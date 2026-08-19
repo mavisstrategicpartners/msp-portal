@@ -1,0 +1,1 @@
+UPDATE public.tools SET login_url = 'https://rs63.cphost.co.za:2087/login/' WHERE slug = 'whm';

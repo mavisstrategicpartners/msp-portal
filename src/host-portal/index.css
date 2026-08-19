@@ -1,0 +1,110 @@
+/*
+ * Host portal styles — scoped to `.host-portal-root` so the tokens do NOT leak
+ * into the MSP shell. Colours are aligned with Mavis Strategic Partners (near-black + magenta).
+ */
+.host-portal-root {
+  --bg-page: #0A0A0F;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --brand: #C026D3;
+  --brand-dark: #9F1AB0;
+  --brand-soft: #FBE7FE;
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --purple: #7C3AED;
+  --purple-soft: #EDE4FE;
+  --shadow-sm: 0 1px 2px rgba(10,10,15,.10);
+  --shadow-md: 0 4px 12px rgba(10,10,15,.14);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+.dark .host-portal-root {
+  --bg-page: #0A0A0F;
+  --bg-primary: #161622;
+  --bg-secondary: #1E1E2E;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255,255,255,0.10);
+  --input-bg: #1E1E2E;
+  --input-border: #2d2d3d;
+  --input-text: #f1f5f9;
+  --brand: #E879F9;
+  --brand-dark: #C026D3;
+  --brand-soft: rgba(232,121,249,0.18);
+  --success-soft: #14532d;
+  --warning-soft: #78350f;
+  --danger-soft: #7f1d1d;
+  --purple: #A78BFA;
+  --purple-soft: rgba(167,139,250,0.18);
+}
+
+.host-portal-root * { box-sizing: border-box; }
+.host-portal-root a { color: inherit; text-decoration: none; }
+.host-portal-root button { font-family: inherit; }
+.host-portal-root table { border-collapse: collapse; width: 100%; }
+.host-portal-root input,
+.host-portal-root select,
+.host-portal-root textarea { font-family: inherit; }
+
+.host-portal-root .btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  border: 1px solid transparent; cursor: pointer; transition: all .15s;
+}
+.host-portal-root .btn-primary { background: var(--brand); color: #ffffff; }
+.host-portal-root .btn-primary:hover { background: var(--brand-dark); }
+.host-portal-root .btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-color); }
+.host-portal-root .btn-ghost:hover { background: var(--bg-secondary); }
+.host-portal-root .btn-danger { background: var(--danger); color: white; }
+.host-portal-root .btn-success { background: var(--success); color: white; }
+
+.host-portal-root .badge {
+  display: inline-flex; align-items: center; padding: 3px 9px;
+  border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.host-portal-root .badge-success { background: var(--success-soft); color: var(--success); }
+.host-portal-root .badge-warning { background: var(--warning-soft); color: var(--warning); }
+.host-portal-root .badge-danger { background: var(--danger-soft); color: var(--danger); }
+.host-portal-root .badge-info { background: var(--brand-soft); color: var(--brand-dark); }
+.host-portal-root .badge-purple { background: var(--purple-soft); color: var(--purple); }
+
+.host-portal-root .card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.host-portal-root .kanban-col.drag-over { outline: 2px dashed var(--brand); outline-offset: -6px; }
+.host-portal-root .kanban-card { cursor: grab; }
+.host-portal-root .kanban-card:active { cursor: grabbing; }
+
+.host-portal-root .chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  background: var(--bg-secondary); color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.host-portal-root .link { color: var(--brand-dark); cursor: pointer; }
+.host-portal-root .link:hover { text-decoration: underline; }
+
+.host-portal-root input:focus,
+.host-portal-root select:focus,
+.host-portal-root textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
