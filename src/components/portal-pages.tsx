@@ -129,9 +129,17 @@ function useTable<T>(key: string, table: string, order = "sort_order") {
   return useQuery({
     queryKey: [key],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from(table).select("*").order(order, { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as T[];
+      try {
+        const { data, error } = await (supabase as any).from(table).select("*").order(order, { ascending: true });
+        if (error) {
+          console.warn(`Error querying table ${table}:`, error);
+          return [] as T[];
+        }
+        return (data ?? []) as T[];
+      } catch (err) {
+        console.warn(`Query exception for table ${table}:`, err);
+        return [] as T[];
+      }
     },
     staleTime: 60_000,
   });

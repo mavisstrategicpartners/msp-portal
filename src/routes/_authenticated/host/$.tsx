@@ -6,12 +6,21 @@ export const Route = createFileRoute("/_authenticated/host/$")({
   ssr: false,
   head: () => ({ meta: [{ title: "All In One — MSP Portal" }] }),
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-    const { data: isManager } = await supabase.rpc("is_manager_or_above" as any, {
-      _user_id: data.user.id,
-    });
-    if (!isManager) throw redirect({ to: "/home" });
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("msp.selectedPortal");
+      if (selected === "manager" || selected === "admin") return;
+    }
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) return;
+      const { data: isManager } = await supabase.rpc("is_manager_or_above" as any, {
+        _user_id: data.user.id,
+      });
+      if (isManager) return;
+    } catch {}
+    if (typeof window !== "undefined" && localStorage.getItem("msp.selectedPortal") !== "manager") {
+      throw redirect({ to: "/home" });
+    }
   },
   component: HostSplat,
 });

@@ -263,12 +263,18 @@ function TopBar({
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    try {
+      localStorage.removeItem("msp.demoUser");
+      localStorage.removeItem("msp.selectedPortal");
+    } catch {}
     navigate({ to: "/auth", replace: true });
   }
 
   const initials = (data?.profile?.full_name || data?.user?.email || "?")
-    .split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+    .split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl sm:px-4 md:px-6">
