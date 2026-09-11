@@ -4,6 +4,7 @@ import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import KanbanBoard from '../../components/KanbanBoard.jsx'
 import { seedTasks, seedProjects, seedLearners, TASK_STATUSES, PROJECT_PRIORITIES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { Lightbulb } from 'lucide-react'
 
 const empty = { title: '', project_id: '', assignee_learner_id: '', status: 'To Do', priority: 'Medium', due_date: '', description: '' }
 const priorityColor = (p) => p === 'Critical' ? 'var(--danger)' : p === 'High' ? 'var(--warning)' : p === 'Low' ? 'var(--text-muted)' : 'var(--brand)'
@@ -78,7 +79,7 @@ export default function Tasks() {
 
         {view === 'board' ? (
           <>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>💡 Drag any task between columns — in either direction.</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> Drag any task between columns — in either direction.</div>
             <KanbanBoard columns={TASK_STATUSES} items={filtered} onMove={move} columnAccent={columnAccent}
               renderCard={(t) => (
                 <div className="card" style={{ padding: 12, borderLeft: `4px solid ${priorityColor(t.priority)}` }}>

@@ -5,6 +5,7 @@ import FilePreview from '../../components/FilePreview.jsx'
 import { seedLeave, seedLearnerLeaveRequests, seedLeaveBalances, LEAVE_TYPES, ZA_PUBLIC_HOLIDAYS } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
 import { useNotifications } from '../../context/NotificationContext.jsx'
+import { Lightbulb, Paperclip } from 'lucide-react'
 
 const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review' ? 'badge-warning' : 'badge-danger'
 
@@ -63,7 +64,7 @@ export default function Leave() {
 
       {tab === 'learner' && (
         <div className="card">
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>💡 HR cannot delete a learner's request — only the learner who submitted it can withdraw it.</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> HR cannot delete a learner's request — only the learner who submitted it can withdraw it.</div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
@@ -81,7 +82,7 @@ export default function Leave() {
                     <td>{r.type}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{r.from} → {r.to}</td>
                     <td>{r.days}</td>
-                    <td>{r.document_name ? <span style={{ fontSize: 12 }}>📎 {r.document_name}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                    <td>{r.document_name ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12 }}><Paperclip size={13} /> {r.document_name}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                     <td>{r.doc_verification ? <span className={'badge ' + badgeFor(r.doc_verification.status)} title={r.doc_verification.reasons?.join(', ')}>{r.doc_verification.status}</span> : '—'}</td>
                     <td><span className={'badge ' + (r.status === 'Approved' ? 'badge-success' : r.status === 'Rejected' ? 'badge-danger' : 'badge-warning')}>{r.status}</span></td>
                     <td><button className="btn btn-primary" onClick={() => setReviewing(r)}>Review</button></td>

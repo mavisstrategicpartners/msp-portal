@@ -29,7 +29,7 @@ export default function CompanyProfile() {
 
   return (
     <DashboardLayout title="My Company Profile">
-      <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg, var(--brand-soft), transparent)' }}>
+      <div className="card" style={{ marginBottom: 16, background: 'var(--bg-primary)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{profile.company_name}</div>

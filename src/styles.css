@@ -6,8 +6,8 @@
 
 /*
  * MAVIS STRATEGIC PARTNERS (MSP) — design system.
- * Dark-first corporate SaaS. Near-black background, magenta→violet accent,
- * Inter typography. All colors use oklch.
+ * MSP enterprise portal design system. Cool neutral surfaces, slate text,
+ * restrained berry accents, and quiet elevation.
  */
 
 @theme inline {
@@ -56,89 +56,88 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --shadow-glow: 0 0 0 1px oklch(0.68 0.28 330 / 0.35), 0 8px 32px -8px oklch(0.68 0.28 330 / 0.55);
   --shadow-soft: 0 1px 2px 0 oklch(0 0 0 / 0.4), 0 8px 24px -12px oklch(0 0 0 / 0.65);
 }
 
 :root {
   /* Light mode — ink on paper, magenta accent (MSP brand mark) */
-  --radius: 0.75rem;
-  --background: oklch(0.985 0.005 320);
-  --foreground: oklch(0.15 0.03 310);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.03 310);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.03 310);
-  --primary: oklch(0.62 0.28 330);
-  --primary-foreground: oklch(0.99 0.005 320);
-  --secondary: oklch(0.95 0.02 320);
-  --secondary-foreground: oklch(0.2 0.04 310);
-  --muted: oklch(0.96 0.015 320);
-  --muted-foreground: oklch(0.5 0.03 310);
-  --accent: oklch(0.94 0.06 330);
-  --accent-foreground: oklch(0.3 0.15 330);
+  --radius: 0.5rem;
+  --background: oklch(0.975 0.008 250);
+  --foreground: oklch(0.22 0.025 250);
+  --card: oklch(0.995 0.002 250);
+  --card-foreground: oklch(0.22 0.025 250);
+  --popover: oklch(0.995 0.002 250);
+  --popover-foreground: oklch(0.22 0.025 250);
+  --primary: oklch(0.52 0.16 338);
+  --primary-foreground: oklch(0.99 0.002 250);
+  --secondary: oklch(0.945 0.012 250);
+  --secondary-foreground: oklch(0.27 0.025 250);
+  --muted: oklch(0.95 0.01 250);
+  --muted-foreground: oklch(0.48 0.025 250);
+  --accent: oklch(0.93 0.035 338);
+  --accent-foreground: oklch(0.34 0.1 338);
   --destructive: oklch(0.62 0.22 27);
   --destructive-foreground: oklch(0.98 0 0);
   --success: oklch(0.7 0.16 155);
   --success-foreground: oklch(0.1 0.02 260);
   --warning: oklch(0.78 0.15 75);
   --warning-foreground: oklch(0.2 0.05 75);
-  --border: oklch(0.9 0.02 320);
-  --input: oklch(0.93 0.02 320);
-  --ring: oklch(0.62 0.28 330);
-  --chart-1: oklch(0.62 0.28 330);
-  --chart-2: oklch(0.55 0.25 295);
-  --chart-3: oklch(0.72 0.22 355);
-  --chart-4: oklch(0.65 0.2 265);
-  --chart-5: oklch(0.6 0.22 20);
-  --sidebar: oklch(0.13 0.02 310);
-  --sidebar-foreground: oklch(0.94 0.01 320);
-  --sidebar-primary: oklch(0.68 0.28 330);
-  --sidebar-primary-foreground: oklch(0.1 0.02 310);
-  --sidebar-accent: oklch(0.2 0.04 310);
-  --sidebar-accent-foreground: oklch(0.97 0.03 330);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.68 0.28 330);
+  --border: oklch(0.88 0.015 250);
+  --input: oklch(0.9 0.015 250);
+  --ring: oklch(0.52 0.16 338);
+  --chart-1: oklch(0.52 0.16 338);
+  --chart-2: oklch(0.52 0.11 235);
+  --chart-3: oklch(0.62 0.12 155);
+  --chart-4: oklch(0.64 0.13 70);
+  --chart-5: oklch(0.58 0.12 25);
+  --sidebar: oklch(0.22 0.025 250);
+  --sidebar-foreground: oklch(0.96 0.006 250);
+  --sidebar-primary: oklch(0.7 0.14 338);
+  --sidebar-primary-foreground: oklch(0.15 0.02 250);
+  --sidebar-accent: oklch(0.29 0.03 250);
+  --sidebar-accent-foreground: oklch(0.98 0.004 250);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.7 0.14 338);
 }
 
 .dark {
-  /* Dark mode — DEFAULT. Near-black background + magenta accent (MSP brand). */
-  --background: oklch(0.09 0.015 310);
-  --foreground: oklch(0.97 0.008 320);
-  --card: oklch(0.14 0.03 310);
-  --card-foreground: oklch(0.97 0.008 320);
-  --popover: oklch(0.14 0.03 310);
-  --popover-foreground: oklch(0.97 0.008 320);
-  --primary: oklch(0.68 0.28 330);
-  --primary-foreground: oklch(0.1 0.02 310);
-  --secondary: oklch(0.18 0.04 310);
-  --secondary-foreground: oklch(0.97 0.008 320);
-  --muted: oklch(0.16 0.03 310);
-  --muted-foreground: oklch(0.72 0.03 320);
-  --accent: oklch(0.32 0.14 330);
-  --accent-foreground: oklch(0.97 0.03 330);
+  /* Professional dark theme: slate surfaces with restrained MSP accent. */
+  --background: oklch(0.16 0.018 250);
+  --foreground: oklch(0.95 0.006 250);
+  --card: oklch(0.205 0.022 250);
+  --card-foreground: oklch(0.95 0.006 250);
+  --popover: oklch(0.205 0.022 250);
+  --popover-foreground: oklch(0.95 0.006 250);
+  --primary: oklch(0.7 0.14 338);
+  --primary-foreground: oklch(0.16 0.018 250);
+  --secondary: oklch(0.24 0.025 250);
+  --secondary-foreground: oklch(0.95 0.006 250);
+  --muted: oklch(0.235 0.022 250);
+  --muted-foreground: oklch(0.72 0.02 250);
+  --accent: oklch(0.31 0.08 338);
+  --accent-foreground: oklch(0.95 0.02 338);
   --destructive: oklch(0.7 0.19 22);
   --destructive-foreground: oklch(0.98 0 0);
   --success: oklch(0.72 0.16 155);
   --success-foreground: oklch(0.13 0.02 310);
   --warning: oklch(0.82 0.16 80);
   --warning-foreground: oklch(0.2 0.04 75);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.68 0.28 330);
-  --chart-1: oklch(0.72 0.28 330);
-  --chart-2: oklch(0.65 0.25 290);
-  --chart-3: oklch(0.78 0.2 355);
-  --chart-4: oklch(0.68 0.2 260);
-  --chart-5: oklch(0.7 0.22 20);
-  --sidebar: oklch(0.07 0.01 310);
-  --sidebar-foreground: oklch(0.94 0.01 320);
-  --sidebar-primary: oklch(0.7 0.28 330);
-  --sidebar-primary-foreground: oklch(0.1 0.02 310);
-  --sidebar-accent: oklch(0.15 0.04 310);
-  --sidebar-accent-foreground: oklch(0.97 0.03 330);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.7 0.28 330);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.7 0.14 338);
+  --chart-1: oklch(0.7 0.14 338);
+  --chart-2: oklch(0.68 0.1 235);
+  --chart-3: oklch(0.7 0.11 155);
+  --chart-4: oklch(0.76 0.12 70);
+  --chart-5: oklch(0.72 0.12 25);
+  --sidebar: oklch(0.13 0.018 250);
+  --sidebar-foreground: oklch(0.94 0.006 250);
+  --sidebar-primary: oklch(0.72 0.14 338);
+  --sidebar-primary-foreground: oklch(0.14 0.018 250);
+  --sidebar-accent: oklch(0.22 0.025 250);
+  --sidebar-accent-foreground: oklch(0.96 0.006 250);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.72 0.14 338);
 }
 
 @layer base {
@@ -155,25 +154,13 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Subtle background gradient for depth in dark mode (magenta → violet glow) */
-  .dark body {
-    background-image:
-      radial-gradient(at 12% 0%, oklch(0.55 0.28 330 / 0.18) 0px, transparent 55%),
-      radial-gradient(at 95% 15%, oklch(0.5 0.25 285 / 0.22) 0px, transparent 55%),
-      radial-gradient(at 50% 100%, oklch(0.4 0.22 300 / 0.15) 0px, transparent 60%);
-    background-attachment: fixed;
-  }
 }
 
 @utility glass {
-  background: color-mix(in oklch, var(--card) 70%, transparent);
-  backdrop-filter: blur(12px) saturate(140%);
+  background: var(--card);
   border: 1px solid var(--border);
 }
 
-@utility gradient-text {
-  background: linear-gradient(135deg, oklch(0.72 0.28 330), oklch(0.62 0.25 285));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+@utility brand-text {
+  color: var(--primary);
 }

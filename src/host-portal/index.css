@@ -1,9 +1,9 @@
 /*
  * Host portal styles — scoped to `.host-portal-root` so the tokens do NOT leak
- * into the MSP shell. Colours are aligned with Mavis Strategic Partners (near-black + magenta).
+ * into the MSP shell. Colours are aligned with the MSP enterprise design system.
  */
 .host-portal-root {
-  --bg-page: #0A0A0F;
+  --bg-page: #f4f6f8;
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --text-primary: #0f172a;
@@ -13,19 +13,19 @@
   --input-bg: #ffffff;
   --input-border: #cbd5e1;
   --input-text: #0f172a;
-  --brand: #C026D3;
-  --brand-dark: #9F1AB0;
-  --brand-soft: #FBE7FE;
+  --brand: #9c3d75;
+  --brand-dark: #7f2f5e;
+  --brand-soft: #f5e8ef;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --warning: #d97706;
   --warning-soft: #fef3c7;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
-  --purple: #7C3AED;
-  --purple-soft: #EDE4FE;
-  --shadow-sm: 0 1px 2px rgba(10,10,15,.10);
-  --shadow-md: 0 4px 12px rgba(10,10,15,.14);
+  --purple: #52607a;
+  --purple-soft: #e9edf3;
+  --shadow-sm: 0 1px 2px rgba(25,35,50,.06);
+  --shadow-md: 0 6px 18px rgba(25,35,50,.08);
   color: var(--text-primary);
   background: var(--bg-page);
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -33,24 +33,24 @@
 }
 
 .dark .host-portal-root {
-  --bg-page: #0A0A0F;
-  --bg-primary: #161622;
-  --bg-secondary: #1E1E2E;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --bg-page: #18202a;
+  --bg-primary: #202b37;
+  --bg-secondary: #263443;
+  --text-primary: #edf2f7;
+  --text-secondary: #c4ced9;
+  --text-muted: #93a2b2;
   --border-color: rgba(255,255,255,0.10);
-  --input-bg: #1E1E2E;
-  --input-border: #2d2d3d;
-  --input-text: #f1f5f9;
-  --brand: #E879F9;
-  --brand-dark: #C026D3;
-  --brand-soft: rgba(232,121,249,0.18);
+  --input-bg: #263443;
+  --input-border: #3b4b5c;
+  --input-text: #edf2f7;
+  --brand: #d18aaa;
+  --brand-dark: #b86e91;
+  --brand-soft: rgba(209,138,170,0.16);
   --success-soft: #14532d;
   --warning-soft: #78350f;
   --danger-soft: #7f1d1d;
-  --purple: #A78BFA;
-  --purple-soft: rgba(167,139,250,0.18);
+  --purple: #aab6c8;
+  --purple-soft: rgba(170,182,200,0.16);
 }
 
 .host-portal-root * { box-sizing: border-box; }
@@ -86,7 +86,7 @@
 .host-portal-root .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 22px;
   box-shadow: var(--shadow-sm);
 }

@@ -82,7 +82,7 @@ export default function Recruitment() {
                       <span className="chip" style={{ color: typeColor(v.type), borderColor: typeColor(v.type) }}>{v.type}</span>
                       <span className="chip">📍 {v.location}</span>
                       {v.salary && <span className="chip">💰 {v.salary}</span>}
-                      <span className="chip">👥 {v.applicants} applicants</span>
+                      <span className="chip">{v.applicants} applicants</span>
                       {v.closes && <span className="chip">⏰ Closes {v.closes}</span>}
                     </div>
                     <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '10px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.description}</p>
@@ -136,7 +136,7 @@ export default function Recruitment() {
             <span className="chip" style={{ color: typeColor(viewing.type), borderColor: typeColor(viewing.type) }}>{viewing.type}</span>
             <span className="chip">💰 {viewing.salary}</span>
             <span className="chip">⏰ Closes {viewing.closes}</span>
-            <span className="chip">👥 {viewing.applicants} applicants</span>
+            <span className="chip">{viewing.applicants} applicants</span>
           </div>
           <div style={{ fontSize: 13, marginBottom: 14 }}><b>About the role</b><p style={{ marginTop: 4, color: 'var(--text-secondary)' }}>{viewing.description}</p></div>
           <div style={{ fontSize: 13 }}><b>Requirements</b>

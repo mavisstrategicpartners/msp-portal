@@ -5,6 +5,7 @@ import NotificationBell from './NotificationBell.jsx'
 import { useSidebarScrollRef } from '../lib/scrollMemory.js'
 import { useLocalStorage } from '../lib/useLocalStorage.js'
 import { hostProfile } from '../data/mockData.js'
+import { Moon, Sun } from 'lucide-react'
 
 const hostNav = [
   { heading: null, items: [{ name: 'Dashboard', path: '/host', icon: '◆' }] },
@@ -22,7 +23,7 @@ const hostNav = [
     heading: 'Recruitment',
     items: [
       { name: 'Learner Marketplace', path: '/host/marketplace', icon: '★' },
-      { name: 'Recruitment', path: '/host/recruitment', icon: '👥' },
+      { name: 'Recruitment', path: '/host/recruitment', icon: '◎' },
       { name: 'Host Employer Check', path: '/host/check', icon: '☑' },
     ],
   },
@@ -55,8 +56,8 @@ const hrNav = [
     items: [
       { name: 'Attendance Register', path: '/hr/attendance', icon: '◐' },
       { name: 'Leave Management', path: '/hr/leave', icon: '☰' },
-      { name: 'Timesheets', path: '/hr/timesheets', icon: '⏱' },
-      { name: 'Employee Relations', path: '/hr/relations', icon: '⚖' },
+      { name: 'Timesheets', path: '/hr/timesheets', icon: '◷' },
+      { name: 'Employee Relations', path: '/hr/relations', icon: '◇' },
     ],
   },
   {
@@ -210,7 +211,7 @@ export default function DashboardLayout({ children, title }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <NotificationBell />
             <button className="btn btn-ghost" onClick={toggleTheme}>
-              {theme === 'light' ? '🌙' : '☀'}
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +32,16 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(
-    () => typeof window !== "undefined" && localStorage.getItem("msp.theme") === "dark",
+    () =>
+      typeof window !== "undefined" &&
+      (localStorage.getItem("msp-theme") ?? localStorage.getItem("msp.theme")) === "dark",
   );
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpType, setHelpType] = useState<"forgot" | "support">("forgot");
@@ -46,11 +50,8 @@ function AuthPage() {
     const root = document.documentElement;
     root.classList.toggle("dark", darkMode);
     root.style.colorScheme = darkMode ? "dark" : "light";
+    localStorage.setItem("msp-theme", darkMode ? "dark" : "light");
     localStorage.setItem("msp.theme", darkMode ? "dark" : "light");
-    return () => {
-      root.classList.add("dark");
-      root.style.colorScheme = "dark";
-    };
   }, [darkMode]);
 
   useEffect(() => {
@@ -68,7 +69,13 @@ function AuthPage() {
     } catch {}
   }, [navigate]);
 
-  function authenticateSession(targetEmail: string) {
+  async function refreshProfileAndGoHome() {
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    await queryClient.refetchQueries({ queryKey: ["profile"], type: "all" });
+    await navigate({ to: "/home" });
+  }
+
+  async function authenticateSession(targetEmail: string) {
     const cleanName = targetEmail.includes("@")
       ? targetEmail
           .split("@")[0]
@@ -86,7 +93,7 @@ function AuthPage() {
       localStorage.setItem("msp.demoUser", JSON.stringify(sessionUser));
     } catch {}
 
-    navigate({ to: "/home" });
+    await refreshProfileAndGoHome();
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -101,7 +108,7 @@ function AuthPage() {
       });
 
       if (error) {
-        authenticateSession(targetEmail);
+        await authenticateSession(targetEmail);
         toast.success("Welcome back", {
           description: "Your session is ready.",
           duration: 3000,
@@ -109,13 +116,15 @@ function AuthPage() {
         return;
       }
 
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.refetchQueries({ queryKey: ["profile"], type: "all" });
       toast.success("Welcome back", {
         description: "Your session is ready.",
         duration: 3000,
       });
-      navigate({ to: "/home" });
+      await navigate({ to: "/home" });
     } catch {
-      authenticateSession(targetEmail);
+      await authenticateSession(targetEmail);
       toast.success("Welcome back", {
         description: "Your session is ready.",
         duration: 3000,
@@ -126,9 +135,7 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#43213b] text-primary-foreground dark:bg-[#241a2a]">
-      <div className="pointer-events-none absolute -left-24 top-0 h-full w-2/5 -skew-x-12 border-r border-white/10 bg-white/[0.04]" />
-      <div className="pointer-events-none absolute -bottom-32 -right-20 h-2/3 w-2/5 rotate-12 border-l border-white/10 bg-black/10" />
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#43213b] text-white dark:bg-[#241a2a]">
 
       <div className="relative z-10 flex justify-end px-6 pt-6 sm:px-10">
         <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5 text-[11px] font-medium text-white/80 shadow-sm">
@@ -163,10 +170,10 @@ function AuthPage() {
       {/* Center: Corporate Login Card */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[420px]">
-          <div className="space-y-6 rounded-xl border border-[#d6dfe5] bg-white p-8 shadow-[0_16px_40px_-24px_rgba(32,48,59,0.55)] sm:p-9 dark:border-white/10 dark:bg-[#263844]">
+          <div className="space-y-6 rounded-lg border border-border bg-card p-8 shadow-md sm:p-9">
             {/* Header: Company Emblem & Title */}
             <div className="relative space-y-3 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border border-white/20 bg-[#43213b] p-2 shadow-sm dark:bg-[#241a2a]">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center bg-transparent p-2">
                 <img
                   src="/msp-logo.png"
                   alt="Mavis Strategic Partners"
@@ -204,7 +211,7 @@ function AuthPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@mavisstrategicpartners.co.za"
                     required
-                    className="h-10.5 border-[#d6dfe5] bg-[#f8fafb] pl-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary dark:border-white/10 dark:bg-[#1f303b] dark:text-slate-100 text-sm"
+                    className="h-10.5 border-input bg-background pl-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
                   />
                 </div>
               </div>
@@ -236,7 +243,7 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="h-10.5 border-[#d6dfe5] bg-[#f8fafb] pl-10 pr-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary dark:border-white/10 dark:bg-[#1f303b] dark:text-slate-100 text-sm"
+                    className="h-10.5 border-input bg-background pl-10 pr-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
                   />
                   <button
                     type="button"

@@ -183,8 +183,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       </div>
       {!collapsed && (
         <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">Company workspace</p>
-          <p className="mt-1 text-xs text-white/75">Internal operations portal</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">Company workspace</p>
+          <p className="mt-1 text-xs text-white/80">Internal operations portal</p>
         </div>
       )}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
@@ -196,7 +196,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
           return (
             <div key={section.group} className="mb-5">
               {!collapsed && (
-                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/45">
+                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/55">
                   {section.group}
                   {section.managerOnly && <Lock className="ml-1 inline h-2.5 w-2.5" />}
                 </p>
@@ -212,7 +212,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                           "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
                           active
                             ? "border-l-primary bg-white/12 text-white shadow-sm"
-                            : "text-white/65 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
+                            : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
                           collapsed && "justify-center px-2",
                         )}
                         title={collapsed ? item.label : undefined}
@@ -235,8 +235,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       </nav>
       <div className="border-t border-white/10 p-3">
         {!collapsed && (
-          <p className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] leading-relaxed text-white/55">
-            <span className="font-semibold text-white/85">Need help?</span> Open MSP Assist in the bottom-right corner.
+          <p className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] leading-relaxed text-white/60">
+            <span className="font-semibold text-white">Need help?</span> Open MSP Assist in the bottom-right corner.
           </p>
         )}
       </div>
@@ -369,43 +369,45 @@ function TopBar({
           <kbd className="ml-auto hidden rounded border border-border bg-background/80 px-1.5 py-0.5 text-[10px] font-medium md:inline">⌘K</kbd>
         </button>
       </div>
-      <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>
-      <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>
-      <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
-        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="ml-1 flex items-center gap-2 rounded-full p-0.5 transition hover:bg-secondary/60">
-            <Avatar className="h-8 w-8 border border-border">
-              <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
-              <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">{initials}</AvatarFallback>
-            </Avatar>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="space-y-1">
-            <p className="text-sm">{data?.profile?.full_name || "Signed in"}</p>
-            <p className="truncate text-xs font-normal text-muted-foreground">{data?.user?.email}</p>
-            <RoleBadge tier={data?.roleTier} />
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
-            <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
-          </DropdownMenuItem>
-          {avatarUrl && (
-            <DropdownMenuItem onSelect={useInitials} disabled={uploadingAvatar}>
-              <User className="mr-2 h-4 w-4" /> Use initials instead
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="ml-1 flex items-center gap-2 rounded-full p-0.5 transition hover:bg-secondary/60">
+              <Avatar className="h-8 w-8 border border-border">
+                <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
+                <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">{initials}</AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="space-y-1">
+              <p className="text-sm">{data?.profile?.full_name || "Signed in"}</p>
+              <p className="truncate text-xs font-normal text-muted-foreground">{data?.user?.email}</p>
+              <RoleBadge tier={data?.roleTier} />
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
+              <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
             </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={onOpenSettings}>
-            <Settings className="mr-2 h-4 w-4" /> Portal settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
-            <LogOut className="mr-2 h-4 w-4" /> Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {avatarUrl && (
+              <DropdownMenuItem onSelect={useInitials} disabled={uploadingAvatar}>
+                <User className="mr-2 h-4 w-4" /> Use initials instead
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={onOpenSettings}>
+              <Settings className="mr-2 h-4 w-4" /> Portal settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -423,7 +425,7 @@ function MspBubble({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-glow)] transition hover:scale-105"
+      className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition hover:bg-primary/90"
       title="Ask Msp"
     >
       <MessageCircle className="h-6 w-6" />

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 export function MspLogo({ className, showWord = true }: { className?: string; showWord?: boolean }) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/15 bg-transparent p-1">
+      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-1">
         <img src="/msp-logo.png" alt="Mavis Strategic Partners" className="h-full w-full object-contain" />
       </div>
       {showWord && (

@@ -7,7 +7,7 @@ import { useNotifications } from '../../context/NotificationContext.jsx'
 
 const CRITERIA = [
   { key: 'skills', label: 'Skills Matching', icon: '🧠' },
-  { key: 'qualification', label: 'Qualification Matching', icon: '🎓' },
+  { key: 'qualification', label: 'Qualification Matching', icon: '◆' },
   { key: 'geo', label: 'Geographic Matching', icon: '📍' },
   { key: 'disability', label: 'Disability Inclusion', icon: '♿' },
   { key: 'industry', label: 'Industry Matching', icon: '🏭' },
@@ -45,7 +45,7 @@ export default function Marketplace() {
 
   return (
     <DashboardLayout title="Learner Marketplace">
-      <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg, var(--purple-soft), var(--brand-soft))', border: 'none' }}>
+      <div className="card" style={{ marginBottom: 16, background: 'var(--bg-primary)' }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ fontSize: 34 }}>🤖</div>
           <div style={{ flex: 1, minWidth: 240 }}>
@@ -90,7 +90,7 @@ export default function Marketplace() {
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>{l.bio}</div>
             <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span className="chip">📍 {l.location}</span>
-              <span className="chip">⏱ {l.availability}</span>
+              <span className="chip">Availability: {l.availability}</span>
               {l.disability && <span className="chip" style={{ color: 'var(--purple)', borderColor: 'var(--purple)' }}>♿ {l.disability}</span>}
             </div>
             <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>

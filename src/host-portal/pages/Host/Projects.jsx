@@ -4,6 +4,7 @@ import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import KanbanBoard from '../../components/KanbanBoard.jsx'
 import { seedProjects, seedLearners, seedTasks, PROJECT_STATUSES, PROJECT_PRIORITIES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { Lightbulb } from 'lucide-react'
 
 const empty = { name: '', client: '', description: '', status: 'To Do', priority: 'Medium', start_date: '', end_date: '', lead: '', assigned_learner_ids: [] }
 
@@ -75,7 +76,7 @@ export default function Projects() {
           <button className="btn btn-primary" onClick={openAdd}>+ New Project</button>
         </div>
 
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>💡 Drag any project card into a different column to change its status — in any direction.</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> Drag any project card into a different column to change its status — in any direction.</div>
 
         <KanbanBoard
           columns={PROJECT_STATUSES}
@@ -91,8 +92,8 @@ export default function Projects() {
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '8px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                   <span className="chip">👤 {p.lead}</span>
-                  <span className="chip">🎯 {p.priority}</span>
-                  <span className="chip">👥 {(p.assigned_learner_ids || []).length} learners</span>
+                  <span className="chip">Priority: {p.priority}</span>
+                  <span className="chip">{(p.assigned_learner_ids || []).length} learners</span>
                   <span className="chip">✓ {projectTasks.filter(t => t.status === 'Completed').length}/{projectTasks.length} tasks</span>
                 </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 4 }}>

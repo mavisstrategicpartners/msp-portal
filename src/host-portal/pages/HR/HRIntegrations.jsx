@@ -8,7 +8,7 @@ export default function HRIntegrations() {
   const cats = Array.from(new Set(ints.map(i => i.category)))
   return (
     <DashboardLayout title="Integrations">
-      <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg, var(--purple-soft), transparent)' }}>
+      <div className="card" style={{ marginBottom: 16, background: 'var(--bg-primary)' }}>
         <div style={{ fontSize: 14, fontWeight: 700 }}>Connect your existing HR tooling</div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>Payroll, biometric devices, ERP, LMS, job boards, e-signature, SSO/MFA, and BI. Toggle to enable a live connection (demo — no external calls made).</div>
       </div>
