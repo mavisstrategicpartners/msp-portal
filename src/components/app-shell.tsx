@@ -1,11 +1,11 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, Compass, BookOpen, Briefcase, Tag, ListTree, Wrench, Map, User, CalendarDays,
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
-  Crown, FileBarChart2, KeyRound, Menu,
+  Crown, FileBarChart2, KeyRound, Menu, Camera,
   LayoutDashboard,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -19,7 +19,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HelpPanel,
   MspChatPanel,
@@ -174,13 +174,19 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     : null) ?? "staff";
   return (
     <aside className={cn(
-      "shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+      "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#43213b] text-white dark:bg-[#241a2a]",
       mobile ? "flex h-full w-full" : "sticky top-0 hidden h-screen md:flex",
       !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
     )}>
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border px-4", collapsed && "justify-center px-2")}>
+      <div className={cn("flex h-[76px] items-center border-b border-white/10 px-4", collapsed && "justify-center px-2")}>
         <MspLogo showWord={!collapsed} />
       </div>
+      {!collapsed && (
+        <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">Company workspace</p>
+          <p className="mt-1 text-xs text-white/75">Internal operations portal</p>
+        </div>
+      )}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
           if (section.managerOnly && !isManagerOrAbove) return null;
@@ -190,7 +196,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
           return (
             <div key={section.group} className="mb-5">
               {!collapsed && (
-                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/45">
                   {section.group}
                   {section.managerOnly && <Lock className="ml-1 inline h-2.5 w-2.5" />}
                 </p>
@@ -203,10 +209,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                       <Link
                         to={item.to as any}
                         className={cn(
-                          "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
+                          "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
                           active
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                            ? "border-l-primary bg-white/12 text-white shadow-sm"
+                            : "text-white/65 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
                           collapsed && "justify-center px-2",
                         )}
                         title={collapsed ? item.label : undefined}
@@ -227,10 +233,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
           );
         })}
       </nav>
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-white/10 p-3">
         {!collapsed && (
-          <p className="px-2 text-[10px] text-muted-foreground">
-            <span className="font-semibold text-foreground">Need help?</span> Tap Msp (bottom-right) and ask anything.
+          <p className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] leading-relaxed text-white/55">
+            <span className="font-semibold text-white/85">Need help?</span> Open MSP Assist in the bottom-right corner.
           </p>
         )}
       </div>
@@ -259,6 +265,81 @@ function TopBar({
   const { data } = useProfile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    setAvatarUrl(
+      data?.profile?.avatar_url ??
+        (typeof window !== "undefined" ? localStorage.getItem("msp.demoAvatar") : null),
+    );
+  }, [data?.profile?.avatar_url]);
+
+  const initials = (data?.profile?.full_name || data?.user?.email || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part: string) => part[0])
+    .join("")
+    .toUpperCase();
+
+  async function updateAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !data?.user?.id) return;
+
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) return;
+
+    setUploadingAvatar(true);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${data.user.id}/avatar-${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = publicData.publicUrl;
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", data.user.id);
+
+      if (profileError) throw profileError;
+      setAvatarUrl(`${publicUrl}?v=${Date.now()}`);
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const localUrl = typeof reader.result === "string" ? reader.result : null;
+        if (localUrl) {
+          setAvatarUrl(localUrl);
+          localStorage.setItem("msp.demoAvatar", localUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function useInitials() {
+    setUploadingAvatar(true);
+    try {
+      if (data?.user?.id) {
+        await supabase.from("profiles").update({ avatar_url: null }).eq("id", data.user.id);
+      }
+      localStorage.removeItem("msp.demoAvatar");
+      setAvatarUrl(null);
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -272,9 +353,6 @@ function TopBar({
     } catch {}
     navigate({ to: "/auth", replace: true });
   }
-
-  const initials = (data?.profile?.full_name || data?.user?.email || "?")
-    .split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl sm:px-4 md:px-6">
@@ -300,6 +378,7 @@ function TopBar({
         <DropdownMenuTrigger asChild>
           <button className="ml-1 flex items-center gap-2 rounded-full p-0.5 transition hover:bg-secondary/60">
             <Avatar className="h-8 w-8 border border-border">
+              <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
               <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">{initials}</AvatarFallback>
             </Avatar>
           </button>
@@ -311,6 +390,14 @@ function TopBar({
             <RoleBadge tier={data?.roleTier} />
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
+            <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
+          </DropdownMenuItem>
+          {avatarUrl && (
+            <DropdownMenuItem onSelect={useInitials} disabled={uploadingAvatar}>
+              <User className="mr-2 h-4 w-4" /> Use initials instead
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={onOpenSettings}>
             <Settings className="mr-2 h-4 w-4" /> Portal settings
           </DropdownMenuItem>
@@ -319,6 +406,14 @@ function TopBar({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={updateAvatar}
+        className="hidden"
+        aria-label="Upload profile picture"
+      />
     </header>
   );
 }

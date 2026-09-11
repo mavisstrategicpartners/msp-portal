@@ -11,15 +11,9 @@ import {
   Mail,
   Eye,
   EyeOff,
-  Moon,
-  Sun,
   ShieldCheck,
   HelpCircle,
   Building2,
-  User,
-  KeyRound,
-  Crown,
-  Briefcase,
 } from "lucide-react";
 import {
   Dialog,
@@ -28,16 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import logoAsset from "@/assets/msp-logo.png.asset.json";
-
-type Role = "staff" | "manager" | "admin" | "contractor";
-
-const WORKSPACES: { id: Role; label: string; icon: typeof User; destination: string }[] = [
-  { id: "staff", label: "Staff", icon: User, destination: "/home" },
-  { id: "manager", label: "Manager", icon: KeyRound, destination: "/host" },
-  { id: "admin", label: "Admin", icon: Crown, destination: "/portal/admin" },
-  { id: "contractor", label: "Contractor", icon: Briefcase, destination: "/portal/other" },
-];
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -52,22 +36,22 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [navy, setNavy] = useState(true);
-  const [role, setRole] = useState<Role>("staff");
+  const [darkMode, setDarkMode] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem("msp.theme") === "dark",
+  );
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpType, setHelpType] = useState<"forgot" | "support">("forgot");
 
-  const logoSrc = logoAsset.url || "/favicon.png";
-
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("dark", navy);
-    root.style.colorScheme = navy ? "dark" : "light";
+    root.classList.toggle("dark", darkMode);
+    root.style.colorScheme = darkMode ? "dark" : "light";
+    localStorage.setItem("msp.theme", darkMode ? "dark" : "light");
     return () => {
       root.classList.add("dark");
       root.style.colorScheme = "dark";
     };
-  }, [navy]);
+  }, [darkMode]);
 
   useEffect(() => {
     try {
@@ -84,8 +68,7 @@ function AuthPage() {
     } catch {}
   }, [navigate]);
 
-  function authenticateSession(targetEmail: string, chosenRole: Role) {
-    const workspace = WORKSPACES.find((w) => w.id === chosenRole) || WORKSPACES[0];
+  function authenticateSession(targetEmail: string) {
     const cleanName = targetEmail.includes("@")
       ? targetEmail
           .split("@")[0]
@@ -94,23 +77,22 @@ function AuthPage() {
       : "Team Member";
 
     const sessionUser = {
-      id: "usr-" + chosenRole,
+      id: "usr-corporate",
       email: targetEmail,
       user_metadata: { full_name: cleanName },
     };
 
     try {
       localStorage.setItem("msp.demoUser", JSON.stringify(sessionUser));
-      localStorage.setItem("msp.selectedPortal", chosenRole);
     } catch {}
 
-    navigate({ to: workspace.destination as any });
+    navigate({ to: "/home" });
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const targetEmail = email.trim() || `${role}@mavisstrategicpartners.co.za`;
+    const targetEmail = email.trim();
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -119,68 +101,74 @@ function AuthPage() {
       });
 
       if (error) {
-        authenticateSession(targetEmail, role);
-        toast.success(`Signed in to ${role.toUpperCase()} workspace`);
+        authenticateSession(targetEmail);
+        toast.success("Welcome back", {
+          description: "Your session is ready.",
+          duration: 3000,
+        });
         return;
       }
 
-      try {
-        localStorage.setItem("msp.selectedPortal", role);
-      } catch {}
-
-      const workspace = WORKSPACES.find((w) => w.id === role) || WORKSPACES[0];
-      navigate({ to: workspace.destination as any });
+      toast.success("Welcome back", {
+        description: "Your session is ready.",
+        duration: 3000,
+      });
+      navigate({ to: "/home" });
     } catch {
-      authenticateSession(targetEmail, role);
-      toast.success(`Signed in to ${role.toUpperCase()} workspace`);
+      authenticateSession(targetEmail);
+      toast.success("Welcome back", {
+        description: "Your session is ready.",
+        duration: 3000,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-background text-foreground flex flex-col justify-between overflow-hidden">
-      {/* Subtle ambient corporate background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.55_0.25_330/0.08)_0%,transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_20%,oklch(0.68_0.28_330/0.12)_0%,transparent_50%)]" />
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#43213b] text-primary-foreground dark:bg-[#241a2a]">
+      <div className="pointer-events-none absolute -left-24 top-0 h-full w-2/5 -skew-x-12 border-r border-white/10 bg-white/[0.04]" />
+      <div className="pointer-events-none absolute -bottom-32 -right-20 h-2/3 w-2/5 rotate-12 border-l border-white/10 bg-black/10" />
 
-      {/* Top Bar: Minimal Theme Toggle */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 sm:px-10">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Building2 className="h-4 w-4 text-primary" />
-          <span className="font-semibold tracking-wide text-foreground">MSP</span>
-          <span className="hidden sm:inline">·</span>
-          <span className="hidden sm:inline">Internal Operations Portal</span>
+      <div className="relative z-10 flex justify-end px-6 pt-6 sm:px-10">
+        <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5 text-[11px] font-medium text-white/80 shadow-sm">
+          <span className="px-2 py-1">Theme</span>
+          <button
+            type="button"
+            onClick={() => setDarkMode(false)}
+            className={`rounded-full px-3 py-1 transition ${
+              !darkMode
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "hover:bg-white/10 hover:text-white"
+            }`}
+            aria-pressed={!darkMode}
+          >
+            Light
+          </button>
+          <button
+            type="button"
+            onClick={() => setDarkMode(true)}
+            className={`rounded-full px-3 py-1 transition ${
+              darkMode
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "hover:bg-white/10 hover:text-white"
+            }`}
+            aria-pressed={darkMode}
+          >
+            Dark
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setNavy((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur transition hover:text-foreground hover:bg-card"
-          aria-label="Toggle theme"
-        >
-          {navy ? (
-            <>
-              <Sun className="h-3.5 w-3.5 text-amber-400" />
-              <span>Light</span>
-            </>
-          ) : (
-            <>
-              <Moon className="h-3.5 w-3.5 text-primary" />
-              <span>Dark</span>
-            </>
-          )}
-        </button>
-      </header>
+      </div>
 
       {/* Center: Corporate Login Card */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[420px]">
-          <div className="rounded-2xl border border-border/80 bg-card/90 p-8 sm:p-9 shadow-2xl backdrop-blur-xl space-y-6">
+          <div className="space-y-6 rounded-xl border border-[#d6dfe5] bg-white p-8 shadow-[0_16px_40px_-24px_rgba(32,48,59,0.55)] sm:p-9 dark:border-white/10 dark:bg-[#263844]">
             {/* Header: Company Emblem & Title */}
-            <div className="text-center space-y-3">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/60 border border-border p-2 shadow-sm">
+            <div className="relative space-y-3 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border border-white/20 bg-[#43213b] p-2 shadow-sm dark:bg-[#241a2a]">
                 <img
-                  src={logoSrc}
+                  src="/msp-logo.png"
                   alt="Mavis Strategic Partners"
                   className="h-full w-full object-contain"
                   onError={(e) => {
@@ -199,34 +187,6 @@ function AuthPage() {
               </div>
             </div>
 
-            {/* Workspace Selector (Compact Segmented Control) */}
-            <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Workspace
-              </Label>
-              <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-secondary/50 border border-border/60">
-                {WORKSPACES.map((w) => {
-                  const IconComponent = w.icon;
-                  const active = role === w.id;
-                  return (
-                    <button
-                      key={w.id}
-                      type="button"
-                      onClick={() => setRole(w.id)}
-                      className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs font-medium transition-all ${
-                        active
-                          ? "bg-card text-foreground shadow-sm font-semibold border border-border/80"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <IconComponent className={`h-3.5 w-3.5 mb-1 ${active ? "text-primary" : ""}`} />
-                      <span>{w.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Login Form */}
             <form onSubmit={onSubmit} className="space-y-4">
               {/* Work Email */}
@@ -242,9 +202,9 @@ function AuthPage() {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder={`${role}@mavisstrategicpartners.co.za`}
+                    placeholder="name@mavisstrategicpartners.co.za"
                     required
-                    className="pl-10 h-10.5 bg-background/60 border-border/80 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:ring-primary focus-visible:border-primary text-sm"
+                    className="h-10.5 border-[#d6dfe5] bg-[#f8fafb] pl-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary dark:border-white/10 dark:bg-[#1f303b] dark:text-slate-100 text-sm"
                   />
                 </div>
               </div>
@@ -276,7 +236,7 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="pl-10 pr-10 h-10.5 bg-background/60 border-border/80 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:ring-primary focus-visible:border-primary text-sm"
+                    className="h-10.5 border-[#d6dfe5] bg-[#f8fafb] pl-10 pr-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary dark:border-white/10 dark:bg-[#1f303b] dark:text-slate-100 text-sm"
                   />
                   <button
                     type="button"
@@ -317,7 +277,7 @@ function AuthPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-10.5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition active:scale-[0.99] mt-2"
+                className="mx-auto mt-2 block h-10.5 w-3/5 max-w-[220px] text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition active:scale-[0.99]"
               >
                 {loading ? (
                   <>
@@ -325,23 +285,11 @@ function AuthPage() {
                     Signing in...
                   </>
                 ) : (
-                  `Sign In as ${WORKSPACES.find((w) => w.id === role)?.label}`
+                  "Sign In"
                 )}
               </Button>
             </form>
 
-            {/* Quick Demo Mode Link (Discreet text link for testing without clutter) */}
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() =>
-                  authenticateSession(email || `${role}@mavisstrategicpartners.co.za`, role)
-                }
-                className="text-[11px] text-muted-foreground/80 hover:text-primary transition underline-offset-4 hover:underline"
-              >
-                Quick access: Open preview as {role} →
-              </button>
-            </div>
           </div>
 
           {/* Security Notice */}
@@ -355,7 +303,7 @@ function AuthPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-4 px-6 text-center text-[11px] text-muted-foreground border-t border-border/30">
+      <footer className="relative z-10 border-t border-white/15 px-6 py-4 text-center text-[11px] text-white/70">
         <p>© {new Date().getFullYear()} Mavis Strategic Partners (Pty) Ltd. All rights reserved.</p>
       </footer>
 
