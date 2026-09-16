@@ -1,23 +1,44 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedCoaching, seedLearners } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 
 export default function Coaching() {
   const [notes, setNotes] = useLocalStorage('host.coaching', seedCoaching)
   const [learners] = useLocalStorage('host.learners', seedLearners)
   const [form, setForm] = useState(null)
+  const confirm = useConfirm()
 
   const openAdd = () => setForm({ learner_id: '', date: new Date().toISOString().slice(0, 10), mentor: 'Thandi Mokoena', note: '', mood: 'Positive' })
   const submit = () => {
-    if (!form.learner_id || !form.note) return alert('Please pick a learner and add a note.')
+    if (!form.learner_id || !form.note) {
+      toast.warning('Details Required', { description: 'Please pick a learner and add a coaching note.' })
+      return
+    }
     const l = learners.find(x => x.id === form.learner_id)
-    if (form.id) setNotes(prev => prev.map(n => n.id === form.id ? { ...form, learner_name: l?.full_name || '' } : n))
-    else setNotes(prev => [{ id: uid('CN'), ...form, learner_name: l?.full_name || '' }, ...prev])
+    if (form.id) {
+      setNotes(prev => prev.map(n => n.id === form.id ? { ...form, learner_name: l?.full_name || '' } : n))
+      toast.success('Coaching Note Updated', { description: `Note for ${l?.full_name || ''} updated.` })
+    } else {
+      setNotes(prev => [{ id: uid('CN'), ...form, learner_name: l?.full_name || '' }, ...prev])
+      toast.success('Coaching Note Added', { description: `Note added for ${l?.full_name || ''}.` })
+    }
     setForm(null)
   }
-  const remove = (n) => { if (window.confirm('Delete note?')) setNotes(prev => prev.filter(x => x.id !== n.id)) }
+  const remove = async (n) => {
+    const ok = await confirm({
+      title: 'Delete Coaching Note',
+      description: `Are you sure you want to delete this coaching note for "${n.learner_name}"?`,
+      variant: 'destructive',
+      confirmText: 'Delete Note',
+    })
+    if (!ok) return
+    setNotes(prev => prev.filter(x => x.id !== n.id))
+    toast.success('Note Deleted', { description: 'Coaching note was removed.' })
+  }
 
   return (
     <DashboardLayout title="Coaching Notes">

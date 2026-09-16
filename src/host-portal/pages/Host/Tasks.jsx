@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import KanbanBoard from '../../components/KanbanBoard.jsx'
 import { seedTasks, seedProjects, seedLearners, TASK_STATUSES, PROJECT_PRIORITIES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 import { Lightbulb } from 'lucide-react'
 
 const empty = { title: '', project_id: '', assignee_learner_id: '', status: 'To Do', priority: 'Medium', due_date: '', description: '' }
@@ -20,6 +22,7 @@ export default function Tasks() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const confirm = useConfirm()
 
   const projectName = (id) => projects.find(p => p.id === id)?.name || '—'
   const learnerName = (id) => learners.find(l => l.id === id)?.full_name || '—'
@@ -31,14 +34,35 @@ export default function Tasks() {
 
   const openAdd = () => { setEditing(null); setForm({ ...empty, project_id: projects[0]?.id || '', assignee_learner_id: learners[0]?.id || '' }); setShowForm(true) }
   const openEdit = (t) => { setEditing(t.id); setForm({ ...empty, ...t }); setShowForm(true) }
-  const remove = (t) => { if (window.confirm(`Delete task "${t.title}"?`)) setTasks(prev => prev.filter(x => x.id !== t.id)) }
+  const remove = async (t) => {
+    const ok = await confirm({
+      title: 'Delete Task',
+      description: `Are you sure you want to delete task "${t.title}"? This cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete Task',
+    })
+    if (!ok) return
+    setTasks(prev => prev.filter(x => x.id !== t.id))
+    toast.success('Task Deleted', { description: `"${t.title}" was removed.` })
+  }
   const move = (id, status) => setTasks(prev => prev.map(x => x.id === id ? { ...x, status } : x))
   const submit = (e) => {
     e.preventDefault()
-    if (!form.title.trim()) return alert('Task title is required')
-    if (!form.project_id) return alert('Please pick a project')
-    if (editing) setTasks(prev => prev.map(x => x.id === editing ? { ...x, ...form } : x))
-    else setTasks(prev => [{ id: uid('T'), ...form }, ...prev])
+    if (!form.title.trim()) {
+      toast.warning('Task Title Required', { description: 'Please enter a name for the task.' })
+      return
+    }
+    if (!form.project_id) {
+      toast.warning('Project Required', { description: 'Please select an associated project.' })
+      return
+    }
+    if (editing) {
+      setTasks(prev => prev.map(x => x.id === editing ? { ...x, ...form } : x))
+      toast.success('Task Updated', { description: `"${form.title}" has been updated.` })
+    } else {
+      setTasks(prev => [{ id: uid('T'), ...form }, ...prev])
+      toast.success('Task Created', { description: `"${form.title}" has been added.` })
+    }
     setShowForm(false)
   }
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))

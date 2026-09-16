@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal from '../../components/Modal.jsx'
 import { seedAvailableLearners, HOST_COMPANY } from '../../data/mockData.js'
@@ -33,12 +34,18 @@ export default function Marketplace() {
   }, [available, enabled, q])
 
   const toggleShortlist = (id, name) => {
-    setShortlist(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-    if (!shortlist.includes(id)) push({ title: 'Learner shortlisted', body: `${name} was added to your shortlist.`, link: '/host/marketplace', kind: 'recruit' })
+    const isAdding = !shortlist.includes(id)
+    setShortlist(prev => isAdding ? [...prev, id] : prev.filter(x => x !== id))
+    if (isAdding) {
+      push({ title: 'Learner shortlisted', body: `${name} was added to your shortlist.`, link: '/host/marketplace', kind: 'recruit' })
+      toast.success('Added to Shortlist', { description: `${name} was added to candidate shortlist.` })
+    } else {
+      toast.info('Removed from Shortlist', { description: `${name} was removed from candidate shortlist.` })
+    }
   }
   const requestPlacement = (l) => {
     push({ title: 'Placement request sent', body: `${l.full_name}'s provider has been notified of your interest.`, link: '/host/marketplace', kind: 'recruit' })
-    alert(`Placement request sent for ${l.full_name}. (Local demo — no email actually sent.)`)
+    toast.success('Placement Request Sent', { description: `Placement request submitted for ${l.full_name}. Provider notified.` })
   }
 
   const scoreColor = (s) => s >= 90 ? 'var(--success)' : s >= 75 ? 'var(--warning)' : 'var(--text-muted)'

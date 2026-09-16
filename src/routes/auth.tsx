@@ -40,6 +40,7 @@ function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [verificationOpen, setVerificationOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -75,15 +76,29 @@ function AuthPage() {
   }, [navigate]);
 
   async function navigateForDepartment(userId: string) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("department, role_tier")
-      .eq("id", userId)
-      .maybeSingle();
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
+    let profile: { department?: string | null; role_tier?: string | null } | null = null;
+    let roles: { role?: string | null }[] = [];
+    try {
+      const profileResult = await supabase
+        .from("profiles")
+        .select("department, role_tier")
+        .eq("id", userId)
+        .maybeSingle();
+      const rolesResult = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (profileResult.error || rolesResult.error) {
+        throw profileResult.error ?? rolesResult.error;
+      }
+      profile = profileResult.data;
+      roles = rolesResult.data ?? [];
+    } catch (error) {
+      console.warn("Profile lookup unavailable after sign-in; using staff dashboard.", error);
+      localStorage.setItem("msp.selectedPortal", "staff");
+      await navigate({ to: "/home" });
+      return;
+    }
     const isHR = profile?.department === "Human Resources";
     const isSuperAdmin = profile?.role_tier === "root_admin";
     const isAdmin = roles?.some((role) => role.role === "admin") ?? false;
@@ -125,16 +140,16 @@ function AuthPage() {
           options: { data: { full_name: fullName.trim() } },
         });
         if (error) throw error;
-        if (signUpData.session && signUpData.user) {
-          await queryClient.invalidateQueries({ queryKey: ["profile"] });
-          await navigateForDepartment(signUpData.user.id);
-        } else {
-          setVerificationEmail(targetEmail);
-          toast.success("Account created", {
-            description: "Check your company email for a verification code or link, then sign in.",
-          });
-          setIsSignUp(false);
-        }
+        if (signUpData.session) await supabase.auth.signOut();
+        setVerificationEmail(targetEmail);
+        setVerificationCode("");
+        setPassword("");
+        setConfirmPassword("");
+        setIsSignUp(false);
+        setVerificationOpen(true);
+        toast.success("Account created", {
+          description: "Check your company email for a verification code or link.",
+        });
         return;
       }
 
@@ -146,6 +161,7 @@ function AuthPage() {
       if (error) {
         if (error.message.toLowerCase().includes("email not confirmed")) {
           setVerificationEmail(targetEmail);
+          setVerificationOpen(true);
         }
         toast.error("Unable to sign in", {
           description: error.message.toLowerCase().includes("email not confirmed")
@@ -157,16 +173,22 @@ function AuthPage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
-      await queryClient.refetchQueries({ queryKey: ["profile"], type: "all" });
       toast.success("Welcome back", {
         description: "Your session is ready.",
         duration: 3000,
       });
       const { data: sessionData } = await supabase.auth.getUser();
       await navigateForDepartment(sessionData.user?.id ?? "");
-    } catch {
-      toast.error("Sign-in service unavailable", {
-        description: "Please try again in a moment.",
+    } catch (error) {
+      console.error("Sign-in follow-up failed:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isRateLimited = errorMessage.toLowerCase().includes("rate limit");
+      toast.error(isSignUp ? "Account creation unavailable" : "Sign-in service unavailable", {
+        description: isRateLimited
+          ? "Too many verification emails were requested. Please wait a few minutes before trying again."
+          : errorMessage.includes("JWT issued at future")
+          ? "Your session clock is out of sync. Please refresh the page and try again."
+          : errorMessage || "Please try again in a moment.",
         duration: 4000,
       });
     } finally {
@@ -200,7 +222,12 @@ function AuthPage() {
       if (error) throw error;
       if (data.user) {
         toast.success("Email verified", { description: "Your staff account is ready." });
-        await navigateForDepartment(data.user.id);
+        await supabase.auth.signOut();
+        setVerificationEmail("");
+        setVerificationCode("");
+        setVerificationOpen(false);
+        setPassword("");
+        setIsSignUp(false);
       }
     } catch {
       toast.error("Invalid verification code", { description: "Check the latest email and try again." });
@@ -267,30 +294,7 @@ function AuthPage() {
               </div>
             </div>
 
-            {/* Login Form */}
             <form onSubmit={onSubmit} className="space-y-4">
-              {verificationEmail && (
-                <div className="space-y-2 rounded-md border border-primary/25 bg-primary/5 p-3 text-xs">
-                  <p className="font-semibold text-foreground">Verify your company email</p>
-                  <p className="text-muted-foreground">We sent a verification code or link to {verificationEmail}. Verify it before signing in.</p>
-                  <div className="flex gap-2">
-                    <Input
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      inputMode="numeric"
-                      placeholder="6-digit code"
-                      aria-label="Email verification code"
-                      className="h-9 bg-background text-sm tracking-[0.2em]"
-                    />
-                    <Button type="button" size="sm" onClick={verifyEmailCode} disabled={loading || verificationCode.length < 6}>
-                      Verify
-                    </Button>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={resendVerification} disabled={loading}>
-                    Resend verification
-                  </Button>
-                </div>
-              )}
 
               {isSignUp && (
                 <div className="space-y-1.5">
@@ -520,6 +524,34 @@ function AuthPage() {
             >
               Close
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
+        <DialogContent className="max-w-md border-primary/25">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5 text-primary" /> Verify your company email</DialogTitle>
+            <DialogDescription>
+              We sent a verification code or link to <strong>{verificationEmail}</strong>. Verify your email before signing in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                placeholder="6-digit code"
+                aria-label="Email verification code"
+                className="h-10 tracking-[0.2em]"
+              />
+              <Button type="button" onClick={verifyEmailCode} disabled={loading || verificationCode.length < 6}>Verify</Button>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <Button type="button" variant="outline" size="sm" onClick={resendVerification} disabled={loading}>Resend verification</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setVerificationOpen(false)}>Back to sign in</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

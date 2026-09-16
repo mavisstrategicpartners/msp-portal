@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedLearners, HOST_COMPANY } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 
 const PROGRAMS = ['Software Development NQF5','Data Analytics NQF5','Cloud Engineering NQF6','Cybersecurity NQF5','UX/UI Design NQF5']
 const STATUSES = ['Active','On Leave','Completed','At Risk']
@@ -21,6 +23,7 @@ export default function PlacedLearners() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const confirm = useConfirm()
 
   const filtered = useMemo(() => list.filter(l =>
     (status === 'All' || l.status === status) &&
@@ -31,15 +34,25 @@ export default function PlacedLearners() {
 
   const openAdd = () => { setEditing(null); setForm({ ...empty, start_date: new Date().toISOString().slice(0, 10) }); setShowForm(true) }
   const openEdit = (l) => { setEditing(l.id); setForm({ ...empty, ...l }); setShowForm(true); setSelected(null) }
-  const remove = (l) => {
-    if (!window.confirm(`Remove ${l.full_name}?`)) return
+  const remove = async (l) => {
+    const ok = await confirm({
+      title: 'Remove Learner',
+      description: `Are you sure you want to remove ${l.full_name} from placed learners?`,
+      variant: 'destructive',
+      confirmText: 'Remove Learner',
+    })
+    if (!ok) return
     setList(prev => prev.filter(x => x.id !== l.id))
     setSelected(null)
+    toast.success('Learner Removed', { description: `${l.full_name} has been removed.` })
   }
 
   const submit = (e) => {
     e.preventDefault()
-    if (!form.full_name.trim()) return alert('Name is required')
+    if (!form.full_name.trim()) {
+      toast.warning('Name Required', { description: 'Please enter learner full name.' })
+      return
+    }
     const isComplete = form.status === 'Completed'
     const clean = {
       ...form,
@@ -50,8 +63,10 @@ export default function PlacedLearners() {
     }
     if (editing) {
       setList(prev => prev.map(x => x.id === editing ? { ...x, ...clean } : x))
+      toast.success('Learner Updated', { description: `${clean.full_name}'s record was updated.` })
     } else {
       setList(prev => [{ ...clean, id: uid('L') }, ...prev])
+      toast.success('Learner Added', { description: `${clean.full_name} has been placed.` })
     }
     setShowForm(false)
   }

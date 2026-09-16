@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedPerformance, seedLearners } from '../../data/mockData.js'
@@ -46,8 +47,12 @@ export default function Performance() {
 
   const submit = (e) => {
     e.preventDefault()
-    if (!form.learner_name) return alert('Please pick the learner being reviewed.')
+    if (!form.learner_name) {
+      toast.warning('Learner Required', { description: 'Please pick the learner being reviewed.' })
+      return
+    }
     setReviews(prev => [{ ...form, id: uid('R') }, ...prev])
+    toast.success('Performance Review Submitted', { description: `Review recorded for ${form.learner_name}.` })
     setShowForm(false)
   }
 

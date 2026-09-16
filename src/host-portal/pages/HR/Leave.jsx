@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import DashboardLayout from '../../components/DashboardLayout.jsx'
-import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import FilePreview from '../../components/FilePreview.jsx'
-import { seedLeave, seedLearnerLeaveRequests, seedLeaveBalances, LEAVE_TYPES, ZA_PUBLIC_HOLIDAYS } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
-import { useNotifications } from '../../context/NotificationContext.jsx'
+import { useState } from 'react';
+import DashboardLayout from '../../components/DashboardLayout.jsx';
+import Modal, { field, labelStyle } from '../../components/Modal.jsx';
+import FilePreview from '../../components/FilePreview.jsx';
+import { seedLeave, seedLearnerLeaveRequests, seedLeaveBalances, LEAVE_TYPES, ZA_PUBLIC_HOLIDAYS } from '../../data/mockData.js';
+import { useLocalStorage, uid } from '../../lib/useLocalStorage.js';
+import { useNotifications } from '../../context/NotificationContext.jsx';
+import { toast } from 'sonner';
 import { Lightbulb, Paperclip } from 'lucide-react'
 
 const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review' ? 'badge-warning' : 'badge-danger'

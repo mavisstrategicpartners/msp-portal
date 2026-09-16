@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedOnboarding, seedLearners, hostProfile, HOST_COMPANY } from '../../data/mockData.js'
@@ -67,9 +68,14 @@ export default function Onboarding() {
 
   const submit = (e) => {
     e.preventDefault()
-    if (atCapacity) return alert(`Learner capacity reached (${placed.length}/${capacity}). Can't onboard a learner right now.`)
+    if (atCapacity) {
+      toast.error('Capacity Limit Reached', { description: `Learner capacity reached (${placed.length}/${capacity}). Cannot onboard right now.` })
+      return
+    }
     // Required-field validation
-    const requiredMsg = (label) => alert(`${label} is required.`)
+    const requiredMsg = (label) => {
+      toast.warning(`${label} Required`, { description: `Please provide a valid ${label.toLowerCase()}.` })
+    }
     if (!form.full_name.trim()) return requiredMsg('Full name')
     if (!form.email.trim()) return requiredMsg('Email')
     if (!form.phone.trim()) return requiredMsg('Phone')
@@ -78,11 +84,15 @@ export default function Onboarding() {
     if (!form.address.trim()) return requiredMsg('Address')
     if (!form.qualification.trim()) return requiredMsg('Qualification')
     if (!form.program || !availablePrograms.includes(form.program)) {
-      return alert('Please choose a program from the available list.')
+      toast.warning('Program Required', { description: 'Please choose a program from the available list.' })
+      return
     }
     if (!form.start_date) return requiredMsg('Start date')
     if (!form.end_date) return requiredMsg('End date')
-    if (form.end_date < form.start_date) return alert('End date must be on or after the start date.')
+    if (form.end_date < form.start_date) {
+      toast.warning('Invalid Date Range', { description: 'End date must be on or after the start date.' })
+      return
+    }
     if (form.disability && !form.disability_nature.trim()) return requiredMsg('Nature of disability')
 
     const tasks = DEFAULT_TASKS.map(name => ({ name, done: false }))
@@ -105,6 +115,7 @@ export default function Onboarding() {
     }
     setData(d => [newRow, ...d])
     setShowForm(false)
+    toast.success('Learner Added to Onboarding', { description: `${newRow.learner_name} has been enrolled.` })
     setFlash({ tone: 'success', msg: `${newRow.learner_name} added to onboarding.` })
     push({ title: 'New onboarding started', body: `${newRow.learner_name} was added to the onboarding queue.`, link: '/host/onboarding', kind: 'reminder' })
   }

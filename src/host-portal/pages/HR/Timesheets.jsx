@@ -1,8 +1,10 @@
 import { useState, Fragment } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTimesheets, seedProjects, ATTENDANCE_STATUSES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 
 const totalHours = (r) => (r.projects || []).reduce((s, p) => s + Number(p.hours || 0), 0)
 const emptyEntry = () => ({
@@ -18,16 +20,35 @@ export default function Timesheets() {
   const [projects] = useLocalStorage('host.projects', seedProjects)
   const [expanded, setExpanded] = useState({})
   const [form, setForm] = useState(null)
+  const confirm = useConfirm()
 
   const openAdd = () => setForm(emptyEntry())
   const openEdit = (r) => setForm({ ...r, projects: (r.projects || []).map(p => ({ manager_comment: '', ...p })) })
-  const remove = (r) => { if (window.confirm('Delete timesheet?')) setList(prev => prev.filter(x => x.id !== r.id)) }
+  const remove = async (r) => {
+    const ok = await confirm({
+      title: 'Delete Timesheet',
+      description: `Are you sure you want to delete the timesheet for "${r.employee}" on ${r.date}?`,
+      variant: 'destructive',
+      confirmText: 'Delete Timesheet',
+    })
+    if (!ok) return
+    setList(prev => prev.filter(x => x.id !== r.id))
+    toast.success('Timesheet Deleted', { description: `Timesheet for ${r.employee} was removed.` })
+  }
   const submit = (e) => {
     e.preventDefault()
-    if (!form.employee.trim()) return alert('Employee is required')
+    if (!form.employee.trim()) {
+      toast.warning('Employee Required', { description: 'Please enter employee name.' })
+      return
+    }
     const clean = { ...form, projects: form.projects.filter(p => p.name.trim()).map(p => ({ name: p.name, hours: Number(p.hours) || 0, manager_comment: p.manager_comment || '' })) }
-    if (form.id) setList(prev => prev.map(x => x.id === form.id ? clean : x))
-    else setList(prev => [{ ...clean, id: uid('TS') }, ...prev])
+    if (form.id) {
+      setList(prev => prev.map(x => x.id === form.id ? clean : x))
+      toast.success('Timesheet Updated', { description: `Timesheet for ${clean.employee} was updated.` })
+    } else {
+      setList(prev => [{ ...clean, id: uid('TS') }, ...prev])
+      toast.success('Timesheet Created', { description: `Timesheet logged for ${clean.employee}.` })
+    }
     setForm(null)
   }
   const setStatus = (r, status) => setList(prev => prev.map(x => x.id === r.id ? { ...x, status } : x))

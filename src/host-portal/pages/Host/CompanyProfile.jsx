@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { hostProfile as seed, seedLearners } from '../../data/mockData.js'
 import { useLocalStorage } from '../../lib/useLocalStorage.js'
+import { useConfirm, usePrompt } from '@/components/ui/modal-context'
 import { Link } from 'react-router-dom'
 
 export default function CompanyProfile() {
@@ -23,7 +25,12 @@ export default function CompanyProfile() {
   useEffect(() => { setDraft(profile) }, [profile.company_name, profile.contact_person, profile.email, profile.phone, profile.industry])
   // keep draft in sync when profile changes elsewhere
   const setDraftField = k => e => setDraft(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
-  const saveProfile = () => { setProfile(draft); setSavedFlash(true); setTimeout(() => setSavedFlash(false), 2400) }
+  const saveProfile = () => {
+    setProfile(draft)
+    setSavedFlash(true)
+    toast.success('Profile Saved', { description: 'Company details updated successfully.' })
+    setTimeout(() => setSavedFlash(false), 2400)
+  }
 
   const set = k => e => { setProfile(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })); setDraft(p => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })) }
 
@@ -183,40 +190,84 @@ function ProgramsAndDepartments({ profile, setProfile }) {
   const programs = Array.isArray(profile.programs) ? profile.programs : []
   const [newDept, setNewDept] = useState('')
   const [newProg, setNewProg] = useState('')
+  const confirm = useConfirm()
+  const prompt = usePrompt()
 
   const addDept = () => {
     const v = newDept.trim(); if (!v) return
-    if (departments.includes(v)) return alert('Department already exists')
+    if (departments.includes(v)) {
+      toast.error('Duplicate Department', { description: `"${v}" already exists.` })
+      return
+    }
     setProfile(p => ({ ...p, departments: [...(p.departments || []), v] }))
+    toast.success('Department Added', { description: `"${v}" was added.` })
     setNewDept('')
   }
-  const removeDept = (d) => {
-    if (!window.confirm(`Remove department "${d}"?`)) return
+  const removeDept = async (d) => {
+    const ok = await confirm({
+      title: 'Remove Department',
+      description: `Are you sure you want to remove department "${d}"?`,
+      variant: 'destructive',
+      confirmText: 'Remove Department',
+    })
+    if (!ok) return
     setProfile(p => ({ ...p, departments: (p.departments || []).filter(x => x !== d) }))
+    toast.success('Department Removed', { description: `"${d}" was removed.` })
   }
-  const editDept = (d) => {
-    const v = window.prompt('Rename department', d)
+  const editDept = async (d) => {
+    const v = await prompt({
+      title: 'Rename Department',
+      description: `Enter the new name for "${d}":`,
+      defaultValue: d,
+      placeholder: 'Department name...',
+      required: true,
+    })
     if (!v || !v.trim() || v === d) return
     const nv = v.trim()
-    if (departments.includes(nv)) return alert('Department already exists')
+    if (departments.includes(nv)) {
+      toast.error('Duplicate Department', { description: `"${nv}" already exists.` })
+      return
+    }
     setProfile(p => ({ ...p, departments: (p.departments || []).map(x => x === d ? nv : x) }))
+    toast.success('Department Renamed', { description: `Renamed to "${nv}".` })
   }
   const addProg = () => {
     const v = newProg.trim(); if (!v) return
-    if (programs.includes(v)) return alert('Program already exists')
+    if (programs.includes(v)) {
+      toast.error('Duplicate Program', { description: `"${v}" already exists.` })
+      return
+    }
     setProfile(p => ({ ...p, programs: [...(p.programs || []), v] }))
+    toast.success('Program Added', { description: `"${v}" was added.` })
     setNewProg('')
   }
-  const removeProg = (pr) => {
-    if (!window.confirm(`Remove program "${pr}"?`)) return
+  const removeProg = async (pr) => {
+    const ok = await confirm({
+      title: 'Remove Program',
+      description: `Are you sure you want to remove program "${pr}"?`,
+      variant: 'destructive',
+      confirmText: 'Remove Program',
+    })
+    if (!ok) return
     setProfile(p => ({ ...p, programs: (p.programs || []).filter(x => x !== pr) }))
+    toast.success('Program Removed', { description: `"${pr}" was removed.` })
   }
-  const editProg = (pr) => {
-    const v = window.prompt('Rename program', pr)
+  const editProg = async (pr) => {
+    const v = await prompt({
+      title: 'Rename Program',
+      description: `Enter the new name for "${pr}":`,
+      defaultValue: pr,
+      placeholder: 'Program name...',
+      required: true,
+    })
     if (!v || !v.trim() || v === pr) return
     const nv = v.trim()
-    if (programs.includes(nv)) return alert('Program already exists')
+    if (programs.includes(nv)) {
+      toast.error('Duplicate Program', { description: `"${nv}" already exists.` })
+      return
+    }
     setProfile(p => ({ ...p, programs: (p.programs || []).map(x => x === pr ? nv : x) }))
+    toast.success('Program Renamed', { description: `Renamed to "${nv}".` })
   }
 
   const inputStyle = { flex: 1, padding: '8px 10px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }

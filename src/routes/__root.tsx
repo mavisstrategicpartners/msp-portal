@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeScript } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ModalProvider } from "@/components/ui/modal-context";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -146,7 +147,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <ModalProvider>
+        <Outlet />
+      </ModalProvider>
     </QueryClientProvider>
   );
 }

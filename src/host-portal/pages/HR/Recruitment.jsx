@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react'
-import DashboardLayout from '../../components/DashboardLayout.jsx'
-import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
-import { useNotifications } from '../../context/NotificationContext.jsx'
+import { useMemo, useState } from 'react';
+import DashboardLayout from '../../components/DashboardLayout.jsx';
+import Modal, { field, labelStyle } from '../../components/Modal.jsx';
+import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../../data/mockData.js';
+import { useLocalStorage, uid } from '../../lib/useLocalStorage.js';
+import { useNotifications } from '../../context/NotificationContext.jsx';
+import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/modal-context';
 
 const empty = { title: '', department: '', type: 'Full-time', location: '', posted: '', closes: '', applicants: 0, status: 'Open', salary: '', description: '', requirements: [], tags: [] }
 
@@ -18,7 +20,8 @@ export default function Recruitment() {
   const [viewing, setViewing] = useState(null)
   const [form, setForm] = useState(null)
   const [applicantForm, setApplicantForm] = useState(null)
-  const { push } = useNotifications()
+  const { push } = useNotifications();
+  const confirm = useConfirm();
 
   const filtered = useMemo(() => vacancies.filter(v =>
     (typeFilter === 'All' || v.type === typeFilter) &&
@@ -29,13 +32,16 @@ export default function Recruitment() {
   const openEdit = (v) => setForm({ ...empty, ...v })
   const submitVacancy = (e) => {
     e.preventDefault()
-    if (!form.title.trim()) return alert('Title is required')
+    if (!form.title.trim()) return toast.warning('Title is required');
     const clean = { ...form, requirements: typeof form.requirements === 'string' ? form.requirements.split('\n').filter(Boolean) : form.requirements, tags: typeof form.tags === 'string' ? form.tags.split(',').map(s => s.trim()).filter(Boolean) : form.tags }
     if (form.id) setVacancies(prev => prev.map(x => x.id === form.id ? clean : x))
     else { setVacancies(prev => [{ id: uid('V'), ...clean }, ...prev]); push({ title: 'New vacancy posted', body: form.title, link: '/hr/recruitment', kind: 'recruit' }) }
     setForm(null)
   }
-  const remove = (v) => { if (window.confirm('Delete vacancy?')) setVacancies(prev => prev.filter(x => x.id !== v.id)) }
+  const remove = async (v) => {
+    const ok = await confirm({ title: 'Delete vacancy?', description: `Delete ${v.title}?` });
+    if (ok) setVacancies(prev => prev.filter(x => x.id !== v.id));
+  };
 
   const submitApplicant = (e) => {
     e.preventDefault()
@@ -130,7 +136,7 @@ export default function Recruitment() {
         <Modal open onClose={() => setViewing(null)} title={viewing.title} subtitle={`${HOST_COMPANY} · ${viewing.department} · ${viewing.location}`} width={720}
           footer={<>
             <button className="btn btn-ghost" onClick={() => setViewing(null)}>Close</button>
-            <button className="btn btn-primary" onClick={() => alert('Applicants can apply from the public careers portal.')}>Share job link</button>
+            <button className="btn btn-primary" onClick={() => toast.info('Applicants can apply from the public careers portal.')}>Share job link</button>
           </>}>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
             <span className="chip" style={{ color: typeColor(viewing.type), borderColor: typeColor(viewing.type) }}>{viewing.type}</span>
