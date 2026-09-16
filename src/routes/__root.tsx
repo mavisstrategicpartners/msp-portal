@@ -119,7 +119,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" closeButton expand offset={16} />
         <Scripts />
       </body>
     </html>
