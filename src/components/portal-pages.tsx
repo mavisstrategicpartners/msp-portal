@@ -966,7 +966,7 @@ function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
 }
 
 function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ email: "", fullName: "", department: "Sales Team", jobTitle: "" });
+  const [form, setForm] = useState({ email: "", fullName: "", department: "Sales Team", jobTitle: "", accessLevel: "staff" });
   const [password, setPassword] = useState("");
   const create = useMutation({
     mutationFn: () => createTeamMember({ data: { ...form, password: password || generateTempPassword(), role: "user" } }),
@@ -974,7 +974,7 @@ function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpe
       toast.success("Invite sent — user provisioned");
       onCreated();
       onOpenChange(false);
-      setForm({ email: "", fullName: "", department: "Sales Team", jobTitle: "" });
+      setForm({ email: "", fullName: "", department: "Sales Team", jobTitle: "", accessLevel: "staff" });
       setPassword("");
     },
     onError: (e) => toast.error((e as Error).message),
@@ -990,6 +990,17 @@ function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpe
             <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div><Label>Access level</Label>
+            <Select value={form.accessLevel} onValueChange={(v) => setForm({ ...form, accessLevel: v, ...(v === "hr" ? { department: "Human Resources" } : {}) })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div><Label>Job title</Label><Input value={form.jobTitle} onChange={(e) => setForm({ ...form, jobTitle: e.target.value })} /></div>

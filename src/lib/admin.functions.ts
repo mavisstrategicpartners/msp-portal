@@ -8,6 +8,7 @@ const createTeamMemberSchema = z.object({
   fullName: z.string().min(2),
   jobTitle: z.string().optional(),
   department: z.string().optional(),
+  accessLevel: z.enum(["staff", "manager", "hr", "superadmin"]).default("staff"),
   role: z.enum(["admin", "user"]).default("user"),
 });
 
@@ -23,6 +24,13 @@ export const createTeamMember = createServerFn({ method: "POST" })
 
     if (roleError || !allowed) {
       throw new Response("Only admins can add portal users", { status: 403 });
+    }
+
+    if (data.accessLevel === "superadmin") {
+      const { data: rootAdmin, error: rootError } = await db.rpc("is_root_admin", {
+        _user_id: context.userId,
+      });
+      if (rootError || !rootAdmin) throw new Response("Only superadmins can create superadmin accounts", { status: 403 });
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -42,7 +50,8 @@ export const createTeamMember = createServerFn({ method: "POST" })
       email: data.email,
       full_name: data.fullName,
       job_title: data.jobTitle || null,
-      department: data.department || null,
+      department: data.accessLevel === "hr" ? "Human Resources" : data.department || null,
+      role_tier: data.accessLevel === "manager" ? "manager" : data.accessLevel === "superadmin" ? "root_admin" : "staff",
       is_active: true,
       onboarding_completed: false,
     };
@@ -54,14 +63,14 @@ export const createTeamMember = createServerFn({ method: "POST" })
 
     const { error: roleInsertError } = await (supabaseAdmin as any)
       .from("user_roles")
-      .upsert({ user_id: user.id, role: data.role }, { onConflict: "user_id,role" });
+      .upsert({ user_id: user.id, role: data.accessLevel === "manager" || data.accessLevel === "superadmin" ? "admin" : data.role }, { onConflict: "user_id,role" });
     if (roleInsertError) throw roleInsertError;
 
     await (supabaseAdmin as any).from("audit_logs").insert({
       actor_id: context.userId,
       action: "team_member_created",
       target_id: user.id,
-      details: { email: data.email, role: data.role, department: data.department || null },
+      details: { email: data.email, accessLevel: data.accessLevel, role: data.role, department: data.department || null },
     });
 
     return { id: user.id, email: data.email };

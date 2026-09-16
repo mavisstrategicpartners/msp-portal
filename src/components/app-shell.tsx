@@ -30,9 +30,9 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other";
+type PortalKey = "staff" | "manager" | "admin" | "other" | "hr";
 
-const NAV: { group: string; managerOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
+const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
   { group: "Learn MSP", portals: ["staff"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
@@ -75,7 +75,7 @@ const NAV: { group: string; managerOnly?: boolean; portals?: PortalKey[]; items:
     { to: "/host/company", label: "Company Profile", icon: Building2 },
     { to: "/host/settings", label: "Host Settings", icon: Settings },
   ]},
-  { group: "All In One — HR", managerOnly: true, portals: ["manager"], items: [
+  { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
     { to: "/host/hr/attendance", label: "Attendance Register", icon: CalendarDays },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
@@ -169,12 +169,13 @@ function ShellInner({ children }: { children: ReactNode }) {
 
 function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data } = useProfile();
   const selectedPortal = (typeof window !== "undefined"
     ? (localStorage.getItem("msp.selectedPortal") as PortalKey | null)
-    : null) ?? "staff";
+    : null) ?? (data?.isHR ? "hr" : "staff");
   return (
     <aside className={cn(
-      "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#43213b] text-white dark:bg-[#241a2a]",
+      "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
       mobile ? "flex h-full w-full" : "sticky top-0 hidden h-screen md:flex",
       !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
     )}>
@@ -190,6 +191,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
           if (section.managerOnly && !isManagerOrAbove) return null;
+          if (section.hrOnly && !data?.isHR) return null;
           if (section.portals && !section.portals.includes(selectedPortal)) return null;
           const items = section.items.filter((it) => !it.rootOnly || isRootAdmin);
           if (items.length === 0) return null;

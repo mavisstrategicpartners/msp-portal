@@ -63,37 +63,24 @@ function AuthPage() {
       supabase.auth
         .getSession()
         .then(({ data }) => {
-          if (data?.session) navigate({ to: "/home" });
+          if (data?.session?.user) navigateForDepartment(data.session.user.id);
         })
         .catch(() => {});
     } catch {}
   }, [navigate]);
 
-  async function refreshProfileAndGoHome() {
-    await queryClient.invalidateQueries({ queryKey: ["profile"] });
-    await queryClient.refetchQueries({ queryKey: ["profile"], type: "all" });
-    await navigate({ to: "/home" });
-  }
-
-  async function authenticateSession(targetEmail: string) {
-    const cleanName = targetEmail.includes("@")
-      ? targetEmail
-          .split("@")[0]
-          .replace(/[._]/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase())
-      : "Team Member";
-
-    const sessionUser = {
-      id: "usr-corporate",
-      email: targetEmail,
-      user_metadata: { full_name: cleanName },
-    };
-
-    try {
-      localStorage.setItem("msp.demoUser", JSON.stringify(sessionUser));
-    } catch {}
-
-    await refreshProfileAndGoHome();
+  async function navigateForDepartment(userId: string) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("department, role_tier")
+      .eq("id", userId)
+      .maybeSingle();
+    const isHR = profile?.department === "Human Resources";
+    const isManager = profile?.role_tier === "manager" || profile?.role_tier === "root_admin";
+    const destination = isHR ? "/host/hr" : isManager ? "/host" : "/home";
+    const portal = isHR ? "hr" : isManager ? "manager" : "staff";
+    localStorage.setItem("msp.selectedPortal", portal);
+    await navigate({ to: destination as any });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -108,10 +95,9 @@ function AuthPage() {
       });
 
       if (error) {
-        await authenticateSession(targetEmail);
-        toast.success("Welcome back", {
-          description: "Your session is ready.",
-          duration: 3000,
+        toast.error("Unable to sign in", {
+          description: "Check your work email and password, then try again.",
+          duration: 4000,
         });
         return;
       }
@@ -122,12 +108,12 @@ function AuthPage() {
         description: "Your session is ready.",
         duration: 3000,
       });
-      await navigate({ to: "/home" });
+      const { data: sessionData } = await supabase.auth.getUser();
+      await navigateForDepartment(sessionData.user?.id ?? "");
     } catch {
-      await authenticateSession(targetEmail);
-      toast.success("Welcome back", {
-        description: "Your session is ready.",
-        duration: 3000,
+      toast.error("Sign-in service unavailable", {
+        description: "Please try again in a moment.",
+        duration: 4000,
       });
     } finally {
       setLoading(false);
@@ -135,7 +121,7 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#43213b] text-white dark:bg-[#241a2a]">
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#3b1d4d] text-white dark:bg-[#21172f]">
 
       <div className="relative z-10 flex justify-end px-6 pt-6 sm:px-10">
         <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5 text-[11px] font-medium text-white/80 shadow-sm">

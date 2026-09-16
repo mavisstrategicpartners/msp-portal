@@ -17,8 +17,14 @@ export const Route = createFileRoute("/_authenticated/host/$")({
         _user_id: data.user.id,
       });
       if (isManager) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("department")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profile?.department === "Human Resources") return;
     } catch {}
-    if (typeof window !== "undefined" && localStorage.getItem("msp.selectedPortal") !== "manager") {
+    if (typeof window !== "undefined" && !["manager", "hr"].includes(localStorage.getItem("msp.selectedPortal") || "")) {
       throw redirect({ to: "/home" });
     }
   },
