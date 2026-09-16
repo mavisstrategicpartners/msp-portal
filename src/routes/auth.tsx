@@ -33,16 +33,31 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("msp.rememberedEmail") || "";
+    }
+    return "";
+  });
   const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("msp.rememberedPassword") || "";
+    }
+    return "";
+  });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationOpen, setVerificationOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("msp.rememberMe") !== "false";
+    }
+    return true;
+  });
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(
     () =>
@@ -51,6 +66,31 @@ function AuthPage() {
   );
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpType, setHelpType] = useState<"forgot" | "support">("forgot");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (rememberMe) {
+        if (email) localStorage.setItem("msp.rememberedEmail", email);
+        if (password) localStorage.setItem("msp.rememberedPassword", password);
+        localStorage.setItem("msp.rememberMe", "true");
+      } else {
+        localStorage.removeItem("msp.rememberedEmail");
+        localStorage.removeItem("msp.rememberedPassword");
+        localStorage.setItem("msp.rememberMe", "false");
+      }
+    }
+  }, [email, password, rememberMe]);
+
+  useEffect(() => {
+    // When the user is logged out on the auth page, trap back navigation
+    // so the browser back button keeps them safely on the login page.
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

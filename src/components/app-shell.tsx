@@ -357,6 +357,11 @@ function TopBar({
   }
 
   async function signOut() {
+    try {
+      if (profile?.email && !localStorage.getItem("msp.rememberedEmail")) {
+        localStorage.setItem("msp.rememberedEmail", profile.email);
+      }
+    } catch {}
     await queryClient.cancelQueries();
     queryClient.clear();
     try {
@@ -366,7 +371,7 @@ function TopBar({
       localStorage.removeItem("msp.demoUser");
       localStorage.removeItem("msp.selectedPortal");
     } catch {}
-    navigate({ to: "/auth", replace: true });
+    window.location.replace("/auth");
   }
 
   return (

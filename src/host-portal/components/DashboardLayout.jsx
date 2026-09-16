@@ -122,10 +122,15 @@ export default function DashboardLayout({ children, title }) {
   const role = isHR ? 'HR Manager' : (profile.contact_title || 'Host Admin')
 
   const logout = async () => {
-    try { await supabase.auth.signOut() } catch {}
+    try {
+      if (profile?.contact_email && !localStorage.getItem('msp.rememberedEmail')) {
+        localStorage.setItem('msp.rememberedEmail', profile.contact_email)
+      }
+      await supabase.auth.signOut()
+    } catch {}
     localStorage.removeItem('msp.demoUser')
     localStorage.removeItem('msp.selectedPortal')
-    window.location.assign('/auth')
+    window.location.replace('/auth')
   }
 
   const updateAvatar = (event) => {
