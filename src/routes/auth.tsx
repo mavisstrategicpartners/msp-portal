@@ -147,7 +147,7 @@ function AuthPage() {
         setConfirmPassword("");
         setIsSignUp(false);
         setVerificationOpen(true);
-        toast.success("Account created", {
+        toast.success("Your account successfully created", {
           description: "Check your company email for a verification code or link.",
         });
         return;

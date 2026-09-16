@@ -165,75 +165,145 @@
   color: var(--primary);
 }
 
-/* ─── Sonner toast icon badges ─────────────────────────────────────────────
-   Matches the reference design: circular coloured badge with a white icon.
-   Each type gets its own brand colour to clearly signal intent at a glance.
+/* ─── Sonner popup messages (matches reference image) ─────────────────────────
+   Pill/card shape, pure white surface, soft shadow, vibrant circular icon badge
    ────────────────────────────────────────────────────────────────────────── */
 
-/* Shared icon badge shell */
+/* Force clean pill-card styling for all toasts */
+[data-sonner-toast] {
+  border-radius: 20px !important;
+  font-family: inherit !important;
+}
+
+[data-sonner-toast][data-styled="true"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
+  padding: 14px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+  min-width: 320px !important;
+}
+
+.dark [data-sonner-toast][data-styled="true"] {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Icon container reset */
 [data-sonner-toast] [data-icon] {
-  flex-shrink: 0;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* The circular icon badge matching the user's reference image */
+.toast-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  flex-shrink: 0;
 }
 
-[data-sonner-toast] [data-icon] svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 2.5;
+/* ✅ Success: bright mint/teal-green matching reference image */
+.toast-badge-success {
+  background: #00c988;
+  box-shadow: 0 3px 10px rgba(0, 201, 136, 0.35);
 }
 
-/* ✅ Success — emerald green (matches reference image exactly) */
-[data-sonner-toast][data-type="success"] [data-icon] {
-  background: linear-gradient(135deg, #10d9a0 0%, #059669 100%);
-  box-shadow: 0 2px 8px rgba(16, 217, 160, 0.35);
+/* ❌ Error: soft vibrant red */
+.toast-badge-error {
+  background: #f43f5e;
+  box-shadow: 0 3px 10px rgba(244, 63, 94, 0.35);
 }
 
-/* ❌ Error — rose red */
-[data-sonner-toast][data-type="error"] [data-icon] {
-  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+/* ⚠️ Warning: warm amber */
+.toast-badge-warning {
+  background: #f59e0b;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
 }
 
-/* ⚠️ Warning — amber */
-[data-sonner-toast][data-type="warning"] [data-icon] {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+/* ℹ️ Info: system violet */
+.toast-badge-info {
+  background: #6366f1;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
 }
 
-/* ℹ️ Info — uses the system primary (MSP berry/magenta) */
-[data-sonner-toast][data-type="info"] [data-icon] {
-  background: linear-gradient(135deg, oklch(0.72 0.2 330) 0%, oklch(0.57 0.22 330) 100%);
-  box-shadow: 0 2px 8px oklch(0.57 0.22 330 / 30%);
-}
-
-/* Loading spinner stays neutral */
-[data-sonner-toast][data-type="loading"] [data-icon] {
-  background: transparent;
-  width: 34px;
-  height: 34px;
-}
-
-/* Content column: stack title + description vertically */
-[data-sonner-toast] [data-content] {
+/* Fallback badge styling for standard sonner icons if toast-badge is not present */
+[data-sonner-toast] [data-icon]:not(:has(.toast-badge)) {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
 }
 
-/* Smooth slide-in from the right */
-@keyframes msp-toast-in {
-  from { opacity: 0; transform: translateX(24px) scale(0.96); }
-  to   { opacity: 1; transform: translateX(0)   scale(1); }
+[data-sonner-toast][data-type="success"] [data-icon]:not(:has(.toast-badge)) {
+  background: #00c988;
+  box-shadow: 0 3px 10px rgba(0, 201, 136, 0.35);
 }
 
-[data-sonner-toast] {
-  animation: msp-toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+[data-sonner-toast][data-type="error"] [data-icon]:not(:has(.toast-badge)) {
+  background: #f43f5e;
+  box-shadow: 0 3px 10px rgba(244, 63, 94, 0.35);
 }
+
+[data-sonner-toast][data-type="warning"] [data-icon]:not(:has(.toast-badge)) {
+  background: #f59e0b;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+}
+
+[data-sonner-toast][data-type="info"] [data-icon]:not(:has(.toast-badge)) {
+  background: #6366f1;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+}
+
+[data-sonner-toast] [data-icon]:not(:has(.toast-badge)) svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 3;
+}
+
+/* Title & content layout */
+[data-sonner-toast] [data-content] {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em;
+}
+
+.dark [data-sonner-toast] [data-title] {
+  color: #f8fafc !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-size: 13px !important;
+  color: #64748b !important;
+  line-height: 1.4 !important;
+}
+
+.dark [data-sonner-toast] [data-description] {
+  color: #94a3b8 !important;
+}
+
