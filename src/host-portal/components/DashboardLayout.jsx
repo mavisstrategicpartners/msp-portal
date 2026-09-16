@@ -5,7 +5,8 @@ import NotificationBell from './NotificationBell.jsx'
 import { useSidebarScrollRef } from '../lib/scrollMemory.js'
 import { useLocalStorage } from '../lib/useLocalStorage.js'
 import { hostProfile } from '../data/mockData.js'
-import { Moon, Sun } from 'lucide-react'
+import { Camera, LogOut, Moon, Sun, User, UserRound } from 'lucide-react'
+import { supabase } from '../../integrations/supabase/client'
 
 const hostNav = [
   { heading: null, items: [{ name: 'Dashboard', path: '/host', icon: '◆' }] },
@@ -73,6 +74,8 @@ const hrNav = [
     heading: 'System',
     items: [
       { name: 'HR Administration', path: '/hr/admin', icon: '▣' },
+        { name: 'Employee Documents', path: '/hr/documents', icon: '▤' },
+        { name: 'Payroll', path: '/hr/payroll', icon: '▥' },
       { name: 'Integrations', path: '/hr/integrations', icon: '⚡' },
     ],
   },
@@ -85,10 +88,20 @@ export default function DashboardLayout({ children, title }) {
   const { theme, toggleTheme } = useTheme()
   const [open, setOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [initialsMode, setInitialsMode] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false)
   const [profile] = useLocalStorage('host.company_profile', hostProfile)
   const navRef = useRef(null)
+  const avatarInputRef = useRef(null)
   useSidebarScrollRef(navRef)
+
+  useEffect(() => {
+    setAvatarUrl(localStorage.getItem('msp.portalAvatar') || null)
+    setInitialsMode(localStorage.getItem('msp.portalInitials') === 'true')
+  }, [])
 
   if (typeof window !== 'undefined') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -107,6 +120,44 @@ export default function DashboardLayout({ children, title }) {
   const accent = isHR ? 'var(--purple)' : 'var(--brand)'
   const displayName = profile.contact_person || 'User'
   const role = isHR ? 'HR Manager' : (profile.contact_title || 'Host Admin')
+
+  const logout = async () => {
+    try { await supabase.auth.signOut() } catch {}
+    localStorage.removeItem('msp.demoUser')
+    localStorage.removeItem('msp.selectedPortal')
+    window.location.assign('/auth')
+  }
+
+  const updateAvatar = (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file || !file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) return
+    setUploadingAvatar(true)
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAvatarUrl(reader.result)
+        setInitialsMode(false)
+        localStorage.setItem('msp.portalAvatar', reader.result)
+        localStorage.removeItem('msp.portalInitials')
+      }
+      setUploadingAvatar(false)
+    }
+    reader.onerror = () => setUploadingAvatar(false)
+    reader.readAsDataURL(file)
+  }
+
+  const useInitials = () => {
+    setAvatarUrl(null)
+    setInitialsMode(true)
+    localStorage.removeItem('msp.portalAvatar')
+    localStorage.setItem('msp.portalInitials', 'true')
+  }
+
+  const useAvatarIcon = () => {
+    setInitialsMode(false)
+    localStorage.removeItem('msp.portalInitials')
+  }
 
   const sidebarVisible = !isMobile || mobileOpen
   const sidebarStyle = isMobile
@@ -213,21 +264,56 @@ export default function DashboardLayout({ children, title }) {
             <button className="btn btn-ghost" onClick={toggleTheme}>
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 999,
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: accent,
-                color: 'white', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700,
-              }}>{initialsOf(displayName)}</div>
-              <div style={{ fontSize: 12 }} className="hp-user-meta">
-                <div style={{ fontWeight: 600 }}>{displayName}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{role}</div>
-              </div>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setAccountOpen(value => !value)}
+                aria-expanded={accountOpen}
+                aria-label="Open account menu"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 999,
+                  background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%', background: accent,
+                  color: 'white', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700,
+                  overflow: 'hidden',
+                }}>{avatarUrl ? <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsMode ? initialsOf(displayName) : <UserRound size={16} strokeWidth={1.8} />}</div>
+                <div style={{ fontSize: 12 }} className="hp-user-meta">
+                  <div style={{ fontWeight: 600 }}>{displayName}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{role}</div>
+                </div>
+              </button>
+              {accountOpen && (
+                <div style={{
+                  position: 'absolute', right: 0, top: 'calc(100% + 10px)', minWidth: 238, padding: 8,
+                  background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12,
+                  boxShadow: '0 14px 34px rgba(11, 7, 20, .28)', zIndex: 20,
+                }}>
+                  <div style={{ padding: '7px 10px 9px', borderBottom: '1px solid var(--border-color)', marginBottom: 6 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700 }}>Account</div>
+                    <div style={{ marginTop: 3, fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{displayName}</div>
+                  </div>
+                  <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="hp-account-action">
+                    <Camera size={16} />
+                    <span>{uploadingAvatar ? 'Uploading picture...' : avatarUrl ? 'Change profile picture' : 'Add profile picture'}</span>
+                  </button>
+                  <button type="button" onClick={initialsMode ? useAvatarIcon : useInitials} disabled={uploadingAvatar} className="hp-account-action">
+                    {initialsMode ? <UserRound size={16} /> : <User size={16} />}
+                    <span>{initialsMode ? 'Use avatar icon' : 'Use initials instead'}</span>
+                  </button>
+                  <button type="button" onClick={logout} className="hp-account-action hp-account-action-danger">
+                    <LogOut size={16} />
+                    <span>Log out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
+        <input ref={avatarInputRef} type="file" accept="image/*" onChange={updateAvatar} style={{ display: 'none' }} aria-label="Upload profile picture" />
         <div style={{ padding: 'clamp(14px, 3vw, 28px)' }}>{children}</div>
       </main>
     </div>

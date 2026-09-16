@@ -3,29 +3,29 @@
  * into the MSP shell. Colours are aligned with the MSP enterprise design system.
  */
 .host-portal-root {
-  --bg-page: #f4f6f8;
+  --bg-page: #f6f4fa;
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border-color: #e2e8f0;
+  --bg-secondary: #f0edf5;
+  --text-primary: #201a2c;
+  --text-secondary: #5e526d;
+  --text-muted: #958ba1;
+  --border-color: #ded7e6;
   --input-bg: #ffffff;
-  --input-border: #cbd5e1;
-  --input-text: #0f172a;
-  --brand: #9c3d75;
-  --brand-dark: #7f2f5e;
-  --brand-soft: #f5e8ef;
+  --input-border: #cfc5da;
+  --input-text: #201a2c;
+  --brand: #d946c8;
+  --brand-dark: #b832a9;
+  --brand-soft: #f8e2f5;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --warning: #d97706;
   --warning-soft: #fef3c7;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
-  --purple: #52607a;
-  --purple-soft: #e9edf3;
-  --shadow-sm: 0 1px 2px rgba(25,35,50,.06);
-  --shadow-md: 0 6px 18px rgba(25,35,50,.08);
+  --purple: #6d3c86;
+  --purple-soft: #eee4f3;
+  --shadow-sm: 0 1px 2px rgba(45,25,60,.08);
+  --shadow-md: 0 6px 18px rgba(45,25,60,.12);
   color: var(--text-primary);
   background: var(--bg-page);
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -33,24 +33,24 @@
 }
 
 .dark .host-portal-root {
-  --bg-page: #18202a;
-  --bg-primary: #202b37;
-  --bg-secondary: #263443;
-  --text-primary: #edf2f7;
-  --text-secondary: #c4ced9;
-  --text-muted: #93a2b2;
+  --bg-page: #070e14;
+  --bg-primary: #101922;
+  --bg-secondary: #151f2a;
+  --text-primary: #f4f2f7;
+  --text-secondary: #b8c1cf;
+  --text-muted: #8491a2;
   --border-color: rgba(255,255,255,0.10);
-  --input-bg: #263443;
-  --input-border: #3b4b5c;
-  --input-text: #edf2f7;
-  --brand: #d18aaa;
-  --brand-dark: #b86e91;
-  --brand-soft: rgba(209,138,170,0.16);
+  --input-bg: #101922;
+  --input-border: #344151;
+  --input-text: #f4f2f7;
+  --brand: #ed58d8;
+  --brand-dark: #d63fc1;
+  --brand-soft: rgba(237,88,216,0.16);
   --success-soft: #14532d;
   --warning-soft: #78350f;
   --danger-soft: #7f1d1d;
-  --purple: #aab6c8;
-  --purple-soft: rgba(170,182,200,0.16);
+  --purple: #c66be0;
+  --purple-soft: rgba(198,107,224,0.16);
 }
 
 .host-portal-root * { box-sizing: border-box; }
@@ -104,6 +104,18 @@
 
 .host-portal-root .link { color: var(--brand-dark); cursor: pointer; }
 .host-portal-root .link:hover { text-decoration: underline; }
+
+.host-portal-root .hp-account-action {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 38px;
+  padding: 0 10px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 600;
+  text-align: left; cursor: pointer; transition: background .15s, color .15s, transform .15s;
+}
+.host-portal-root .hp-account-action svg { color: var(--brand); flex: 0 0 auto; }
+.host-portal-root .hp-account-action:hover { background: var(--brand-soft); color: var(--text-primary); transform: translateX(2px); }
+.host-portal-root .hp-account-action:disabled { cursor: wait; opacity: .6; transform: none; }
+.host-portal-root .hp-account-action-danger svg { color: var(--danger); }
+.host-portal-root .hp-account-action-danger:hover { background: var(--danger-soft); color: var(--danger); }
 
 .host-portal-root input:focus,
 .host-portal-root select:focus,

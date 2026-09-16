@@ -34,7 +34,12 @@ function AuthPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -75,10 +80,16 @@ function AuthPage() {
       .select("department, role_tier")
       .eq("id", userId)
       .maybeSingle();
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
     const isHR = profile?.department === "Human Resources";
-    const isManager = profile?.role_tier === "manager" || profile?.role_tier === "root_admin";
-    const destination = isHR ? "/host/hr" : isManager ? "/host" : "/home";
-    const portal = isHR ? "hr" : isManager ? "manager" : "staff";
+    const isSuperAdmin = profile?.role_tier === "root_admin";
+    const isAdmin = roles?.some((role) => role.role === "admin") ?? false;
+    const isManager = profile?.role_tier === "manager";
+    const destination = isHR ? "/host/hr" : isSuperAdmin || isAdmin || isManager ? "/host" : "/home";
+    const portal = isHR ? "hr" : isSuperAdmin || isAdmin || isManager ? "admin" : "staff";
     localStorage.setItem("msp.selectedPortal", portal);
     await navigate({ to: destination as any });
   }
@@ -89,14 +100,57 @@ function AuthPage() {
     const targetEmail = email.trim();
 
     try {
+      if (isSignUp) {
+        if (!targetEmail.toLowerCase().endsWith("@mavisstrategicpartners.co.za")) {
+          toast.error("Company email required", {
+            description: "Staff accounts must use a @mavisstrategicpartners.co.za email address.",
+          });
+          return;
+        }
+        if (fullName.trim().length < 2) {
+          toast.error("Enter your full name");
+          return;
+        }
+        if (password.length < 8) {
+          toast.error("Password is too short", { description: "Use at least 8 characters." });
+          return;
+        }
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
+        const { data: signUpData, error } = await supabase.auth.signUp({
+          email: targetEmail,
+          password,
+          options: { data: { full_name: fullName.trim() } },
+        });
+        if (error) throw error;
+        if (signUpData.session && signUpData.user) {
+          await queryClient.invalidateQueries({ queryKey: ["profile"] });
+          await navigateForDepartment(signUpData.user.id);
+        } else {
+          setVerificationEmail(targetEmail);
+          toast.success("Account created", {
+            description: "Check your company email for a verification code or link, then sign in.",
+          });
+          setIsSignUp(false);
+        }
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email: targetEmail,
         password: password || "password123",
       });
 
       if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          setVerificationEmail(targetEmail);
+        }
         toast.error("Unable to sign in", {
-          description: "Check your work email and password, then try again.",
+          description: error.message.toLowerCase().includes("email not confirmed")
+            ? "Verify your email first, then try signing in again."
+            : "Check your work email and password, then try again.",
           duration: 4000,
         });
         return;
@@ -115,6 +169,41 @@ function AuthPage() {
         description: "Please try again in a moment.",
         duration: 4000,
       });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function resendVerification() {
+    if (!verificationEmail) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: verificationEmail });
+      if (error) throw error;
+      toast.success("Verification message sent", { description: `Check ${verificationEmail} for the code or link.` });
+    } catch {
+      toast.error("Could not resend verification", { description: "Wait a moment and try again." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function verifyEmailCode() {
+    if (!verificationEmail || verificationCode.trim().length < 6) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: verificationEmail,
+        token: verificationCode.trim(),
+        type: "signup",
+      });
+      if (error) throw error;
+      if (data.user) {
+        toast.success("Email verified", { description: "Your staff account is ready." });
+        await navigateForDepartment(data.user.id);
+      }
+    } catch {
+      toast.error("Invalid verification code", { description: "Check the latest email and try again." });
     } finally {
       setLoading(false);
     }
@@ -171,17 +260,54 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Mavis Strategic Partners
-                </h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Mavis Strategic Partners</h1>
                 <p className="text-xs text-muted-foreground">
-                  Sign in with your corporate credentials to continue.
+                  {isSignUp ? "Create your staff account with your company email." : "Sign in with your corporate credentials to continue."}
                 </p>
               </div>
             </div>
 
             {/* Login Form */}
             <form onSubmit={onSubmit} className="space-y-4">
+              {verificationEmail && (
+                <div className="space-y-2 rounded-md border border-primary/25 bg-primary/5 p-3 text-xs">
+                  <p className="font-semibold text-foreground">Verify your company email</p>
+                  <p className="text-muted-foreground">We sent a verification code or link to {verificationEmail}. Verify it before signing in.</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      inputMode="numeric"
+                      placeholder="6-digit code"
+                      aria-label="Email verification code"
+                      className="h-9 bg-background text-sm tracking-[0.2em]"
+                    />
+                    <Button type="button" size="sm" onClick={verifyEmailCode} disabled={loading || verificationCode.length < 6}>
+                      Verify
+                    </Button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={resendVerification} disabled={loading}>
+                    Resend verification
+                  </Button>
+                </div>
+              )}
+
+              {isSignUp && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullName" className="text-xs font-medium text-foreground">Full name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    autoComplete="name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Your full name"
+                    required
+                    className="h-10.5 border-input bg-background text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
+                  />
+                </div>
+              )}
+
               {/* Work Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-medium text-foreground">
@@ -224,7 +350,7 @@ function AuthPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
@@ -242,8 +368,24 @@ function AuthPage() {
                 </div>
               </div>
 
+              {isSignUp && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPassword" className="text-xs font-medium text-foreground">Confirm password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat your password"
+                    required
+                    className="h-10.5 border-input bg-background pl-3 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
+                  />
+                </div>
+              )}
+
               {/* Remember Me */}
-              <div className="flex items-center justify-between pt-0.5">
+              {!isSignUp && <div className="flex items-center justify-between pt-0.5">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -264,7 +406,7 @@ function AuthPage() {
                 >
                   <HelpCircle className="h-3 w-3" /> IT Help Desk
                 </button>
-              </div>
+              </div>}
 
               {/* Sign In Button */}
               <Button
@@ -275,13 +417,24 @@ function AuthPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {isSignUp ? "Creating account..." : "Signing in..."}
                   </>
                 ) : (
-                  "Sign In"
+                  isSignUp ? "Create staff account" : "Sign In"
                 )}
               </Button>
             </form>
+
+            <div className="text-center text-xs text-muted-foreground">
+              {isSignUp ? "Already have an account?" : "Need a staff account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setIsSignUp((value) => !value)}
+                className="font-medium text-primary hover:underline"
+              >
+                {isSignUp ? "Sign in" : "Create one"}
+              </button>
+            </div>
 
           </div>
 

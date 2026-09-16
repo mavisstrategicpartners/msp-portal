@@ -30,6 +30,8 @@ import Training from './pages/HR/Training.jsx'
 import HRPerformance from './pages/HR/HRPerformance.jsx'
 import HRAdmin from './pages/HR/HRAdmin.jsx'
 import HRIntegrations from './pages/HR/HRIntegrations.jsx'
+import HRDocuments from './pages/HR/Documents.jsx'
+import Payroll from './pages/HR/Payroll.jsx'
 
 export default function App() {
   return (
@@ -71,6 +73,8 @@ export default function App() {
       <Route path="/hr/performance" element={<HRPerformance />} />
       <Route path="/hr/admin" element={<HRAdmin />} />
       <Route path="/hr/integrations" element={<HRIntegrations />} />
+      <Route path="/hr/documents" element={<HRDocuments />} />
+      <Route path="/hr/payroll" element={<Payroll />} />
       {/* legacy HR under /host/hr/* */}
       <Route path="/host/hr/leave" element={<Navigate to="/hr/leave" replace />} />
       <Route path="/host/hr/timesheets" element={<Navigate to="/hr/timesheets" replace />} />

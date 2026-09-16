@@ -5,7 +5,7 @@ import {
   Home, Compass, BookOpen, Briefcase, Tag, ListTree, Wrench, Map, User, CalendarDays,
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
-  Crown, FileBarChart2, KeyRound, Menu, Camera,
+  Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
   LayoutDashboard,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -192,7 +192,9 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
         {NAV.map((section) => {
           if (section.managerOnly && !isManagerOrAbove) return null;
           if (section.hrOnly && !data?.isHR) return null;
-          if (section.portals && !section.portals.includes(selectedPortal)) return null;
+          const visibleToAdmin = selectedPortal === "admin" &&
+            (section.portals?.includes("staff") || section.portals?.includes("manager"));
+          if (section.portals && !section.portals.includes(selectedPortal) && !visibleToAdmin) return null;
           const items = section.items.filter((it) => !it.rootOnly || isRootAdmin);
           if (items.length === 0) return null;
           return (
@@ -269,6 +271,7 @@ function TopBar({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [initialsMode, setInitialsMode] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
@@ -276,6 +279,7 @@ function TopBar({
       data?.profile?.avatar_url ??
         (typeof window !== "undefined" ? localStorage.getItem("msp.demoAvatar") : null),
     );
+    setInitialsMode(typeof window !== "undefined" && localStorage.getItem("msp.initialsMode") === "true");
   }, [data?.profile?.avatar_url]);
 
   const initials = (data?.profile?.full_name || data?.user?.email || "?")
@@ -313,6 +317,8 @@ function TopBar({
 
       if (profileError) throw profileError;
       setAvatarUrl(`${publicUrl}?v=${Date.now()}`);
+      setInitialsMode(false);
+      localStorage.removeItem("msp.initialsMode");
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
     } catch {
       const reader = new FileReader();
@@ -330,6 +336,8 @@ function TopBar({
   }
 
   async function useInitials() {
+    setInitialsMode(true);
+    localStorage.setItem("msp.initialsMode", "true");
     setUploadingAvatar(true);
     try {
       if (data?.user?.id) {
@@ -341,6 +349,11 @@ function TopBar({
     } finally {
       setUploadingAvatar(false);
     }
+  }
+
+  function useAvatarIcon() {
+    setInitialsMode(false);
+    localStorage.removeItem("msp.initialsMode");
   }
 
   async function signOut() {
@@ -379,11 +392,17 @@ function TopBar({
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="ml-1 flex items-center gap-2 rounded-full p-0.5 transition hover:bg-secondary/60">
+            <button className="ml-1 flex items-center gap-2 rounded-full border border-border px-1.5 py-1 transition hover:bg-secondary/60 sm:pr-3">
               <Avatar className="h-8 w-8 border border-border">
                 <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
-                <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary/15 text-primary">
+                  {initialsMode ? <span className="text-xs font-semibold">{initials}</span> : <UserRound className="h-4 w-4" strokeWidth={1.8} />}
+                </AvatarFallback>
               </Avatar>
+              <span className="hidden max-w-[150px] text-left sm:block">
+                <span className="block truncate text-xs font-semibold text-foreground">{data?.profile?.full_name || "Signed in"}</span>
+                <span className="block truncate text-[10px] text-muted-foreground">{data?.profile?.job_title || "Staff member"}</span>
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -396,11 +415,9 @@ function TopBar({
             <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
               <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
             </DropdownMenuItem>
-            {avatarUrl && (
-              <DropdownMenuItem onSelect={useInitials} disabled={uploadingAvatar}>
-                <User className="mr-2 h-4 w-4" /> Use initials instead
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onSelect={initialsMode ? useAvatarIcon : useInitials} disabled={uploadingAvatar}>
+                <User className="mr-2 h-4 w-4" /> {initialsMode ? "Use avatar icon" : "Use initials instead"}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onOpenSettings}>
               <Settings className="mr-2 h-4 w-4" /> Portal settings
             </DropdownMenuItem>

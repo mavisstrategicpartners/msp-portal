@@ -641,8 +641,8 @@ export function DepartmentsPage() {
                   <div className="mt-2 flex flex-wrap gap-2">
                     {members.map((m) => (
                       <div key={m.id} className="flex items-center gap-2 rounded-full border border-border bg-secondary/40 py-1 pl-1 pr-3">
-                        <Avatar className="h-6 w-6"><AvatarFallback className="bg-primary/15 text-[10px] text-primary">{(m.full_name || m.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                        <span className="text-xs">{m.full_name || m.email.split("@")[0]}</span>
+                        <Avatar className="h-6 w-6"><AvatarFallback className="bg-primary/15 text-[10px] text-primary">{dept === "CEO" ? "EX" : (m.full_name || m.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                        <span className="text-xs">{dept === "CEO" ? "Executive team" : m.full_name || m.email.split("@")[0]}</span>
                       </div>
                     ))}
                   </div>
@@ -862,8 +862,10 @@ type TeamRow = ProfileRow & { is_admin?: boolean };
 
 export function TeamPage() {
   const queryClient = useQueryClient();
+  const { data: profileData, isLoading: profileLoading } = useProfile();
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<TeamRow | null>(null);
+  const isAdmin = profileData?.isAdmin ?? false;
 
   const { data = [] } = useQuery({
     queryKey: ["team"],
@@ -880,7 +882,15 @@ export function TeamPage() {
   return (
     <div className="space-y-4">
       {pageTitle(Users, "Admin", "Team Management", "One table, one click. Add, edit, promote or deactivate — no wizards.")}
-      <div className="flex justify-end"><Button onClick={() => setAddOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add user</Button></div>
+      {profileLoading ? null : isAdmin ? (
+        <div className="flex justify-end"><Button onClick={() => setAddOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add user</Button></div>
+      ) : (
+        <Alert className="border-primary/20 bg-primary/5">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>Admins only</AlertTitle>
+          <AlertDescription>Only administrators can add or manage portal users.</AlertDescription>
+        </Alert>
+      )}
       <Card className="p-0">
         <Table>
           <TableHeader>
@@ -895,18 +905,18 @@ export function TeamPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row) => <TeamRowActions key={row.id} row={row} onEdit={() => setEditing(row)} />)}
+            {data.map((row) => <TeamRowActions key={row.id} row={row} onEdit={() => setEditing(row)} canManage={isAdmin} />)}
           </TableBody>
         </Table>
       </Card>
 
-      <AddUserDrawer open={addOpen} onOpenChange={setAddOpen} onCreated={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />
+      {isAdmin && <AddUserDrawer open={addOpen} onOpenChange={setAddOpen} onCreated={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />}
       <EditUserDrawer row={editing} onClose={() => setEditing(null)} onSaved={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />
     </div>
   );
 }
 
-function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
+function TeamRowActions({ row, onEdit, canManage }: { row: TeamRow; onEdit: () => void; canManage: boolean }) {
   const queryClient = useQueryClient();
   const toggleAdmin = useMutation({
     mutationFn: () => setAdminRole({ data: { userId: row.id, makeAdmin: !row.is_admin } }),
@@ -935,7 +945,7 @@ function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
       <TableCell><Badge variant={row.is_active ? "default" : "outline"} className={row.is_active ? "" : "text-muted-foreground"}>{row.is_active ? "Active" : "Inactive"}</Badge></TableCell>
       <TableCell className="text-xs text-muted-foreground">{row.last_login_at ? new Date(row.last_login_at).toLocaleDateString() : "—"}</TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
+        {canManage && <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={onEdit}><Edit3 className="h-3.5 w-3.5" /></Button>
           <Popover>
             <PopoverTrigger asChild>
@@ -959,7 +969,7 @@ function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
               </Button>
             </PopoverContent>
           </Popover>
-        </div>
+        </div>}
       </TableCell>
     </TableRow>
   );
@@ -1184,32 +1194,42 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/80 p-0 shadow-2xl">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <DialogTitle className="flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Msp Assistant</DialogTitle>
-              <DialogDescription>AI-powered help for MSP internal workflows.</DialogDescription>
-            </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={reset} title="Reset conversation"><RotateCcw className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="sm" onClick={endChat} title="End chat & save"><PowerOff className="h-4 w-4" /></Button>
+          <div className="border-b border-border bg-secondary/30 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"><Sparkles className="h-5 w-5" /></div>
+                <div>
+                  <DialogTitle className="flex items-center gap-2 text-base">Msp Assistant <Badge variant="outline" className="gap-1 border-success/30 text-[10px] font-medium text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" /> Online</Badge></DialogTitle>
+                  <DialogDescription className="mt-0.5 text-xs">Your internal guide to MSP workflows, tools, services and SOPs.</DialogDescription>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={reset} title="Reset conversation" className="h-8 w-8"><RotateCcw className="h-4 w-4" /></Button>
+              </div>
             </div>
           </div>
         </DialogHeader>
-        <div className="max-h-80 space-y-3 overflow-y-auto rounded-md border border-border bg-secondary/20 p-3">
+        <div className="max-h-[min(46vh,420px)] min-h-64 space-y-4 overflow-y-auto bg-background/60 px-5 py-5 sm:px-6">
           {messages.map((message, index) => (
-            <div key={index} className={cn("max-w-[85%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm", message.from === "you" ? "ml-auto bg-primary text-primary-foreground" : "bg-background text-foreground")}>{message.text}</div>
+            <div key={index} className={cn("flex items-end gap-2.5", message.from === "you" && "justify-end")}>
+              {message.from === "msp" && <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div>}
+              <div className={cn("max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm", message.from === "you" ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card text-foreground")}>{message.text}</div>
+            </div>
           ))}
-          {pending && <div className="max-w-[85%] rounded-md bg-background px-3 py-2 text-sm text-muted-foreground">Msp is thinking…</div>}
+          {pending && <div className="flex items-end gap-2.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div><div className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" /></span></div></div>}
         </div>
-        <div>
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Quick starters</p>
-          <div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div>
-        </div>
-        <div className="flex gap-2">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Ask Msp…" disabled={pending} />
-          <Button onClick={() => send()} disabled={pending}><Send className="h-4 w-4" /></Button>
+        <div className="space-y-3 border-t border-border bg-secondary/20 px-5 py-4 sm:px-6">
+          {messages.length === 1 && <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Suggested prompts</p><div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" className="h-8 rounded-full bg-background text-xs" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div></div>}
+          <form className="flex items-center gap-2 rounded-xl border border-input bg-background p-1.5 shadow-sm" onSubmit={(event) => { event.preventDefault(); send(); }}>
+            <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ask Msp anything about the portal…" disabled={pending} className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0" />
+            <Button type="submit" size="icon" disabled={pending || !input.trim()} className="h-9 w-9 shrink-0 rounded-lg"><Send className="h-4 w-4" /></Button>
+          </form>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] text-muted-foreground">Msp uses approved MSP knowledge and may need confirmation for sensitive decisions.</p>
+            <Button type="button" variant="ghost" size="sm" onClick={endChat} className="shrink-0 text-xs text-muted-foreground hover:text-destructive"><PowerOff className="mr-1.5 h-3.5 w-3.5" /> End chat &amp; save</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

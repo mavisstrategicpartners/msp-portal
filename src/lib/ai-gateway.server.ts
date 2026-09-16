@@ -1,9 +1,13 @@
-/**
- * Lovable AI Gateway provider — server-only.
- * Uses openai-compatible provider with Lovable's gateway base URL and
- * the workspace-scoped `LOVABLE_API_KEY` header.
- */
+/** Server-only AI providers. Never import this module into browser code. */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+
+export function createOpenAiProvider(apiKey: string) {
+  return createOpenAICompatible({
+    name: "openai",
+    baseURL: "https://api.openai.com/v1",
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+}
 
 export function createLovableAiGatewayProvider(apiKey: string) {
   return createOpenAICompatible({
