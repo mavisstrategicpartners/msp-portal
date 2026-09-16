@@ -6,7 +6,7 @@ import { seedLeave, seedLearnerLeaveRequests, seedLeaveBalances, LEAVE_TYPES, ZA
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js';
 import { useNotifications } from '../../context/NotificationContext.jsx';
 import { toast } from 'sonner';
-import { Lightbulb, Paperclip } from 'lucide-react'
+import { Lightbulb, Paperclip, XCircle } from 'lucide-react'
 
 const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review' ? 'badge-warning' : 'badge-danger'
 
@@ -16,25 +16,52 @@ export default function Leave() {
   const [staffLeave, setStaffLeave] = useLocalStorage('host.hr.leave', seedLeave)
   const [reviewing, setReviewing] = useState(null)
   const [staffForm, setStaffForm] = useState(null)
+  // Rejection reason modal state
+  const [rejectModal, setRejectModal] = useState(null) // { id, learnerName }
+  const [rejectNote, setRejectNote] = useState('')
   const { push } = useNotifications()
 
-  const decide = (id, decision) => {
-    const note = decision === 'Rejected' ? window.prompt('Reason for rejection (visible to learner)?', '') : ''
-    if (decision === 'Rejected' && note === null) return
+  // Approve a leave request directly
+  const decideApprove = (id, learnerName) => {
     setLearnerLeave(prev => prev.map(r => r.id === id ? {
-      ...r, status: decision === 'Approved' ? 'Approved' : 'Rejected',
+      ...r, status: 'Approved',
       decided_by: 'Thandi Mokoena', decided_at: new Date().toISOString().slice(0, 10),
-      decision_note: note || undefined,
     } : r))
-    push({ title: `Leave ${decision.toLowerCase()}`, body: `Request has been ${decision.toLowerCase()}.`, link: '/hr/leave', kind: 'leave' })
+    push({ title: 'Leave approved', body: `${learnerName}'s request has been approved.`, link: '/hr/leave', kind: 'leave' })
+    toast.success('Leave Approved', { description: `${learnerName}'s leave request was approved.` })
+    setReviewing(null)
+  }
+
+  // Open the rejection-reason modal
+  const openRejectModal = (id, learnerName) => {
+    setRejectNote('')
+    setRejectModal({ id, learnerName })
+  }
+
+  // Confirm rejection with the typed note
+  const confirmReject = () => {
+    const { id, learnerName } = rejectModal
+    setLearnerLeave(prev => prev.map(r => r.id === id ? {
+      ...r, status: 'Rejected',
+      decided_by: 'Thandi Mokoena', decided_at: new Date().toISOString().slice(0, 10),
+      decision_note: rejectNote.trim() || undefined,
+    } : r))
+    push({ title: 'Leave rejected', body: `${learnerName}'s request has been rejected.`, link: '/hr/leave', kind: 'leave' })
+    toast.error('Leave Rejected', { description: `${learnerName}'s leave request was rejected.` })
+    setRejectModal(null)
+    setRejectNote('')
     setReviewing(null)
   }
 
   const submitStaff = (e) => {
     e.preventDefault()
-    if (!staffForm.employee.trim()) return alert('Employee is required')
+    if (!staffForm.employee.trim()) {
+      toast.warning('Employee Required', { description: 'Please enter the employee name before saving.' })
+      return
+    }
     if (staffForm.id) setStaffLeave(prev => prev.map(x => x.id === staffForm.id ? staffForm : x))
     else setStaffLeave(prev => [{ ...staffForm, id: uid('LV') }, ...prev])
+    toast.success(staffForm.id ? 'Leave Updated' : 'Leave Added', { description: `Staff leave record saved for ${staffForm.employee}.` })
     setStaffForm(null)
   }
 
@@ -162,8 +189,8 @@ export default function Leave() {
           width={780}
           footer={reviewing.status === 'Pending' ? <>
             <button className="btn btn-ghost" onClick={() => setReviewing(null)}>Close</button>
-            <button className="btn btn-danger" onClick={() => decide(reviewing.id, 'Rejected')}>Reject</button>
-            <button className="btn btn-primary" onClick={() => decide(reviewing.id, 'Approved')}>Approve</button>
+            <button className="btn btn-danger" onClick={() => openRejectModal(reviewing.id, reviewing.learner_name)}>Reject</button>
+            <button className="btn btn-primary" onClick={() => decideApprove(reviewing.id, reviewing.learner_name)}>Approve</button>
           </> : <button className="btn btn-primary" onClick={() => setReviewing(null)}>Close</button>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, fontSize: 13, marginBottom: 14 }}>
             <div><div style={{ color: 'var(--text-muted)', fontSize: 11 }}>Program</div>{reviewing.program}</div>
@@ -209,6 +236,38 @@ export default function Leave() {
             </div>
             <div><label style={labelStyle}>Reason</label><textarea rows={3} style={field} value={staffForm.reason} onChange={e => setStaffForm({ ...staffForm, reason: e.target.value })} /></div>
           </form>
+        </Modal>
+      )}
+
+      {/* ── Rejection reason modal ───────────────────────────────────────── */}
+      {rejectModal && (
+        <Modal
+          open
+          onClose={() => { setRejectModal(null); setRejectNote('') }}
+          title="Reject leave request"
+          subtitle={`Provide a reason for rejecting ${rejectModal.learnerName}'s request. This will be visible to the learner.`}
+          width={480}
+          footer={<>
+            <button className="btn btn-ghost" onClick={() => { setRejectModal(null); setRejectNote('') }}>Cancel</button>
+            <button className="btn btn-danger" onClick={confirmReject}>
+              <XCircle size={15} style={{ marginRight: 6 }} />
+              Confirm Rejection
+            </button>
+          </>}>
+          <div>
+            <label style={labelStyle}>Reason for rejection <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></label>
+            <textarea
+              autoFocus
+              rows={4}
+              style={{ ...field, resize: 'vertical', marginTop: 6 }}
+              placeholder="e.g. Insufficient supporting documentation. Please re-apply with a medical certificate."
+              value={rejectNote}
+              onChange={e => setRejectNote(e.target.value)}
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+              Leave blank to reject without a note. The learner will still be notified.
+            </div>
+          </div>
         </Modal>
       )}
     </DashboardLayout>
