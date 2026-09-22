@@ -30,12 +30,11 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://ynqqypbexbcrfszauodk.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_ynqqypbexbcrfszauodk_placeholder";
+  const rawUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://tkjytjaerfjpghusrwom.supabase.co";
+  const rawKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_kU8G-7AUhbhiWPqd8XD6Ow_GNViYCDs";
 
-  if (!import.meta.env.VITE_SUPABASE_URL && !process.env.SUPABASE_URL) {
-    console.warn("[Supabase] Supabase credentials not set in environment. Operating in demo/offline mode.");
-  }
+  const SUPABASE_URL = (rawUrl || "").trim();
+  const SUPABASE_PUBLISHABLE_KEY = (rawKey || "").trim();
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
