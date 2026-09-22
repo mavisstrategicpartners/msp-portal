@@ -51,18 +51,18 @@ export function useProfile() {
       }
 
       const emailLower = (user.email || "").toLowerCase();
-      const isSiphelele = emailLower.includes("superadmin") || emailLower.includes("siphelele") || emailLower.includes("malotana");
-      const isHRUser = emailLower.includes("hr") || emailLower.includes("thandi");
+      const isSuperAdmin = emailLower.includes("superadmin");
+      const isHRUser = emailLower.includes("thandi");
 
       const selectedRole = typeof window !== "undefined" ? localStorage.getItem("msp.selectedPortal") || "staff" : "staff";
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        isSiphelele
+        isSuperAdmin
           ? "root_admin"
           : profile?.role_tier ||
             (selectedRole === "admin" ? "root_admin" : selectedRole === "manager" ? "manager" : isHRUser ? "manager" : "staff");
 
-      const defaultName = isSiphelele
-        ? "Siphelele Malotana"
+      const defaultName = isSuperAdmin
+        ? "Super Admin"
         : isHRUser
         ? "Thandi Mokoena"
         : user.user_metadata?.full_name || (user.email ? user.email.split("@")[0].replace(".", " ") : "Team Member");
@@ -73,8 +73,8 @@ export function useProfile() {
         email: user.email || "superadmin@mavisstrategicpartners.co.za",
         phone: "+27 11 000 0000",
         avatar_url: null,
-        department: isHRUser ? "Human Resources" : isSiphelele ? "Engineering & Operations" : "Staff Department",
-        job_title: isHRUser ? "HR Manager" : isSiphelele ? "Software Engineer / Admin Lead" : "Staff Member",
+        department: isHRUser ? "Human Resources" : isSuperAdmin ? "Engineering & Operations" : "Staff Department",
+        job_title: isHRUser ? "HR Manager" : isSuperAdmin ? "System Administrator" : "Staff Member",
         is_active: true,
         onboarding_completed: true,
         role_tier: resolvedTier,

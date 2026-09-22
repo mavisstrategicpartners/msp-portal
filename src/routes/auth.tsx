@@ -161,14 +161,14 @@ function AuthPage() {
       );
 
       const emailLower = emailToUse.toLowerCase();
-      const isSuperAdmin = emailLower.includes("superadmin") || emailLower.includes("malotana") || emailLower.includes("siphelele");
+      const isSuperAdmin = emailLower.includes("superadmin");
       const isHR = role === "hr" || emailLower.includes("thandi");
 
       const nameToUse = isSuperAdmin
-        ? "Siphelele Malotana"
+        ? "Super Admin"
         : isHR
         ? "Thandi Mokoena"
-        : fullName.trim() || "Staff Member";
+        : fullName.trim() || (emailToUse.split("@")[0].replace(".", " "));
 
       const demoUser = {
         id: isSuperAdmin ? "00000000-0000-0000-0000-000000000001" : isHR ? "00000000-0000-0000-0000-000000000002" : "00000000-0000-0000-0000-000000000003",
@@ -179,7 +179,7 @@ function AuthPage() {
       };
 
       localStorage.setItem("msp.demoUser", JSON.stringify(demoUser));
-      localStorage.setItem("msp.selectedPortal", isHR ? "hr" : "admin");
+      localStorage.setItem("msp.selectedPortal", isSuperAdmin ? "admin" : isHR ? "hr" : "staff");
       localStorage.setItem("msp.rememberedEmail", emailToUse);
 
       toast.success("Welcome back", {
@@ -205,7 +205,7 @@ function AuthPage() {
     try {
       const emailLower = targetEmail.toLowerCase();
       const isHR = emailLower.includes("thandi");
-      const isAdmin = emailLower.includes("superadmin") || emailLower.includes("malotana") || emailLower.includes("siphelele") || emailLower.includes("admin");
+      const isAdmin = emailLower.includes("superadmin");
       const role = isHR ? "hr" : isAdmin ? "admin" : "staff";
 
       if (isSignUp) {
