@@ -51,7 +51,7 @@ export function useProfile() {
       }
 
       const emailLower = (user.email || "").toLowerCase();
-      const isSiphelele = emailLower.includes("siphelele") || emailLower.includes("malotana");
+      const isSiphelele = emailLower.includes("superadmin") || emailLower.includes("siphelele") || emailLower.includes("malotana");
       const isHRUser = emailLower.includes("hr") || emailLower.includes("thandi");
 
       const selectedRole = typeof window !== "undefined" ? localStorage.getItem("msp.selectedPortal") || "staff" : "staff";
@@ -70,7 +70,7 @@ export function useProfile() {
       const resolvedProfile: Profile = profile || {
         id: user.id,
         full_name: defaultName,
-        email: user.email || "siphelele.malotana@mavisstrategicpartners.co.za",
+        email: user.email || "superadmin@mavisstrategicpartners.co.za",
         phone: "+27 11 000 0000",
         avatar_url: null,
         department: isHRUser ? "Human Resources" : isSiphelele ? "Engineering & Operations" : "Staff Department",

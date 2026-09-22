@@ -154,24 +154,24 @@ function AuthPage() {
     try {
       const emailToUse = customEmail || (
         role === "admin"
-          ? "siphelele.malotana@mavisstrategicpartners.co.za"
+          ? "superadmin@mavisstrategicpartners.co.za"
           : role === "hr"
           ? "thandi.mokoena@mavisstrategicpartners.co.za"
           : "sipho.dlamini@mavisstrategicpartners.co.za"
       );
 
       const emailLower = emailToUse.toLowerCase();
-      const isSiphelele = emailLower.includes("malotana") || emailLower.includes("siphelele");
-      const isHR = role === "hr" || emailLower.includes("hr") || emailLower.includes("thandi");
+      const isSuperAdmin = emailLower.includes("superadmin") || emailLower.includes("malotana") || emailLower.includes("siphelele");
+      const isHR = role === "hr" || emailLower.includes("thandi");
 
-      const nameToUse = isSiphelele
+      const nameToUse = isSuperAdmin
         ? "Siphelele Malotana"
         : isHR
         ? "Thandi Mokoena"
         : fullName.trim() || "Staff Member";
 
       const demoUser = {
-        id: isSiphelele ? "00000000-0000-0000-0000-000000000001" : isHR ? "00000000-0000-0000-0000-000000000002" : "00000000-0000-0000-0000-000000000003",
+        id: isSuperAdmin ? "00000000-0000-0000-0000-000000000001" : isHR ? "00000000-0000-0000-0000-000000000002" : "00000000-0000-0000-0000-000000000003",
         email: emailToUse,
         user_metadata: {
           full_name: nameToUse,
@@ -183,7 +183,7 @@ function AuthPage() {
       localStorage.setItem("msp.rememberedEmail", emailToUse);
 
       toast.success("Welcome back", {
-        description: `Signed in as ${nameToUse} (${isSiphelele ? "Superadmin" : isHR ? "HR Lead" : "Staff"}).`,
+        description: `Signed in as ${nameToUse} (${isSuperAdmin ? "Superadmin" : isHR ? "HR Lead" : "Staff"}).`,
         duration: 3000,
       });
 
@@ -200,12 +200,12 @@ function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const targetEmail = email.trim() || "siphelele.malotana@mavisstrategicpartners.co.za";
+    const targetEmail = email.trim() || "superadmin@mavisstrategicpartners.co.za";
 
     try {
       const emailLower = targetEmail.toLowerCase();
-      const isHR = emailLower.includes("hr") || emailLower.includes("thandi");
-      const isAdmin = emailLower.includes("malotana") || emailLower.includes("siphelele") || emailLower.includes("admin");
+      const isHR = emailLower.includes("thandi");
+      const isAdmin = emailLower.includes("superadmin") || emailLower.includes("malotana") || emailLower.includes("siphelele") || emailLower.includes("admin");
       const role = isHR ? "hr" : isAdmin ? "admin" : "staff";
 
       if (isSignUp) {
