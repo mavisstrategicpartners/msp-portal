@@ -1,0 +1,1 @@
+import{r as e}from"./portal-pages-C0JrQ42j.js";var t=e;export{t as component};
