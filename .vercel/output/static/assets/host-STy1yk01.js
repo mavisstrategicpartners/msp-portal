@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BkSabwWG.js";import{t}from"./EmbeddedApp-9GmCTsHL.js";var n=e(),r=()=>(0,n.jsx)(t,{initialPath:`/host`});export{r as component};

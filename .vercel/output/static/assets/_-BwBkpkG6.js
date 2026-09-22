@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BkSabwWG.js";import{t}from"./EmbeddedApp-9GmCTsHL.js";import{t as n}from"./index-DAgphjQN.js";var r=e();function i(){let{_splat:e}=n.useParams(),i=e??``,a=i.startsWith(`hr`)?`/`+i:`/host/`+i;return(0,r.jsx)(t,{initialPath:a},a)}export{i as component};
