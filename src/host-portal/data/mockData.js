@@ -220,7 +220,7 @@ export const seedLearnerLeaveRequests = [
   { id: 'LLV-3', learner_id: 'L-1004', learner_name: 'Bongani Nkosi', program: 'Cloud Engineering NQF6', type: 'Study', from: '2026-07-10', to: '2026-07-10', days: 1, status: 'Approved', reason: 'AWS Solutions Architect exam — supporting registration attached.', submitted_at: '2026-06-28', document_name: 'AWS-Exam-Registration.pdf', document_url: null, document_type: 'application/pdf', decided_by: 'Thandi Mokoena', decided_at: '2026-06-29', doc_verification: { status: 'Verified', score: 94, reasons: ['Trusted external source'] } },
 ]
 
-export const ATTENDANCE_STATUSES = ['Present', 'Clocked In', 'Clocked Out', 'On Leave', 'Absent']
+export const ATTENDANCE_STATUSES = ['Present', 'Clocked In', 'On Break', 'Clocked Out', 'On Leave', 'Absent']
 
 export const seedTimesheets = [
   { id: 'TS-1', employee: 'Thandi Mokoena', date: '2026-06-30', clock_in: '08:00', clock_out: '17:00',

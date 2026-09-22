@@ -23,6 +23,7 @@ import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSopsRouteImport } from './routes/_authenticated/sops'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedWhoWeAreRouteImport } from './routes/_authenticated/who-we-are'
+import { Route as AuthenticatedAdminAttendanceRouteImport } from './routes/_authenticated/admin/attendance'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin/content'
 import { Route as AuthenticatedAdminKpisRouteImport } from './routes/_authenticated/admin/kpis'
@@ -106,6 +107,12 @@ const AuthenticatedWhoWeAreRoute = AuthenticatedWhoWeAreRouteImport.update({
   path: '/who-we-are',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAttendanceRoute =
+  AuthenticatedAdminAttendanceRouteImport.update({
+    id: '/admin/attendance',
+    path: '/admin/attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   id: '/admin/audit',
   path: '/admin/audit',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
@@ -242,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/sops': typeof AuthenticatedSopsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/_authenticated/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/kpis': typeof AuthenticatedAdminKpisRoute
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/sops'
     | '/tools'
     | '/who-we-are'
+    | '/admin/attendance'
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/sops'
     | '/tools'
     | '/who-we-are'
+    | '/admin/attendance'
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
@@ -326,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sops'
     | '/_authenticated/tools'
     | '/_authenticated/who-we-are'
+    | '/_authenticated/admin/attendance'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/content'
     | '/_authenticated/admin/kpis'
@@ -446,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWhoWeAreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/attendance': {
+      id: '/_authenticated/admin/attendance'
+      path: '/admin/attendance'
+      fullPath: '/admin/attendance'
+      preLoaderRoute: typeof AuthenticatedAdminAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/audit': {
       id: '/_authenticated/admin/audit'
       path: '/admin/audit'
@@ -545,6 +565,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSopsRoute: typeof AuthenticatedSopsRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
   AuthenticatedWhoWeAreRoute: typeof AuthenticatedWhoWeAreRoute
+  AuthenticatedAdminAttendanceRoute: typeof AuthenticatedAdminAttendanceRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
   AuthenticatedAdminKpisRoute: typeof AuthenticatedAdminKpisRoute
@@ -571,6 +592,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSopsRoute: AuthenticatedSopsRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,
   AuthenticatedWhoWeAreRoute: AuthenticatedWhoWeAreRoute,
+  AuthenticatedAdminAttendanceRoute: AuthenticatedAdminAttendanceRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
   AuthenticatedAdminKpisRoute: AuthenticatedAdminKpisRoute,

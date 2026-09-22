@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
 import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench } from "lucide-react";
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — MSP Portal" }] }),
@@ -55,13 +56,20 @@ function Home() {
         </p>
       </div>
 
-      <Card className="flex items-start gap-3 border-primary/20 bg-primary/[0.04] p-4">
-        <div className="rounded-md border border-primary/20 bg-primary/10 p-2"><Sparkles className="h-4 w-4 text-primary" /></div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tip of the day</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-foreground"><Lightbulb className="h-4 w-4 shrink-0 text-primary" />{tip}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <Card className="flex flex-col justify-center h-full gap-3 border-primary/20 bg-primary/[0.04] p-4">
+            <div className="flex items-center gap-2">
+              <div className="rounded-md border border-primary/20 bg-primary/10 p-2"><Sparkles className="h-4 w-4 text-primary" /></div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tip of the day</p>
+            </div>
+            <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground"><Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />{tip}</p>
+          </Card>
         </div>
-      </Card>
+        <div className="md:col-span-1">
+          <StaffAttendanceWidget />
+        </div>
+      </div>
 
       <section>
         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">The four core rules</h2>

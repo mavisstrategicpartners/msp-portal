@@ -1,7 +1,7 @@
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { Link } from 'react-router-dom'
 import { BarChart, LineChart, Donut, StatCard } from '../../components/Chart.jsx'
-import { seedEmployees, seedVacancies, seedApplicants, seedLeave, seedLearnerLeaveRequests, seedTraining, attendanceTrend, performanceTrend } from '../../data/mockData.js'
+import { seedEmployees, seedVacancies, seedApplicants, seedLeave, seedLearnerLeaveRequests, seedTraining, seedAttendance, attendanceTrend, performanceTrend } from '../../data/mockData.js'
 import { useLocalStorage } from '../../lib/useLocalStorage.js'
 
 export default function HRDashboard() {
@@ -11,6 +11,7 @@ export default function HRDashboard() {
   const [leave] = useLocalStorage('host.hr.leave', seedLeave)
   const [learnerLeave] = useLocalStorage('host.hr.learner_leave', seedLearnerLeaveRequests)
   const [training] = useLocalStorage('host.hr.training', seedTraining)
+  const [attendanceRecords] = useLocalStorage('host.attendance', seedAttendance)
 
   const empByType = ['Permanent','Contract','Temporary'].map((t, i) => ({
     label: t, value: employees.filter(e => e.employment_type === t).length,
@@ -92,6 +93,21 @@ export default function HRDashboard() {
             { label: 'May', value: 30 }, { label: 'Jun', value: 28 },
           ]} height={200} color="#7c3aed" />
         </div>
+      </div>
+
+      {/* Real-time Attendance & Presence */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Real-time Attendance & Time Tracking</div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <a href="/admin/attendance" style={{ fontSize: 12, color: 'var(--purple)', fontWeight: 600 }}>Live Command Center (Teams View) ↗</a>
+          <Link to="/hr/attendance" style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>Full Register →</Link>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 22 }}>
+        <StatCard label="Clocked In" value={attendanceRecords.filter(r => r.status === 'Clocked In' || r.status === 'Present').length} color="var(--success)" sub="Active today" />
+        <StatCard label="On Break" value={attendanceRecords.filter(r => r.status === 'On Break').length} color="var(--warning)" sub="Temporary break" />
+        <StatCard label="Clocked Out" value={attendanceRecords.filter(r => r.status === 'Clocked Out').length} sub="Shift ended" />
+        <StatCard label="On Leave / Absent" value={attendanceRecords.filter(r => r.status === 'On Leave' || r.status === 'Absent').length} color="var(--danger)" sub="Unavailable" />
       </div>
 
       {/* Leave */}

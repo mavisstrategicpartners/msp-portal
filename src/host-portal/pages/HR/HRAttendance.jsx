@@ -4,10 +4,10 @@ import { seedAttendance, ATTENDANCE_STATUSES } from '../../data/mockData.js'
 import { useLocalStorage } from '../../lib/useLocalStorage.js'
 
 const statusBadge = (s) => {
-  if (s === 'Present') return 'badge-success'
-  if (s === 'Clocked In') return 'badge-info'
+  if (s === 'Present' || s === 'Clocked In') return 'badge-success'
+  if (s === 'On Break') return 'badge-warning'
   if (s === 'Clocked Out') return 'badge-purple'
-  if (s === 'On Leave') return 'badge-warning'
+  if (s === 'On Leave') return 'badge-info'
   return 'badge-danger'
 }
 
@@ -30,6 +30,16 @@ export default function HRAttendance() {
 
   return (
     <DashboardLayout title="Work Attendance Register">
+      <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--card-bg)', border: '1px solid var(--purple)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>🟢 Live Workforce Command Center (Teams Presence)</span>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>View real-time check-ins, active hours, and break timers across all company departments and interns.</p>
+        </div>
+        <a href="/admin/attendance" style={{ padding: '6px 14px', background: 'var(--purple)', color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+          Open Live Presence View ↗
+        </a>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
         {stats.map(s => (
           <div key={s.label} className="card" style={{ padding: 14 }}>

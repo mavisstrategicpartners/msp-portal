@@ -6,7 +6,7 @@ import {
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
   Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard,
+  LayoutDashboard, Clock,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -77,6 +77,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/host/hr/attendance", label: "Attendance Register", icon: CalendarDays },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
@@ -88,7 +89,8 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
-  { group: "Admin", managerOnly: true, portals: ["staff"], items: [
+  { group: "Admin", managerOnly: true, portals: ["staff", "hr"], items: [
+    { to: "/admin/attendance", label: "Staff Attendance", icon: Clock },
     { to: "/admin/team", label: "Team Management", icon: Users },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
