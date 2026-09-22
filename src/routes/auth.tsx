@@ -508,32 +508,6 @@ function AuthPage() {
               </button>
             </div>
 
-            {/* Fast Corporate Sign In (Presentation Mode) */}
-            <div className="border-t border-border/60 pt-4 space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-center">
-                Fast Corporate Sign In
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loginAsDemo("admin", "siphelele.malotana@mavisstrategicpartners.co.za")}
-                  className="h-8 text-xs font-semibold justify-start border-primary/30 hover:bg-primary/10 text-foreground"
-                >
-                  <span className="mr-1">👑</span> Admin Lead
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loginAsDemo("hr", "thandi.mokoena@mavisstrategicpartners.co.za")}
-                  className="h-8 text-xs font-semibold justify-start border-primary/30 hover:bg-primary/10 text-foreground"
-                >
-                  <span className="mr-1">👩‍💼</span> HR Executive
-                </Button>
-              </div>
-            </div>
 
           </div>
 
