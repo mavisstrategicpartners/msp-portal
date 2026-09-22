@@ -50,19 +50,31 @@ export function useProfile() {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
+      const emailLower = (user.email || "").toLowerCase();
+      const isSiphelele = emailLower.includes("siphelele") || emailLower.includes("malotana");
+      const isHRUser = emailLower.includes("hr") || emailLower.includes("thandi");
+
       const selectedRole = typeof window !== "undefined" ? localStorage.getItem("msp.selectedPortal") || "staff" : "staff";
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        profile?.role_tier ||
-        (selectedRole === "admin" ? "root_admin" : selectedRole === "manager" ? "manager" : "staff");
+        isSiphelele
+          ? "root_admin"
+          : profile?.role_tier ||
+            (selectedRole === "admin" ? "root_admin" : selectedRole === "manager" ? "manager" : isHRUser ? "manager" : "staff");
+
+      const defaultName = isSiphelele
+        ? "Siphelele Malotana"
+        : isHRUser
+        ? "Thandi Mokoena"
+        : user.user_metadata?.full_name || (user.email ? user.email.split("@")[0].replace(".", " ") : "Team Member");
 
       const resolvedProfile: Profile = profile || {
         id: user.id,
-        full_name: user.user_metadata?.full_name || (user.email ? user.email.split("@")[0].replace(".", " ") : "Team Member"),
-        email: user.email || "team@msp.co.za",
+        full_name: defaultName,
+        email: user.email || "siphelele.malotana@mavisstrategicpartners.co.za",
         phone: "+27 11 000 0000",
         avatar_url: null,
-        department: selectedRole === "manager" ? "Operations Manager" : selectedRole === "admin" ? "Admin Department" : "Marketing Team",
-        job_title: selectedRole === "manager" ? "Operations Manager" : selectedRole === "admin" ? "Portal Administrator" : "Senior Specialist",
+        department: isHRUser ? "Human Resources" : isSiphelele ? "Engineering & Operations" : "Staff Department",
+        job_title: isHRUser ? "HR Manager" : isSiphelele ? "Software Engineer / Admin Lead" : "Staff Member",
         is_active: true,
         onboarding_completed: true,
         role_tier: resolvedTier,
