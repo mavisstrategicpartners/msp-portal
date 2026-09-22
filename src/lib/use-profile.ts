@@ -86,7 +86,7 @@ export function useProfile() {
         user,
         profile: resolvedProfile,
         isAdmin,
-        isHR: profile?.department === "Human Resources",
+        isHR: resolvedProfile.department === "Human Resources" || isHRUser,
         roleTier: resolvedTier,
         isRootAdmin: resolvedTier === "root_admin",
         isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier),

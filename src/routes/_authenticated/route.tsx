@@ -40,7 +40,10 @@ function AuthedLayout() {
             window.location.replace("/auth");
           }
         } catch {
-          window.location.replace("/auth");
+          const demoUser = localStorage.getItem("msp.demoUser");
+          if (!demoUser) {
+            window.location.replace("/auth");
+          }
         }
       }
     };
