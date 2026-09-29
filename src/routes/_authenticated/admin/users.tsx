@@ -57,6 +57,7 @@ interface StaffProfile {
 const DEPARTMENTS = [
   "Engineering",
   "Human Resources",
+  "IT",
   "Sales",
   "Marketing",
   "Operations",
