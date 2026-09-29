@@ -16,3 +16,15 @@ export function createLovableAiGatewayProvider(apiKey: string) {
     headers: { "Lovable-API-Key": apiKey },
   });
 }
+
+export function createOpenRouterProvider(apiKey: string) {
+  return createOpenAICompatible({
+    name: "openrouter",
+    baseURL: "https://openrouter.ai/api/v1",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": "https://mavisstrategicpartners.co.za",
+      "X-Title": "MSP Portal",
+    },
+  });
+}

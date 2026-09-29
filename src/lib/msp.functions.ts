@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider, createOpenAiProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, createOpenAiProvider, createOpenRouterProvider } from "@/lib/ai-gateway.server";
 
 const SYSTEM_PROMPT = `You are "Msp", the internal AI assistant for Mavis Strategic Partners (MSP), a South African digital growth & technology agency (paid ads, websites, CRM/automation, social, SEO, AI chatbots, mobile apps).
 
@@ -54,13 +54,31 @@ export const askMsp = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const openAiKey = process.env.OPENAI_API_KEY;
+    const openRouterKey =
+      process.env.OPENROUTER_API_KEY ||
+      (process.env.OPENAI_API_KEY?.startsWith("sk-or-") ? process.env.OPENAI_API_KEY : undefined);
+    const openAiKey = !openRouterKey ? process.env.OPENAI_API_KEY : undefined;
     const lovableKey = process.env.LOVABLE_API_KEY;
-    if (!openAiKey && !lovableKey) throw new Error("OPENAI_API_KEY is not configured on the server.");
-    const gateway = openAiKey ? createOpenAiProvider(openAiKey) : createLovableAiGatewayProvider(lovableKey!);
+
+    if (!openRouterKey && !openAiKey && !lovableKey) {
+      throw new Error("AI API Key is not configured on the server.");
+    }
+
+    const gateway = openRouterKey
+      ? createOpenRouterProvider(openRouterKey)
+      : openAiKey
+      ? createOpenAiProvider(openAiKey)
+      : createLovableAiGatewayProvider(lovableKey!);
+
+    const modelName = openRouterKey
+      ? "openai/gpt-4o-mini"
+      : openAiKey
+      ? "gpt-4o-mini"
+      : "google/gemini-3.6-flash";
+
     try {
       const { text } = await generateText({
-        model: gateway(openAiKey ? "gpt-4o-mini" : "google/gemini-3.6-flash"),
+        model: gateway(modelName),
         system: SYSTEM_PROMPT,
         messages: data.messages,
       });

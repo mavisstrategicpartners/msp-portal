@@ -5,7 +5,7 @@ import {
   AlertCircle, ArrowRight, BarChart3, BookOpen, Bot, Briefcase, Building2, CalendarDays,
   CheckCircle2, ChevronRight, ClipboardCheck, ClipboardList, Clock, Compass, Edit3, ExternalLink,
   FileSignature, Gauge, ListTree, Lock, Mail, Map as MapIcon, MessageCircle, Phone, Plus, Search, Send,
-  ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench,
+  ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench, Eye, EyeOff, KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -663,7 +663,14 @@ export function ProfilePage() {
   const { data } = useProfile();
   const profile = data?.profile;
   const [form, setForm] = useState({ full_name: "", phone: "" });
-  const [password, setPassword] = useState("");
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [prefs, setPrefs] = useState({ digest: true, logChat: true });
   const [declaration, setDeclaration] = useState<any>(null);
 
@@ -689,10 +696,38 @@ export function ProfilePage() {
 
   const changePassword = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (!passwordForm.currentPassword) {
+        throw new Error("Please enter your current/temporary password.");
+      }
+      if (passwordForm.newPassword.length < 8) {
+        throw new Error("New password must be at least 8 characters long.");
+      }
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        throw new Error("New password and confirm password do not match.");
+      }
+      if (passwordForm.currentPassword === passwordForm.newPassword) {
+        throw new Error("New password must be different from your current temporary password.");
+      }
+
+      // Verify current password first
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: profile!.email,
+        password: passwordForm.currentPassword,
+      });
+      if (verifyError) {
+        throw new Error("Current password is incorrect.");
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
+      if (updateError) throw updateError;
     },
-    onSuccess: () => { toast.success("Password updated"); setPassword(""); },
+    onSuccess: () => {
+      toast.success("Password updated successfully!", {
+        description: "Your corporate account password has been updated.",
+      });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -725,11 +760,106 @@ export function ProfilePage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-semibold">Password</h3>
-          <div className="mt-3 flex gap-2">
-            <Input type="password" placeholder="New password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Button disabled={password.length < 8 || changePassword.isPending} onClick={() => changePassword.mutate()}>Update</Button>
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-primary" />
+            <div>
+              <h3 className="font-semibold">Change Password</h3>
+              <p className="text-xs text-muted-foreground">
+                Enter your current password, then set your new password.
+              </p>
+            </div>
           </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              changePassword.mutate();
+            }}
+            className="mt-4 space-y-3.5"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="current-pw">Current Password *</Label>
+              <div className="relative">
+                <Input
+                  id="current-pw"
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="••••••••••••"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-pw">New Password *</Label>
+                <div className="relative">
+                  <Input
+                    id="new-pw"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Min. 8 characters"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-pw">Confirm New Password *</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-pw"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repeat new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={
+                !passwordForm.currentPassword ||
+                passwordForm.newPassword.length < 8 ||
+                passwordForm.confirmPassword.length < 8 ||
+                changePassword.isPending
+              }
+              className="mt-1"
+            >
+              {changePassword.isPending ? "Updating password…" : "Update Password"}
+            </Button>
+          </form>
         </Card>
 
         <Card className="p-5">

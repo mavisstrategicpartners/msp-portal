@@ -39,20 +39,10 @@ function AuthPage() {
     }
     return "";
   });
-  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [verificationOpen, setVerificationOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("msp.rememberMe") !== "false";
-    }
-    return true;
-  });
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(
     () =>
@@ -64,19 +54,10 @@ function AuthPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Purge any stored passwords and fake demo users from localStorage
       localStorage.removeItem("msp.rememberedPassword");
       localStorage.removeItem("msp.demoUser");
-
-      if (rememberMe) {
-        if (email) localStorage.setItem("msp.rememberedEmail", email);
-        localStorage.setItem("msp.rememberMe", "true");
-      } else {
-        localStorage.removeItem("msp.rememberedEmail");
-        localStorage.setItem("msp.rememberMe", "false");
-      }
     }
-  }, [email, rememberMe]);
+  }, []);
 
   useEffect(() => {
     // When the user is logged out on the auth page, trap back navigation
@@ -146,70 +127,18 @@ function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const targetEmail = email.trim();
-    if (!targetEmail) {
-      toast.error("Please enter your work email.");
-      return;
-    }
-    if (!password) {
-      toast.error("Please enter your password.");
-      return;
-    }
-
+    if (!targetEmail) { toast.error("Please enter your work email."); return; }
+    if (!password) { toast.error("Please enter your password."); return; }
     setLoading(true);
-
     try {
-      if (isSignUp) {
-        if (password !== confirmPassword) {
-          toast.error("Passwords do not match.");
-          setLoading(false);
-          return;
-        }
-
-        const { data: signUpData, error } = await supabase.auth.signUp({
-          email: targetEmail,
-          password,
-          options: { data: { full_name: fullName.trim() || targetEmail.split("@")[0] } },
-        });
-
-        if (error) {
-          toast.error("Registration failed", { description: error.message });
-          return;
-        }
-
-        if (signUpData.session?.user) {
-          toast.success("Account created successfully", { description: "Welcome to Mavis Strategic Partners." });
-          await queryClient.invalidateQueries({ queryKey: ["profile"] });
-          await navigateForDepartment(signUpData.session.user.id);
-          return;
-        }
-
-        setVerificationEmail(targetEmail);
-        setVerificationOpen(true);
-        toast.info("Verification email sent", {
-          description: `Please verify your email address via the link sent to ${targetEmail}.`,
-        });
-        return;
-      }
-
-      // Real Supabase sign in with email and password
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({
-        email: targetEmail,
-        password,
-      });
-
-      if (error) {
-        toast.error("Sign-in failed", { description: error.message });
-        return;
-      }
-
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: targetEmail, password });
+      if (error) { toast.error("Sign-in failed", { description: error.message }); return; }
       if (signInData?.user) {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome back", { description: "Signed in successfully." });
         await navigateForDepartment(signInData.user.id);
-        return;
       }
     } catch (error: any) {
-      console.error("Sign-in error:", error);
       toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
     } finally {
       setLoading(false);
@@ -309,30 +238,13 @@ function AuthPage() {
               <div className="space-y-1">
                 <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Mavis Strategic Partners</h1>
                 <p className="text-xs text-muted-foreground">
-                  {isSignUp ? "Create your staff account with your company email." : "Sign in with your corporate credentials to continue."}
+                  Sign in with your corporate credentials to continue.
                 </p>
               </div>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
 
-              {isSignUp && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="fullName" className="text-xs font-medium text-foreground">Full name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    autoComplete="name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Your full name"
-                    required
-                    className="h-10.5 border-input bg-background text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
-                  />
-                </div>
-              )}
-
-              {/* Work Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-medium text-foreground">
                   Work Email
@@ -409,28 +321,27 @@ function AuthPage() {
               )}
 
               {/* Remember Me */}
-              {!isSignUp && <div className="flex items-center justify-between pt-0.5">
+              <div className="flex items-center justify-between pt-0.5">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                    defaultChecked
+                    onChange={(e) => {
+                      if (e.target.checked) localStorage.setItem("msp.rememberMe", "true");
+                      else localStorage.removeItem("msp.rememberMe");
+                    }}
                     className="h-3.5 w-3.5 rounded border-border text-primary accent-primary focus:ring-primary"
                   />
                   <span>Remember this device</span>
                 </label>
-
                 <button
                   type="button"
-                  onClick={() => {
-                    setHelpType("support");
-                    setHelpOpen(true);
-                  }}
+                  onClick={() => { setHelpType("support"); setHelpOpen(true); }}
                   className="text-[11px] text-muted-foreground hover:text-foreground transition flex items-center gap-1"
                 >
                   <HelpCircle className="h-3 w-3" /> IT Help Desk
                 </button>
-              </div>}
+              </div>
 
               {/* Sign In Button */}
               <Button
@@ -441,22 +352,20 @@ function AuthPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isSignUp ? "Creating account..." : "Signing in..."}
+                    Signing in...
                   </>
-                ) : (
-                  isSignUp ? "Create staff account" : "Sign In"
-                )}
+                ) : "Sign In"}
               </Button>
             </form>
 
             <div className="text-center text-xs text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Need a staff account?"}{" "}
+              Don&apos;t have an account?{" "}
               <button
                 type="button"
-                onClick={() => setIsSignUp((value) => !value)}
+                onClick={() => { setHelpType("support"); setHelpOpen(true); }}
                 className="font-medium text-primary hover:underline"
               >
-                {isSignUp ? "Sign in" : "Create one"}
+                Contact your admin
               </button>
             </div>
 
@@ -545,34 +454,6 @@ function AuthPage() {
             >
               Close
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
-        <DialogContent className="max-w-md border-primary/25">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5 text-primary" /> Verify your company email</DialogTitle>
-            <DialogDescription>
-              We sent a verification code or link to <strong>{verificationEmail}</strong>. Verify your email before signing in.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                placeholder="6-digit code"
-                aria-label="Email verification code"
-                className="h-10 tracking-[0.2em]"
-              />
-              <Button type="button" onClick={verifyEmailCode} disabled={loading || verificationCode.length < 6}>Verify</Button>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <Button type="button" variant="outline" size="sm" onClick={resendVerification} disabled={loading}>Resend verification</Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setVerificationOpen(false)}>Back to sign in</Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

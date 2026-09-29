@@ -47,7 +47,6 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/tools", label: "Tools & Systems", icon: Wrench },
   ]},
   { group: "My Workspace", portals: ["staff"], items: [
-    { to: "/me/profile", label: "My Profile", icon: User },
     { to: "/me/leave", label: "Leave Requests", icon: CalendarDays },
     { to: "/me/declaration", label: "HR Documents", icon: FileSignature },
   ]},
@@ -417,11 +416,10 @@ function TopBar({
             <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
               <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={initialsMode ? useAvatarIcon : useInitials} disabled={uploadingAvatar}>
-                <User className="mr-2 h-4 w-4" /> {initialsMode ? "Use avatar icon" : "Use initials instead"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onOpenSettings}>
-              <Settings className="mr-2 h-4 w-4" /> Portal settings
+            <DropdownMenuItem asChild>
+              <Link to="/me/profile" className="flex items-center cursor-pointer">
+                <User className="mr-2 h-4 w-4" /> My Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 h-4 w-4" /> Sign out

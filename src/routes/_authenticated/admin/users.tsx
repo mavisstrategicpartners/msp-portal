@@ -29,11 +29,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users, UserPlus, Search, MoreVertical, ShieldCheck, Pencil,
-  UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Eye, EyeOff,
+  UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Eye, EyeOff, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createTeamMember, updateTeamMember } from "@/lib/admin.functions";
+import { createTeamMember, updateTeamMember, deleteTeamMember } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   head: () => ({ meta: [{ title: "Manage Staff — MSP Admin" }] }),
@@ -55,14 +55,17 @@ interface StaffProfile {
 }
 
 const DEPARTMENTS = [
-  "Engineering",
+  "IT Department",
+  "Marketing Team",
+  "Graphics Team",
+  "Sales Team",
   "Human Resources",
-  "IT",
-  "Sales",
-  "Marketing",
-  "Operations",
-  "Finance",
-  "Management",
+  "Admin Department",
+  "Operations Manager",
+  "Client Relationship Manager",
+  "Social Media Manager",
+  "Managing Director",
+  "CEO",
 ];
 
 const ROLE_OPTIONS: { value: string; label: string; tier: RoleTier }[] = [
@@ -98,6 +101,7 @@ function ManageUsersPage() {
   // Add user dialog
   const [addOpen, setAddOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -106,12 +110,25 @@ function ManageUsersPage() {
     accessLevel: "staff",
     password: "Staff2026",
   });
-  const [showPassword, setShowPassword] = useState(false);
 
   // Edit user dialog
   const [editUser, setEditUser] = useState<StaffProfile | null>(null);
-  const [editForm, setEditForm] = useState({ fullName: "", jobTitle: "", department: "" });
+  const [editForm, setEditForm] = useState<{
+    fullName: string;
+    jobTitle: string;
+    department: string;
+    roleTier: RoleTier;
+  }>({
+    fullName: "",
+    jobTitle: "",
+    department: "",
+    roleTier: "staff",
+  });
   const [saving, setSaving] = useState(false);
+
+  // Delete user confirmation
+  const [deleteTarget, setDeleteTarget] = useState<StaffProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadStaff = useCallback(async () => {
     setLoading(true);
@@ -160,7 +177,7 @@ function ManageUsersPage() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.password || !form.department) {
+    if (!form.firstName || !form.lastName || !form.department) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -169,16 +186,16 @@ function ManageUsersPage() {
       await createTeamMember({
         data: {
           email: derivedEmail,
-          password: form.password,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
           jobTitle: form.jobTitle || undefined,
           department: form.department,
           accessLevel: form.accessLevel as any,
           role: "user",
+          password: form.password || undefined,
         },
       });
-      toast.success("Staff member added!", {
-        description: `${form.firstName} ${form.lastName} can now sign in at ${derivedEmail}`,
+      toast.success("Staff member created!", {
+        description: `${form.firstName} ${form.lastName} can now log in at ${derivedEmail} with the password.`,
       });
       setAddOpen(false);
       setForm({ firstName: "", lastName: "", jobTitle: "", department: "", accessLevel: "staff", password: "Staff2026" });
@@ -193,7 +210,12 @@ function ManageUsersPage() {
   // ── Edit user ─────────────────────────────────────────────────────────────
   function openEdit(s: StaffProfile) {
     setEditUser(s);
-    setEditForm({ fullName: s.full_name ?? "", jobTitle: s.job_title ?? "", department: s.department ?? "" });
+    setEditForm({
+      fullName: s.full_name ?? "",
+      jobTitle: s.job_title ?? "",
+      department: s.department ?? "",
+      roleTier: s.role_tier ?? "staff",
+    });
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -207,6 +229,7 @@ function ManageUsersPage() {
           fullName: editForm.fullName || undefined,
           jobTitle: editForm.jobTitle || null,
           department: editForm.department || null,
+          roleTier: editForm.roleTier,
         },
       });
       toast.success("Profile updated.");
@@ -227,6 +250,22 @@ function ManageUsersPage() {
       await loadStaff();
     } catch (err: any) {
       toast.error("Failed: " + (err?.message ?? String(err)));
+    }
+  }
+
+  // ── Delete user ─────────────────────────────────────────────────────────
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteTeamMember({ data: { userId: deleteTarget.id } });
+      toast.success(`${deleteTarget.full_name || deleteTarget.email} permanently removed.`);
+      setDeleteTarget(null);
+      await loadStaff();
+    } catch (err: any) {
+      toast.error("Failed to delete user: " + (err?.message ?? String(err)));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -380,6 +419,11 @@ function ManageUsersPage() {
                               ? <><UserX className="mr-2 h-4 w-4" />Deactivate</>
                               : <><UserCheck className="mr-2 h-4 w-4" />Reactivate</>
                             }
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setDeleteTarget(s)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Permanently
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -543,16 +587,35 @@ function ManageUsersPage() {
                 onChange={(e) => setEditForm((f) => ({ ...f, jobTitle: e.target.value }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-dept">Department</Label>
-              <Select value={editForm.department} onValueChange={(v) => setEditForm((f) => ({ ...f, department: v }))}>
-                <SelectTrigger id="edit-dept">
-                  <SelectValue placeholder="Select…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-dept">Department</Label>
+                <Select value={editForm.department} onValueChange={(v) => setEditForm((f) => ({ ...f, department: v }))}>
+                  <SelectTrigger id="edit-dept">
+                    <SelectValue placeholder="Select department…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select
+                  value={editForm.roleTier}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, roleTier: v as RoleTier }))}
+                >
+                  <SelectTrigger id="edit-role">
+                    <SelectValue placeholder="Select role…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="staff">Staff Member</SelectItem>
+                    <SelectItem value="intern">Intern</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="root_admin">Root Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter className="pt-2">
               <Button type="button" variant="ghost" onClick={() => setEditUser(null)}>Cancel</Button>
@@ -562,6 +625,42 @@ function ManageUsersPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent className="max-w-md border-destructive/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Permanently Remove Staff Member
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive space-y-1">
+            <p className="font-semibold">⚠️ This action cannot be undone.</p>
+            <p>
+              This will completely remove their account, profile data, roles, and login access from the system.
+            </p>
+          </div>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="gap-2"
+            >
+              {deleting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              {deleting ? "Deleting…" : "Delete Permanently"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
