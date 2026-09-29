@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminKpisRouteImport } from './routes/_authenticated/admin/kpis'
 import { Route as AuthenticatedAdminSalesPlaybookRouteImport } from './routes/_authenticated/admin/sales-playbook'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin/team'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
 import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
 import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
@@ -140,6 +141,11 @@ const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
   path: '/admin/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
   id: '/host/',
   path: '/host/',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/kpis': typeof AuthenticatedAdminKpisRoute
   '/_authenticated/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/admin/kpis'
     | '/admin/sales-playbook'
     | '/admin/team'
+    | '/admin/users'
     | '/host/$'
     | '/me/declaration'
     | '/me/leave'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/admin/kpis'
     | '/admin/sales-playbook'
     | '/admin/team'
+    | '/admin/users'
     | '/host/$'
     | '/me/declaration'
     | '/me/leave'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/kpis'
     | '/_authenticated/admin/sales-playbook'
     | '/_authenticated/admin/team'
+    | '/_authenticated/admin/users'
     | '/_authenticated/host/$'
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
@@ -501,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/host/': {
       id: '/_authenticated/host/'
       path: '/host'
@@ -571,6 +590,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminKpisRoute: typeof AuthenticatedAdminKpisRoute
   AuthenticatedAdminSalesPlaybookRoute: typeof AuthenticatedAdminSalesPlaybookRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
@@ -598,6 +618,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminKpisRoute: AuthenticatedAdminKpisRoute,
   AuthenticatedAdminSalesPlaybookRoute: AuthenticatedAdminSalesPlaybookRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,

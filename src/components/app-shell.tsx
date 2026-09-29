@@ -90,8 +90,8 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
   { group: "Admin", managerOnly: true, portals: ["staff", "hr"], items: [
+    { to: "/admin/users", label: "Manage Staff", icon: Users },
     { to: "/admin/attendance", label: "Staff Attendance", icon: Clock },
-    { to: "/admin/team", label: "Team Management", icon: Users },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
     { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
