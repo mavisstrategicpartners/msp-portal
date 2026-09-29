@@ -172,9 +172,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data } = useProfile();
-  const selectedPortal = (typeof window !== "undefined"
-    ? (localStorage.getItem("msp.selectedPortal") as PortalKey | null)
-    : null) ?? (data?.isHR ? "hr" : "staff");
+  const selectedPortal = data?.isHR ? "hr" : (data?.isAdmin || data?.isManagerOrAbove) ? "admin" : "staff";
   return (
     <aside className={cn(
       "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
@@ -359,11 +357,6 @@ function TopBar({
   }
 
   async function signOut() {
-    try {
-      if (profile?.email && !localStorage.getItem("msp.rememberedEmail")) {
-        localStorage.setItem("msp.rememberedEmail", profile.email);
-      }
-    } catch {}
     await queryClient.cancelQueries();
     queryClient.clear();
     try {
@@ -372,6 +365,8 @@ function TopBar({
     try {
       localStorage.removeItem("msp.demoUser");
       localStorage.removeItem("msp.selectedPortal");
+      localStorage.removeItem("msp.rememberedPassword");
+      localStorage.removeItem("msp.demoAvatar");
     } catch {}
     window.location.replace("/auth");
   }

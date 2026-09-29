@@ -1,73 +1,167 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Coffee, CheckCircle2, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { useLocalStorage } from "@/lib/use-local-storage";
+import { supabase } from "@/integrations/supabase/client";
 
 type AttendanceState = "Clocked Out" | "Clocked In" | "On Break";
 
-export function StaffAttendanceWidget() {
-  const [state, setState] = useLocalStorage<AttendanceState>("staff.attendance.state", "Clocked Out");
-  const [clockInTime, setClockInTime] = useLocalStorage<number | null>("staff.attendance.clockInTime", null);
-  const [breakStartTime, setBreakStartTime] = useLocalStorage<number | null>("staff.attendance.breakStartTime", null);
-  const [totalBreakMs, setTotalBreakMs] = useLocalStorage<number>("staff.attendance.totalBreakMs", 0);
-  const [now, setNow] = useState(Date.now());
+interface AttendanceRecord {
+  state: AttendanceState;
+  clockInTime: number | null;
+  breakStartTime: number | null;
+  totalBreakMs: number;
+}
 
+const DEFAULT_RECORD: AttendanceRecord = {
+  state: "Clocked Out",
+  clockInTime: null,
+  breakStartTime: null,
+  totalBreakMs: 0,
+};
+
+async function loadTodayAttendance(userId: string): Promise<AttendanceRecord> {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { data: logs, error } = await supabase
+    .from("audit_logs")
+    .select("*")
+    .eq("actor_id", userId)
+    .gte("created_at", startOfDay.toISOString())
+    .like("action", "attendance_%")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error || !logs || logs.length === 0) return DEFAULT_RECORD;
+
+  const details = logs[0].details as any;
+  return {
+    state: details?.state ?? "Clocked Out",
+    clockInTime: details?.clock_in_time ?? null,
+    breakStartTime: details?.break_start_time ?? null,
+    totalBreakMs: details?.total_break_ms ?? 0,
+  };
+}
+
+async function saveAttendance(userId: string, record: AttendanceRecord, hoursWorked: string) {
+  const { error } = await supabase.from("audit_logs").insert({
+    actor_id: userId,
+    action: `attendance_${record.state.toLowerCase().replace(/\s+/g, "_")}`,
+    details: {
+      state: record.state,
+      clock_in_time: record.clockInTime,
+      break_start_time: record.breakStartTime,
+      total_break_ms: record.totalBreakMs,
+      hours_worked: hoursWorked,
+      updated_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.warn("Failed to save attendance to Supabase:", error);
+}
+
+export function StaffAttendanceWidget() {
+  const [record, setRecord] = useState<AttendanceRecord>(DEFAULT_RECORD);
+  const [now, setNow] = useState(Date.now());
+  const [loading, setLoading] = useState(true);
+  const userIdRef = useRef<string | null>(null);
+
+  // Load current user and their today's attendance on mount
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        userIdRef.current = user.id;
+        const rec = await loadTodayAttendance(user.id);
+        setRecord(rec);
+      } catch (e) {
+        console.warn("Error loading attendance:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, []);
+
+  // Live clock tick
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleClockIn = () => {
-    setState("Clocked In");
-    setClockInTime(Date.now());
-    setTotalBreakMs(0); // Reset break time for the new day
-    toast.success("Clocked In", { description: "Have a great day at work!" });
-  };
-
-  const handleStartBreak = () => {
-    setState("On Break");
-    setBreakStartTime(Date.now());
-    toast("Break Started", { description: "Enjoy your break!" });
-  };
-
-  const handleEndBreak = () => {
-    if (breakStartTime) {
-      setTotalBreakMs(prev => prev + (Date.now() - breakStartTime));
+  const calculateHoursWorked = (): string => {
+    if (!record.clockInTime || record.state === "Clocked Out") return "0h 0m";
+    let elapsed = now - record.clockInTime - record.totalBreakMs;
+    if (record.state === "On Break" && record.breakStartTime) {
+      elapsed -= (now - record.breakStartTime);
     }
-    setState("Clocked In");
-    setBreakStartTime(null);
-    toast("Break Ended", { description: "Welcome back." });
-  };
-
-  const handleClockOut = () => {
-    // If they were on break, finalize the break time
-    if (state === "On Break" && breakStartTime) {
-      setTotalBreakMs(prev => prev + (Date.now() - breakStartTime));
-      setBreakStartTime(null);
-    }
-    setState("Clocked Out");
-    toast.success("Clocked Out", { description: "Great work today! See you tomorrow." });
-  };
-
-  const calculateHoursWorked = () => {
-    if (!clockInTime) return "0h 0m";
-    const endTime = state === "Clocked Out" ? Date.now() : now; 
-    // Wait, if clocked out, we don't show the active timer, we just reset or show the last session? 
-    // Let's just show 0h 0m when clocked out for simplicity, or the last duration.
-    if (state === "Clocked Out") return "0h 0m";
-
-    let elapsed = endTime - clockInTime - totalBreakMs;
-    if (state === "On Break" && breakStartTime) {
-      elapsed -= (now - breakStartTime);
-    }
-
     const totalMinutes = Math.max(0, Math.floor(elapsed / 60000));
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
     return `${hours}h ${mins}m`;
   };
+
+  const updateRecord = async (newRecord: AttendanceRecord) => {
+    setRecord(newRecord);
+    if (userIdRef.current) {
+      await saveAttendance(userIdRef.current, newRecord, calculateHoursWorked());
+    }
+  };
+
+  const handleClockIn = async () => {
+    const newRecord: AttendanceRecord = {
+      state: "Clocked In",
+      clockInTime: Date.now(),
+      breakStartTime: null,
+      totalBreakMs: 0,
+    };
+    await updateRecord(newRecord);
+    toast.success("Clocked In", { description: "Have a great day at work!" });
+  };
+
+  const handleStartBreak = async () => {
+    const newRecord: AttendanceRecord = { ...record, state: "On Break", breakStartTime: Date.now() };
+    await updateRecord(newRecord);
+    toast("Break Started", { description: "Enjoy your break!" });
+  };
+
+  const handleEndBreak = async () => {
+    const extraBreak = record.breakStartTime ? Date.now() - record.breakStartTime : 0;
+    const newRecord: AttendanceRecord = {
+      ...record,
+      state: "Clocked In",
+      breakStartTime: null,
+      totalBreakMs: record.totalBreakMs + extraBreak,
+    };
+    await updateRecord(newRecord);
+    toast("Break Ended", { description: "Welcome back." });
+  };
+
+  const handleClockOut = async () => {
+    const extraBreak =
+      record.state === "On Break" && record.breakStartTime ? Date.now() - record.breakStartTime : 0;
+    const newRecord: AttendanceRecord = {
+      ...record,
+      state: "Clocked Out",
+      breakStartTime: null,
+      totalBreakMs: record.totalBreakMs + extraBreak,
+    };
+    await updateRecord(newRecord);
+    toast.success("Clocked Out", { description: "Great work today! See you tomorrow." });
+  };
+
+  const { state } = record;
+
+  if (loading) {
+    return (
+      <Card className="flex flex-col border-border/70 p-5 items-center justify-center min-h-[120px]">
+        <Clock className="w-5 h-5 animate-pulse text-primary" />
+        <p className="text-xs text-muted-foreground mt-2">Loading attendance…</p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="flex flex-col border-border/70 p-5 transition-colors hover:border-primary/40 relative overflow-hidden">
@@ -84,7 +178,7 @@ export function StaffAttendanceWidget() {
           </h2>
           <p className="text-xs text-muted-foreground mt-1">Manage your attendance</p>
         </div>
-        
+
         <div className="text-right">
           <div className="text-2xl font-bold font-mono tracking-tight">
             {calculateHoursWorked()}

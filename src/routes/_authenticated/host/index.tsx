@@ -6,27 +6,26 @@ export const Route = createFileRoute("/_authenticated/host/")({
   ssr: false,
   head: () => ({ meta: [{ title: "All In One — MSP Portal" }] }),
   beforeLoad: async () => {
-    if (typeof window !== "undefined") {
-      const selected = localStorage.getItem("msp.selectedPortal");
-      if (selected === "manager" || selected === "admin") return;
-    }
     try {
       const { data } = await supabase.auth.getUser();
-      if (!data?.user) return;
-      const { data: isManager } = await supabase.rpc("is_manager_or_above" as any, {
-        _user_id: data.user.id,
-      });
-      if (isManager) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("department")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      if (profile?.department === "Human Resources") return;
-    } catch {}
-    if (typeof window !== "undefined" && !["manager", "hr"].includes(localStorage.getItem("msp.selectedPortal") || "")) {
-      throw redirect({ to: "/home" });
+      if (!data?.user) throw redirect({ to: "/auth" });
+
+      const [{ data: isManager }, { data: profile }, { data: roles }] = await Promise.all([
+        supabase.rpc("is_manager_or_above" as any, { _user_id: data.user.id }).catch(() => ({ data: false })),
+        supabase.from("profiles").select("department, role_tier").eq("id", data.user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", data.user.id),
+      ]);
+
+      const isAdmin = roles?.some((r) => r.role === "admin") || profile?.role_tier === "root_admin";
+      const isHR = profile?.department === "Human Resources";
+      const isManagerOrAbove = isManager || profile?.role_tier === "manager" || isAdmin;
+
+      if (isManagerOrAbove || isHR) return;
+    } catch (e: any) {
+      if (e?.to) throw e;
     }
+
+    throw redirect({ to: "/home" });
   },
   component: () => <HostPortalEmbedded initialPath="/host" />,
 });

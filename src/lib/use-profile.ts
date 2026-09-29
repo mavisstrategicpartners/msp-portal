@@ -26,15 +26,6 @@ export function useProfile() {
         console.warn("Error fetching user in useProfile:", e);
       }
 
-      if (!user && typeof window !== "undefined") {
-        const demo = localStorage.getItem("msp.demoUser");
-        if (demo) {
-          try {
-            user = JSON.parse(demo);
-          } catch {}
-        }
-      }
-
       if (!user) return null;
 
       let profile: Profile | null = null;
@@ -46,50 +37,52 @@ export function useProfile() {
         ]);
         profile = p as Profile | null;
         roles = r ?? [];
+
+        // If the user is authenticated in Supabase but doesn't have a profile row yet, initialize it
+        if (!profile && user.email) {
+          const defaultName =
+            user.user_metadata?.full_name ||
+            (user.email ? user.email.split("@")[0].replace(".", " ") : "Team Member");
+
+          const newProfilePayload = {
+            id: user.id,
+            email: user.email,
+            full_name: defaultName,
+            phone: null,
+            avatar_url: null,
+            department: null,
+            job_title: "Staff Member",
+            is_active: true,
+            onboarding_completed: false,
+            role_tier: "staff" as const,
+          };
+
+          const { data: inserted } = await supabase
+            .from("profiles")
+            .upsert(newProfilePayload)
+            .select()
+            .maybeSingle();
+
+          profile = (inserted as Profile) || (newProfilePayload as Profile);
+        }
       } catch (e) {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
-      const emailLower = (user.email || "").toLowerCase();
-      const isSuperAdmin = emailLower.includes("superadmin");
-      const isHRUser = emailLower.includes("thandi");
-
-      const selectedRole = typeof window !== "undefined" ? localStorage.getItem("msp.selectedPortal") || "staff" : "staff";
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        isSuperAdmin
-          ? "root_admin"
-          : profile?.role_tier ||
-            (selectedRole === "admin" ? "root_admin" : selectedRole === "manager" ? "manager" : isHRUser ? "manager" : "staff");
+        profile?.role_tier || "staff";
 
-      const defaultName = isSuperAdmin
-        ? "Super Admin"
-        : isHRUser
-        ? "Thandi Mokoena"
-        : user.user_metadata?.full_name || (user.email ? user.email.split("@")[0].replace(".", " ") : "Team Member");
-
-      const resolvedProfile: Profile = profile || {
-        id: user.id,
-        full_name: defaultName,
-        email: user.email || "superadmin@mavisstrategicpartners.co.za",
-        phone: "+27 11 000 0000",
-        avatar_url: null,
-        department: isHRUser ? "Human Resources" : isSuperAdmin ? "Engineering & Operations" : "Staff Department",
-        job_title: isHRUser ? "HR Manager" : isSuperAdmin ? "System Administrator" : "Staff Member",
-        is_active: true,
-        onboarding_completed: true,
-        role_tier: resolvedTier,
-      };
-
-      const isAdmin = roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
+      const isAdmin =
+        roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
 
       return {
         user,
-        profile: resolvedProfile,
+        profile,
         isAdmin,
-        isHR: resolvedProfile.department === "Human Resources" || isHRUser,
+        isHR: profile?.department === "Human Resources",
         roleTier: resolvedTier,
         isRootAdmin: resolvedTier === "root_admin",
-        isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier),
+        isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier) || isAdmin,
       };
     },
     staleTime: 60_000,

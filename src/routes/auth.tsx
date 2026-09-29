@@ -40,12 +40,7 @@ function AuthPage() {
     return "";
   });
   const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("msp.rememberedPassword") || "";
-    }
-    return "";
-  });
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
@@ -69,17 +64,19 @@ function AuthPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Purge any stored passwords and fake demo users from localStorage
+      localStorage.removeItem("msp.rememberedPassword");
+      localStorage.removeItem("msp.demoUser");
+
       if (rememberMe) {
         if (email) localStorage.setItem("msp.rememberedEmail", email);
-        if (password) localStorage.setItem("msp.rememberedPassword", password);
         localStorage.setItem("msp.rememberMe", "true");
       } else {
         localStorage.removeItem("msp.rememberedEmail");
-        localStorage.removeItem("msp.rememberedPassword");
         localStorage.setItem("msp.rememberMe", "false");
       }
     }
-  }, [email, password, rememberMe]);
+  }, [email, rememberMe]);
 
   useEffect(() => {
     // When the user is logged out on the auth page, trap back navigation
@@ -102,9 +99,9 @@ function AuthPage() {
 
   useEffect(() => {
     try {
-      if (typeof window !== "undefined" && localStorage.getItem("msp.demoUser")) {
-        navigate({ to: "/home" });
-        return;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("msp.rememberedPassword");
+        localStorage.removeItem("msp.demoUser");
       }
       supabase.auth
         .getSession()
@@ -134,8 +131,7 @@ function AuthPage() {
       profile = profileResult.data;
       roles = rolesResult.data ?? [];
     } catch (error) {
-      console.warn("Profile lookup unavailable after sign-in; using staff dashboard.", error);
-      localStorage.setItem("msp.selectedPortal", "staff");
+      console.warn("Profile lookup failed; navigating to home.", error);
       await navigate({ to: "/home" });
       return;
     }
@@ -144,121 +140,77 @@ function AuthPage() {
     const isAdmin = roles?.some((role) => role.role === "admin") ?? false;
     const isManager = profile?.role_tier === "manager";
     const destination = isHR ? "/host/hr" : isSuperAdmin || isAdmin || isManager ? "/host" : "/home";
-    const portal = isHR ? "hr" : isSuperAdmin || isAdmin || isManager ? "admin" : "staff";
-    localStorage.setItem("msp.selectedPortal", portal);
     await navigate({ to: destination as any });
-  }
-
-  async function loginAsDemo(role: "admin" | "hr" | "staff", customEmail?: string) {
-    setLoading(true);
-    try {
-      const emailToUse = customEmail || (
-        role === "admin"
-          ? "superadmin@mavisstrategicpartners.co.za"
-          : role === "hr"
-          ? "thandi.mokoena@mavisstrategicpartners.co.za"
-          : "sipho.dlamini@mavisstrategicpartners.co.za"
-      );
-
-      const emailLower = emailToUse.toLowerCase();
-      const isSuperAdmin = emailLower.includes("superadmin");
-      const isHR = role === "hr" || emailLower.includes("thandi");
-
-      const nameToUse = isSuperAdmin
-        ? "Super Admin"
-        : isHR
-        ? "Thandi Mokoena"
-        : fullName.trim() || (emailToUse.split("@")[0].replace(".", " "));
-
-      const demoUser = {
-        id: isSuperAdmin ? "00000000-0000-0000-0000-000000000001" : isHR ? "00000000-0000-0000-0000-000000000002" : "00000000-0000-0000-0000-000000000003",
-        email: emailToUse,
-        user_metadata: {
-          full_name: nameToUse,
-        },
-      };
-
-      localStorage.setItem("msp.demoUser", JSON.stringify(demoUser));
-      localStorage.setItem("msp.selectedPortal", isSuperAdmin ? "admin" : isHR ? "hr" : "staff");
-      localStorage.setItem("msp.rememberedEmail", emailToUse);
-
-      toast.success("Welcome back", {
-        description: `Signed in as ${nameToUse} (${isSuperAdmin ? "Superadmin" : isHR ? "HR Lead" : "Staff"}).`,
-        duration: 3000,
-      });
-
-      const destination = isHR ? "/host/hr" : "/home";
-      window.location.href = destination;
-    } catch (err) {
-      console.error("Demo sign-in error:", err);
-      window.location.href = "/home";
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const targetEmail = email.trim();
+    if (!targetEmail) {
+      toast.error("Please enter your work email.");
+      return;
+    }
+    if (!password) {
+      toast.error("Please enter your password.");
+      return;
+    }
+
     setLoading(true);
-    const targetEmail = email.trim() || "superadmin@mavisstrategicpartners.co.za";
 
     try {
-      const emailLower = targetEmail.toLowerCase();
-      const isHR = emailLower.includes("thandi");
-      const isAdmin = emailLower.includes("superadmin");
-      const role = isHR ? "hr" : isAdmin ? "admin" : "staff";
-
       if (isSignUp) {
-        try {
-          const { data: signUpData, error } = await supabase.auth.signUp({
-            email: targetEmail,
-            password: password || "password123",
-            options: { data: { full_name: fullName.trim() || "Siphelele Malotana" } },
-          });
-          if (error) {
-            await loginAsDemo(role, targetEmail);
-            return;
-          }
-          if (signUpData.session) {
-            await loginAsDemo(role, targetEmail);
-            return;
-          }
-        } catch {
-          await loginAsDemo(role, targetEmail);
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match.");
+          setLoading(false);
           return;
         }
-        await loginAsDemo(role, targetEmail);
-        return;
-      }
 
-      try {
-        const { data: signInData, error } = await supabase.auth.signInWithPassword({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: targetEmail,
-          password: password || "password123",
+          password,
+          options: { data: { full_name: fullName.trim() || targetEmail.split("@")[0] } },
         });
 
         if (error) {
-          console.warn("Supabase auth bypassed; logging in with corporate profile:", error.message);
-          await loginAsDemo(role, targetEmail);
+          toast.error("Registration failed", { description: error.message });
           return;
         }
 
-        if (signInData?.user) {
+        if (signUpData.session?.user) {
+          toast.success("Account created successfully", { description: "Welcome to Mavis Strategic Partners." });
           await queryClient.invalidateQueries({ queryKey: ["profile"] });
-          toast.success("Welcome back", { description: "Your session is ready." });
-          await navigateForDepartment(signInData.user.id);
+          await navigateForDepartment(signUpData.session.user.id);
           return;
         }
-      } catch (authErr) {
-        console.warn("Supabase fetch failed; activating offline session:", authErr);
-        await loginAsDemo(role, targetEmail);
+
+        setVerificationEmail(targetEmail);
+        setVerificationOpen(true);
+        toast.info("Verification email sent", {
+          description: `Please verify your email address via the link sent to ${targetEmail}.`,
+        });
         return;
       }
 
-      await loginAsDemo(role, targetEmail);
-    } catch (error) {
-      console.error("Sign-in fallback triggered:", error);
-      await loginAsDemo("admin", targetEmail);
+      // Real Supabase sign in with email and password
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+        email: targetEmail,
+        password,
+      });
+
+      if (error) {
+        toast.error("Sign-in failed", { description: error.message });
+        return;
+      }
+
+      if (signInData?.user) {
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome back", { description: "Signed in successfully." });
+        await navigateForDepartment(signInData.user.id);
+        return;
+      }
+    } catch (error: any) {
+      console.error("Sign-in error:", error);
+      toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
     } finally {
       setLoading(false);
     }

@@ -16,12 +16,7 @@ export const Route = createFileRoute("/_authenticated")({
     }
 
     if (typeof window !== "undefined") {
-      const demoUser = localStorage.getItem("msp.demoUser");
-      if (demoUser) {
-        try {
-          return { user: JSON.parse(demoUser) };
-        } catch {}
-      }
+      localStorage.removeItem("msp.demoUser");
     }
 
     throw redirect({ to: "/auth", replace: true });
@@ -35,15 +30,11 @@ function AuthedLayout() {
       if (event.persisted) {
         try {
           const { data } = await supabase.auth.getUser();
-          const demoUser = localStorage.getItem("msp.demoUser");
-          if (!data?.user && !demoUser) {
+          if (!data?.user) {
             window.location.replace("/auth");
           }
         } catch {
-          const demoUser = localStorage.getItem("msp.demoUser");
-          if (!demoUser) {
-            window.location.replace("/auth");
-          }
+          window.location.replace("/auth");
         }
       }
     };

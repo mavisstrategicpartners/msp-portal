@@ -2,14 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Clock, Search, Coffee, CheckCircle2, XCircle, Users, Building2,
-  Sparkles, Filter, Download, ArrowUpRight, ShieldCheck, Briefcase
+  Sparkles, Filter, Download, ArrowUpRight, ShieldCheck, Briefcase, RefreshCw,
 } from "lucide-react";
 import { useProfile } from "@/lib/use-profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/attendance")({
   head: () => ({ meta: [{ title: "Admin Command Center — Workforce Attendance" }] }),
@@ -17,10 +18,10 @@ export const Route = createFileRoute("/_authenticated/admin/attendance")({
 });
 
 interface StaffMember {
-  id: number | string;
+  id: string;
   name: string;
   role: string;
-  department: "Engineering" | "HR" | "Marketing" | "Sales" | "Operations";
+  department: string;
   tier: "Permanent" | "Contract" | "Intern";
   status: "Clocked In" | "On Break" | "Clocked Out";
   time: string;
@@ -29,83 +30,87 @@ interface StaffMember {
   avatar?: string;
 }
 
-const INITIAL_STAFF: StaffMember[] = [
-  { id: 1, name: "Siphelele Malotana", role: "Full Stack Engineer", department: "Engineering", tier: "Permanent", status: "Clocked In", time: "08:00", hours: "4h 15m", currentProject: "MSP Portal V2", avatar: "" },
-  { id: 2, name: "Thandi Mokoena", role: "HR Operations Lead", department: "HR", tier: "Permanent", status: "Clocked In", time: "07:45", hours: "4h 30m", currentProject: "Q3 Intake Induction", avatar: "" },
-  { id: 3, name: "Bongani Zulu", role: "Cloud Solutions Engineer", department: "Engineering", tier: "Permanent", status: "On Break", time: "08:15", hours: "3h 45m", currentProject: "AWS Cloud Migration", avatar: "" },
-  { id: 4, name: "Karabo Mthembu", role: "Cybersecurity Intern", department: "Engineering", tier: "Intern", status: "Clocked In", time: "08:30", hours: "3h 30m", currentProject: "Security Audit Sprint", avatar: "" },
-  { id: 5, name: "Sipho Dlamini", role: "Software Developer Intern", department: "Engineering", tier: "Intern", status: "Clocked In", time: "08:30", hours: "3h 30m", currentProject: "Client Portal Rebuild", avatar: "" },
-  { id: 6, name: "Sarah Johnson", role: "Senior Sales Executive", department: "Sales", tier: "Permanent", status: "Clocked In", time: "09:00", hours: "3h 00m", currentProject: "Enterprise Inbound Deals", avatar: "" },
-  { id: 7, name: "Naledi Nkosi", role: "Marketing & Brand Intern", department: "Marketing", tier: "Intern", status: "On Break", time: "08:45", hours: "3h 15m", currentProject: "Brand Assets Campaign", avatar: "" },
-  { id: 8, name: "David Smith", role: "Growth Specialist Intern", department: "Marketing", tier: "Intern", status: "Clocked Out", time: "-", hours: "0h 0m", currentProject: "SEO Optimization", avatar: "" },
-  { id: 9, name: "Anele Radebe", role: "Operations Specialist", department: "Operations", tier: "Permanent", status: "Clocked In", time: "08:10", hours: "3h 50m", currentProject: "SOP Governance", avatar: "" },
-];
-
 function AdminAttendanceCommandCenter() {
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState<string>("All");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
-  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const { data: profile } = useProfile();
 
-  // Load active user's local clock state
-  useEffect(() => {
-    const syncLocalUser = () => {
-      const localState = localStorage.getItem("staff.attendance.state")?.replace(/"/g, "") as "Clocked In" | "On Break" | "Clocked Out" | undefined;
-      const clockInTime = localStorage.getItem("staff.attendance.clockInTime");
-      const currentUserName = profile?.profile?.full_name || "You (Logged In User)";
-      
-      let formattedTime = "-";
-      let formattedHours = "0h 0m";
+  const loadAttendance = useCallback(async () => {
+    setLoadingData(true);
+    try {
+      const { data: profiles, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, job_title, department, avatar_url, role_tier")
+        .eq("is_active", true)
+        .order("full_name", { ascending: true });
 
-      if (clockInTime && localState && localState !== "Clocked Out") {
-        const checkInDate = new Date(Number(clockInTime));
-        formattedTime = checkInDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const elapsedMinutes = Math.max(1, Math.floor((Date.now() - Number(clockInTime)) / 60000));
-        formattedHours = `${Math.floor(elapsedMinutes / 60)}h ${elapsedMinutes % 60}m`;
-      }
+      if (pErr) throw pErr;
 
-      setStaffList((prev) => {
-        const exists = prev.find((s) => s.id === 999 || s.name.toLowerCase() === currentUserName.toLowerCase());
-        if (exists) {
-          return prev.map((s) =>
-            s.id === exists.id
-              ? {
-                  ...s,
-                  status: localState || s.status,
-                  time: localState && localState !== "Clocked Out" ? formattedTime : "-",
-                  hours: localState && localState !== "Clocked Out" ? formattedHours : "0h 0m",
-                }
-              : s
-          );
-        } else if (profile?.profile?.full_name) {
-          return [
-            {
-              id: 999,
-              name: currentUserName,
-              role: profile?.profile?.job_title || "Staff Member",
-              department: "Engineering",
-              tier: "Permanent",
-              status: localState || "Clocked Out",
-              time: localState && localState !== "Clocked Out" ? formattedTime : "-",
-              hours: localState && localState !== "Clocked Out" ? formattedHours : "0h 0m",
-              currentProject: "MSP Operations",
-            },
-            ...prev,
-          ];
-        }
-        return prev;
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const { data: logs } = await supabase
+        .from("audit_logs")
+        .select("actor_id, details, created_at")
+        .gte("created_at", startOfDay.toISOString())
+        .like("action", "attendance_%")
+        .order("created_at", { ascending: true });
+
+      const statusMap = new Map<string, any>();
+      (logs || []).forEach((log: any) => {
+        if (log.actor_id) statusMap.set(log.actor_id, log.details);
       });
-    };
 
-    syncLocalUser();
-    window.addEventListener("storage", syncLocalUser);
-    window.addEventListener("local-storage-update", syncLocalUser);
-    return () => {
-      window.removeEventListener("storage", syncLocalUser);
-      window.removeEventListener("local-storage-update", syncLocalUser);
-    };
-  }, [profile]);
+      const rows: StaffMember[] = (profiles || []).map((p: any) => {
+        const live = statusMap.get(p.id);
+        const clockInTime = live?.clock_in_time;
+        const state: StaffMember["status"] = live?.state || "Clocked Out";
+        let time = "-";
+        let hours = "0h 0m";
+
+        if (clockInTime && state !== "Clocked Out") {
+          time = new Date(clockInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const elapsedMs = Date.now() - clockInTime - (live?.total_break_ms || 0);
+          const totalMins = Math.max(0, Math.floor(elapsedMs / 60000));
+          hours = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
+        }
+
+        const tier: StaffMember["tier"] =
+          p.role_tier === "intern" ? "Intern" : "Permanent";
+
+        const dept = (p.department || "General").replace(" Team", "") as StaffMember["department"];
+
+        return {
+          id: p.id,
+          name: p.full_name || p.email.split("@")[0].replace(".", " "),
+          role: p.job_title || "Staff Member",
+          department: dept,
+          tier,
+          status: state,
+          time,
+          hours,
+          currentProject: "MSP Operations",
+          avatar: p.avatar_url,
+        };
+      });
+
+      setStaffList(rows);
+    } catch (err) {
+      console.warn("Error loading admin attendance:", err);
+      toast.error("Failed to load attendance data");
+    } finally {
+      setLoadingData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAttendance();
+    const timer = setInterval(loadAttendance, 60_000);
+    return () => clearInterval(timer);
+  }, [loadAttendance]);
 
   const filteredStaff = staffList.filter((s) => {
     const matchesSearch =
@@ -159,6 +164,10 @@ function AdminAttendanceCommandCenter() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={loadAttendance} disabled={loadingData} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${loadingData ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm" onClick={exportSummary} className="gap-2">
             <Download className="h-4 w-4" />
             Export Report
