@@ -6,7 +6,7 @@ import {
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
   Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard, Clock,
+  LayoutDashboard, Clock, Activity,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -89,6 +89,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
   { group: "Admin", managerOnly: true, portals: ["staff", "hr"], items: [
+    { to: "/admin/operations", label: "Operations Control", icon: Activity },
     { to: "/admin/users", label: "Manage Staff", icon: Users },
     { to: "/admin/attendance", label: "Staff Attendance", icon: Clock },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },

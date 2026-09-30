@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
-import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench } from "lucide-react";
+import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity } from "lucide-react";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -86,7 +86,8 @@ function Home() {
 
       <section>
         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Jump back in</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <QuickLink to="/admin/operations" icon={Activity} title="Operations Control" desc="Workflows, attendance & client health." />
           <QuickLink to="/sops" icon={BookOpen} title="SOP Library" desc="How every department works." />
           <QuickLink to="/services" icon={Briefcase} title="Our Services" desc="The 7 services we sell." />
           <QuickLink to="/tools" icon={Wrench} title="Tools & Systems" desc="GHL, Meta, Zoho, Slack…" />

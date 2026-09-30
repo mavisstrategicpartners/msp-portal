@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminAttendanceRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin/content'
 import { Route as AuthenticatedAdminKpisRouteImport } from './routes/_authenticated/admin/kpis'
+import { Route as AuthenticatedAdminOperationsRouteImport } from './routes/_authenticated/admin/operations'
 import { Route as AuthenticatedAdminSalesPlaybookRouteImport } from './routes/_authenticated/admin/sales-playbook'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin/team'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
@@ -130,6 +131,12 @@ const AuthenticatedAdminKpisRoute = AuthenticatedAdminKpisRouteImport.update({
   path: '/admin/kpis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminOperationsRoute =
+  AuthenticatedAdminOperationsRouteImport.update({
+    id: '/admin/operations',
+    path: '/admin/operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSalesPlaybookRoute =
   AuthenticatedAdminSalesPlaybookRouteImport.update({
     id: '/admin/sales-playbook',
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -263,6 +272,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/_authenticated/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/_authenticated/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
+    | '/admin/operations'
     | '/admin/sales-playbook'
     | '/admin/team'
     | '/admin/users'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
+    | '/admin/operations'
     | '/admin/sales-playbook'
     | '/admin/team'
     | '/admin/users'
@@ -353,6 +365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/content'
     | '/_authenticated/admin/kpis'
+    | '/_authenticated/admin/operations'
     | '/_authenticated/admin/sales-playbook'
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/users'
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminKpisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/operations': {
+      id: '/_authenticated/admin/operations'
+      path: '/admin/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AuthenticatedAdminOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/sales-playbook': {
       id: '/_authenticated/admin/sales-playbook'
       path: '/admin/sales-playbook'
@@ -588,6 +608,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
   AuthenticatedAdminKpisRoute: typeof AuthenticatedAdminKpisRoute
+  AuthenticatedAdminOperationsRoute: typeof AuthenticatedAdminOperationsRoute
   AuthenticatedAdminSalesPlaybookRoute: typeof AuthenticatedAdminSalesPlaybookRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
@@ -616,6 +637,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
   AuthenticatedAdminKpisRoute: AuthenticatedAdminKpisRoute,
+  AuthenticatedAdminOperationsRoute: AuthenticatedAdminOperationsRoute,
   AuthenticatedAdminSalesPlaybookRoute: AuthenticatedAdminSalesPlaybookRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
