@@ -82,6 +82,7 @@ export default function HRDashboard() {
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>DIVERSITY — GENDER</div>
           <Donut data={empByGender} size={160} thickness={20} />
         </div>
+      </div>
       {/* Live Employee Leave Approvals */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
