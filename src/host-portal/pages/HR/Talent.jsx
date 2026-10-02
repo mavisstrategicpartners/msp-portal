@@ -2,10 +2,11 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTalent, seedEmployees } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function Talent() {
-  const [talent, setTalent] = useLocalStorage('hr.talent', seedTalent)
+  const [talent, setTalent] = useSupabaseTable('hr_talent', seedTalent)
   const [form, setForm] = useState(null)
 
   const openAdd = () => setForm({ employee: seedEmployees[0]?.full_name || '', role: seedEmployees[0]?.role || '', potential: 'Medium', readiness: '1-2 years', successor_for: '', idp_progress: 0 })

@@ -1,9 +1,9 @@
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { seedIntegrations } from '../../data/mockData.js'
-import { useLocalStorage } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function HRIntegrations() {
-  const [ints, setInts] = useLocalStorage('hr.integrations', seedIntegrations)
+  const [ints, setInts] = useSupabaseTable('hr_integrations', seedIntegrations)
   const toggle = (id) => setInts(prev => prev.map(i => i.id === id ? { ...i, status: i.status === 'Connected' ? 'Not Connected' : 'Connected', last_sync: i.status === 'Connected' ? null : new Date().toISOString().slice(0, 16).replace('T', ' ') } : i))
   const cats = Array.from(new Set(ints.map(i => i.category)))
   return (

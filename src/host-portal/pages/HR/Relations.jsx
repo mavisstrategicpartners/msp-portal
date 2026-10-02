@@ -2,10 +2,11 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedRelations, seedEmployees } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function Relations() {
-  const [relations, setRelations] = useLocalStorage('hr.relations', seedRelations)
+  const [relations, setRelations] = useSupabaseTable('hr_relations', seedRelations)
   const [form, setForm] = useState(null)
 
   const openAdd = () => setForm({ employee: seedEmployees[0]?.full_name || '', type: 'Grievance', severity: 'Low', date: new Date().toISOString().slice(0, 10), status: 'Open', description: '' })

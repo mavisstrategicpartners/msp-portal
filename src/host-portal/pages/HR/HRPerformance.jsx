@@ -2,7 +2,8 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { BarChart } from '../../components/Chart.jsx'
 
 const seedReviews = [
@@ -12,7 +13,7 @@ const seedReviews = [
 ]
 
 export default function HRPerformance() {
-  const [reviews, setReviews] = useLocalStorage('hr.reviews', seedReviews)
+  const [reviews, setReviews] = useSupabaseTable('hr_reviews', seedReviews)
   const [form, setForm] = useState(null)
   const openAdd = () => setForm({ employee: seedEmployees[0]?.full_name || '', period: 'Q3 2026', overall: 3.5, goals_met: 0, goals_total: 5, feedback: '', pip: false, promotion: false })
   const submit = () => {

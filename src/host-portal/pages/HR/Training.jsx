@@ -2,10 +2,11 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTraining } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function Training() {
-  const [training, setTraining] = useLocalStorage('hr.training', seedTraining)
+  const [training, setTraining] = useSupabaseTable('hr_training', seedTraining)
   const [form, setForm] = useState(null)
 
   const openAdd = () => setForm({ title: '', type: 'Technical', mode: 'Online', duration: '1h', enrolled: 0, completed: 0, deadline: new Date().toISOString().slice(0, 10) })

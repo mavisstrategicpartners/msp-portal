@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { Calculator, Lock, Plus, Trash2 } from 'lucide-react'
 
 const money = value => `R ${Number(value || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -16,7 +17,7 @@ function totals(record) {
 }
 
 export default function Payroll() {
-  const [records, setRecords] = useLocalStorage('hr.payroll_records', [])
+  const [records, setRecords] = useSupabaseTable('hr_payroll_records', [])
   const [selectedEmployee, setSelectedEmployee] = useState(seedEmployees[0]?.id || '')
   const [form, setForm] = useState(null)
   const employee = seedEmployees.find(item => item.id === selectedEmployee) || seedEmployees[0]

@@ -2,13 +2,14 @@ import { useMemo, useRef, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { Folder, FileText, Lock, Upload, Trash2 } from 'lucide-react'
 
 const accessOptions = ['HR only', 'Employee + HR']
 
 export default function Documents() {
-  const [documents, setDocuments] = useLocalStorage('hr.employee_documents', [])
+  const [documents, setDocuments] = useSupabaseTable('hr_documents', [])
   const [selectedEmployee, setSelectedEmployee] = useState(seedEmployees[0]?.id || '')
   const [uploadOpen, setUploadOpen] = useState(false)
   const [access, setAccess] = useState('HR only')
