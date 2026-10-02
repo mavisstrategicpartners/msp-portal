@@ -180,9 +180,22 @@ function ShellInner({ children }: { children: ReactNode }) {
 
 function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const { data } = useProfile();
   const isAdmin = data?.isAdmin ?? false;
   const selectedPortal = data?.isHR ? "hr" : isAdmin ? "admin" : (data?.isManagerOrAbove) ? "manager" : "staff";
+
+  // Navigate by raw href to ensure TanStack splat routes receive the correct full path.
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    e.preventDefault();
+    if (to.startsWith('/host/') && to !== '/host') {
+      // Use splat param navigation for /host/* sub-routes
+      const splat = to.replace('/host/', '');
+      navigate({ to: '/_authenticated/host/$' as any, params: { _splat: splat } } as any);
+    } else {
+      navigate({ to } as any);
+    }
+  };
   return (
     <aside className={cn(
       "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
@@ -232,8 +245,9 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                   const active = pathname === item.to || pathname.startsWith(item.to + "/");
                   return (
                     <li key={item.to}>
-                      <Link
-                        to={item.to as any}
+                      <a
+                        href={item.to}
+                        onClick={(e) => handleNavClick(e, item.to)}
                         className={cn(
                           "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
                           active
@@ -242,6 +256,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                           collapsed && "justify-center px-2",
                         )}
                         title={collapsed ? item.label : undefined}
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
                       >
                         <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
                         {!collapsed && (
@@ -250,7 +265,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                             {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
                           </span>
                         )}
-                      </Link>
+                      </a>
                     </li>
                   );
                 })}
