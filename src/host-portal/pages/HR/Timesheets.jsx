@@ -18,7 +18,7 @@ const statusBadge = (s) => s === 'Present' ? 'badge-success' : s === 'Clocked In
 
 export default function Timesheets() {
   const [list, setList] = useSupabaseTable('hr_timesheets', seedTimesheets)
-  const [projects] = useLocalStorage('host.projects', seedProjects)
+  const [projects] = useSupabaseTable('host_projects', seedProjects)
   const [expanded, setExpanded] = useState({})
   const [form, setForm] = useState(null)
   const confirm = useConfirm()

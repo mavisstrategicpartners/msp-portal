@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 import { HostPortalEmbedded } from "@/host-portal/EmbeddedApp";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,10 +31,12 @@ export const Route = createFileRoute("/_authenticated/host/$")({
 });
 
 function HostSplat() {
-  const { _splat } = Route.useParams();
-  const splat = _splat ?? "";
-  // Sidebar entries like /host/hr/leave map to the embedded HR router at /hr/leave.
-  const initialPath = splat.startsWith("hr") ? "/" + splat : "/host/" + splat;
-  // Remount when path changes so the embedded MemoryRouter picks up the new initial entry.
-  return <HostPortalEmbedded key={initialPath} initialPath={initialPath} />;
-}
+  // Use full pathname from router state for a reliable, unique key on every navigation
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Strip the /host/ prefix to get the internal path for the embedded MemoryRouter
+  const internal = pathname.replace(/^\/host\/?/, "");
+  // HR paths go to /hr/*, everything else goes to /host/*
+  const initialPath = internal.startsWith("hr") ? "/" + internal : "/host/" + (internal || "");
+  // key={pathname} guarantees React unmounts and remounts the MemoryRouter on every click
+  return <HostPortalEmbedded key={pathname} initialPath={initialPath} />;
+}
