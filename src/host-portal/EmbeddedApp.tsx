@@ -15,24 +15,15 @@ import { NotificationProvider } from "./context/NotificationContext.jsx";
 import "./index.css";
 
 export function HostPortalEmbedded({ initialPath = "/host" }: { initialPath?: string }) {
-  // Force full remount by using initialPath as component key
-  // This ensures a fresh MemoryRouter is created for each navigation
-  const [mounted, setMounted] = useState(true);
-
-  useEffect(() => {
-    // Force remount on path change
-    setMounted(false);
-    const timer = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(timer);
-  }, [initialPath]);
-
-  if (!mounted) return null;
-
+  const entries = [initialPath];
+  if (initialPath.startsWith("/host/hr")) {
+    entries.push(initialPath.replace("/host", ""));
+  }
   return (
     <div className="host-portal-root">
       <ThemeProvider>
         <NotificationProvider>
-          <MemoryRouter initialEntries={[initialPath]} key={initialPath}>
+          <MemoryRouter initialEntries={entries} initialIndex={0} key={initialPath}>
             <App />
           </MemoryRouter>
         </NotificationProvider>

@@ -31,12 +31,6 @@ export const Route = createFileRoute("/_authenticated/host/$")({
 });
 
 function HostSplat() {
-  // Use full pathname from router state for a reliable, unique key on every navigation
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Strip the /host/ prefix to get the internal path for the embedded MemoryRouter
-  const internal = pathname.replace(/^\/host\/?/, "");
-  // HR paths go to /hr/*, everything else goes to /host/*
-  const initialPath = internal.startsWith("hr") ? "/" + internal : "/host/" + (internal || "");
-  // key={pathname} guarantees React unmounts and remounts the MemoryRouter on every click
-  return <HostPortalEmbedded key={pathname} initialPath={initialPath} />;
+  return <HostPortalEmbedded key={pathname} initialPath={pathname} />;
 }

@@ -61,34 +61,45 @@ export default function App() {
       {/* legacy */}
       <Route path="/host/attendance" element={<Navigate to="/hr/attendance" replace />} />
 
-      {/* HR Portal */}
+      {/* HR Portal Direct & Legacy Routes */}
       <Route path="/hr" element={<HRDashboard />} />
+      <Route path="/host/hr" element={<HRDashboard />} />
+
       <Route path="/hr/attendance" element={<HRAttendance />} />
+      <Route path="/host/hr/attendance" element={<HRAttendance />} />
+
       <Route path="/hr/leave" element={<Leave />} />
+      <Route path="/host/hr/leave" element={<Leave />} />
+
       <Route path="/hr/timesheets" element={<Timesheets />} />
+      <Route path="/host/hr/timesheets" element={<Timesheets />} />
+
       <Route path="/hr/relations" element={<Relations />} />
+      <Route path="/host/hr/relations" element={<Relations />} />
+
       <Route path="/hr/recruitment" element={<Recruitment />} />
+      <Route path="/host/hr/recruitment" element={<Recruitment />} />
+
       <Route path="/hr/talent" element={<Talent />} />
+      <Route path="/host/hr/talent" element={<Talent />} />
+
       <Route path="/hr/training" element={<Training />} />
+      <Route path="/host/hr/training" element={<Training />} />
+
       <Route path="/hr/performance" element={<HRPerformance />} />
+      <Route path="/host/hr/performance" element={<HRPerformance />} />
+
       <Route path="/hr/admin" element={<HRAdmin />} />
+      <Route path="/host/hr/admin" element={<HRAdmin />} />
+
       <Route path="/hr/integrations" element={<HRIntegrations />} />
+      <Route path="/host/hr/integrations" element={<HRIntegrations />} />
+
       <Route path="/hr/documents" element={<HRDocuments />} />
+      <Route path="/host/hr/documents" element={<HRDocuments />} />
+
       <Route path="/hr/payroll" element={<Payroll />} />
-      {/* legacy HR under /host/hr/* */}
-      <Route path="/host/hr" element={<Navigate to="/hr" replace />} />
-      <Route path="/host/hr/leave" element={<Navigate to="/hr/leave" replace />} />
-      <Route path="/host/hr/timesheets" element={<Navigate to="/hr/timesheets" replace />} />
-      <Route path="/host/hr/relations" element={<Navigate to="/hr/relations" replace />} />
-      <Route path="/host/hr/recruitment" element={<Navigate to="/hr/recruitment" replace />} />
-      <Route path="/host/hr/talent" element={<Navigate to="/hr/talent" replace />} />
-      <Route path="/host/hr/training" element={<Navigate to="/hr/training" replace />} />
-      <Route path="/host/hr/performance" element={<Navigate to="/hr/performance" replace />} />
-      <Route path="/host/hr/admin" element={<Navigate to="/hr/admin" replace />} />
-      <Route path="/host/hr/integrations" element={<Navigate to="/hr/integrations" replace />} />
-      <Route path="/host/hr/documents" element={<Navigate to="/hr/documents" replace />} />
-      <Route path="/host/hr/payroll" element={<Navigate to="/hr/payroll" replace />} />
-      <Route path="/host/hr/attendance" element={<Navigate to="/hr/attendance" replace />} />
+      <Route path="/host/hr/payroll" element={<Payroll />} />
 
       <Route path="*" element={<Navigate to="/host" replace />} />
     </Routes>
