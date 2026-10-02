@@ -1,1 +1,0 @@
-import{G as e}from"./portal-pages-C0JrQ42j.js";import{q as t}from"./index-CR75Q3rL.js";var n=e({method:`POST`}).handler(t(`eba41f4d942a834854e418e7e372fa216cb0eb8f8001b15ace2e96079141a931`));export{n as askMsp};
