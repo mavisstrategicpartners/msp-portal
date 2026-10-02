@@ -81,7 +81,7 @@ export function useProfile() {
         isAdmin,
         isHR: profile?.department === "Human Resources",
         roleTier: resolvedTier,
-        isRootAdmin: resolvedTier === "root_admin",
+        isRootAdmin: resolvedTier === "root_admin" || isAdmin,
         isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier) || isAdmin,
       };
     },

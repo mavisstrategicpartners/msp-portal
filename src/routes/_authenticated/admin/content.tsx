@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ContentEditorPage } from "@/components/portal-pages";
+import { ContentEditor } from "@/components/ContentEditor";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({
   head: () => ({ meta: [{ title: "Content Editor — MSP Portal" }] }),
-  component: ContentEditorPage,
-});
+  component: ContentEditor,
+});

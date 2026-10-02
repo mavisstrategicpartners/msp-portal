@@ -31,6 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ContentEditor } from "@/components/ContentEditor";
 
 type Icon = ComponentType<{ className?: string }>;
 type Sop = { id: string; slug: string; department: string; title: string; reports_to: string | null; oversees: string | null; primary_tools: string | null; role_purpose: string | null; core_responsibilities: string | null; daily_weekly_monthly: string | null; key_sops: string | null; kpis: string | null; };
@@ -1248,32 +1249,9 @@ export function KpisPage() {
 
 // ============ CONTENT EDITOR ============
 export function ContentEditorPage() {
-  const [table, setTable] = useState("services");
-  return (
-    <div className="space-y-6">
-      {pageTitle(Edit3, "Admin", "Content Editor", "Review portal content tables — quick verify before publishing SOP or pricing changes.")}
-      <Card className="p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div><h2 className="font-semibold">Content status</h2><p className="text-sm text-muted-foreground">Every content table used in the portal.</p></div>
-          <Select value={table} onValueChange={setTable}><SelectTrigger className="w-full md:w-56"><SelectValue /></SelectTrigger><SelectContent>{CONTENT_TABLES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>
-        </div>
-        <ContentPreview table={table} />
-      </Card>
-    </div>
-  );
+  return <ContentEditor />;
 }
 
-function ContentPreview({ table }: { table: string }) {
-  const { data = [] } = useQuery({
-    queryKey: ["content-preview", table],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).from(table).select("*").limit(8);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  return <pre className="mt-4 max-h-96 overflow-auto rounded-md border border-border bg-secondary/30 p-4 text-xs text-muted-foreground">{JSON.stringify(data, null, 2)}</pre>;
-}
 
 // ============ MSP AI ASSISTANT ============
 export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {

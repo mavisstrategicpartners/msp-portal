@@ -93,19 +93,19 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/users", label: "Manage Staff", icon: Users },
     { to: "/admin/operations", label: "Operations Control", icon: Activity },
     { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
+    { to: "/admin/content", label: "Content Editor", icon: Settings },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
-    { to: "/admin/content", label: "Content Editor", icon: Settings, rootOnly: true },
   ]},
   // Admin also sees standard admin tools within staff portal view
   { group: "Admin Tools", managerOnly: true, portals: ["staff", "hr"], items: [
     { to: "/admin/operations", label: "Operations Control", icon: Activity },
     { to: "/admin/users", label: "Manage Staff", icon: Users },
     { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
+    { to: "/admin/content", label: "Content Editor", icon: Settings },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
-    { to: "/admin/content", label: "Content Editor", icon: Settings, rootOnly: true },
+    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
   ]},
 ];
 
@@ -215,7 +215,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
           const visibleToPortal = section.portals?.includes(selectedPortal as PortalKey);
           if (!isAdmin && section.portals && !visibleToPortal) return null;
           const items = section.items.filter((it) => {
-            if (it.rootOnly && !isRootAdmin) return false;
+            if (it.rootOnly && !isRootAdmin && !isAdmin) return false;
             if (it.adminHide && isAdmin) return false;
             return true;
           });
