@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/admin/attendance")({
   component: AdminAttendanceCommandCenter,
 });
 
+import { getAttendanceBoard, formatElapsed } from "@/lib/attendance-client";
+
 interface StaffMember {
   id: string;
   name: string;
@@ -28,76 +30,23 @@ interface StaffMember {
   hours: string;
   currentProject: string;
   avatar?: string;
+  clockInTime?: number | null;
+  totalBreakMs?: number;
 }
 
 function AdminAttendanceCommandCenter() {
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState<string>("All");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [rawStaff, setRawStaff] = useState<StaffMember[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [now, setNow] = useState<number>(Date.now());
   const { data: profile } = useProfile();
 
   const loadAttendance = useCallback(async () => {
-    setLoadingData(true);
     try {
-      const { data: profiles, error: pErr } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, job_title, department, avatar_url, role_tier")
-        .eq("is_active", true)
-        .order("full_name", { ascending: true });
-
-      if (pErr) throw pErr;
-
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const { data: logs } = await supabase
-        .from("audit_logs")
-        .select("actor_id, details, created_at")
-        .gte("created_at", startOfDay.toISOString())
-        .like("action", "attendance_%")
-        .order("created_at", { ascending: true });
-
-      const statusMap = new Map<string, any>();
-      (logs || []).forEach((log: any) => {
-        if (log.actor_id) statusMap.set(log.actor_id, log.details);
-      });
-
-      const rows: StaffMember[] = (profiles || []).map((p: any) => {
-        const live = statusMap.get(p.id);
-        const clockInTime = live?.clock_in_time;
-        const state: StaffMember["status"] = live?.state || "Clocked Out";
-        let time = "-";
-        let hours = "0h 0m";
-
-        if (clockInTime && state !== "Clocked Out") {
-          time = new Date(clockInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          const elapsedMs = Date.now() - clockInTime - (live?.total_break_ms || 0);
-          const totalMins = Math.max(0, Math.floor(elapsedMs / 60000));
-          hours = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
-        }
-
-        const tier: StaffMember["tier"] =
-          p.role_tier === "intern" ? "Intern" : "Permanent";
-
-        const dept = (p.department || "General").replace(" Team", "") as StaffMember["department"];
-
-        return {
-          id: p.id,
-          name: p.full_name || p.email.split("@")[0].replace(".", " "),
-          role: p.job_title || "Staff Member",
-          department: dept,
-          tier,
-          status: state,
-          time,
-          hours,
-          currentProject: "MSP Operations",
-          avatar: p.avatar_url,
-        };
-      });
-
-      setStaffList(rows);
+      const { staff } = await getAttendanceBoard();
+      setRawStaff(staff as any);
     } catch (err) {
       console.warn("Error loading admin attendance:", err);
       toast.error("Failed to load attendance data");
@@ -108,9 +57,42 @@ function AdminAttendanceCommandCenter() {
 
   useEffect(() => {
     loadAttendance();
-    const timer = setInterval(loadAttendance, 60_000);
-    return () => clearInterval(timer);
+
+    // 1. Realtime broadcast subscription
+    const channel = supabase
+      .channel("attendance-realtime")
+      .on("broadcast", { event: "attendance_update" }, () => {
+        loadAttendance();
+      })
+      .subscribe();
+
+    // 2. Refresh every 10 seconds in the background
+    const pollTimer = setInterval(loadAttendance, 10_000);
+
+    // 3. 1-second live ticker for continuous time calculation
+    const tickTimer = setInterval(() => setNow(Date.now()), 1000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollTimer);
+      clearInterval(tickTimer);
+    };
   }, [loadAttendance]);
+
+  // Recalculate live worked time every second for active clocked-in members
+  const staffList = useMemo(() => {
+    return rawStaff.map((s) => {
+      let liveHours = s.hours || "0h 0m";
+      if (s.status === "Clocked In" && s.clockInTime) {
+        const elapsedMs = now - s.clockInTime - (s.totalBreakMs || 0);
+        liveHours = formatElapsed(elapsedMs);
+      }
+      return {
+        ...s,
+        hours: liveHours,
+      };
+    });
+  }, [rawStaff, now]);
 
   const filteredStaff = staffList.filter((s) => {
     const matchesSearch =
