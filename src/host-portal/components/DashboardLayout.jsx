@@ -112,7 +112,7 @@ export default function DashboardLayout({ children, title }) {
     }, [])
   }
 
-  const isHR = location.pathname.startsWith('/hr')
+  const isHR = location.pathname.startsWith('/hr') || location.pathname.startsWith('/host/hr')
   const groups = isHR ? hrNav : hostNav
   const W = open ? 254 : 68
   const portalLabel = isHR ? 'MSP — All In One (HR)' : 'MSP — All In One (Host)'
@@ -222,7 +222,7 @@ export default function DashboardLayout({ children, title }) {
                 <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text-muted)', padding: '8px 10px 4px', fontWeight: 700 }}>{group.heading}</div>
               )}
               {group.items.map(item => {
-                const active = location.pathname === item.path
+                const active = location.pathname === item.path || location.pathname === `/host${item.path}` || location.pathname.replace('/host/hr', '/hr') === item.path
                 return (
                   <Link key={item.path} to={item.path} onClick={() => isMobile && setMobileOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
