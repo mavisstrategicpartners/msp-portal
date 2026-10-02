@@ -1,8 +1,9 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
-import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity } from "lucide-react";
+import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock } from "lucide-react";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
+import { StaffAttendanceBoard } from "@/components/StaffAttendanceBoard";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — MSP Portal" }] }),
@@ -43,6 +44,63 @@ function Home() {
   const greetingText = greeting();
   const name = data?.profile?.full_name?.trim() ?? "there";
   const tip = TIPS[new Date().getDate() % TIPS.length];
+  const isAdmin = data?.isAdmin ?? false;
+
+  if (isAdmin) {
+    return (
+      <div className="space-y-10">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              Admin Control Panel
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            {greetingText}, <span className="brand-text">{name}</span>
+          </h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            You're logged in as an administrator. Monitor live workforce presence, manage staff, and control operations below.
+          </p>
+        </div>
+
+        <Card className="flex flex-col gap-3 border-primary/20 bg-primary/[0.04] p-4">
+          <div className="flex items-center gap-2">
+            <div className="rounded-md border border-primary/20 bg-primary/10 p-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Admin tip</p>
+          </div>
+          <p className="flex items-start gap-1.5 text-sm text-foreground">
+            <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+            Use Live Staff Presence to see who is clocked in right now across all departments in real time.
+          </p>
+        </Card>
+
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Live workforce presence
+            </h2>
+            <Link to="/admin/attendance" className="text-xs text-primary hover:underline font-medium flex items-center gap-1">
+              Full view <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <StaffAttendanceBoard />
+        </section>
+
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Quick actions</h2>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <QuickLink to="/admin/attendance" icon={Clock} title="Live Staff Presence" desc="Real-time clock-in & presence board." />
+            <QuickLink to="/admin/users" icon={Users} title="Manage Staff" desc="Add, edit & manage team members." />
+            <QuickLink to="/admin/operations" icon={Activity} title="Operations Control" desc="Workflows, client health & KPIs." />
+            <QuickLink to="/admin/kpis" icon={BarChart3} title="KPI Dashboards" desc="Performance metrics & reporting." />
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
@@ -60,10 +118,15 @@ function Home() {
         <div className="md:col-span-2">
           <Card className="flex flex-col justify-center h-full gap-3 border-primary/20 bg-primary/[0.04] p-4">
             <div className="flex items-center gap-2">
-              <div className="rounded-md border border-primary/20 bg-primary/10 p-2"><Sparkles className="h-4 w-4 text-primary" /></div>
+              <div className="rounded-md border border-primary/20 bg-primary/10 p-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tip of the day</p>
             </div>
-            <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground"><Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />{tip}</p>
+            <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground">
+              <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+              {tip}
+            </p>
           </Card>
         </div>
         <div className="md:col-span-1">
@@ -100,7 +163,7 @@ function Home() {
 function QuickLink({ to, icon: Icon, title, desc }: { to: string; icon: typeof BookOpen; title: string; desc: string }) {
   return (
     <Link to={to as any} className="group">
-          <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
+      <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
         <div>
           <Icon className="h-5 w-5 text-primary" />
           <p className="mt-3 text-sm font-semibold">{title}</p>

@@ -28,11 +28,11 @@ import {
   SettingsPanel,
 } from "@/components/portal-pages";
 
-type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean };
+type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
 type PortalKey = "staff" | "manager" | "admin" | "other" | "hr";
 
-const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
+const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
   { group: "Learn MSP", portals: ["staff"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
@@ -46,21 +46,20 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
     { to: "/tools", label: "Tools & Systems", icon: Wrench },
   ]},
+  // My Workspace — staff only (no Leave/HR docs for admin)
   { group: "My Workspace", portals: ["staff"], items: [
-    { to: "/me/leave", label: "Leave Requests", icon: CalendarDays },
-    { to: "/me/declaration", label: "HR Documents", icon: FileSignature },
+    { to: "/me/leave", label: "Leave Requests", icon: CalendarDays, adminHide: true },
+    { to: "/me/declaration", label: "HR Documents", icon: FileSignature, adminHide: true },
   ]},
   { group: "Client Delivery", managerOnly: true, portals: ["staff"], items: [
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
   ]},
+  // Host section — only for manager portal, NOT shown to admin
   { group: "All In One — Host", managerOnly: true, portals: ["manager"], items: [
-    { to: "/host", label: "Host Dashboard", icon: LayoutDashboard },
-    { to: "/host/learners", label: "Placed Learners", icon: Users },
     { to: "/host/workforce", label: "Workforce", icon: Users },
     { to: "/host/performance", label: "Performance", icon: BarChart3 },
     { to: "/host/coaching", label: "Coaching Notes", icon: FileSignature },
     { to: "/host/onboarding", label: "Onboarding", icon: ClipboardList },
-    { to: "/host/marketplace", label: "Learner Marketplace", icon: Compass },
     { to: "/host/recruitment", label: "Recruitment", icon: Users },
     { to: "/host/check", label: "Host Employer Check", icon: ShieldCheck },
     { to: "/host/calendar", label: "Calendar", icon: CalendarDays },
@@ -88,10 +87,21 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; portals?: P
     { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
-  { group: "Admin", managerOnly: true, portals: ["staff", "hr"], items: [
+  // Admin-only dashboard section
+  { group: "Admin Dashboard", adminOnly: true, managerOnly: true, portals: ["admin"], items: [
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/admin/users", label: "Manage Staff", icon: Users },
+    { to: "/admin/operations", label: "Operations Control", icon: Activity },
+    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
+    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
+    { to: "/admin/content", label: "Content Editor", icon: Settings, rootOnly: true },
+  ]},
+  // Admin also sees standard admin tools within staff portal view
+  { group: "Admin Tools", managerOnly: true, portals: ["staff", "hr"], items: [
     { to: "/admin/operations", label: "Operations Control", icon: Activity },
     { to: "/admin/users", label: "Manage Staff", icon: Users },
-    { to: "/admin/attendance", label: "Staff Attendance", icon: Clock },
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
     { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
@@ -172,7 +182,8 @@ function ShellInner({ children }: { children: ReactNode }) {
 function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data } = useProfile();
-  const selectedPortal = data?.isHR ? "hr" : (data?.isAdmin || data?.isManagerOrAbove) ? "admin" : "staff";
+  const isAdmin = data?.isAdmin ?? false;
+  const selectedPortal = data?.isHR ? "hr" : isAdmin ? "admin" : (data?.isManagerOrAbove) ? "manager" : "staff";
   return (
     <aside className={cn(
       "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
@@ -184,18 +195,30 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       </div>
       {!collapsed && (
         <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">Company workspace</p>
-          <p className="mt-1 text-xs text-white/80">Internal operations portal</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
+            {isAdmin ? "Admin workspace" : "Company workspace"}
+          </p>
+          <p className="mt-1 text-xs text-white/80">
+            {isAdmin ? "MSP Admin Control Panel" : "Internal operations portal"}
+          </p>
         </div>
       )}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
           if (section.managerOnly && !isManagerOrAbove) return null;
           if (section.hrOnly && !data?.isHR) return null;
-          const visibleToAdmin = selectedPortal === "admin" &&
-            (section.portals?.includes("staff") || section.portals?.includes("manager"));
-          if (section.portals && !section.portals.includes(selectedPortal) && !visibleToAdmin) return null;
-          const items = section.items.filter((it) => !it.rootOnly || isRootAdmin);
+          // adminOnly sections are exclusively for admin portal
+          if (section.adminOnly && !isAdmin) return null;
+          // Admin portal: only show admin-only section + skip other non-admin sections
+          if (isAdmin && !section.adminOnly) return null;
+          // Non-admin portals: skip adminOnly sections
+          const visibleToPortal = section.portals?.includes(selectedPortal as PortalKey);
+          if (!isAdmin && section.portals && !visibleToPortal) return null;
+          const items = section.items.filter((it) => {
+            if (it.rootOnly && !isRootAdmin) return false;
+            if (it.adminHide && isAdmin) return false;
+            return true;
+          });
           if (items.length === 0) return null;
           return (
             <div key={section.group} className="mb-5">
