@@ -76,12 +76,19 @@ export default function App() {
       <Route path="/hr/documents" element={<HRDocuments />} />
       <Route path="/hr/payroll" element={<Payroll />} />
       {/* legacy HR under /host/hr/* */}
+      <Route path="/host/hr" element={<Navigate to="/hr" replace />} />
       <Route path="/host/hr/leave" element={<Navigate to="/hr/leave" replace />} />
       <Route path="/host/hr/timesheets" element={<Navigate to="/hr/timesheets" replace />} />
       <Route path="/host/hr/relations" element={<Navigate to="/hr/relations" replace />} />
       <Route path="/host/hr/recruitment" element={<Navigate to="/hr/recruitment" replace />} />
       <Route path="/host/hr/talent" element={<Navigate to="/hr/talent" replace />} />
       <Route path="/host/hr/training" element={<Navigate to="/hr/training" replace />} />
+      <Route path="/host/hr/performance" element={<Navigate to="/hr/performance" replace />} />
+      <Route path="/host/hr/admin" element={<Navigate to="/hr/admin" replace />} />
+      <Route path="/host/hr/integrations" element={<Navigate to="/hr/integrations" replace />} />
+      <Route path="/host/hr/documents" element={<Navigate to="/hr/documents" replace />} />
+      <Route path="/host/hr/payroll" element={<Navigate to="/hr/payroll" replace />} />
+      <Route path="/host/hr/attendance" element={<Navigate to="/hr/attendance" replace />} />
 
       <Route path="*" element={<Navigate to="/host" replace />} />
     </Routes>
