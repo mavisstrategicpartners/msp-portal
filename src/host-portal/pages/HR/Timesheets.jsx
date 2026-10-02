@@ -3,7 +3,8 @@ import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTimesheets, seedProjects, ATTENDANCE_STATUSES } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { useConfirm } from '@/components/ui/modal-context'
 
 const totalHours = (r) => (r.projects || []).reduce((s, p) => s + Number(p.hours || 0), 0)
@@ -16,7 +17,7 @@ const emptyEntry = () => ({
 const statusBadge = (s) => s === 'Present' ? 'badge-success' : s === 'Clocked In' ? 'badge-info' : s === 'Clocked Out' ? 'badge-purple' : s === 'On Leave' ? 'badge-warning' : 'badge-danger'
 
 export default function Timesheets() {
-  const [list, setList] = useLocalStorage('host.hr.timesheets', seedTimesheets)
+  const [list, setList] = useSupabaseTable('hr_timesheets', seedTimesheets)
   const [projects] = useLocalStorage('host.projects', seedProjects)
   const [expanded, setExpanded] = useState({})
   const [form, setForm] = useState(null)

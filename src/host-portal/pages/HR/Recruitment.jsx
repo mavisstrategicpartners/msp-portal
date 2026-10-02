@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout.jsx';
 import Modal, { field, labelStyle } from '../../components/Modal.jsx';
 import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../../data/mockData.js';
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js';
+import { uid } from '../../lib/useLocalStorage.js';
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js';
 import { useNotifications } from '../../context/NotificationContext.jsx';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/modal-context';
@@ -13,8 +14,8 @@ const typeColor = (t) => t === 'Leanership' ? 'var(--purple)' : t === 'Intern' ?
 
 export default function Recruitment() {
   const [tab, setTab] = useState('vacancies')
-  const [vacancies, setVacancies] = useLocalStorage('host.hr.vacancies', seedVacancies)
-  const [applicants, setApplicants] = useLocalStorage('host.hr.applicants', seedApplicants)
+  const [vacancies, setVacancies] = useSupabaseTable('hr_vacancies', seedVacancies)
+  const [applicants, setApplicants] = useSupabaseTable('hr_applicants', seedApplicants)
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [viewing, setViewing] = useState(null)

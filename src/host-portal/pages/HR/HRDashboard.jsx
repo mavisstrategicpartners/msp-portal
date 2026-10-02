@@ -2,16 +2,16 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { Link } from 'react-router-dom'
 import { BarChart, LineChart, Donut, StatCard } from '../../components/Chart.jsx'
 import { seedEmployees, seedVacancies, seedApplicants, seedLeave, seedLearnerLeaveRequests, seedTraining, seedAttendance, attendanceTrend, performanceTrend } from '../../data/mockData.js'
-import { useLocalStorage } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function HRDashboard() {
-  const [employees] = useLocalStorage('hr.employees', seedEmployees)
-  const [vacancies] = useLocalStorage('host.hr.vacancies', seedVacancies)
-  const [applicants] = useLocalStorage('host.hr.applicants', seedApplicants)
-  const [leave] = useLocalStorage('host.hr.leave', seedLeave)
-  const [learnerLeave] = useLocalStorage('host.hr.learner_leave', seedLearnerLeaveRequests)
-  const [training] = useLocalStorage('host.hr.training', seedTraining)
-  const [attendanceRecords] = useLocalStorage('host.attendance', seedAttendance)
+  const [employees] = useSupabaseTable('hr_employees', seedEmployees)
+  const [vacancies] = useSupabaseTable('hr_vacancies', seedVacancies)
+  const [applicants] = useSupabaseTable('hr_applicants', seedApplicants)
+  const [leave] = useSupabaseTable('hr_leave', seedLeave)
+  const [learnerLeave] = useSupabaseTable('hr_learner_leave', seedLearnerLeaveRequests)
+  const [training] = useSupabaseTable('hr_training', seedTraining)
+  const [attendanceRecords] = useSupabaseTable('hr_attendance', seedAttendance)
 
   const empByType = ['Permanent','Contract','Temporary'].map((t, i) => ({
     label: t, value: employees.filter(e => e.employment_type === t).length,

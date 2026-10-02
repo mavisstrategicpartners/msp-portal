@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { seedAttendance, ATTENDANCE_STATUSES } from '../../data/mockData.js'
-import { useLocalStorage } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 const statusBadge = (s) => {
   if (s === 'Present' || s === 'Clocked In') return 'badge-success'
@@ -12,7 +12,7 @@ const statusBadge = (s) => {
 }
 
 export default function HRAttendance() {
-  const [records, setRecords] = useLocalStorage('host.attendance', seedAttendance)
+  const [records, setRecords] = useSupabaseTable('hr_attendance', seedAttendance)
   const [q, setQ] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [date, setDate] = useState('')

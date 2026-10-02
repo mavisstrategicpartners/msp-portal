@@ -2,14 +2,15 @@ import { useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees, seedAnnouncements, seedLetters, seedAudit } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function HRAdmin() {
   const [tab, setTab] = useState('employees')
-  const [employees, setEmployees] = useLocalStorage('hr.employees', seedEmployees)
-  const [announcements, setAnnouncements] = useLocalStorage('hr.announcements', seedAnnouncements)
-  const [letters, setLetters] = useLocalStorage('hr.letters', seedLetters)
-  const [audit] = useLocalStorage('hr.audit', seedAudit)
+  const [employees, setEmployees] = useSupabaseTable('hr_employees', seedEmployees)
+  const [announcements, setAnnouncements] = useSupabaseTable('hr_announcements', seedAnnouncements)
+  const [letters, setLetters] = useSupabaseTable('hr_letters', seedLetters)
+  const [audit] = useSupabaseTable('hr_audit', seedAudit)
   const [form, setForm] = useState(null)
   const [annForm, setAnnForm] = useState(null)
 

@@ -3,7 +3,8 @@ import DashboardLayout from '../../components/DashboardLayout.jsx';
 import Modal, { field, labelStyle } from '../../components/Modal.jsx';
 import FilePreview from '../../components/FilePreview.jsx';
 import { seedLeave, seedLearnerLeaveRequests, seedLeaveBalances, LEAVE_TYPES, ZA_PUBLIC_HOLIDAYS } from '../../data/mockData.js';
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js';
+import { uid } from '../../lib/useLocalStorage.js';
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js';
 import { useNotifications } from '../../context/NotificationContext.jsx';
 import { toast } from 'sonner';
 import { Lightbulb, Paperclip, XCircle } from 'lucide-react'
@@ -12,8 +13,8 @@ const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review
 
 export default function Leave() {
   const [tab, setTab] = useState('learner')
-  const [learnerLeave, setLearnerLeave] = useLocalStorage('host.hr.learner_leave', seedLearnerLeaveRequests)
-  const [staffLeave, setStaffLeave] = useLocalStorage('host.hr.leave', seedLeave)
+  const [learnerLeave, setLearnerLeave] = useSupabaseTable('hr_learner_leave', seedLearnerLeaveRequests)
+  const [staffLeave, setStaffLeave] = useSupabaseTable('hr_leave', seedLeave)
   const [reviewing, setReviewing] = useState(null)
   const [staffForm, setStaffForm] = useState(null)
   // Rejection reason modal state
