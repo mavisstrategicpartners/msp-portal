@@ -163,3 +163,20 @@ export async function getAttendanceBoard(): Promise<{ staff: StaffPresenceMember
 
   return { staff: [], timestamp: Date.now() };
 }
+
+// 4. Fetch Monday to Friday Attendance Register & Timesheet
+export async function getAttendanceRegister(weekStart?: string): Promise<any | null> {
+  try {
+    const url = weekStart
+      ? `/api/attendance/register?weekStart=${encodeURIComponent(weekStart)}`
+      : "/api/attendance/register";
+    const res = await fetch(url);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn("[Attendance Client] Failed to fetch attendance register:", err);
+  }
+  return null;
+}
+

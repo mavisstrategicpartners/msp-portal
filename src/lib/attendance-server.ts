@@ -299,6 +299,266 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       });
     }
 
+    // 4. GET /api/attendance/register?weekStart=... -> Monday to Friday Attendance Register
+    if (
+      request.method === "GET" &&
+      pathname.startsWith("/api/attendance/register")
+    ) {
+      // Calculate Monday of the requested or current week
+      let monday: Date;
+      const paramStart = url.searchParams.get("weekStart");
+      if (paramStart) {
+        monday = new Date(paramStart + "T00:00:00");
+      } else {
+        const now = new Date();
+        const day = now.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        monday = new Date(now);
+        monday.setDate(now.getDate() + diff);
+        monday.setHours(0, 0, 0, 0);
+      }
+
+      // Generate the 5 dates for Monday to Friday
+      const weekDays: {
+        dateStr: string;
+        dayName: "Mon" | "Tue" | "Wed" | "Thu" | "Fri";
+        formattedDate: string;
+        dateObj: Date;
+      }[] = [];
+
+      const dayNames: ("Mon" | "Tue" | "Wed" | "Thu" | "Fri")[] = [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+      ];
+
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        const formattedDate = d.toLocaleDateString("en-ZA", {
+          day: "2-digit",
+          month: "short",
+        });
+        weekDays.push({
+          dateStr,
+          dayName: dayNames[i],
+          formattedDate,
+          dateObj: d,
+        });
+      }
+
+      const weekStartStr = weekDays[0].dateStr;
+      const weekEndStr = weekDays[4].dateStr;
+      const weekLabel = `${weekDays[0].formattedDate} ${monday.getFullYear()} – ${weekDays[4].formattedDate} ${weekDays[4].dateObj.getFullYear()}`;
+
+      // 1) Fetch all active staff profiles
+      const { data: profiles, error: pErr } = await (supabaseAdmin as any)
+        .from("profiles")
+        .select("id, full_name, email, job_title, department, avatar_url, role_tier")
+        .eq("is_active", true)
+        .order("full_name", { ascending: true });
+
+      if (pErr) {
+        return new Response(JSON.stringify({ error: pErr.message }), { status: 500, headers });
+      }
+
+      // 2) Fetch all approved leave requests overlapping this Monday-Friday
+      const { data: approvedLeaves, error: lErr } = await (supabaseAdmin as any)
+        .from("leave_requests")
+        .select("user_id, start_date, end_date, reason, status")
+        .eq("status", "approved")
+        .lte("start_date", weekEndStr)
+        .gte("end_date", weekStartStr);
+
+      if (lErr) console.warn("Leave requests query warning:", lErr);
+
+      // 3) Fetch all attendance audit_logs for the week
+      const startIso = new Date(weekDays[0].dateObj).toISOString();
+      const endFriday = new Date(weekDays[4].dateObj);
+      endFriday.setHours(23, 59, 59, 999);
+      const endIso = endFriday.toISOString();
+
+      const { data: logs, error: aErr } = await (supabaseAdmin as any)
+        .from("audit_logs")
+        .select("actor_id, details, created_at, action")
+        .gte("created_at", startIso)
+        .lte("created_at", endIso)
+        .like("action", "attendance_%")
+        .order("created_at", { ascending: true });
+
+      if (aErr) console.warn("Audit logs query warning:", aErr);
+
+      // Build day records for each staff member
+      const now = new Date();
+      const todayDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+      let totalOverallHoursMins = 0;
+      let totalLeaveCount = 0;
+      let totalPossibleWorkDays = 0;
+      let totalActualPresentDays = 0;
+
+      const rows = (profiles || []).map((p: any) => {
+        const userLogs = (logs || []).filter((l: any) => l.actor_id === p.id);
+        const userLeaves = (approvedLeaves || []).filter((lv: any) => lv.user_id === p.id);
+
+        let userTotalMinutes = 0;
+        let daysPresent = 0;
+        let daysLeave = 0;
+        let daysAbsent = 0;
+
+        const days = weekDays.map((wd) => {
+          const dayDate = wd.dateStr;
+
+          // A) Check for approved HR leave on this date
+          const matchingLeave = userLeaves.find(
+            (lv: any) => lv.start_date <= dayDate && lv.end_date >= dayDate
+          );
+
+          if (matchingLeave) {
+            daysLeave++;
+            totalLeaveCount++;
+            return {
+              dateStr: dayDate,
+              dayName: wd.dayName,
+              formattedDate: wd.formattedDate,
+              status: "Approved Leave" as const,
+              leaveReason: matchingLeave.reason || "Approved Leave",
+            };
+          }
+
+          // B) Check for attendance logs on this date
+          const dayLogs = userLogs.filter((l: any) => {
+            const lDate = l.created_at.split("T")[0];
+            return lDate === dayDate;
+          });
+
+          if (dayLogs.length > 0) {
+            daysPresent++;
+            totalActualPresentDays++;
+
+            const firstClockIn = dayLogs.find((l: any) => l.action === "attendance_clocked_in") || dayLogs[0];
+            const lastClockOut = [...dayLogs].reverse().find((l: any) => l.action === "attendance_clocked_out");
+            const latestLog = dayLogs[dayLogs.length - 1];
+
+            const clockInTimeStr = firstClockIn.details?.clock_in_time
+              ? new Date(firstClockIn.details.clock_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : new Date(firstClockIn.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+            let clockOutTimeStr = "17:00";
+            if (lastClockOut) {
+              clockOutTimeStr = new Date(lastClockOut.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            } else if (dayDate === todayDateStr && latestLog.details?.state === "Clocked In") {
+              clockOutTimeStr = "In Progress";
+            }
+
+            // Estimate / calculate hours worked
+            let dayMins = 0;
+            if (latestLog.details?.hours_worked) {
+              const match = latestLog.details.hours_worked.match(/(\d+)h\s*(\d+)m/);
+              if (match) {
+                dayMins = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+              } else {
+                dayMins = 8 * 60;
+              }
+            } else if (firstClockIn.details?.clock_in_time) {
+              const diffMs = (lastClockOut ? new Date(lastClockOut.created_at).getTime() : Date.now()) - firstClockIn.details.clock_in_time;
+              dayMins = Math.max(0, Math.floor(diffMs / 60000));
+            } else {
+              dayMins = 8 * 60;
+            }
+
+            userTotalMinutes += dayMins;
+            const h = Math.floor(dayMins / 60);
+            const m = dayMins % 60;
+
+            return {
+              dateStr: dayDate,
+              dayName: wd.dayName,
+              formattedDate: wd.formattedDate,
+              status: "Present" as const,
+              clockInTime: clockInTimeStr,
+              clockOutTime: clockOutTimeStr,
+              hoursWorked: `${h}h ${m}m`,
+            };
+          }
+
+          // C) If day is in the future
+          if (dayDate > todayDateStr) {
+            return {
+              dateStr: dayDate,
+              dayName: wd.dayName,
+              formattedDate: wd.formattedDate,
+              status: "Upcoming" as const,
+            };
+          }
+
+          // D) Past or today weekday with no clock in and no approved leave
+          daysAbsent++;
+          return {
+            dateStr: dayDate,
+            dayName: wd.dayName,
+            formattedDate: wd.formattedDate,
+            status: "Did Not Clock In" as const,
+            hoursWorked: "0h 0m",
+          };
+        });
+
+        totalOverallHoursMins += userTotalMinutes;
+        const totalPastDays = days.filter((d) => d.status !== "Upcoming").length;
+        totalPossibleWorkDays += totalPastDays;
+
+        const complianceRate = totalPastDays > 0 ? Math.round(((daysPresent + daysLeave) / totalPastDays) * 100) : 100;
+        const totH = Math.floor(userTotalMinutes / 60);
+        const totM = userTotalMinutes % 60;
+
+        return {
+          userId: p.id,
+          name: p.full_name || p.email.split("@")[0].replace(".", " "),
+          email: p.email,
+          role: p.job_title || "Staff Member",
+          department: (p.department || "General").replace(" Team", ""),
+          tier: p.role_tier === "intern" ? "Intern" : "Permanent",
+          days,
+          daysPresent,
+          daysLeave,
+          daysAbsent,
+          totalHoursWorked: `${totH}h ${totM}m`,
+          complianceRate,
+        };
+      });
+
+      const avgAttendanceRate =
+        totalPossibleWorkDays > 0
+          ? Math.round(((totalActualPresentDays + totalLeaveCount) / totalPossibleWorkDays) * 100)
+          : 100;
+
+      const grandH = Math.floor(totalOverallHoursMins / 60);
+      const grandM = totalOverallHoursMins % 60;
+
+      return new Response(
+        JSON.stringify({
+          weekStart: weekStartStr,
+          weekEnd: weekEndStr,
+          weekLabel,
+          schedule: "Monday to Friday, 08:00 – 17:00 (SAST)",
+          rows,
+          stats: {
+            totalStaff: profiles?.length || 0,
+            avgAttendanceRate,
+            totalHoursLogged: `${grandH}h ${grandM}m`,
+            totalLeaveDays: totalLeaveCount,
+          },
+        }),
+        { status: 200, headers }
+      );
+    }
+
     return new Response(JSON.stringify({ error: "Endpoint not found" }), {
       status: 404,
       headers,
