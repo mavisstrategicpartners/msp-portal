@@ -1,8 +1,12 @@
+import { useState, useEffect } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import { Link } from 'react-router-dom'
 import { BarChart, LineChart, Donut, StatCard } from '../../components/Chart.jsx'
 import { seedEmployees, seedVacancies, seedApplicants, seedLeave, seedLearnerLeaveRequests, seedTraining, seedAttendance, attendanceTrend, performanceTrend } from '../../data/mockData.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from 'sonner'
+import { CheckCircle, XCircle } from 'lucide-react'
 
 export default function HRDashboard() {
   const [employees] = useSupabaseTable('hr_employees', seedEmployees)
@@ -12,6 +16,34 @@ export default function HRDashboard() {
   const [learnerLeave] = useSupabaseTable('hr_learner_leave', seedLearnerLeaveRequests)
   const [training] = useSupabaseTable('hr_training', seedTraining)
   const [attendanceRecords] = useSupabaseTable('hr_attendance', seedAttendance)
+  const [portalLeaveRequests, setPortalLeaveRequests] = useState([])
+
+  useEffect(() => {
+    async function fetchPortalRequests() {
+      const { data } = await supabase
+        .from('leave_requests')
+        .select('*, profiles:user_id(full_name, email)')
+        .order('created_at', { ascending: false })
+      if (data) setPortalLeaveRequests(data)
+    }
+    fetchPortalRequests()
+  }, [])
+
+  const handleApprove = async (id, name) => {
+    const { error } = await supabase.from('leave_requests').update({ status: 'approved' }).eq('id', id)
+    if (!error) {
+      setPortalLeaveRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' } : r))
+      toast.success('Leave Approved', { description: `Approved leave request for ${name}.` })
+    }
+  }
+
+  const handleDecline = async (id, name) => {
+    const { error } = await supabase.from('leave_requests').update({ status: 'declined' }).eq('id', id)
+    if (!error) {
+      setPortalLeaveRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'declined' } : r))
+      toast.error('Leave Declined', { description: `Declined leave request for ${name}.` })
+    }
+  }
 
   const empByType = ['Permanent','Contract','Temporary'].map((t, i) => ({
     label: t, value: employees.filter(e => e.employment_type === t).length,
@@ -50,6 +82,76 @@ export default function HRDashboard() {
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>DIVERSITY — GENDER</div>
           <Donut data={empByGender} size={160} thickness={20} />
         </div>
+      {/* Live Employee Leave Approvals */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+          Pending Employee Leave Requests ({portalLeaveRequests.filter(r => r.status === 'pending').length})
+        </div>
+        <Link to="/hr/leave" style={{ fontSize: 12, color: 'var(--purple)', fontWeight: 600 }}>Manage All Leave Requests →</Link>
+      </div>
+      <div className="card" style={{ marginBottom: 22 }}>
+        {portalLeaveRequests.length === 0 ? (
+          <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>No employee leave requests submitted yet.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <th style={{ padding: '8px 0' }}>Employee</th>
+                  <th>Dates</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portalLeaveRequests.slice(0, 5).map(r => {
+                  const name = r.profiles?.full_name || r.profiles?.email || 'Employee'
+                  const isPending = r.status === 'pending'
+                  const isApproved = r.status === 'approved'
+                  const isDeclined = r.status === 'declined'
+                  return (
+                    <tr key={r.id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 12 }}>
+                      <td style={{ padding: '10px 0', fontWeight: 600 }}>
+                        {name}
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{r.profiles?.email || ''}</div>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{r.start_date} → {r.end_date}</td>
+                      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason}</td>
+                      <td>
+                        <span className={'badge ' + (isApproved ? 'badge-success' : isDeclined ? 'badge-danger' : 'badge-warning')}>
+                          {isApproved ? 'Approved' : isDeclined ? 'Declined' : 'Pending'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', gap: 6 }}>
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: '3px 8px', fontSize: 11 }}
+                            disabled={isApproved}
+                            onClick={() => handleApprove(r.id, name)}
+                          >
+                            <CheckCircle size={12} style={{ marginRight: 3 }} />
+                            Approve
+                          </button>
+                          <button
+                            className="btn btn-ghost"
+                            style={{ padding: '3px 8px', fontSize: 11, color: 'var(--danger)' }}
+                            disabled={isDeclined}
+                            onClick={() => handleDecline(r.id, name)}
+                          >
+                            <XCircle size={12} style={{ marginRight: 3 }} />
+                            Decline
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, marginBottom: 22 }}>
