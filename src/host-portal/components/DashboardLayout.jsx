@@ -64,18 +64,18 @@ const hrNav = [
   {
     heading: 'Talent',
     items: [
-      { name: 'Employee Recruitment', path: '/hr/recruitment', icon: '◎' },
-      { name: 'HR Performance', path: '/hr/performance', icon: '◑' },
+      { name: 'Recruitment', path: '/hr/recruitment', icon: '✎' },
+      { name: 'Performance', path: '/hr/performance', icon: '◑' },
       { name: 'Talent Management', path: '/hr/talent', icon: '★' },
-      { name: 'Training Development', path: '/hr/training', icon: '✦' },
+      { name: 'Training & Development', path: '/hr/training', icon: '✦' },
     ],
   },
   {
     heading: 'System',
     items: [
       { name: 'HR Administration', path: '/hr/admin', icon: '▣' },
-      { name: 'Employee Documents', path: '/hr/documents', icon: '▤' },
-      { name: 'Payroll', path: '/hr/payroll', icon: '▥' },
+        { name: 'Employee Documents', path: '/hr/documents', icon: '▤' },
+        { name: 'Payroll', path: '/hr/payroll', icon: '▥' },
       { name: 'Integrations', path: '/hr/integrations', icon: '⚡' },
     ],
   },
