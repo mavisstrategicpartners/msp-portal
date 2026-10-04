@@ -42,12 +42,6 @@ function AuthedLayout() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-  // The embedded Host / HR portal owns its own sidebar + top bar,
-  // so render it edge-to-edge without the MSP shell wrapper.
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname.startsWith("/host") || pathname.startsWith("/hr")) {
-    return <Outlet />;
-  }
   return (
     <AppShell>
       <Outlet />

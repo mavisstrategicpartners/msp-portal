@@ -75,11 +75,19 @@ export function useProfile() {
       const isAdmin =
         roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
 
+      const deptLower = (profile?.department || "").toLowerCase();
+      const titleLower = (profile?.job_title || "").toLowerCase();
+      const isHR =
+        deptLower.includes("human resources") ||
+        deptLower.includes("hr") ||
+        titleLower.includes("hr") ||
+        isAdmin;
+
       return {
         user,
         profile,
         isAdmin,
-        isHR: profile?.department === "Human Resources",
+        isHR,
         roleTier: resolvedTier,
         isRootAdmin: resolvedTier === "root_admin" || isAdmin,
         isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier) || isAdmin,

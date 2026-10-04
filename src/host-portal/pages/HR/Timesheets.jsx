@@ -63,6 +63,19 @@ export default function Timesheets() {
     ...ATTENDANCE_STATUSES.map(s => ({ label: s, value: list.filter(r => r.status === s).length })),
   ]
 
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+
+  const filteredList = list.filter(r => {
+    const matchSearch =
+      r.employee.toLowerCase().includes(search.toLowerCase()) ||
+      (r.notes || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.projects || []).some(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    if (!matchSearch) return false
+    if (statusFilter !== 'All' && r.status !== statusFilter) return false
+    return true
+  })
+
   return (
     <DashboardLayout title="Timesheet Management">
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
@@ -74,8 +87,22 @@ export default function Timesheets() {
         ))}
       </div>
 
-      <div className="card" style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="btn btn-primary" onClick={openAdd}>+ Add Timesheet</button>
+      <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by employee name or project…"
+          style={{ flex: 1, minWidth: 240, padding: '9px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }}
+        />
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          style={{ padding: '9px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }}
+        >
+          <option value="All">All Statuses</option>
+          {ATTENDANCE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button className="btn btn-primary" onClick={openAdd} style={{ marginLeft: 'auto' }}>+ Add Timesheet</button>
       </div>
 
       <div className="card">
@@ -87,7 +114,7 @@ export default function Timesheets() {
               </tr>
             </thead>
             <tbody>
-              {list.map(r => {
+              {filteredList.map(r => {
                 const isOpen = !!expanded[r.id]
                 const ps = r.projects || []
                 return (

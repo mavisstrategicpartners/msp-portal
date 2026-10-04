@@ -8,11 +8,40 @@
  * scoped inside `.host-portal-root` so styles/tokens don't leak.
  */
 import { useState, useEffect } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import App from "./App.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 import "./index.css";
+
+function RouterUrlSync() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const rawPath = location.pathname;
+    let target = rawPath;
+    if (rawPath.startsWith('/hr')) {
+      target = `/host${rawPath}`;
+    }
+    if (window.location.pathname !== target && target.startsWith('/host')) {
+      window.history.pushState(null, '', target);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const p = window.location.pathname;
+      if (p.startsWith('/host')) {
+        navigate(p);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [navigate]);
+
+  return null;
+}
 
 export function HostPortalEmbedded({ initialPath = "/host" }: { initialPath?: string }) {
   const entries = [initialPath];
@@ -24,6 +53,7 @@ export function HostPortalEmbedded({ initialPath = "/host" }: { initialPath?: st
       <ThemeProvider>
         <NotificationProvider>
           <MemoryRouter initialEntries={entries} initialIndex={0} key={initialPath}>
+            <RouterUrlSync />
             <App />
           </MemoryRouter>
         </NotificationProvider>

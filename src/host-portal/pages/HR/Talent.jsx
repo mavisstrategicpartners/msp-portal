@@ -1,335 +1,642 @@
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import { BarChart, Donut } from '../../components/Chart.jsx'
 import { seedTalent, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
-import { Star, TrendingUp, Award, Target, Users, ChevronRight, Plus, Edit2, Trash2, Search, Filter, ArrowUpRight } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  Crown,
+  Sparkles,
+  ShieldCheck,
+  TrendingUp,
+  AlertCircle,
+  Search,
+  Filter,
+  Plus,
+  Edit2,
+  Trash2,
+  UserCheck,
+  Compass,
+  CheckCircle,
+  GraduationCap
+} from 'lucide-react'
 
-const POTENTIAL_COLORS = { High: 'var(--success)', Medium: 'var(--warning)', Low: 'var(--danger)' }
-const READINESS_COLORS = { 'Ready now': 'var(--success)', '1-2 years': 'var(--brand)', '2-3 years': 'var(--warning)', 'Not ready': 'var(--danger)' }
-const READINESS_ORDER = ['Ready now', '1-2 years', '2-3 years', 'Not ready']
-
-const NineBox = ({ talent }) => {
-  const cells = [
-    { row: 0, col: 0, label: 'Underperformer', sub: 'Low potential, low performance', bg: '#fee2e2', border: '#dc2626' },
-    { row: 0, col: 1, label: 'Core Employee', sub: 'Moderate potential, low performance', bg: '#fef3c7', border: '#d97706' },
-    { row: 0, col: 2, label: 'High Professional', sub: 'High potential, low performance', bg: '#dcfce7', border: '#16a34a' },
-    { row: 1, col: 0, label: 'Inconsistent Player', sub: 'Low potential, moderate performance', bg: '#fef3c7', border: '#d97706' },
-    { row: 1, col: 1, label: 'Key Player', sub: 'Moderate potential, moderate performance', bg: '#dbeafe', border: '#2563eb' },
-    { row: 1, col: 2, label: 'High Performer', sub: 'High potential, moderate performance', bg: '#ede9fe', border: '#7c3aed' },
-    { row: 2, col: 0, label: 'Reliable Employee', sub: 'Low potential, high performance', bg: '#dcfce7', border: '#16a34a' },
-    { row: 2, col: 1, label: 'High Achiever', sub: 'Moderate potential, high performance', bg: '#ede9fe', border: '#7c3aed' },
-    { row: 2, col: 2, label: 'Star', sub: 'High potential, high performance', bg: 'linear-gradient(135deg,#ede9fe,#dbeafe)', border: '#7c3aed' },
-  ]
-
-  const getCell = (t) => {
-    const potCol = { High: 2, Medium: 1, Low: 0 }[t.potential] ?? 1
-    const perfRow = t.idp_progress >= 80 ? 2 : t.idp_progress >= 50 ? 1 : 0
-    return `${perfRow}-${potCol}`
+const initialTalent = [
+  {
+    id: 'T-1',
+    employee: 'Thandi Mokoena',
+    department: 'People Operations',
+    role: 'Lead People Operations Partner',
+    potential: 'High',
+    readiness: 'Ready now',
+    successor_for: 'Director of People & Culture',
+    idp_progress: 92,
+    flight_risk: 'Low',
+    mentor: 'Chief Executive Officer',
+    strengths: 'Strategic workforce planning, empathy, high-stakes mediation'
+  },
+  {
+    id: 'T-2',
+    employee: 'Sipho Dlamini',
+    department: 'Engineering & Delivery',
+    role: 'Senior Infrastructure Engineer',
+    potential: 'High',
+    readiness: '1-2 years',
+    successor_for: 'Lead Technical Architect',
+    idp_progress: 75,
+    flight_risk: 'Medium',
+    mentor: 'Principal Systems Architect',
+    strengths: 'Cloud automation, fault-tolerant infrastructure, rapid debugging'
+  },
+  {
+    id: 'T-3',
+    employee: 'Naledi Sithole',
+    department: 'Marketing & Partnerships',
+    role: 'Growth Marketing Lead',
+    potential: 'High',
+    readiness: 'Ready now',
+    successor_for: 'Head of Growth & Client Acquisition',
+    idp_progress: 88,
+    flight_risk: 'Low',
+    mentor: 'Managing Director',
+    strengths: 'Demand generation, conversion funnels, data analytics'
+  },
+  {
+    id: 'T-4',
+    employee: 'Bongani Nkosi',
+    department: 'Operations',
+    role: 'Operations Specialist',
+    potential: 'Medium',
+    readiness: '2-3 years',
+    successor_for: 'Operations Delivery Manager',
+    idp_progress: 60,
+    flight_risk: 'Low',
+    mentor: 'Thandi Mokoena',
+    strengths: 'Process documentation, ticketing workflows, SLA tracking'
+  },
+  {
+    id: 'T-5',
+    employee: 'Karabo Mthembu',
+    department: 'Client Delivery',
+    role: 'Junior Associate',
+    potential: 'Low',
+    readiness: 'Not ready',
+    successor_for: '',
+    idp_progress: 35,
+    flight_risk: 'High',
+    mentor: 'Sipho Dlamini',
+    strengths: 'Customer service, basic triage'
   }
+]
 
-  const cellTalent = {}
-  talent.forEach(t => {
-    const key = getCell(t)
-    if (!cellTalent[key]) cellTalent[key] = []
-    cellTalent[key].push(t)
-  })
-
-  return (
-    <div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8, fontSize: 11, color: 'var(--text-muted)' }}>
-        <div style={{ flex: 1, textAlign: 'center' }}>LOW POTENTIAL</div>
-        <div style={{ flex: 1, textAlign: 'center' }}>MEDIUM POTENTIAL</div>
-        <div style={{ flex: 1, textAlign: 'center' }}>HIGH POTENTIAL</div>
-      </div>
-      <div style={{ display: 'flex', gap: 4, flexDirection: 'column' }}>
-        {[2, 1, 0].map(row => (
-          <div key={row} style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
-            <div style={{ width: 60, display: 'flex', alignItems: 'center', fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', paddingRight: 8 }}>
-              {row === 2 ? 'HIGH PERF' : row === 1 ? 'MID PERF' : 'LOW PERF'}
-            </div>
-            {[0, 1, 2].map(col => {
-              const cell = cells.find(c => c.row === row && c.col === col)
-              const key = `${row}-${col}`
-              const names = cellTalent[key] || []
-              return (
-                <div key={col} style={{
-                  flex: 1, minHeight: 80, borderRadius: 8, padding: '8px 10px',
-                  background: cell.bg, border: `1.5px solid ${cell.border}`, position: 'relative',
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: cell.border, marginBottom: 4 }}>{cell.label}</div>
-                  {names.map(t => (
-                    <div key={t.id} style={{
-                      fontSize: 10, background: 'white', borderRadius: 4, padding: '2px 6px',
-                      marginBottom: 2, fontWeight: 500, boxShadow: '0 1px 3px rgba(0,0,0,.1)',
-                    }}>
-                      {t.employee.split(' ')[0]}
-                    </div>
-                  ))}
-                </div>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+const criticalRoles = [
+  {
+    title: 'Director of People & Culture',
+    department: 'Executive Leadership',
+    vacancyRisk: 'High',
+    benchCount: 2,
+    leadSuccessor: 'Thandi Mokoena',
+    readiness: 'Ready now'
+  },
+  {
+    title: 'Lead Technical Architect',
+    department: 'Technology',
+    vacancyRisk: 'Critical',
+    benchCount: 1,
+    leadSuccessor: 'Sipho Dlamini',
+    readiness: '1-2 years'
+  },
+  {
+    title: 'Head of Growth & Client Acquisition',
+    department: 'Commercial',
+    vacancyRisk: 'Medium',
+    benchCount: 1,
+    leadSuccessor: 'Naledi Sithole',
+    readiness: 'Ready now'
+  },
+  {
+    title: 'Operations Delivery Manager',
+    department: 'Client Operations',
+    vacancyRisk: 'Medium',
+    benchCount: 2,
+    leadSuccessor: 'Bongani Nkosi',
+    readiness: '2-3 years'
+  }
+]
 
 export default function Talent() {
-  const [talent, setTalent] = useSupabaseTable('hr_talent', seedTalent)
-  const [form, setForm] = useState(null)
+  const [talent, setTalent] = useSupabaseTable('hr_talent', initialTalent)
+  const [tab, setTab] = useState('pipeline') // 'pipeline' | 'directory' | 'hipo'
   const [search, setSearch] = useState('')
-  const [filterPotential, setFilterPotential] = useState('All')
-  const [view, setView] = useState('list') // list | matrix
+  const [potentialFilter, setPotentialFilter] = useState('All')
+  const [form, setForm] = useState(null)
 
-  const filtered = useMemo(() =>
-    talent.filter(t =>
-      (filterPotential === 'All' || t.potential === filterPotential) &&
-      (t.employee.toLowerCase().includes(search.toLowerCase()) || (t.role || '').toLowerCase().includes(search.toLowerCase()))
-    ), [talent, search, filterPotential])
+  const filteredTalent = useMemo(() => {
+    return talent.filter(t => {
+      const matchSearch =
+        t.employee.toLowerCase().includes(search.toLowerCase()) ||
+        (t.role || '').toLowerCase().includes(search.toLowerCase()) ||
+        (t.successor_for || '').toLowerCase().includes(search.toLowerCase())
+      if (!matchSearch) return false
 
-  const openAdd = () => setForm({
-    employee: seedEmployees[0]?.full_name || '',
-    role: seedEmployees[0]?.role || '',
-    potential: 'Medium',
-    readiness: '1-2 years',
-    successor_for: '',
-    idp_progress: 0,
-    strengths: '',
-    development_areas: '',
-  })
+      if (potentialFilter !== 'All' && t.potential !== potentialFilter) return false
+      return true
+    })
+  }, [talent, search, potentialFilter])
 
-  const submit = () => {
-    if (!form.employee.trim()) return toast.warning('Employee name required')
+  const hipoList = talent.filter(t => t.potential === 'High')
+  const avgIdp = Math.round(
+    talent.reduce((s, t) => s + Number(t.idp_progress || 0), 0) / (talent.length || 1)
+  )
+  const readyNowCount = talent.filter(t => t.readiness === 'Ready now').length
+  const highRiskCount = talent.filter(t => t.flight_risk === 'High').length
+
+  const openAdd = () => {
+    setForm({
+      employee: seedEmployees[0]?.full_name || '',
+      department: seedEmployees[0]?.department || 'Operations',
+      role: seedEmployees[0]?.role || '',
+      potential: 'High',
+      readiness: '1-2 years',
+      successor_for: '',
+      idp_progress: 50,
+      flight_risk: 'Low',
+      mentor: 'Executive Team',
+      strengths: ''
+    })
+  }
+
+  const openEdit = (t) => {
+    setForm({ ...t })
+  }
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!form.employee.trim()) {
+      toast.warning('Employee name required')
+      return
+    }
+
     if (form.id) {
-      setTalent(prev => prev.map(x => x.id === form.id ? form : x))
-      toast.success('Talent record updated')
+      setTalent(prev => prev.map(x => (x.id === form.id ? form : x)))
+      toast.success('Talent Profile Updated', { description: `Profile for ${form.employee} saved.` })
     } else {
-      setTalent(prev => [{ id: uid('T'), ...form }, ...prev])
-      toast.success('Talent record added')
+      const newRec = { ...form, id: uid('T') }
+      setTalent(prev => [newRec, ...prev])
+      toast.success('Talent Profile Created', { description: `Added ${form.employee} to talent pipeline.` })
     }
     setForm(null)
   }
 
   const remove = (t) => {
-    if (window.confirm(`Remove ${t.employee} from talent pipeline?`)) {
+    if (window.confirm(`Remove ${t.employee} from the talent pipeline?`)) {
       setTalent(prev => prev.filter(x => x.id !== t.id))
-      toast.success('Record removed')
+      toast.info('Record Removed', { description: `${t.employee} was removed from talent tracking.` })
     }
   }
 
-  // Analytics
-  const highPotential = talent.filter(t => t.potential === 'High').length
-  const readyNow = talent.filter(t => t.readiness === 'Ready now').length
-  const avgIdp = talent.length ? Math.round(talent.reduce((s, t) => s + (t.idp_progress || 0), 0) / talent.length) : 0
-  const withSuccessor = talent.filter(t => t.successor_for).length
-
-  const potentialDist = ['High', 'Medium', 'Low'].map((p, i) => ({
-    label: p, value: talent.filter(t => t.potential === p).length,
-    color: ['var(--success)', 'var(--warning)', 'var(--danger)'][i],
-  }))
-  const readinessDist = READINESS_ORDER.map(r => ({
-    label: r.replace(' years', 'yr').replace('Ready now', 'Ready'),
-    value: talent.filter(t => t.readiness === r).length,
-  }))
-
   return (
     <DashboardLayout title="Talent Management">
-
-      {/* Hero Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #4c1d95 0%, var(--purple) 100%)',
-        borderRadius: 16, padding: '22px 28px', marginBottom: 24, color: 'white',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-        boxShadow: '0 8px 32px rgba(109,60,134,.35)',
-      }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <Star size={16} />
-            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', opacity: 0.8 }}>Talent Pipeline</span>
+      <div className="space-y-6">
+        {/* Metric Cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">High-Potential (HiPo)</span>
+              <Crown className="h-4 w-4 text-amber-500" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-foreground">{hipoList.length}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Top tier future leaders</div>
           </div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Succession Planning & IDP Tracker</h2>
-          <p style={{ margin: '4px 0 0', opacity: 0.75, fontSize: 13 }}>
-            {highPotential} high-potential employees · {readyNow} ready for promotion
-          </p>
-        </div>
-        <button className="btn" onClick={openAdd} style={{ background: 'rgba(255,255,255,.2)', color: 'white', border: '1px solid rgba(255,255,255,.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Plus size={14} /> Add Talent Record
-        </button>
-      </div>
 
-      {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        {[
-          { label: 'Total in Pipeline', value: talent.length, icon: Users, color: 'var(--purple)' },
-          { label: 'High Potential', value: highPotential, icon: Star, color: 'var(--success)', sub: `${Math.round((highPotential / (talent.length || 1)) * 100)}% of workforce` },
-          { label: 'Ready for Promotion', value: readyNow, icon: Award, color: 'var(--brand)' },
-          { label: 'Avg IDP Progress', value: `${avgIdp}%`, icon: TrendingUp, color: '#2563eb' },
-          { label: 'Succession Mapped', value: withSuccessor, icon: Target, color: 'var(--warning)', sub: `${talent.length - withSuccessor} unmapped` },
-        ].map((s, i) => (
-          <div key={i} className="card" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, borderRadius: '50%', background: s.color, opacity: 0.12 }} />
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--text-muted)', marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
-            {s.sub && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.sub}</div>}
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Ready-Now Successors</span>
+              <UserCheck className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{readyNowCount}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Prepared for immediate promotion</div>
           </div>
-        ))}
-      </div>
 
-      {/* Analytics Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <div className="card">
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Potential Distribution</div>
-          <Donut data={potentialDist} size={140} thickness={20} />
-        </div>
-        <div className="card">
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Readiness for Advancement</div>
-          <BarChart data={readinessDist} height={160} color="var(--purple)" />
-        </div>
-        <div className="card">
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>9-Box Grid</div>
-          <NineBox talent={talent} />
-        </div>
-      </div>
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Avg IDP Completion</span>
+              <GraduationCap className="h-4 w-4 text-purple-500" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-foreground">{avgIdp}%</div>
+            <div className="mt-1 text-xs text-muted-foreground">Personal development milestones</div>
+          </div>
 
-      {/* Controls */}
-      <div className="card" style={{ marginBottom: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 200 }}>
-          <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or role…"
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: 'var(--text-primary)' }} />
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Retention Alerts</span>
+              <AlertCircle className="h-4 w-4 text-rose-500" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{highRiskCount}</div>
+            <div className="mt-1 text-xs text-muted-foreground">High flight-risk talent flagged</div>
+          </div>
         </div>
-        <select value={filterPotential} onChange={e => setFilterPotential(e.target.value)}
-          style={{ padding: '6px 10px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 12 }}>
-          {['All', 'High', 'Medium', 'Low'].map(p => <option key={p}>{p}</option>)}
-        </select>
-        <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
-          {['list', 'matrix'].map(v => (
-            <button key={v} onClick={() => setView(v)} className={`btn ${view === v ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ borderRadius: 0, padding: '6px 14px', fontSize: 12 }}>
-              {v === 'list' ? 'List View' : '9-Box'}
+
+        {/* Tab Switcher & Actions */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex rounded-lg border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setTab('pipeline')}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                tab === 'pipeline' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Succession Pipeline
             </button>
-          ))}
-        </div>
-        <button className="btn btn-primary" onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Plus size={14} /> Add Record
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={() => setTab('directory')}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                tab === 'directory' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Talent Directory ({talent.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('hipo')}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                tab === 'hipo' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              HiPo Spotlight ({hipoList.length})
+            </button>
+          </div>
 
-      {view === 'list' ? (
-        <div className="card" style={{ overflowX: 'auto' }}>
-          <table>
-            <thead>
-              <tr style={{ textAlign: 'left', fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                <th style={{ padding: '10px 0' }}>Employee</th>
-                <th style={{ padding: '10px 12px' }}>Current Role</th>
-                <th style={{ padding: '10px 12px' }}>Potential</th>
-                <th style={{ padding: '10px 12px' }}>Readiness</th>
-                <th style={{ padding: '10px 12px' }}>Successor For</th>
-                <th style={{ padding: '10px 12px' }}>IDP Progress</th>
-                <th style={{ padding: '10px 0', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(t => (
-                <tr key={t.id} style={{ borderTop: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '14px 12px 14px 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--purple-soft)', color: 'var(--purple)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-                        {t.employee.slice(0, 2).toUpperCase()}
-                      </div>
+          <button
+            onClick={openAdd}
+            className="btn btn-primary inline-flex items-center gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Talent Record</span>
+          </button>
+        </div>
+
+        {/* TAB 1: SUCCESSION PIPELINE */}
+        {tab === 'pipeline' && (
+          <div className="space-y-4">
+            <div className="card p-4">
+              <div className="mb-3">
+                <h3 className="text-base font-bold text-foreground">Critical Leadership Succession Bench</h3>
+                <p className="text-xs text-muted-foreground">Identified successors for core operational roles to mitigate key-person dependency.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {criticalRoles.map((role) => (
+                  <div key={role.title} className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{t.employee}</div>
-                        {t.strengths && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>Strengths: {t.strengths.slice(0, 40)}{t.strengths.length > 40 ? '…' : ''}</div>}
+                        <div className="font-bold text-foreground text-sm">{role.title}</div>
+                        <div className="text-xs text-muted-foreground">{role.department}</div>
                       </div>
+                      <span className={`badge ${role.vacancyRisk === 'Critical' ? 'badge-danger' : role.vacancyRisk === 'High' ? 'badge-warning' : 'badge-info'}`}>
+                        {role.vacancyRisk} Risk
+                      </span>
                     </div>
-                  </td>
-                  <td style={{ padding: '14px 12px', fontSize: 12, color: 'var(--text-secondary)' }}>{t.role}</td>
-                  <td style={{ padding: '14px 12px' }}>
-                    <span style={{ background: POTENTIAL_COLORS[t.potential] + '22', color: POTENTIAL_COLORS[t.potential], padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                      {t.potential}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 12px' }}>
-                    <span style={{ background: READINESS_COLORS[t.readiness] + '22', color: READINESS_COLORS[t.readiness], padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                      {t.readiness}
-                    </span>
-                  </td>
-                  <td style={{ padding: '14px 12px', fontSize: 12, color: 'var(--text-secondary)' }}>{t.successor_for || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                  <td style={{ padding: '14px 12px', minWidth: 140 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, height: 8, background: 'var(--bg-secondary)', borderRadius: 999, overflow: 'hidden' }}>
-                        <div style={{ width: `${t.idp_progress}%`, height: '100%', background: t.idp_progress >= 70 ? 'var(--success)' : t.idp_progress >= 40 ? 'var(--warning)' : 'var(--danger)', borderRadius: 999, transition: 'width .4s ease' }} />
-                      </div>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, width: 32 }}>{t.idp_progress}%</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '14px 0', textAlign: 'right' }}>
-                    <div style={{ display: 'inline-flex', gap: 4 }}>
-                      <button className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={() => setForm(t)}>
-                        <Edit2 size={12} /> Edit
-                      </button>
-                      <button className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 11, color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={() => remove(t)}>
-                        <Trash2 size={12} /> Remove
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No talent records match your filter.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="card">
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>Full 9-Box Talent Matrix</div>
-          <NineBox talent={talent} />
-        </div>
-      )}
 
-      {form && (
-        <Modal open onClose={() => setForm(null)} title={form.id ? 'Edit Talent Record' : 'New Talent Record'} width={640}
-          footer={<><button className="btn btn-ghost" onClick={() => setForm(null)}>Cancel</button><button className="btn btn-primary" onClick={submit}>Save Record</button></>}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Employee Name</label>
-              <select style={field} value={form.employee} onChange={e => {
-                const emp = seedEmployees.find(x => x.full_name === e.target.value)
-                setForm({ ...form, employee: e.target.value, role: emp?.role || form.role })
-              }}>
-                {seedEmployees.map(e => <option key={e.id} value={e.full_name}>{e.full_name}</option>)}
-              </select>
-            </div>
-            <div><label style={labelStyle}>Current Role</label><input style={field} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} /></div>
-            <div><label style={labelStyle}>Potential Rating</label>
-              <select style={field} value={form.potential} onChange={e => setForm({ ...form, potential: e.target.value })}>
-                <option>High</option><option>Medium</option><option>Low</option>
-              </select>
-            </div>
-            <div><label style={labelStyle}>Readiness for Advancement</label>
-              <select style={field} value={form.readiness} onChange={e => setForm({ ...form, readiness: e.target.value })}>
-                <option>Ready now</option><option>1-2 years</option><option>2-3 years</option><option>Not ready</option>
-              </select>
-            </div>
-            <div><label style={labelStyle}>Successor For (Role)</label><input style={field} value={form.successor_for} onChange={e => setForm({ ...form, successor_for: e.target.value })} placeholder="e.g. HR Manager" /></div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>IDP Progress ({form.idp_progress}%)</label>
-              <input type="range" min="0" max="100" step="5" value={form.idp_progress}
-                onChange={e => setForm({ ...form, idp_progress: Number(e.target.value) })}
-                style={{ width: '100%', accentColor: 'var(--purple)' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                <span>0%</span><span>50%</span><span>100%</span>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Primary Successor:</span>
+                        <span className="font-semibold text-foreground">{role.leadSuccessor}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Succession Readiness:</span>
+                        <span className="badge badge-success">{role.readiness}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Bench Depth:</span>
+                        <span className="text-foreground font-medium">{role.benchCount} successor candidates mapped</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div><label style={labelStyle}>Key Strengths</label><input style={field} value={form.strengths || ''} onChange={e => setForm({ ...form, strengths: e.target.value })} placeholder="e.g. Leadership, communication" /></div>
-            <div><label style={labelStyle}>Development Areas</label><input style={field} value={form.development_areas || ''} onChange={e => setForm({ ...form, development_areas: e.target.value })} placeholder="e.g. Strategic thinking" /></div>
           </div>
+        )}
+
+        {/* TAB 2: TALENT DIRECTORY */}
+        {tab === 'directory' && (
+          <div className="space-y-4">
+            <div className="card p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search candidate name, role, successor target…"
+                    className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex gap-1">
+                    {['All', 'High', 'Medium', 'Low'].map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPotentialFilter(p)}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                          potentialFilter === p
+                            ? 'bg-secondary text-secondary-foreground font-semibold'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {p} Potential
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                    <tr>
+                      <th className="py-3 px-4">Employee</th>
+                      <th className="py-3 px-4">Current Role</th>
+                      <th className="py-3 px-4">Potential</th>
+                      <th className="py-3 px-4">Readiness</th>
+                      <th className="py-3 px-4">Successor For</th>
+                      <th className="py-3 px-4">IDP Progress</th>
+                      <th className="py-3 px-4">Flight Risk</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredTalent.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                          No talent profiles match your criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredTalent.map(t => (
+                        <tr key={t.id} className="transition-colors hover:bg-muted/20">
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-foreground">{t.employee}</div>
+                            <div className="text-xs text-muted-foreground">Mentor: {t.mentor || 'None'}</div>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground">{t.role}</td>
+                          <td className="py-3 px-4">
+                            <span className={`badge ${t.potential === 'High' ? 'badge-success' : t.potential === 'Medium' ? 'badge-info' : 'badge-warning'}`}>
+                              {t.potential}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-xs font-medium text-foreground">{t.readiness}</span>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground">
+                            {t.successor_for || '—'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
+                                <div className="h-full rounded-full bg-primary" style={{ width: `${t.idp_progress}%` }} />
+                              </div>
+                              <span className="text-xs font-medium">{t.idp_progress}%</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`badge ${t.flight_risk === 'High' ? 'badge-danger' : t.flight_risk === 'Medium' ? 'badge-warning' : 'badge-success'}`}>
+                              {t.flight_risk || 'Low'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEdit(t)}
+                                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                title="Edit"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => remove(t)}
+                                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-rose-600"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: HIPO SPOTLIGHT */}
+        {tab === 'hipo' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {hipoList.map(h => (
+              <div key={h.id} className="card p-5 space-y-4 border-l-4 border-l-primary">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-base text-foreground">{h.employee}</h4>
+                    <p className="text-xs text-muted-foreground">{h.role}</p>
+                  </div>
+                  <span className="badge badge-success">HiPo</span>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Target Role:</span>
+                    <span className="font-semibold text-foreground">{h.successor_for || 'Executive Track'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Promotion Readiness:</span>
+                    <span className="text-primary font-semibold">{h.readiness}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Executive Mentor:</span>
+                    <span className="text-foreground">{h.mentor}</span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-muted/30 p-2.5 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Core Competencies: </span>
+                  {h.strengths || 'Analytical rigor, proactive cross-functional leadership.'}
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>Individual Development Plan (IDP)</span>
+                    <span className="font-bold">{h.idp_progress}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${h.idp_progress}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* MODAL: ADD / EDIT TALENT RECORD */}
+      {form && (
+        <Modal
+          open
+          onClose={() => setForm(null)}
+          title={form.id ? `Edit Talent Profile — ${form.employee}` : 'New Talent Profile'}
+          width={650}
+          footer={
+            <>
+              <button type="button" className="btn btn-ghost" onClick={() => setForm(null)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-primary" onClick={submit}>
+                Save Profile
+              </button>
+            </>
+          }
+        >
+          <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Employee Name *</label>
+                <input
+                  required
+                  list="talent-emp-list"
+                  value={form.employee}
+                  onChange={e => {
+                    const emp = seedEmployees.find(x => x.full_name === e.target.value)
+                    setForm({
+                      ...form,
+                      employee: e.target.value,
+                      role: emp?.role || form.role,
+                      department: emp?.department || form.department
+                    })
+                  }}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <datalist id="talent-emp-list">
+                  {seedEmployees.map(e => (
+                    <option key={e.id} value={e.full_name}>{e.role} ({e.department})</option>
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Current Role</label>
+                <input
+                  value={form.role || ''}
+                  onChange={e => setForm({ ...form, role: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Department</label>
+                <input
+                  value={form.department || ''}
+                  onChange={e => setForm({ ...form, department: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Potential Rating</label>
+                <select
+                  value={form.potential}
+                  onChange={e => setForm({ ...form, potential: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option>High</option>
+                  <option>Medium</option>
+                  <option>Low</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Readiness Timeline</label>
+                <select
+                  value={form.readiness}
+                  onChange={e => setForm({ ...form, readiness: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option>Ready now</option>
+                  <option>1-2 years</option>
+                  <option>2-3 years</option>
+                  <option>Not ready</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Successor For (Role)</label>
+                <input
+                  value={form.successor_for || ''}
+                  onChange={e => setForm({ ...form, successor_for: e.target.value })}
+                  placeholder="e.g. Operations Delivery Manager"
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Flight Risk</label>
+                <select
+                  value={form.flight_risk || 'Low'}
+                  onChange={e => setForm({ ...form, flight_risk: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">IDP Progress (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={form.idp_progress}
+                  onChange={e => setForm({ ...form, idp_progress: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Assigned Mentor</label>
+                <input
+                  value={form.mentor || ''}
+                  onChange={e => setForm({ ...form, mentor: e.target.value })}
+                  placeholder="e.g. CEO, Senior Partner"
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase">Key Strengths & Development Focus</label>
+                <textarea
+                  rows={2}
+                  value={form.strengths || ''}
+                  onChange={e => setForm({ ...form, strengths: e.target.value })}
+                  placeholder="Strategic execution, technical certifications to attain..."
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+          </form>
         </Modal>
       )}
     </DashboardLayout>

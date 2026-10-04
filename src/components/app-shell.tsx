@@ -79,7 +79,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
     { to: "/host/hr/relations", label: "Employee Relations", icon: Users },
-    { to: "/host/hr/recruitment", label: "HR Recruitment", icon: Users },
+    { to: "/host/hr/recruitment", label: "Employee Recruitment", icon: Users },
     { to: "/host/hr/performance", label: "HR Performance", icon: BarChart3 },
     { to: "/host/hr/talent", label: "Talent Management", icon: Crown },
     { to: "/host/hr/training", label: "Training & Development", icon: BookOpen },
@@ -183,7 +183,26 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const navigate = useNavigate();
   const { data } = useProfile();
   const isAdmin = data?.isAdmin ?? false;
-  const selectedPortal = data?.isHR ? "hr" : isAdmin ? "admin" : (data?.isManagerOrAbove) ? "manager" : "staff";
+
+  const isHRPath = pathname.startsWith('/host/hr') || pathname.startsWith('/hr');
+  const isHostPath = pathname.startsWith('/host') && !isHRPath;
+  const isAdminPath = pathname.startsWith('/admin');
+
+  // Determine current portal based on path or permission
+  let currentPortal: PortalKey = "staff";
+  if (isHRPath) {
+    currentPortal = "hr";
+  } else if (isAdminPath) {
+    currentPortal = "admin";
+  } else if (isHostPath) {
+    currentPortal = "manager";
+  } else if (data?.isHR) {
+    currentPortal = "hr";
+  } else if (isAdmin) {
+    currentPortal = "admin";
+  } else if (isManagerOrAbove) {
+    currentPortal = "manager";
+  }
 
   // Navigate by raw href to ensure TanStack splat routes receive the correct full path.
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
@@ -196,6 +215,35 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       navigate({ to } as any);
     }
   };
+
+  const switchWorkspace = (portal: PortalKey) => {
+    if (portal === "hr") {
+      navigate({ to: '/_authenticated/host/$' as any, params: { _splat: 'hr' } } as any);
+    } else if (portal === "manager") {
+      navigate({ to: '/host' as any });
+    } else if (portal === "admin") {
+      navigate({ to: '/admin/attendance' as any });
+    } else {
+      navigate({ to: '/home' as any });
+    }
+  };
+
+  const workspaceTitle = currentPortal === "hr"
+    ? "HR Workspace"
+    : currentPortal === "admin"
+    ? "Admin Control"
+    : currentPortal === "manager"
+    ? "Host Operations"
+    : "Staff Portal";
+
+  const workspaceSub = currentPortal === "hr"
+    ? "Human Resources Management"
+    : currentPortal === "admin"
+    ? "MSP Admin Control Panel"
+    : currentPortal === "manager"
+    ? "Host Employer & Workforce"
+    : "Internal operations portal";
+
   return (
     <aside className={cn(
       "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
@@ -206,29 +254,69 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
         <MspLogo showWord={!collapsed} />
       </div>
       {!collapsed && (
-        <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
-            {isAdmin ? "Admin workspace" : "Company workspace"}
-          </p>
+        <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] p-2.5">
+          <div className="flex items-center justify-between">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
+              {workspaceTitle}
+            </p>
+            {(isAdmin || isManagerOrAbove || data?.isHR) && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => switchWorkspace("staff")}
+                  title="Staff Portal"
+                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                >
+                  Staff
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchWorkspace("hr")}
+                  title="Human Resources Portal"
+                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                >
+                  HR
+                </button>
+                {isManagerOrAbove && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("manager")}
+                    title="Host Operations"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "manager" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    Host
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("admin")}
+                    title="Admin Panel"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "admin" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    Admin
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <p className="mt-1 text-xs text-white/80">
-            {isAdmin ? "MSP Admin Control Panel" : "Internal operations portal"}
+            {workspaceSub}
           </p>
         </div>
       )}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
-          if (section.managerOnly && !isManagerOrAbove) return null;
-          if (section.hrOnly && !data?.isHR) return null;
-          // adminOnly sections are exclusively for admin portal
+          if (section.managerOnly && !isManagerOrAbove && !isAdmin) return null;
+          if (section.hrOnly && !(data?.isHR || isManagerOrAbove || isAdmin)) return null;
           if (section.adminOnly && !isAdmin) return null;
-          // Admin portal: only show admin-only section + skip other non-admin sections
-          if (isAdmin && !section.adminOnly) return null;
-          // Non-admin portals: skip adminOnly sections
-          const visibleToPortal = section.portals?.includes(selectedPortal as PortalKey);
-          if (!isAdmin && section.portals && !visibleToPortal) return null;
+
+          // Filter by active workspace/portal
+          if (section.portals && !section.portals.includes(currentPortal)) return null;
+
           const items = section.items.filter((it) => {
             if (it.rootOnly && !isRootAdmin && !isAdmin) return false;
-            if (it.adminHide && isAdmin) return false;
+            if (it.adminHide && currentPortal === "admin") return false;
             return true;
           });
           if (items.length === 0) return null;
