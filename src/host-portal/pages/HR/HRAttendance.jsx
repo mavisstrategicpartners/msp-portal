@@ -65,7 +65,7 @@ export default function HRAttendance() {
           <table>
             <thead>
               <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                <th style={{ padding: '10px 6px' }}>Learner</th>
+                <th style={{ padding: '10px 6px' }}>Intern</th>
                 <th>Contact</th><th>Sponsor</th><th>Host</th>
                 <th>Mentor</th><th>Mentor #</th>
                 <th>Date</th><th>Status</th>

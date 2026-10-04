@@ -36,15 +36,15 @@ export default function PlacedLearners() {
   const openEdit = (l) => { setEditing(l.id); setForm({ ...empty, ...l }); setShowForm(true); setSelected(null) }
   const remove = async (l) => {
     const ok = await confirm({
-      title: 'Remove Learner',
-      description: `Are you sure you want to remove ${l.full_name} from placed learners?`,
+      title: 'Remove Intern',
+      description: `Are you sure you want to remove ${l.full_name} from placed interns?`,
       variant: 'destructive',
-      confirmText: 'Remove Learner',
+      confirmText: 'Remove Intern',
     })
     if (!ok) return
     setList(prev => prev.filter(x => x.id !== l.id))
     setSelected(null)
-    toast.success('Learner Removed', { description: `${l.full_name} has been removed.` })
+    toast.success('Intern Removed', { description: `${l.full_name} has been removed.` })
   }
 
   const submit = (e) => {
@@ -63,10 +63,10 @@ export default function PlacedLearners() {
     }
     if (editing) {
       setList(prev => prev.map(x => x.id === editing ? { ...x, ...clean } : x))
-      toast.success('Learner Updated', { description: `${clean.full_name}'s record was updated.` })
+      toast.success('Intern Updated', { description: `${clean.full_name}'s record was updated.` })
     } else {
       setList(prev => [{ ...clean, id: uid('L') }, ...prev])
-      toast.success('Learner Added', { description: `${clean.full_name} has been placed.` })
+      toast.success('Intern Added', { description: `${clean.full_name} has been placed.` })
     }
     setShowForm(false)
   }
@@ -74,7 +74,7 @@ export default function PlacedLearners() {
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   return (
-    <DashboardLayout title="Placed Learners">
+    <DashboardLayout title="Placed Interns">
       <div className="card">
         <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, program, company…"
@@ -83,14 +83,14 @@ export default function PlacedLearners() {
             style={{ padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)' }}>
             {['All', ...STATUSES].map(s => <option key={s}>{s}</option>)}
           </select>
-          {/* Add Learner moved to Onboarding — new learners must complete onboarding before placement. */}
+          {/* Add Intern moved to Onboarding — new learners must complete onboarding before placement. */}
         </div>
 
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
               <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                <th style={{ padding: '10px 0' }}>Learner</th><th>Program</th><th>Company</th><th>Start</th><th>Status</th><th>Performance</th><th></th>
+                <th style={{ padding: '10px 0' }}>Intern</th><th>Program</th><th>Company</th><th>Start</th><th>Status</th><th>Performance</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -161,14 +161,14 @@ export default function PlacedLearners() {
       )}
 
       <Modal open={showForm} onClose={() => setShowForm(false)}
-        title={editing ? 'Edit Learner' : 'Add Learner'}
+        title={editing ? 'Edit Intern' : 'Add Intern'}
         subtitle={`Host company: ${HOST_COMPANY}`}
         width={720}
         footer={<>
           <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
-          <button className="btn btn-primary" type="submit" form="learner-form">{editing ? 'Save Changes' : 'Create Learner'}</button>
+          <button className="btn btn-primary" type="submit" form="intern-form">{editing ? 'Save Changes' : 'Create Intern'}</button>
         </>}>
-        <form id="learner-form" onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <form id="intern-form" onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Full Name *</label><input required style={field} value={form.full_name} onChange={set('full_name')} /></div>
           <div><label style={labelStyle}>Email</label><input type="email" style={field} value={form.email} onChange={set('email')} /></div>
           <div><label style={labelStyle}>Phone</label><input style={field} value={form.phone} onChange={set('phone')} /></div>

@@ -1,60 +1,74 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Reads a Supabase table and exposes the rows together with a setter that
+ * syncs changes back to the database in the background.
+ *
+ * Falls back to initialSeed when:
+ *  - the table does not exist yet (Postgres error), OR
+ *  - the table exists but has 0 rows (so pages always have data to render).
+ */
 export function useSupabaseTable(tableName, initialSeed = []) {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(initialSeed); // start with seed immediately
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchData() {
-      const { data: rows, error } = await supabase.from(tableName).select('*');
-      if (error) {
-        console.error(`Error fetching ${tableName}:`, error);
-        // If the table doesn't exist yet, we can fallback to the seed data temporarily
-        setData(initialSeed);
-      } else {
-        // If the table is empty, we can seed it (or just rely on the user running a seed script)
-        setData(rows || []);
+      try {
+        const { data: rows, error } = await supabase.from(tableName).select('*');
+        if (cancelled) return;
+        if (error) {
+          // Table may not exist yet - keep seed data
+          console.warn('[useSupabaseTable] ' + tableName + ': ' + error.message);
+        } else if (rows && rows.length > 0) {
+          // Only replace seed if the table actually has rows
+          setData(rows);
+        }
+        // If rows === [] we intentionally keep the seed so the UI is not blank
+      } catch (err) {
+        if (!cancelled) console.warn('[useSupabaseTable] ' + tableName + ':', err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
     fetchData();
-  }, [tableName]);
+    return () => { cancelled = true; };
+  }, [tableName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateData = async (updater) => {
+  const updateData = (updater) => {
     setData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
-      
-      // Perform database sync in the background
+
+      // Background DB sync - fire-and-forget
       (async () => {
         try {
-          const prevIds = new Set(prev.map(x => x.id));
-          const nextIds = new Set(next.map(x => x.id));
-          
-          const added = next.filter(x => !prevIds.has(x.id));
-          const removed = prev.filter(x => !nextIds.has(x.id));
-          const updated = next.filter(x => {
-             if (!prevIds.has(x.id)) return false;
-             const old = prev.find(p => p.id === x.id);
-             return JSON.stringify(old) !== JSON.stringify(x);
+          const prevIds = new Set(prev.map((x) => x.id));
+          const nextIds = new Set(next.map((x) => x.id));
+
+          const added   = next.filter((x) => !prevIds.has(x.id));
+          const removed = prev.filter((x) => !nextIds.has(x.id));
+          const updated = next.filter((x) => {
+            if (!prevIds.has(x.id)) return false;
+            const old = prev.find((p) => p.id === x.id);
+            return JSON.stringify(old) !== JSON.stringify(x);
           });
-          
+
           if (added.length > 0) {
             const { error } = await supabase.from(tableName).insert(added);
-            if (error) console.error(`Error inserting into ${tableName}:`, error);
+            if (error) console.error('[useSupabaseTable] insert ' + tableName + ':', error);
           }
-          
           for (const item of updated) {
-             const { error } = await supabase.from(tableName).update(item).eq('id', item.id);
-             if (error) console.error(`Error updating ${tableName}:`, error);
+            const { error } = await supabase.from(tableName).update(item).eq('id', item.id);
+            if (error) console.error('[useSupabaseTable] update ' + tableName + ':', error);
           }
-          
           for (const item of removed) {
-             const { error } = await supabase.from(tableName).delete().eq('id', item.id);
-             if (error) console.error(`Error deleting from ${tableName}:`, error);
+            const { error } = await supabase.from(tableName).delete().eq('id', item.id);
+            if (error) console.error('[useSupabaseTable] delete ' + tableName + ':', error);
           }
         } catch (err) {
-          console.error(`Failed to sync ${tableName}:`, err);
+          console.error('[useSupabaseTable] sync ' + tableName + ':', err);
         }
       })();
 

@@ -38,7 +38,7 @@ export default function Reports() {
     {
       name: 'Host Reports', icon: '⌂',
       items: [
-        { id: 'host-attendance', title: 'Attendance report', desc: 'Daily attendance across all placed learners.', rows: attendanceRows, file: 'host-attendance.csv' },
+        { id: 'host-attendance', title: 'Attendance report', desc: 'Daily attendance across all placed interns.', rows: attendanceRows, file: 'host-attendance.csv' },
         { id: 'host-perf', title: 'Performance report', desc: 'Quarterly review scores per learner.', rows: perfRows, file: 'host-performance.csv' },
         { id: 'host-absent', title: 'Absenteeism analysis', desc: 'Risk categorisation based on attendance rate.', rows: absenteeismRows, file: 'host-absenteeism.csv' },
         { id: 'host-compliance', title: 'Compliance report', desc: 'POPIA, H&S, contracts, and BBBEE status.', rows: complianceRows, file: 'host-compliance.csv' },
@@ -47,7 +47,7 @@ export default function Reports() {
     {
       name: 'General Reports', icon: '▥',
       items: [
-        { id: 'learners', title: 'Placed learners register', desc: 'Full register of currently placed learners.', rows: learnerRows, file: 'learners.csv' },
+        { id: 'learners', title: 'placed interns register', desc: 'Full register of currently placed interns.', rows: learnerRows, file: 'learners.csv' },
       ],
     },
   ]

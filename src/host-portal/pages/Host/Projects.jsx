@@ -72,7 +72,7 @@ export default function Projects() {
     { label: 'In progress', value: projects.filter(p => p.status === 'In Progress').length, color: 'var(--warning)' },
     { label: 'Review', value: projects.filter(p => p.status === 'Review').length, color: 'var(--warning)' },
     { label: 'Completed', value: projects.filter(p => p.status === 'Completed').length, color: 'var(--success)' },
-    { label: 'Assigned learners', value: new Set(projects.flatMap(p => p.assigned_learner_ids || [])).size, color: 'var(--text-primary)' },
+    { label: 'Assigned Interns', value: new Set(projects.flatMap(p => p.assigned_learner_ids || [])).size, color: 'var(--text-primary)' },
   ]
 
   return (

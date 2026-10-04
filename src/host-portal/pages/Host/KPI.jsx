@@ -105,7 +105,7 @@ export default function KPI() {
             <button className="btn btn-primary" onClick={submit}>Save</button>
           </>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Learner</label>
+            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Intern</label>
               <select style={field} value={form.learner_id} onChange={set('learner_id')}>
                 <option value="">— pick —</option>
                 {learners.map(l => <option key={l.id} value={l.id}>{l.full_name}</option>)}

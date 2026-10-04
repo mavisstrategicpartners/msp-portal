@@ -72,7 +72,7 @@ export default function Coaching() {
             <button className="btn btn-primary" onClick={submit}>Save</button>
           </>}>
           <div style={{ display: 'grid', gap: 12 }}>
-            <div><label style={labelStyle}>Learner</label>
+            <div><label style={labelStyle}>Intern</label>
               <select style={field} value={form.learner_id} onChange={e => setForm({ ...form, learner_id: e.target.value })}>
                 <option value="">— pick —</option>
                 {learners.map(l => <option key={l.id} value={l.id}>{l.full_name}</option>)}

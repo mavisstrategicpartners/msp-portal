@@ -117,6 +117,7 @@ export default function Leave() {
   }
 
   const allPendingCount = portalLeaveRequests.filter(r => r.status === 'pending').length + learnerLeave.filter(r => r.status === 'Pending').length
+  const internLeaveLabel = 'Intern Requests'
   const summary = [
     { label: 'Portal Employee Requests', value: portalLeaveRequests.length, color: 'var(--purple)' },
     { label: 'Pending Approvals', value: allPendingCount, color: 'var(--warning)' },
@@ -138,7 +139,7 @@ export default function Leave() {
       <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {[
           ['user_requests', 'Employee Portal Requests', portalLeaveRequests.length],
-          ['learner', 'Learner Requests', learnerLeave.length],
+          ['learner', 'Intern Requests', learnerLeave.length],
           ['staff', 'Staff Leave', staffLeave.length],
           ['balances', 'Leave Balances', seedLeaveBalances.length],
           ['calendar', 'Calendar & Holidays', ZA_PUBLIC_HOLIDAYS.length]
@@ -224,12 +225,12 @@ export default function Leave() {
 
       {tab === 'learner' && (
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> HR cannot delete a learner's request — only the learner who submitted it can withdraw it.</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> HR cannot delete an intern's request — only the intern who submitted it can withdraw it.</div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '10px 0' }}>Learner</th><th>Type</th><th>From → To</th><th>Days</th><th>Document</th><th>Authenticity</th><th>Status</th><th></th>
+                  <th style={{ padding: '10px 0' }}>Intern</th><th>Type</th><th>From → To</th><th>Days</th><th>Document</th><th>Authenticity</th><th>Status</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -316,7 +317,7 @@ export default function Leave() {
 
       {reviewing && (
         <Modal open onClose={() => setReviewing(null)}
-          title={`Leave request — ${reviewing.learner_name}`}
+          title={`Leave request — ${reviewing.learner_name || reviewing.employee_name || 'Intern'}`}
           subtitle={`${reviewing.type} · ${reviewing.days} day(s) · ${reviewing.from} → ${reviewing.to}`}
           width={780}
           footer={reviewing.status === 'Pending' ? <>
@@ -346,7 +347,7 @@ export default function Leave() {
           {reviewing.document_name && (
             <FilePreview url={reviewing.document_url} mime={reviewing.document_type} name={reviewing.document_name}
               mockTitle={reviewing.document_name.replace(/\.[^.]+$/, '')}
-              mockBody={`Mock rendering of the ${reviewing.type.toLowerCase()} supporting document uploaded by the learner.`} height={280} />
+              mockBody={`Mock rendering of the ${reviewing.type.toLowerCase()} supporting document uploaded by the intern.`} height={280} />
           )}
         </Modal>
       )}
@@ -377,7 +378,8 @@ export default function Leave() {
           open
           onClose={() => { setRejectModal(null); setRejectNote('') }}
           title="Reject leave request"
-          subtitle={`Provide a reason for rejecting ${rejectModal.learnerName}'s request. This will be visible to the learner.`}
+          subtitle={`Provide a reason for rejecting ${rejectModal.learnerName}'s request. This will be visible to the intern.`}
+
           width={480}
           footer={<>
             <button className="btn btn-ghost" onClick={() => { setRejectModal(null); setRejectNote('') }}>Cancel</button>
@@ -397,7 +399,7 @@ export default function Leave() {
               onChange={e => setRejectNote(e.target.value)}
             />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-              Leave blank to reject without a note. The learner will still be notified.
+              Leave blank to reject without a note. The intern will still be notified.
             </div>
           </div>
         </Modal>

@@ -97,7 +97,7 @@ export default function HostDashboard() {
         <StatCard label="Vacant Positions" value={vacant} sub="Placements you can still take" color="var(--warning)" />
         <StatCard label="In Onboarding" value={onboarding.length} sub="Being onboarded" />
         <StatCard label="Reviews Due" value={openReviews} sub="Pending your input" color="var(--danger)" />
-        <StatCard label="Avg Attendance" value={`${avgAttendance}%`} sub="Across placed learners" color="var(--success)" />
+        <StatCard label="Avg Attendance" value={`${avgAttendance}%`} sub="Across placed interns" color="var(--success)" />
       </div>
 
       <div style={{ marginTop: 28 }}>
@@ -127,7 +127,7 @@ export default function HostDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, marginTop: 24 }}>
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h3 style={{ margin: 0, fontSize: 15 }}>Recent Placed Learners</h3>
+            <h3 style={{ margin: 0, fontSize: 15 }}>Recent Placed Interns</h3>
             <Link to="/host/learners" className="btn btn-ghost">View all →</Link>
           </div>
           <table>

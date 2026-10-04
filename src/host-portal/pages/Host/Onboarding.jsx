@@ -115,7 +115,7 @@ export default function Onboarding() {
     }
     setData(d => [newRow, ...d])
     setShowForm(false)
-    toast.success('Learner Added to Onboarding', { description: `${newRow.learner_name} has been enrolled.` })
+    toast.success('Intern Added to Onboarding', { description: `${newRow.learner_name} has been enrolled.` })
     setFlash({ tone: 'success', msg: `${newRow.learner_name} added to onboarding.` })
     push({ title: 'New onboarding started', body: `${newRow.learner_name} was added to the onboarding queue.`, link: '/host/onboarding', kind: 'reminder' })
   }
@@ -159,7 +159,7 @@ export default function Onboarding() {
           onboarded: true,
         }
         setPlaced(prev => [placedRow, ...prev])
-        push({ title: 'Onboarding complete', body: `${migrate.learner_name} moved to Placed Learners.`, link: '/host/learners', kind: 'reminder' })
+        push({ title: 'Onboarding complete', body: `${migrate.learner_name} moved to placed interns.`, link: '/host/learners', kind: 'reminder' })
         return next.filter(r => r.learner_id !== migrate.learner_id)
       }
       return next
@@ -171,13 +171,13 @@ export default function Onboarding() {
       <div className="card" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            {data.length} learner(s) currently being onboarded. Complete all onboarding tasks (100%) to automatically move a learner to <b>Placed Learners</b>.
+            {data.length} learner(s) currently being onboarded. Complete all onboarding tasks (100%) to automatically move a learner to <b>placed interns</b>.
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             Placement capacity: <b>{placed.length}</b> / {capacity}
           </div>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>+ Add Learner</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ Add Intern</button>
       </div>
 
       {flash && (
@@ -196,7 +196,7 @@ export default function Onboarding() {
       <div style={{ display: 'grid', gap: 14 }}>
         {data.length === 0 && (
           <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
-            No learners are being onboarded right now. Click <b>+ Add Learner</b> to start.
+            No learners are being onboarded right now. Click <b>+ Add Intern</b> to start.
           </div>
         )}
         {data.map((row, li) => (

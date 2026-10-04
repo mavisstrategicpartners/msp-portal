@@ -71,7 +71,7 @@ export default function HostRecruitment() {
           <table>
             <thead>
               <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                <th style={{ padding: '8px 0' }}>Learner</th><th>Program</th><th>Match</th><th>Decision</th><th></th>
+                <th style={{ padding: '8px 0' }}>Intern</th><th>Program</th><th>Match</th><th>Decision</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -101,7 +101,7 @@ export default function HostRecruitment() {
           <table>
             <thead>
               <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                <th style={{ padding: '8px 0' }}>Learner</th><th>Date</th><th>Time</th><th>Mode</th><th>Status</th><th></th>
+                <th style={{ padding: '8px 0' }}>Intern</th><th>Date</th><th>Time</th><th>Mode</th><th>Status</th><th></th>
               </tr>
             </thead>
             <tbody>

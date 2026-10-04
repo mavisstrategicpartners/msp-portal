@@ -21,7 +21,7 @@ export default function Settings() {
     setErr('')
     const capacity = Number(draft.learner_capacity) || 0
     if (capacity < placed) {
-      setErr(`Learner capacity cannot be less than the current number of placed learners (${placed}). Please enter ${placed} or more.`)
+      setErr(`Learner capacity cannot be less than the current number of placed interns (${placed}). Please enter ${placed} or more.`)
       return
     }
     // Force current_placements to reflect live count
@@ -51,7 +51,7 @@ export default function Settings() {
           <div>
             <label style={label}>Current Placements</label>
             <input style={{ ...field, opacity: 0.7, cursor: 'not-allowed' }} type="number" value={placed} readOnly />
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Auto-pulled from Placed Learners.</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Auto-pulled from placed interns.</div>
           </div>
         </div>
         {err && <div style={{ marginTop: 14, padding: '10px 12px', borderLeft: '4px solid var(--danger)', background: 'var(--danger-soft, #fee2e2)', color: 'var(--danger)', fontSize: 13, borderRadius: 6 }}>{err}</div>}
