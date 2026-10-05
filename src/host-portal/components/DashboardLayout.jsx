@@ -120,36 +120,6 @@ export default function DashboardLayout({ children, title }) {
             </div>
           </div>
         </div>
-
-        {/* Sub-Navigation Pill Tabs */}
-        <div className="mt-4 border-t border-border/60 pt-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-            {currentNav.map((item) => {
-              const Icon = item.icon
-              const isActive =
-                location.pathname === item.path ||
-                (item.altPath && location.pathname === item.altPath) ||
-                (item.path !== '/host/hr' && item.path !== '/hr' && item.path !== '/host' && location.pathname.startsWith(item.path)) ||
-                (item.altPath && item.altPath !== '/hr' && location.pathname.startsWith(item.altPath))
-
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => handleNav(item)}
-                  type="button"
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{item.name}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
       </div>
 
       {/* Page Content */}
