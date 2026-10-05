@@ -263,14 +263,16 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
             </p>
             {(isAdmin || isManagerOrAbove || data?.isHR) && (
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => switchWorkspace("staff")}
-                  title="Staff Portal"
-                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                >
-                  Staff
-                </button>
+                {!isAdmin && currentPortal !== "admin" && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("staff")}
+                    title="Staff Portal"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    Staff
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => switchWorkspace("hr")}
