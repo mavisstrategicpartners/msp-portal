@@ -271,78 +271,74 @@ export default function Payroll() {
 
   return (
     <DashboardLayout title="Payroll Platform">
-      {/* Top Banner & Metric Cards */}
-      <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg, rgba(59,29,77,0.06), rgba(16,185,129,0.05))' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Calculator size={22} color="var(--brand)" />
-              <span style={{ fontSize: 18, fontWeight: 700 }}>MSP Payroll & Remuneration Platform</span>
-              <span className="badge badge-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Lock size={12} /> Confidential HR
-              </span>
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-              Process basic salaries, calculate sales commission %, manage incentives & gifts, and disburse statutory net remuneration.
-            </div>
+      {/* Sleek, Compact Controls & Metrics Bar */}
+      <div
+        className="card"
+        style={{
+          marginBottom: 16,
+          padding: '12px 16px',
+          borderRadius: 12,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 16,
+          flexWrap: 'wrap',
+          background: 'var(--bg-primary)'
+        }}
+      >
+        {/* Metric summary chips */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Total Gross:</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--brand)' }}>{money(periodStats.totalGross)}</span>
           </div>
-
-          {/* Period selector & View Toggles */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Calendar size={15} color="var(--text-muted)" />
-              <select
-                style={{ ...field, width: 140, height: 34, fontSize: 12 }}
-                value={selectedPeriod}
-                onChange={e => setSelectedPeriod(e.target.value)}
-              >
-                <option value="2026-08">August 2026</option>
-                <option value="2026-07">July 2026</option>
-                <option value="2026-06">June 2026</option>
-                <option value="2026-05">May 2026</option>
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 8, padding: 2, background: 'var(--bg-secondary)' }}>
-              <button
-                type="button"
-                className={`btn btn-xs ${viewMode === 'worksheet' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setViewMode('worksheet')}
-              >
-                Calculator & Pay Sheet
-              </button>
-              <button
-                type="button"
-                className={`btn btn-xs ${viewMode === 'register' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setViewMode('register')}
-              >
-                Payroll Register ({periodRecords.length})
-              </button>
-            </div>
+          <div style={{ height: 16, width: 1, background: 'var(--border-color)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Commission:</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6' }}>{money(periodStats.totalSalesCommission)}</span>
+          </div>
+          <div style={{ height: 16, width: 1, background: 'var(--border-color)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Incentives & Gifts:</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>{money(periodStats.totalIncentives + periodStats.totalGifts)}</span>
+          </div>
+          <div style={{ height: 16, width: 1, background: 'var(--border-color)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Net Payout:</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: '#059669' }}>{money(periodStats.totalNet)}</span>
           </div>
         </div>
 
-        {/* 5-Metric Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border-color)' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Total Basic Salaries</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{money(periodStats.totalBasic)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Sales Commission %</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#3b82f6', marginTop: 2 }}>{money(periodStats.totalSalesCommission)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Incentives & Gifts</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981', marginTop: 2 }}>{money(periodStats.totalIncentives + periodStats.totalGifts)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Total Gross Remuneration</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--brand)', marginTop: 2 }}>{money(periodStats.totalGross)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Net Disbursement (EFT)</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#059669', marginTop: 2 }}>{money(periodStats.totalNet)}</div>
+        {/* Period Selector & View Mode Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <select
+            style={{ ...field, width: 130, height: 32, fontSize: 11.5, borderRadius: 8 }}
+            value={selectedPeriod}
+            onChange={e => setSelectedPeriod(e.target.value)}
+          >
+            <option value="2026-08">Aug 2026</option>
+            <option value="2026-07">Jul 2026</option>
+            <option value="2026-06">Jun 2026</option>
+            <option value="2026-05">May 2026</option>
+          </select>
+
+          <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 8, padding: 2, background: 'var(--bg-secondary)' }}>
+            <button
+              type="button"
+              className={`btn btn-xs ${viewMode === 'worksheet' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setViewMode('worksheet')}
+              style={{ fontSize: 11, borderRadius: 6 }}
+            >
+              Worksheet
+            </button>
+            <button
+              type="button"
+              className={`btn btn-xs ${viewMode === 'register' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setViewMode('register')}
+              style={{ fontSize: 11, borderRadius: 6 }}
+            >
+              Register ({periodRecords.length})
+            </button>
           </div>
         </div>
       </div>
