@@ -6,7 +6,7 @@ import {
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
   Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard, Clock, Activity,
+  LayoutDashboard, Clock, Activity, Calculator, Folder,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -78,6 +78,8 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
+    { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },
+    { to: "/host/hr/documents", label: "Employee Documents", icon: Folder },
     { to: "/host/hr/relations", label: "Employee Relations", icon: Users },
     { to: "/host/hr/recruitment", label: "Employee Recruitment", icon: Users },
     { to: "/host/hr/performance", label: "HR Performance", icon: BarChart3 },

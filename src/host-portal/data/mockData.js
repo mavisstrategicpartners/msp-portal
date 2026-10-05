@@ -350,5 +350,283 @@ export const hostActivityByMonth = [
   { label: 'May', value: 22 }, { label: 'Jun', value: 26 }, { label: 'Jul', value: 30 },
 ]
 
+// HR Employee Documents & Folder Access Settings
+export const seedFolderSettings = [
+  { employee_id: 'E-1', access_level: 'HR Only', restricted: true, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 7, notes: 'Executive HR personnel file. Highest privacy tier.' },
+  { employee_id: 'E-2', access_level: 'Manager + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 5, notes: 'Engineering senior lead file.' },
+  { employee_id: 'E-3', access_level: 'Employee + HR', restricted: false, allow_employee_view: true, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Contract data analyst folder.' },
+  { employee_id: 'E-4', access_level: 'Employee + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 5, notes: 'Design department portfolio and credentials.' },
+  { employee_id: 'E-5', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Security clearance and NDA documentation.' },
+  { employee_id: 'E-6', access_level: 'Manager + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 3, notes: 'People Ops coordination and contract papers.' },
+]
+
+export const seedHrDocuments = [
+  {
+    id: 'DOC-101', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
+    name: 'Employment_Agreement_Thandi_Mokoena_Executive.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 482100, access: 'HR Only',
+    uploaded: '2026-01-10', uploaded_by: 'Board of Directors', verified: true,
+    notes: 'Signed executive contract of employment with confidentiality schedule.'
+  },
+  {
+    id: 'DOC-102', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
+    name: 'RSA_Smart_ID_Thandi_Mokoena_Certified.pdf', category: 'Identification',
+    type: 'application/pdf', size: 310400, access: 'HR Only',
+    uploaded: '2026-01-11', uploaded_by: 'Thandi Mokoena', verified: true,
+    notes: 'Certified copy of South African Smart ID Card (Commissioner of Oaths).'
+  },
+  {
+    id: 'DOC-103', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
+    name: 'SARS_Tax_Directive_IRP5_2025.pdf', category: 'Tax & Banking',
+    type: 'application/pdf', size: 195200, access: 'HR Only',
+    uploaded: '2026-02-14', uploaded_by: 'Payroll Department', verified: true,
+    notes: 'SARS tax registration notice & confirmed IRP5 certificate.'
+  },
+  {
+    id: 'DOC-104', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
+    name: 'Permanent_Employment_Contract_Sipho_Dlamini.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 520000, access: 'Manager + HR',
+    uploaded: '2026-01-15', uploaded_by: 'Thandi Mokoena', verified: true,
+    notes: 'Senior Cloud Engineer offer letter and signed contract.'
+  },
+  {
+    id: 'DOC-105', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
+    name: 'AWS_Solutions_Architect_Professional_Certificate.pdf', category: 'Qualifications',
+    type: 'application/pdf', size: 760000, access: 'Employee + HR',
+    uploaded: '2026-03-01', uploaded_by: 'Sipho Dlamini', verified: true,
+    notes: 'AWS Certified Solutions Architect (SAP-C02) verified badge and PDF.'
+  },
+  {
+    id: 'DOC-106', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
+    name: 'Nedbank_Account_Confirmation_Letter.pdf', category: 'Tax & Banking',
+    type: 'application/pdf', size: 145000, access: 'HR Only',
+    uploaded: '2026-01-16', uploaded_by: 'Sipho Dlamini', verified: true,
+    notes: 'Official bank stamped account confirmation letter for salary direct deposit.'
+  },
+  {
+    id: 'DOC-107', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
+    name: 'Fixed_Term_Contract_Data_Analyst.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 410000, access: 'Employee + HR',
+    uploaded: '2026-01-20', uploaded_by: 'Thandi Mokoena', verified: true,
+    notes: '12-month fixed-term contract with sales commission addendum.'
+  },
+  {
+    id: 'DOC-108', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
+    name: 'BSc_Mathematical_Statistics_Degree_Wits.pdf', category: 'Qualifications',
+    type: 'application/pdf', size: 890000, access: 'Employee + HR',
+    uploaded: '2026-01-22', uploaded_by: 'Lerato Khumalo', verified: true,
+    notes: 'Degree transcript and certificate from University of the Witwatersrand.'
+  },
+  {
+    id: 'DOC-109', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
+    name: 'Employment_Contract_Product_Designer.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 440000, access: 'Employee + HR',
+    uploaded: '2026-02-01', uploaded_by: 'Thandi Mokoena', verified: true,
+    notes: 'Lead Product Designer full-time contract and IP agreement.'
+  },
+  {
+    id: 'DOC-110', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
+    name: 'Design_Portfolio_and_Case_Studies_2026.pdf', category: 'Qualifications',
+    type: 'application/pdf', size: 1250000, access: 'Employee + HR',
+    uploaded: '2026-02-05', uploaded_by: 'Naledi Nkosi', verified: true,
+    notes: 'Comprehensive design system and product UX portfolio.'
+  },
+  {
+    id: 'DOC-111', employee_id: 'E-5', employee_name: 'Bongani Zulu',
+    name: 'Security_Clearance_and_Non_Disclosure_Agreement.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 610000, access: 'HR Only',
+    uploaded: '2026-01-18', uploaded_by: 'Legal Department', verified: true,
+    notes: 'Strict NDA and background vetting clearance certificate.'
+  },
+  {
+    id: 'DOC-112', employee_id: 'E-6', employee_name: 'Karabo Mthembu',
+    name: 'Temporary_Appointment_Letter_People_Ops.pdf', category: 'Contracts',
+    type: 'application/pdf', size: 320000, access: 'Manager + HR',
+    uploaded: '2026-02-10', uploaded_by: 'Thandi Mokoena', verified: true,
+    notes: 'People Ops coordinator temporary contract and scope of work.'
+  }
+]
+
+// HR Payroll records with basic salary, sales commission %, incentive, gift, deductions
+export const seedPayrollRecords = [
+  {
+    id: 'PAY-2026-07-01',
+    employee_id: 'E-1',
+    employee: 'Thandi Mokoena',
+    department: 'People Ops',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 46000,
+    sales_amount: 0,
+    sales_percent: 0,
+    sales_commission: 0,
+    incentive: 4500,
+    incentive_type: 'Executive Quarterly Milestone',
+    gift: 1200,
+    gift_type: 'Winter Wellness Hamper Voucher',
+    uif: 177.12,
+    paye: 8650,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Processed on 25 July via Nedbank Corporate EFT batch.'
+  },
+  {
+    id: 'PAY-2026-07-02',
+    employee_id: 'E-2',
+    employee: 'Sipho Dlamini',
+    department: 'Engineering',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 48500,
+    sales_amount: 0,
+    sales_percent: 0,
+    sales_commission: 0,
+    incentive: 5000,
+    incentive_type: 'Cloud Migration Delivery Bonus',
+    gift: 1500,
+    gift_type: 'Tech Gear Appreciation Token',
+    uif: 177.12,
+    paye: 9400,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Includes project completion delivery bonus for major bank cloud sprint.'
+  },
+  {
+    id: 'PAY-2026-07-03',
+    employee_id: 'E-3',
+    employee: 'Lerato Khumalo',
+    department: 'Data',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 28000,
+    sales_amount: 140000,
+    sales_percent: 5.0,
+    sales_commission: 7000,
+    incentive: 2500,
+    incentive_type: 'Data Pipeline Target Bonus',
+    gift: 750,
+    gift_type: 'Woolworths Gift Voucher',
+    uif: 177.12,
+    paye: 5200,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Sales commission calculated on R 140,000 analytics software add-on sales @ 5.0%.'
+  },
+  {
+    id: 'PAY-2026-07-04',
+    employee_id: 'E-4',
+    employee: 'Naledi Nkosi',
+    department: 'Design',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 32000,
+    sales_amount: 60000,
+    sales_percent: 4.0,
+    sales_commission: 2400,
+    incentive: 3000,
+    incentive_type: 'Client UX Review Distinction',
+    gift: 1000,
+    gift_type: 'Design Excellence Recognition Gift',
+    uif: 177.12,
+    paye: 5900,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Design consulting retainer commission included.'
+  },
+  {
+    id: 'PAY-2026-07-05',
+    employee_id: 'E-5',
+    employee: 'Bongani Zulu',
+    department: 'Engineering',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 39000,
+    sales_amount: 0,
+    sales_percent: 0,
+    sales_commission: 0,
+    incentive: 2000,
+    incentive_type: 'Zero-Security Incident Award',
+    gift: 800,
+    gift_type: 'Takealot Voucher',
+    uif: 177.12,
+    paye: 6850,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Q2 security compliance bonus applied.'
+  },
+  {
+    id: 'PAY-2026-07-06',
+    employee_id: 'E-6',
+    employee: 'Karabo Mthembu',
+    department: 'People Ops',
+    period: '2026-07',
+    pay_date: '2026-07-25',
+    status: 'Paid',
+    basic_salary: 19500,
+    sales_amount: 0,
+    sales_percent: 0,
+    sales_commission: 0,
+    incentive: 1500,
+    incentive_type: 'Intern Onboarding Drive Bonus',
+    gift: 1000,
+    gift_type: 'Mall of Africa Gift Card',
+    uif: 177.12,
+    paye: 1800,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Full onboarding cycle completed on schedule.'
+  },
+  // June 2026 historical records
+  {
+    id: 'PAY-2026-06-01',
+    employee_id: 'E-1',
+    employee: 'Thandi Mokoena',
+    department: 'People Ops',
+    period: '2026-06',
+    pay_date: '2026-06-25',
+    status: 'Paid',
+    basic_salary: 46000,
+    sales_amount: 0,
+    sales_percent: 0,
+    sales_commission: 0,
+    incentive: 3000,
+    incentive_type: 'Mid-Year Review Target',
+    gift: 500,
+    gift_type: 'Staff Recognition Gift',
+    uif: 177.12,
+    paye: 8400,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'June standard pay run.'
+  },
+  {
+    id: 'PAY-2026-06-03',
+    employee_id: 'E-3',
+    employee: 'Lerato Khumalo',
+    department: 'Data',
+    period: '2026-06',
+    pay_date: '2026-06-25',
+    status: 'Paid',
+    basic_salary: 28000,
+    sales_amount: 95000,
+    sales_percent: 5.0,
+    sales_commission: 4750,
+    incentive: 2000,
+    incentive_type: 'Retail Client KPI Incentive',
+    gift: 500,
+    gift_type: 'Mid-Year Token',
+    uif: 177.12,
+    paye: 4800,
+    loan: 0,
+    advance_salary: 0,
+    notes: 'Sales commission on R 95,000 analytics expansion.'
+  }
+]
+
 export { ZA_PUBLIC_HOLIDAYS, holidayOn } from '../lib/holidays.js'
 
