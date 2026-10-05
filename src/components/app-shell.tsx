@@ -204,13 +204,13 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "manager";
   }
 
-  // Navigate by raw href to ensure TanStack splat routes receive the correct full path.
+  // Navigate host-portal routes via browser location so the embedded
+  // MemoryRouter inside HostPortalEmbedded always reinitialises correctly.
+  // Non-host routes use normal TanStack client-side navigation.
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
     e.preventDefault();
-    if (to.startsWith('/host/') && to !== '/host') {
-      // Use splat param navigation for /host/* sub-routes
-      const splat = to.replace('/host/', '');
-      navigate({ to: '/_authenticated/host/$' as any, params: { _splat: splat } } as any);
+    if (to.startsWith('/host')) {
+      window.location.href = to;
     } else {
       navigate({ to } as any);
     }
@@ -218,9 +218,9 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
 
   const switchWorkspace = (portal: PortalKey) => {
     if (portal === "hr") {
-      navigate({ to: '/_authenticated/host/$' as any, params: { _splat: 'hr' } } as any);
+      window.location.href = '/host/hr';
     } else if (portal === "manager") {
-      navigate({ to: '/host' as any });
+      window.location.href = '/host';
     } else if (portal === "admin") {
       navigate({ to: '/admin/attendance' as any });
     } else {
