@@ -350,14 +350,14 @@ export const hostActivityByMonth = [
   { label: 'May', value: 22 }, { label: 'Jun', value: 26 }, { label: 'Jul', value: 30 },
 ]
 
-// HR Employee Documents & Folder Access Settings
+// HR Employee Documents & Folder Access Settings (Strictly Accessible to Human Resources Only)
 export const seedFolderSettings = [
-  { employee_id: 'E-1', access_level: 'HR Only', restricted: true, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 7, notes: 'Executive HR personnel file. Highest privacy tier.' },
-  { employee_id: 'E-2', access_level: 'Manager + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 5, notes: 'Engineering senior lead file.' },
-  { employee_id: 'E-3', access_level: 'Employee + HR', restricted: false, allow_employee_view: true, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Contract data analyst folder.' },
-  { employee_id: 'E-4', access_level: 'Employee + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 5, notes: 'Design department portfolio and credentials.' },
-  { employee_id: 'E-5', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Security clearance and NDA documentation.' },
-  { employee_id: 'E-6', access_level: 'Manager + HR', restricted: false, allow_employee_view: true, allow_manager_view: true, popia_consent: true, retention_years: 3, notes: 'People Ops coordination and contract papers.' },
+  { employee_id: 'E-1', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
+  { employee_id: 'E-2', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
+  { employee_id: 'E-3', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
+  { employee_id: 'E-4', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
+  { employee_id: 'E-5', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
+  { employee_id: 'E-6', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
 ]
 
 export const seedHrDocuments = [
@@ -385,14 +385,14 @@ export const seedHrDocuments = [
   {
     id: 'DOC-104', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
     name: 'Permanent_Employment_Contract_Sipho_Dlamini.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 520000, access: 'Manager + HR',
+    type: 'application/pdf', size: 520000, access: 'HR Only',
     uploaded: '2026-01-15', uploaded_by: 'Thandi Mokoena', verified: true,
     notes: 'Senior Cloud Engineer offer letter and signed contract.'
   },
   {
     id: 'DOC-105', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
     name: 'AWS_Solutions_Architect_Professional_Certificate.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 760000, access: 'Employee + HR',
+    type: 'application/pdf', size: 760000, access: 'HR Only',
     uploaded: '2026-03-01', uploaded_by: 'Sipho Dlamini', verified: true,
     notes: 'AWS Certified Solutions Architect (SAP-C02) verified badge and PDF.'
   },
@@ -406,28 +406,28 @@ export const seedHrDocuments = [
   {
     id: 'DOC-107', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
     name: 'Fixed_Term_Contract_Data_Analyst.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 410000, access: 'Employee + HR',
+    type: 'application/pdf', size: 410000, access: 'HR Only',
     uploaded: '2026-01-20', uploaded_by: 'Thandi Mokoena', verified: true,
     notes: '12-month fixed-term contract with sales commission addendum.'
   },
   {
     id: 'DOC-108', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
     name: 'BSc_Mathematical_Statistics_Degree_Wits.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 890000, access: 'Employee + HR',
+    type: 'application/pdf', size: 890000, access: 'HR Only',
     uploaded: '2026-01-22', uploaded_by: 'Lerato Khumalo', verified: true,
     notes: 'Degree transcript and certificate from University of the Witwatersrand.'
   },
   {
     id: 'DOC-109', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
     name: 'Employment_Contract_Product_Designer.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 440000, access: 'Employee + HR',
+    type: 'application/pdf', size: 440000, access: 'HR Only',
     uploaded: '2026-02-01', uploaded_by: 'Thandi Mokoena', verified: true,
     notes: 'Lead Product Designer full-time contract and IP agreement.'
   },
   {
     id: 'DOC-110', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
     name: 'Design_Portfolio_and_Case_Studies_2026.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 1250000, access: 'Employee + HR',
+    type: 'application/pdf', size: 1250000, access: 'HR Only',
     uploaded: '2026-02-05', uploaded_by: 'Naledi Nkosi', verified: true,
     notes: 'Comprehensive design system and product UX portfolio.'
   },
@@ -441,7 +441,7 @@ export const seedHrDocuments = [
   {
     id: 'DOC-112', employee_id: 'E-6', employee_name: 'Karabo Mthembu',
     name: 'Temporary_Appointment_Letter_People_Ops.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 320000, access: 'Manager + HR',
+    type: 'application/pdf', size: 320000, access: 'HR Only',
     uploaded: '2026-02-10', uploaded_by: 'Thandi Mokoena', verified: true,
     notes: 'People Ops coordinator temporary contract and scope of work.'
   }

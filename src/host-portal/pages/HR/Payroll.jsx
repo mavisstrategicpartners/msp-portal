@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import { seedEmployees, seedLearners, seedPayrollRecords } from '../../data/mockData.js'
+
 import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { toast } from 'sonner'
@@ -75,30 +75,20 @@ export function calculatePayrollTotals(record) {
 }
 
 export default function Payroll() {
-  const [records, setRecords] = useSupabaseTable('hr_payroll_records', seedPayrollRecords)
+  const [records, setRecords] = useSupabaseTable('hr_payroll_records', [])
+  const [employees] = useSupabaseTable('hr_employees', [])
 
-  // Merge permanent employees and interns
+  // Build staff list from live employee records
   const allStaff = useMemo(() => {
-    const regular = seedEmployees.map(e => ({
+    return employees.map(e => ({
       id: e.id,
-      full_name: e.full_name,
-      role: e.role,
-      department: e.department,
-      type: 'Permanent Staff',
-      default_basic: e.role.includes('Senior') ? 48500 : e.role.includes('Lead') ? 46000 : 28000
+      full_name: e.full_name || e.name || 'Unknown',
+      role: e.role || e.job_title || '',
+      department: e.department || '',
+      type: e.employment_type || 'Employee',
+      default_basic: Number(e.basic_salary || 0)
     }))
-
-    const interns = seedLearners.slice(0, 6).map(l => ({
-      id: l.id,
-      full_name: l.full_name,
-      role: `Intern (${l.program})`,
-      department: 'Internship Cohort',
-      type: 'Intern',
-      default_basic: 7500
-    }))
-
-    return [...regular, ...interns]
-  }, [])
+  }, [employees])
 
   const [selectedPeriod, setSelectedPeriod] = useState('2026-07')
   const [viewMode, setViewMode] = useState('worksheet') // 'worksheet' | 'register'
@@ -268,6 +258,27 @@ export default function Payroll() {
   }, [allStaff, staffSearch])
 
   const activeCalc = calculatePayrollTotals(activeRecord)
+
+  // Empty state when no employees in the system yet
+  if (allStaff.length === 0) {
+    return (
+      <DashboardLayout title="Payroll Platform">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 420, gap: 20, textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(59,130,246,0.15) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+            <Calculator size={36} style={{ color: '#10b981' }} />
+          </div>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>No Employees Added Yet</h2>
+          <p style={{ margin: 0, color: 'var(--text-muted)', maxWidth: 400, lineHeight: 1.6 }}>
+            Payroll records will appear here once employees are added to the system. You'll be able to process salaries, commissions, incentives, and gifts.
+          </p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '12px 20px' }}>
+            <ShieldCheck size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Payroll data is restricted to HR personnel only.</span>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout title="Payroll Platform">

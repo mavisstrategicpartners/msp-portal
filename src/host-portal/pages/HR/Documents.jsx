@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import { seedEmployees, seedLearners, seedHrDocuments, seedFolderSettings } from '../../data/mockData.js'
+
 import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { toast } from 'sonner'
@@ -45,30 +45,23 @@ const CATEGORIES = [
 const ACCESS_LEVELS = [
   {
     id: 'HR Only',
-    label: 'HR Only (Confidential)',
-    description: 'Restricted exclusively to HR managers and executives.',
+    label: 'Human Resources Only (Confidential)',
+    description: 'Strictly confidential — accessible to Human Resources only.',
     badgeClass: 'badge-purple',
     icon: Lock,
   },
   {
-    id: 'Manager + HR',
-    label: 'Manager + HR',
-    description: 'Accessible by the assigned Line Manager and HR.',
-    badgeClass: 'badge-warning',
+    id: 'HR Executive Only',
+    label: 'HR Executive & Leadership Only',
+    description: 'Executive committee and senior Human Resources management access.',
+    badgeClass: 'badge-danger',
     icon: Shield,
   },
   {
-    id: 'Employee + HR',
-    label: 'Employee Self-Service',
-    description: 'Employee can view their own files, with HR management rights.',
-    badgeClass: 'badge-success',
-    icon: User,
-  },
-  {
-    id: 'Executive Only',
-    label: 'Executive & Legal Only',
-    description: 'Strict restriction for executive and legal personnel records.',
-    badgeClass: 'badge-danger',
+    id: 'HR Compliance Hold',
+    label: 'HR Compliance & Audit Hold',
+    description: 'Restricted for POPIA regulatory, labour audit, and tax compliance.',
+    badgeClass: 'badge-warning',
     icon: Lock,
   },
 ]
@@ -92,33 +85,22 @@ const getCategoryStyle = (cat) => {
 }
 
 export default function HRDocuments() {
-  const [documents, setDocuments] = useSupabaseTable('hr_documents', seedHrDocuments)
-  const [folderSettings, setFolderSettings] = useSupabaseTable('hr_folder_settings', seedFolderSettings)
+  const [documents, setDocuments] = useSupabaseTable('hr_documents', [])
+  const [folderSettings, setFolderSettings] = useSupabaseTable('hr_folder_settings', [])
+  const [employees] = useSupabaseTable('hr_employees', [])
 
-  // Merge employees & interns for full staff directory
+  // Build staff directory from live employee records
   const allStaff = useMemo(() => {
-    const regular = seedEmployees.map(e => ({
+    return employees.map(e => ({
       id: e.id,
-      full_name: e.full_name,
-      role: e.role,
-      department: e.department,
-      type: 'Permanent Staff',
-      email: e.email,
-      join_date: e.join_date,
+      full_name: e.full_name || e.name || 'Unknown',
+      role: e.role || e.job_title || '',
+      department: e.department || '',
+      type: e.employment_type || 'Employee',
+      email: e.email || '',
+      join_date: e.join_date || e.start_date || '',
     }))
-
-    const interns = seedLearners.slice(0, 6).map(l => ({
-      id: l.id,
-      full_name: l.full_name,
-      role: `Intern (${l.program})`,
-      department: 'Internship Cohort',
-      type: 'Intern',
-      email: l.email,
-      join_date: l.start_date,
-    }))
-
-    return [...regular, ...interns]
-  }, [])
+  }, [employees])
 
   const [selectedStaffId, setSelectedStaffId] = useState(allStaff[0]?.id || 'E-1')
   const [staffSearch, setStaffSearch] = useState('')
@@ -299,6 +281,27 @@ export default function HRDocuments() {
   }
 
   const activeLevelConfig = ACCESS_LEVELS.find(a => a.id === activeSetting.access_level) || ACCESS_LEVELS[0]
+
+  // Empty state when no employees in the system yet
+  if (allStaff.length === 0) {
+    return (
+      <DashboardLayout title="Employee Documents">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 420, gap: 20, textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.15) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+            <Users size={36} style={{ color: '#818cf8' }} />
+          </div>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>No Employees Added Yet</h2>
+          <p style={{ margin: 0, color: 'var(--text-muted)', maxWidth: 400, lineHeight: 1.6 }}>
+            Employee folders will appear here once employees are added to the system. Each employee gets a private, access-controlled document vault.
+          </p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12, padding: '12px 20px' }}>
+            <ShieldCheck size={18} style={{ color: '#818cf8', flexShrink: 0 }} />
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>All documents are POPIA-compliant and HR-restricted by default.</span>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout title="Employee Documents">
@@ -971,24 +974,14 @@ function FolderPermissionsModal({ staff, setting, onClose, onSave }) {
           })}
         </div>
 
-        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 10, display: 'grid', gap: 8 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={allowEmployee}
-              onChange={e => setAllowEmployee(e.target.checked)}
-            />
-            <span>Allow employee to view non-confidential documents via self-service</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={allowManager}
-              onChange={e => setAllowManager(e.target.checked)}
-            />
-            <span>Allow reporting line manager to view performance & reviews</span>
-          </label>
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 10, background: 'var(--brand-soft)', padding: 12, borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 700, color: 'var(--brand)' }}>
+            <Lock size={14} />
+            <span>Human Resources Access Restriction Policy</span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
+            In accordance with company confidentiality standards and POPIA compliance, employee folders and personnel records are accessible to Human Resources only.
+          </div>
         </div>
 
         <div>

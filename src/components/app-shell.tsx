@@ -273,14 +273,16 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                     Staff
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => switchWorkspace("hr")}
-                  title="Human Resources Portal"
-                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                >
-                  HR
-                </button>
+                {(data?.isHR || isAdmin) && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("hr")}
+                    title="Human Resources Portal"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    HR
+                  </button>
+                )}
                 {isManagerOrAbove && (
                   <button
                     type="button"
@@ -312,7 +314,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
           if (section.managerOnly && !isManagerOrAbove && !isAdmin) return null;
-          if (section.hrOnly && !(data?.isHR || isManagerOrAbove || isAdmin)) return null;
+          if (section.hrOnly && !(data?.isHR || isAdmin)) return null;
           if (section.adminOnly && !isAdmin) return null;
 
           // Filter by active workspace/portal
