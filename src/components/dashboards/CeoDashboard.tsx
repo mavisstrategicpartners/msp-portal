@@ -246,8 +246,9 @@ export function CeoDashboard() {
                 <p><strong>Next Action:</strong> {selectedItem.nextAction}</p>
               </div>
             </div>
-
-
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

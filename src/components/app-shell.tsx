@@ -428,6 +428,8 @@ function TopBar({
 }) {
   const { theme, toggle } = useTheme();
   const { data } = useProfile();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isCeoPath = pathname.startsWith('/ceo');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -549,8 +551,8 @@ function TopBar({
         </button>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>
+        {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>}
+        {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>}
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
