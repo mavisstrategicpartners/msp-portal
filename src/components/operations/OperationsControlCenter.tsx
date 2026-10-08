@@ -42,71 +42,42 @@ import {
   ChevronRight,
   Send,
   Eye,
-  ShieldCheck,
-  Zap,
-  Calendar,
-  DollarSign,
-  Briefcase,
-  SlidersHorizontal,
-  HelpCircle,
-  FileBarChart2,
-  Check,
-  XCircle,
-  Clock3,
-  Flame,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  ClientOperation,
-  OperationTask,
-  TaskLifecycleStatus,
-  DelayAttributionCategory,
-  AcceptanceScenarioTest,
-} from "@/lib/operations-data";
+import { ClientOperation } from "@/lib/operations-data";
 
 export function OperationsControlCenter() {
   const { data: profileData } = useProfile();
   const ops = useOperationsData();
 
-  // 1. Role & Perspective Switcher (Section 1)
-  const [activeRole, setActiveRole] = useState<
-    "CEO" | "MD" | "OpsManager" | "DeptManager" | "Employee" | "Finance" | "HR" | "Admin"
-  >("CEO");
-
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("Media Buying");
-
-  // 2. Main Navigation Tabs
+  // Navigation tabs matching the MSP Portal aesthetic
   const [activeTab, setActiveTab] = useState<
-    "executive" | "tasks" | "onboarding" | "sales" | "workflows" | "escalations" | "kpis" | "acceptance"
-  >("executive");
+    "overview" | "tasks" | "people" | "clients" | "onboarding" | "escalations" | "sales"
+  >("overview");
 
   // Filter & Search states
   const [taskFilterStatus, setTaskFilterStatus] = useState<string>("All");
   const [taskFilterPriority, setTaskFilterPriority] = useState<string>("All");
   const [taskSearch, setTaskSearch] = useState<string>("");
 
+  const [clientSearch, setClientSearch] = useState<string>("");
+  const [clientHealthFilter, setClientHealthFilter] = useState<string>("All");
+
   const [leadSearch, setLeadSearch] = useState<string>("");
   const [leadStageFilter, setLeadStageFilter] = useState<string>("All");
-
-  // Selected Item Modals
-  const [selectedTaskTimeline, setSelectedTaskTimeline] = useState<OperationTask | null>(null);
-  const [evidenceSubmissionTask, setEvidenceSubmissionTask] = useState<OperationTask | null>(null);
 
   // Modals state
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
-    clientOrTeam: "",
-    serviceType: "Paid Ads" as const,
     description: "",
+    clientOrTeam: "",
     ownerName: "",
-    managerName: "Xongile Mhlari",
-    reviewerName: "Xongile Mhlari",
     priority: "High" as const,
-    originalDueDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
-    promisedClientDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
-    evidenceRequirement: "Account IDs, copy QA checklist & live platform status.",
-    nextAction: "Assign task owner and review prerequisites",
+    deadline: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
+    reviewer: "Operations Manager",
+    status: "Not Started" as const,
+    progress: 0,
   });
 
   const [escalationModalOpen, setEscalationModalOpen] = useState(false);
@@ -117,43 +88,40 @@ export function OperationsControlCenter() {
     raisedBy: profileData?.profile?.full_name || "Operations Lead",
     priority: "High" as const,
     impact: "High" as const,
-    owner: "Xongile Mhlari",
+    owner: "",
     targetResolutionDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    escalationLevel: "Level 2 (Operations Head)" as const,
+    escalationLevel: "Level 1 (Team Lead)" as const,
     status: "Open" as const,
     actionsTaken: "",
-    workingHoursLate: 4,
-    originalPromiseRetained: true,
   });
 
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [newLead, setNewLead] = useState({
     businessName: "",
     contactPerson: "",
-    leadSource: "Meta Ads" as const,
+    leadSource: "Google Search" as const,
     need: "",
-    assignedSalesperson: profileData?.profile?.full_name || "Mavis Muchena",
+    assignedSalesperson: profileData?.profile?.full_name || "Managing Director",
     followUpDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     stage: "New" as const,
     leadQuality: "Hot" as const,
-    estimatedValue: 45000,
+    estimatedValue: 35000,
     proposalStatus: "Draft" as const,
-    inboundResponseMins: 10,
-    firstHumanActionHrs: 0.5,
     notes: "",
   });
 
-  // Evidence Form State
-  const [evidenceForm, setEvidenceForm] = useState({
-    deliverableType: "Paid Ads" as const,
-    campaignOrAccountIds: "",
-    stagingOrLiveUrl: "",
-    workflowRef: "",
-    proposalOrContractRef: "",
-    qaChecklistVerified: true,
-    platformLiveVerified: true,
-    testLeadVerified: true,
-    evidenceLinkOrRef: "",
+  const [clientHealthModal, setClientHealthModal] = useState<{
+    open: boolean;
+    client: ClientOperation | null;
+    health: "Green" | "Amber" | "Red";
+    reason: string;
+    nextAction: string;
+  }>({
+    open: false,
+    client: null,
+    health: "Green",
+    reason: "",
+    nextAction: "",
   });
 
   // Filtered queries
@@ -169,6 +137,17 @@ export function OperationsControlCenter() {
     });
   }, [ops.tasks, taskSearch, taskFilterStatus, taskFilterPriority]);
 
+  const filteredClients = useMemo(() => {
+    return ops.clients.filter((c) => {
+      const matchSearch =
+        c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+        c.accountManager.toLowerCase().includes(clientSearch.toLowerCase()) ||
+        c.package.toLowerCase().includes(clientSearch.toLowerCase());
+      const matchHealth = clientHealthFilter === "All" || c.health === clientHealthFilter;
+      return matchSearch && matchHealth;
+    });
+  }, [ops.clients, clientSearch, clientHealthFilter]);
+
   const filteredLeads = useMemo(() => {
     return ops.leads.filter((l) => {
       const matchSearch =
@@ -182,26 +161,17 @@ export function OperationsControlCenter() {
 
   return (
     <div className="space-y-6">
-      {/* ─── Header & System Integrity Banner ──────────────────────────────── */}
+      {/* 1. Standard Native MSP Page Title Eyebrow Banner */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-              <Activity className="h-3.5 w-3.5" /> MSP Operations Control & Performance
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <ShieldCheck className="h-3 w-3" /> Selected Period: October 2026 | 100% Data Completeness
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-muted bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground font-mono">
-              <Clock className="h-3 w-3" /> Africa/Johannesburg (SAST)
-            </span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <Activity className="h-3.5 w-3.5" /> Operations
           </div>
-
-          <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl text-foreground">
-            MSP CEO Command Centre
+          <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl text-foreground">
+            Operations Control Centre
           </h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Single source of truth for sold scope, client deliverable status, department deadlines, verification proof, and automated escalations.
+          <p className="mt-2 max-w-3xl text-sm text-muted-foreground md:text-base">
+            Live operations hub connecting team attendance, client deliverable health, active task execution, and pipeline milestones.
           </p>
         </div>
 
@@ -211,15 +181,15 @@ export function OperationsControlCenter() {
             size="sm"
             onClick={() => {
               ops.refreshRealData();
-              toast.success("Refreshed live data from Supabase backend");
+              toast.info("Refreshed live company data from Supabase");
             }}
           >
-            <RefreshCw className="mr-2 h-4 w-4" /> Refresh Engine
+            <RefreshCw className="mr-2 h-4 w-4" /> Refresh
           </Button>
           <Button
             size="sm"
             onClick={() => {
-              setNewTask((t) => ({ ...t, ownerName: ops.employees[0]?.name || "Tinashe Moyo" }));
+              setNewTask((t) => ({ ...t, ownerName: ops.employees[0]?.name || "" }));
               setTaskModalOpen(true);
             }}
           >
@@ -229,6 +199,7 @@ export function OperationsControlCenter() {
             size="sm"
             variant="destructive"
             onClick={() => {
+              setNewEscalation((e) => ({ ...e, owner: ops.employees[0]?.name || "" }));
               setEscalationModalOpen(true);
             }}
           >
@@ -237,128 +208,25 @@ export function OperationsControlCenter() {
         </div>
       </div>
 
-      {/* ─── Role Perspective Switcher (Section 1) ─────────────────────────── */}
-      <Card className="p-3 bg-muted/30 border-border/80">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Role Perspective:</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[
-              { id: "CEO", label: "CEO (Mavis Muchena)", icon: Award },
-              { id: "MD", label: "MD / General Manager", icon: Briefcase },
-              { id: "OpsManager", label: "Operations (Xongile Mhlari)", icon: Activity },
-              { id: "DeptManager", label: "Department Manager", icon: Layers },
-              { id: "Employee", label: "Team Member", icon: Users },
-              { id: "Finance", label: "Finance & Admin", icon: DollarSign },
-              { id: "HR", label: "HR & Performance", icon: ShieldCheck },
-            ].map((role) => (
-              <button
-                key={role.id}
-                onClick={() => setActiveRole(role.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                  activeRole === role.id
-                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground border border-border/50"
-                }`}
-              >
-                <role.icon className="h-3.5 w-3.5" />
-                <span>{role.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {activeRole === "DeptManager" && (
-          <div className="mt-3 pt-2 border-t border-border/60 flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">Department:</span>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="h-8 text-xs w-[220px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[
-                  "Media Buying",
-                  "Websites & Software",
-                  "CRM & AI Automation",
-                  "Strategy",
-                  "SEO",
-                  "Creative",
-                  "Sales",
-                  "Client Success",
-                  "Finance",
-                  "HR & Admin",
-                  "MSP Academy",
-                ].map((dept) => (
-                  <SelectItem key={dept} value={dept} className="text-xs">
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </Card>
-
-      {/* ─── CEO Exception Alert Banner (Section 11 / 12 Example) ───────────── */}
-      <Card className="border-rose-500/40 bg-rose-500/[0.06] p-4 text-foreground">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-rose-500/20 p-2 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
-              <Flame className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  CEO Executive Priority Alert
-                </span>
-                <Badge variant="destructive" className="text-[10px] uppercase font-bold">
-                  Action Required
-                </Badge>
-              </div>
-              <p className="mt-1 text-sm font-semibold">
-                Client Alpha | Meta campaign launch | <span className="underline decoration-rose-500 font-bold">9 working hours late</span> | Buyer submitted on time | Budget approval pending with manager
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                <strong className="text-foreground font-medium">Confirmed Category:</strong> Manager approval delay &bull;{" "}
-                <strong className="text-foreground font-medium">Action:</strong> Operations to obtain approval by 12:00 today &bull;{" "}
-                <strong className="text-foreground font-medium">Client Promise:</strong> Original promise retained.
-              </p>
-            </div>
-          </div>
-
-          <Button
-            size="sm"
-            className="bg-rose-600 hover:bg-rose-700 text-white shrink-0"
-            onClick={() => setSelectedTaskTimeline(ops.tasks[0] || null)}
-          >
-            <Eye className="mr-1.5 h-4 w-4" /> Open Timeline & Evidence
-          </Button>
-        </div>
-      </Card>
-
-      {/* ─── Main Sub-Navigation Tabs ──────────────────────────────────────── */}
+      {/* 2. Standard Native Sub-Navigation Bar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-border pb-2">
         {[
-          { key: "executive", label: "Command Centre & Health Views", icon: Activity, count: null },
-          { key: "tasks", label: "Work & Lifecycle Tasks", icon: CheckSquare, count: ops.tasks.length },
-          { key: "onboarding", label: "2-Day Onboarding & Launch", icon: Layers, count: ops.onboarding.length, alert: ops.executiveHealth.client.onboardingLate > 0 },
-          { key: "sales", label: "Sales Execution & SLAs", icon: TrendingUp, count: ops.leads.length },
-          { key: "workflows", label: "Service Planning Workflows", icon: SlidersHorizontal, count: null },
-          { key: "escalations", label: "Escalations & Incidents", icon: AlertTriangle, count: ops.escalations.length, alert: ops.escalations.length > 0 },
-          { key: "kpis", label: "KPI Dictionary", icon: FileBarChart2, count: null },
-          { key: "acceptance", label: "Acceptance Test Suite (15 Tests)", icon: ShieldCheck, count: ops.acceptanceTests.length },
+          { key: "overview", label: "Dashboard Overview", icon: Activity, count: null },
+          { key: "tasks", label: "Work & Tasks", icon: CheckSquare, count: ops.tasks.length || null },
+          { key: "people", label: "Workforce Presence", icon: Users, count: `${ops.metrics.people.present}/${ops.metrics.people.total}` },
+          { key: "clients", label: "Clients & Health", icon: Building2, count: ops.clients.length || null },
+          { key: "onboarding", label: "Client Onboarding", icon: Layers, count: ops.onboarding.length || null },
+          { key: "escalations", label: "Escalations", icon: AlertTriangle, count: ops.metrics.clients.openEscalations || null, alert: Boolean(ops.metrics.clients.openEscalations) },
+          { key: "sales", label: "Sales & Leads", icon: TrendingUp, count: ops.leads.length || null },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
           return (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
@@ -370,7 +238,7 @@ export function OperationsControlCenter() {
                     isActive
                       ? "bg-primary-foreground/20 text-primary-foreground"
                       : tab.alert
-                      ? "bg-rose-500/20 text-rose-600 dark:text-rose-400"
+                      ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -383,352 +251,439 @@ export function OperationsControlCenter() {
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: EXECUTIVE COMMAND CENTRE & 5 HEALTH VIEWS (Section 2)               */}
+      {/* VIEW: DASHBOARD OVERVIEW                                                  */}
       {/* ========================================================================= */}
-      {activeTab === "executive" && (
+      {activeTab === "overview" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              The Five Executive Health Views (CEO View — {activeRole})
-            </h2>
-            <span className="text-xs text-muted-foreground font-mono">Rule: No department is green if a critical deliverable is overdue</span>
-          </div>
-
-          {/* The 5 Health Cards Grid */}
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {/* 1. Sales Health */}
-            <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          {/* 4 Clean Metric Cards matching Portal SOP & Department styling */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card
+              className="p-5 cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => setActiveTab("people")}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">1. Sales Health</span>
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-medium text-muted-foreground">Workforce Presence</span>
+                <Users className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  R{(ops.executiveHealth.sales.verifiedNewRevenueZar / 1000).toFixed(0)}k{" "}
-                  <span className="text-xs font-normal text-muted-foreground">New Revenue</span>
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between"><span>New Leads:</span> <strong className="text-foreground">{ops.executiveHealth.sales.newLeads}</strong></div>
-                  <div className="flex justify-between"><span>Unanswered Leads:</span> <strong className="text-rose-500 font-bold">{ops.executiveHealth.sales.unansweredLeads}</strong></div>
-                  <div className="flex justify-between"><span>Overdue Follow-ups:</span> <strong className="text-amber-500 font-bold">{ops.executiveHealth.sales.overdueFollowUps}</strong></div>
-                  <div className="flex justify-between"><span>Proposals Sent:</span> <strong className="text-foreground">{ops.executiveHealth.sales.proposalsSent}</strong></div>
-                </div>
-              </div>
-              <Badge variant="outline" className="w-full justify-center bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                Green &bull; On Revenue Target
-              </Badge>
+              <p className="mt-4 text-3xl font-bold text-foreground">
+                {ops.metrics.people.present}{" "}
+                <span className="text-sm font-normal text-muted-foreground">/ {ops.metrics.people.total} Present</span>
+              </p>
+              <Progress
+                value={ops.metrics.people.total ? Math.round((ops.metrics.people.present / ops.metrics.people.total) * 100) : 0}
+                className="mt-3"
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                {ops.metrics.people.late > 0 ? `${ops.metrics.people.late} late arrival` : "All on-time"} &bull; {ops.metrics.people.onLeave} on approved leave
+              </p>
             </Card>
 
-            {/* 2. Revenue Health */}
-            <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+            <Card
+              className="p-5 cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => setActiveTab("tasks")}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">2. Revenue Health</span>
-                <DollarSign className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">Active Workload</span>
+                <CheckSquare className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  R{(ops.executiveHealth.revenue.cashCollectedZar / 1000).toFixed(0)}k{" "}
-                  <span className="text-xs font-normal text-muted-foreground">Collected</span>
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between"><span>Booked Revenue:</span> <strong className="text-foreground">R650k</strong></div>
-                  <div className="flex justify-between"><span>Invoiced Revenue:</span> <strong className="text-foreground">R580k</strong></div>
-                  <div className="flex justify-between"><span>Overdue Debt:</span> <strong className="text-rose-500 font-bold">R60k</strong></div>
-                  <div className="flex justify-between"><span>Gross Margin:</span> <strong className="text-foreground">{ops.executiveHealth.revenue.costMarginPct}%</strong></div>
-                </div>
-              </div>
-              <Badge variant="outline" className="w-full justify-center bg-primary/10 text-primary border-primary/30">
-                Green &bull; R420k Recurring
-              </Badge>
+              <p className="mt-4 text-3xl font-bold text-foreground">
+                {ops.tasks.length}{" "}
+                <span className="text-sm font-normal text-muted-foreground">Tasks</span>
+              </p>
+              <Progress
+                value={ops.tasks.length ? Math.round((ops.metrics.work.completed / ops.tasks.length) * 100) : 0}
+                className="mt-3"
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                {ops.metrics.work.overdue > 0 ? `${ops.metrics.work.overdue} overdue` : "0 overdue"} &bull; {ops.metrics.work.blocked} blocked
+              </p>
             </Card>
 
-            {/* 3. Client Health */}
-            <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+            <Card
+              className="p-5 cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => setActiveTab("clients")}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">3. Client Health</span>
-                <Building2 className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium text-muted-foreground">Active Clients</span>
+                <Building2 className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-emerald-500 inline-block" /> <span className="text-xs font-bold">{ops.executiveHealth.client.greenCount} Green</span>
-                  <span className="h-3 w-3 rounded-full bg-amber-500 inline-block ml-1" /> <span className="text-xs font-bold">{ops.executiveHealth.client.amberCount} Amber</span>
-                  <span className="h-3 w-3 rounded-full bg-rose-500 inline-block ml-1" /> <span className="text-xs font-bold">{ops.executiveHealth.client.redCount} Red</span>
-                </div>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between"><span>Onboarding Late:</span> <strong className="text-rose-500 font-bold">{ops.executiveHealth.client.onboardingLate}</strong></div>
-                  <div className="flex justify-between"><span>Awaiting Launch:</span> <strong className="text-foreground">{ops.executiveHealth.client.awaitingLaunch}</strong></div>
-                  <div className="flex justify-between"><span>Complaints:</span> <strong className="text-emerald-500">{ops.executiveHealth.client.unresolvedComplaints}</strong></div>
-                  <div className="flex justify-between"><span>Renewal Risks:</span> <strong className="text-amber-500 font-bold">{ops.executiveHealth.client.renewalRisks}</strong></div>
-                </div>
+              <p className="mt-4 text-3xl font-bold text-foreground">
+                {ops.clients.length}{" "}
+                <span className="text-sm font-normal text-muted-foreground">Retainers</span>
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  {ops.clients.filter((c) => c.health === "Green").length} Healthy
+                </span>
+                {ops.metrics.clients.atRisk > 0 && (
+                  <Badge variant="destructive" className="text-[10px] ml-auto">
+                    {ops.metrics.clients.atRisk} Attention Needed
+                  </Badge>
+                )}
               </div>
-              <Badge variant="outline" className="w-full justify-center bg-rose-500/10 text-rose-600 border-rose-500/30">
-                Red &bull; Client Alpha Breach
-              </Badge>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Synced from company clients table
+              </p>
             </Card>
 
-            {/* 4. Delivery Health */}
-            <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+            <Card
+              className="p-5 cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => setActiveTab("sales")}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">4. Delivery Health</span>
-                <CheckSquare className="h-4 w-4 text-rose-500" />
+                <span className="text-sm font-medium text-muted-foreground">Pipeline Opportunities</span>
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {ops.executiveHealth.delivery.dueToday}{" "}
-                  <span className="text-xs font-normal text-muted-foreground">Due Today</span>
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between"><span>Overdue Milestones:</span> <strong className="text-rose-500 font-bold">{ops.executiveHealth.delivery.overdueMilestones}</strong></div>
-                  <div className="flex justify-between"><span>Blocked Work:</span> <strong className="text-amber-500 font-bold">{ops.executiveHealth.delivery.blockedWork}</strong></div>
-                  <div className="flex justify-between"><span>Approval Backlog:</span> <strong className="text-foreground">{ops.executiveHealth.delivery.approvalBacklog}</strong></div>
-                  <div className="flex justify-between"><span>Websites Overdue:</span> <strong className="text-emerald-500">{ops.executiveHealth.delivery.overdueWebsites}</strong></div>
-                </div>
-              </div>
-              <Badge variant="outline" className="w-full justify-center bg-amber-500/10 text-amber-600 border-amber-500/30">
-                Amber &bull; 2 Blocked Tasks
-              </Badge>
-            </Card>
-
-            {/* 5. Team Health */}
-            <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">5. Team Health</span>
-                <Users className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {ops.executiveHealth.team.acceptedDeliveryRatePct}%{" "}
-                  <span className="text-xs font-normal text-muted-foreground">On-Time Rate</span>
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <div className="flex justify-between"><span>Active Workload:</span> <strong className="text-foreground">{ops.executiveHealth.team.assignedWorkload} tasks</strong></div>
-                  <div className="flex justify-between"><span>Pending QA Verification:</span> <strong className="text-foreground">{ops.executiveHealth.team.pendingVerification}</strong></div>
-                  <div className="flex justify-between"><span>Overdue Approvals:</span> <strong className="text-rose-500 font-bold">{ops.executiveHealth.team.managerOverdueApprovals}</strong></div>
-                  <div className="flex justify-between"><span>Stale Updates:</span> <strong className="text-foreground">{ops.executiveHealth.team.staleUpdates}</strong></div>
-                </div>
-              </div>
-              <Badge variant="outline" className="w-full justify-center bg-primary/10 text-primary border-primary/30">
-                Green &bull; 94% Delivery Rate
-              </Badge>
+              <p className="mt-4 text-3xl font-bold text-foreground">
+                R{(ops.metrics.sales.pipelineValue / 1000).toFixed(0)}k
+              </p>
+              <Progress
+                value={ops.leads.length ? Math.round((ops.leads.filter((l) => l.stage === "Won").length / ops.leads.length) * 100) : 0}
+                className="mt-3"
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                {ops.metrics.sales.newLeads} new prospective deals &bull; {ops.metrics.sales.followUpsDue} follow-ups
+              </p>
             </Card>
           </div>
 
-          {/* CEO Executive Action Queue (Alert Row Table) */}
-          <Card className="p-5 border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-rose-500" /> CEO Executive Action Queue
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Live exception list showing overdue milestones, working hours late, confirmed blocker, and assigned escalation recipient.
-                </p>
+          {/* Action Required Items & Active Client List */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Urgent Items */}
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-foreground">Urgent Actions & Escalations</h2>
+                <Badge variant="outline">{ops.metrics.actionRequired.length}</Badge>
               </div>
-              <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-600 border-rose-500/30">
-                {ops.tasks.filter((t) => t.status === "Blocked" || t.workingHoursLate > 0).length} Exceptions Requiring Action
-              </Badge>
+
+              {ops.metrics.actionRequired.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
+                  No open escalations or blocked tasks requiring immediate action.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {ops.metrics.actionRequired.slice(0, 4).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start justify-between gap-3 p-3 rounded-md border border-border bg-secondary/20"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={item.priority === "Urgent" ? "destructive" : "default"} className="text-[10px]">
+                            {item.priority}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{item.clientOrTarget}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground mt-1">{item.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Assigned: {item.responsible} &bull; Due {item.deadline}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (item.category === "Escalation") setActiveTab("escalations");
+                          else setActiveTab("tasks");
+                        }}
+                      >
+                        Open <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* Client Accounts At A Glance */}
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-foreground">Live Client Accounts</h2>
+                <Button variant="link" size="sm" className="h-auto p-0 text-primary" onClick={() => setActiveTab("clients")}>
+                  Manage All
+                </Button>
+              </div>
+
+              {ops.clients.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No clients currently recorded in the system.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {ops.clients.slice(0, 4).map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between p-3 rounded-md border border-border bg-secondary/20"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">Account Manager: {c.accountManager}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={c.health === "Green" ? "default" : c.health === "Amber" ? "secondary" : "destructive"}
+                          className="text-xs"
+                        >
+                          {c.health}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setClientHealthModal({
+                              open: true,
+                              client: c,
+                              health: c.health,
+                              reason: c.healthReason,
+                              nextAction: c.nextAction,
+                            });
+                          }}
+                        >
+                          Update
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW: WORK & TASKS                                                        */}
+      {/* ========================================================================= */}
+      {activeTab === "tasks" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 flex-1">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tasks, clients or assignees..."
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+
+              <Select value={taskFilterStatus} onValueChange={setTaskFilterStatus}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Statuses</SelectItem>
+                  <SelectItem value="Not Started">Not Started</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Awaiting Review">Awaiting Review</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Blocked">Blocked</SelectItem>
+                  <SelectItem value="Overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+            <Button onClick={() => setTaskModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> New Task
+            </Button>
+          </div>
+
+          <Card className="p-0 overflow-hidden">
+            {filteredTasks.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No tasks match your filters. Click "New Task" to create one.
+              </div>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
                   <tr>
-                    <th className="p-2.5">Client & Service</th>
-                    <th className="p-2.5">Overdue Milestone</th>
-                    <th className="p-2.5">Original Due</th>
-                    <th className="p-2.5">Working Hrs Late</th>
-                    <th className="p-2.5">Current Blocker</th>
-                    <th className="p-2.5">Task Owner</th>
-                    <th className="p-2.5">Manager</th>
-                    <th className="p-2.5">Delay Category</th>
-                    <th className="p-2.5">Next Action</th>
-                    <th className="p-2.5">Escalation Recipient</th>
-                    <th className="p-2.5 text-right">Actions</th>
+                    <th className="p-3.5">Task</th>
+                    <th className="p-3.5">Client / Context</th>
+                    <th className="p-3.5">Owner</th>
+                    <th className="p-3.5">Deadline</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-right">Quick Update</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {ops.tasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="p-2.5 font-bold text-foreground">
-                        {task.clientOrTeam}
-                        <div className="text-[11px] font-normal text-muted-foreground">{task.serviceType}</div>
-                      </td>
-                      <td className="p-2.5 font-medium">{task.title}</td>
-                      <td className="p-2.5 font-mono text-muted-foreground">
-                        {task.originalDueDate.split("T")[0]}
-                      </td>
-                      <td className="p-2.5">
-                        {task.workingHoursLate > 0 ? (
-                          <span className="font-bold text-rose-600 dark:text-rose-400">{task.workingHoursLate} hrs late</span>
-                        ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">On time</span>
+                  {filteredTasks.map((t) => (
+                    <tr key={t.id} className="hover:bg-muted/30">
+                      <td className="p-3.5">
+                        <p className="font-semibold text-foreground">{t.title}</p>
+                        {t.description && <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>}
+                        {t.blockReason && (
+                          <span className="inline-block mt-1 text-xs text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
+                            Blocker: {t.blockReason}
+                          </span>
                         )}
                       </td>
-                      <td className="p-2.5 max-w-[180px] truncate text-muted-foreground" title={task.blockReason || "None"}>
-                        {task.blockReason ? (
-                          <span className="text-amber-600 dark:text-amber-400 font-medium">{task.blockReason}</span>
-                        ) : (
-                          "Ready for review"
-                        )}
-                      </td>
-                      <td className="p-2.5 font-medium">{task.ownerName}</td>
-                      <td className="p-2.5 text-muted-foreground">{task.managerName}</td>
-                      <td className="p-2.5">
-                        <Badge variant="outline" className="text-[10px] bg-muted">
-                          {task.delayCategory || "Employee execution"}
+                      <td className="p-3.5 text-muted-foreground">{t.clientOrTeam || "Internal"}</td>
+                      <td className="p-3.5 font-medium text-foreground">{t.ownerName}</td>
+                      <td className="p-3.5">{t.deadline}</td>
+                      <td className="p-3.5">
+                        <Badge
+                          variant={
+                            t.status === "Completed"
+                              ? "default"
+                              : t.status === "Blocked" || t.status === "Overdue"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {t.status}
                         </Badge>
                       </td>
-                      <td className="p-2.5 max-w-[200px] truncate" title={task.nextAction}>
-                        {task.nextAction}
-                      </td>
-                      <td className="p-2.5 font-medium text-rose-600 dark:text-rose-400">
-                        {task.escalationRecipient || "Operations Head"}
-                      </td>
-                      <td className="p-2.5 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedTaskTimeline(task)}
-                          className="h-7 text-[11px]"
+                      <td className="p-3.5 text-right">
+                        <Select
+                          value={t.status}
+                          onValueChange={(val) => {
+                            ops.updateTask(t.id, {
+                              status: val as any,
+                              progress: val === "Completed" ? 100 : t.progress,
+                            });
+                            toast.success(`Task status changed to ${val}`);
+                          }}
                         >
-                          <Eye className="mr-1 h-3 w-3" /> Timeline
-                        </Button>
+                          <SelectTrigger className="w-32 h-8 inline-flex"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Not Started">Not Started</SelectItem>
+                            <SelectItem value="In Progress">In Progress</SelectItem>
+                            <SelectItem value="Awaiting Review">Awaiting Review</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                            <SelectItem value="Blocked">Blocked</SelectItem>
+                            <SelectItem value="Overdue">Overdue</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+            )}
           </Card>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 2: WORK & LIFECYCLE TASKS (Section 4)                                  */}
+      {/* VIEW: WORKFORCE PRESENCE                                                  */}
       {/* ========================================================================= */}
-      {activeTab === "tasks" && (
-        <div className="space-y-6">
+      {activeTab === "people" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Live Team Presence</h2>
+            <p className="text-xs text-muted-foreground">Computed directly from active company profiles & attendance logs.</p>
+          </div>
+
+          <Card className="p-0 overflow-hidden">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+                <tr>
+                  <th className="p-3.5">Name</th>
+                  <th className="p-3.5">Role & Department</th>
+                  <th className="p-3.5">Email</th>
+                  <th className="p-3.5">Status Today</th>
+                  <th className="p-3.5">Clock In</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {ops.employees.map((emp) => (
+                  <tr key={emp.id} className="hover:bg-muted/30">
+                    <td className="p-3.5 font-semibold text-foreground">{emp.name}</td>
+                    <td className="p-3.5">
+                      <p className="font-medium text-foreground">{emp.role}</p>
+                      <p className="text-xs text-muted-foreground">{emp.department}</p>
+                    </td>
+                    <td className="p-3.5 text-muted-foreground">{emp.email}</td>
+                    <td className="p-3.5">
+                      <Badge
+                        variant={
+                          emp.attendanceStatus === "Present"
+                            ? "default"
+                            : emp.attendanceStatus === "Approved Leave"
+                            ? "outline"
+                            : "secondary"
+                        }
+                      >
+                        {emp.attendanceStatus}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 font-mono text-xs text-muted-foreground">{emp.clockInTime || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW: CLIENT OPERATIONS & HEALTH                                          */}
+      {/* ========================================================================= */}
+      {activeTab === "clients" && (
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Task Lifecycle & Evidence Verification Queue</h2>
-              <p className="text-xs text-muted-foreground">
-                Task Statuses: Not ready &bull; Ready &bull; In progress &bull; Blocked &bull; Submitted for review &bull; Rework &bull; Accepted complete &bull; Cancelled
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search tasks, clients or owners..."
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-                className="w-[240px] h-8 text-xs"
+                placeholder="Search clients..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                className="pl-8"
               />
-              <Select value={taskFilterStatus} onValueChange={setTaskFilterStatus}>
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Statuses</SelectItem>
-                  <SelectItem value="In progress">In Progress</SelectItem>
-                  <SelectItem value="Blocked">Blocked</SelectItem>
-                  <SelectItem value="Submitted for review">Submitted for Review</SelectItem>
-                  <SelectItem value="Rework">Rework Required</SelectItem>
-                  <SelectItem value="Accepted complete">Accepted Complete</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
+
+            <Select value={clientHealthFilter} onValueChange={setClientHealthFilter}>
+              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Health</SelectItem>
+                <SelectItem value="Green">Green</SelectItem>
+                <SelectItem value="Amber">Amber</SelectItem>
+                <SelectItem value="Red">Red</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredTasks.map((task) => (
-              <Card key={task.id} className="p-4 space-y-3 border-border hover:border-primary/40 transition-colors">
-                <div className="flex items-start justify-between">
+            {filteredClients.map((client) => (
+              <Card key={client.id} className="p-5 space-y-3">
+                <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{task.clientOrTeam}</span>
-                    <h3 className="text-base font-bold text-foreground mt-0.5">{task.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{client.name}</h3>
+                    <p className="text-xs text-muted-foreground">{client.package}</p>
                   </div>
                   <Badge
-                    variant={
-                      task.status === "Accepted complete"
-                        ? "default"
-                        : task.status === "Blocked"
-                        ? "destructive"
-                        : task.status === "Submitted for review"
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className="text-xs"
+                    variant={client.health === "Green" ? "default" : client.health === "Amber" ? "secondary" : "destructive"}
                   >
-                    {task.status}
+                    {client.health}
                   </Badge>
                 </div>
 
-                <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
-
-                {/* 3 Business Clocks Display (Section 5) */}
-                <div className="p-2.5 rounded-md bg-muted/40 text-[11px] space-y-1">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Gross Client Age:</span>
-                    <strong className="text-foreground">{task.clientElapsedTimeHrs} hrs ({Math.round(task.clientElapsedTimeHrs / 24)} days)</strong>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Internal Working Time:</span>
-                    <strong className="text-foreground">{task.internalServiceTimeHrs} working hrs</strong>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Stage Time Held:</span>
-                    <strong className="text-rose-600 dark:text-rose-400 font-bold">{task.stageTimeHrs} hrs ({task.delayCategory || "Execution"})</strong>
-                  </div>
+                <div className="text-xs space-y-1 text-muted-foreground">
+                  <p><span className="font-medium text-foreground">Account Manager:</span> {client.accountManager}</p>
+                  <p><span className="font-medium text-foreground">Contract Status:</span> {client.contractStatus}</p>
                 </div>
 
-                {task.blockReason && (
-                  <div className="p-2 rounded-md bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 font-medium">
-                    <strong className="font-bold">Blocker:</strong> {task.blockReason}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-border">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Users className="h-3.5 w-3.5 text-primary" />
-                    <span>Owner: <strong className="text-foreground">{task.ownerName}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedTaskTimeline(task)}
-                      className="h-7 text-[11px]"
-                    >
-                      Timeline
-                    </Button>
-                    {task.status === "In progress" || task.status === "Rework" ? (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setEvidenceSubmissionTask(task);
-                          setEvidenceForm((f) => ({
-                            ...f,
-                            deliverableType: (task.serviceType as any) || "Paid Ads",
-                          }));
-                        }}
-                        className="h-7 text-[11px]"
-                      >
-                        Submit Evidence
-                      </Button>
-                    ) : task.status === "Submitted for review" ? (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
-                        onClick={() => {
-                          ops.verifyTaskCompletion(task.id, profileData?.profile?.full_name || "Xongile Mhlari");
-                          toast.success("Deliverable verified and accepted as complete!");
-                        }}
-                      >
-                        <Check className="mr-1 h-3 w-3" /> QA Accept
-                      </Button>
-                    ) : null}
-                  </div>
+                <div className="p-2.5 rounded-md bg-secondary/30 text-xs space-y-1">
+                  <p className="font-medium text-foreground">Health Assessment:</p>
+                  <p className="text-muted-foreground">{client.healthReason}</p>
+                  <p className="font-medium text-foreground mt-2">Next Step:</p>
+                  <p className="text-muted-foreground">{client.nextAction} (Due {client.nextActionDue})</p>
                 </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setClientHealthModal({
+                      open: true,
+                      client,
+                      health: client.health,
+                      reason: client.healthReason,
+                      nextAction: client.nextAction,
+                    });
+                  }}
+                >
+                  Update Health Status
+                </Button>
               </Card>
             ))}
           </div>
@@ -736,555 +691,442 @@ export function OperationsControlCenter() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: 2-DAY ONBOARDING & PAID AD LAUNCH TRACKER (Section 6)               */}
+      {/* VIEW: ONBOARDING WORKFLOW                                                 */}
       {/* ========================================================================= */}
       {activeTab === "onboarding" && (
-        <div className="space-y-6">
-          <Card className="p-5 border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-primary" /> Onboarding SLA & Asset Readiness Gate
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Target: 2 Business Days (18 Working Hours) intake to launch readiness. Paid Ad Launch Target: 2 business days from readiness gate.
-                </p>
-              </div>
-              <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
-                1 Client Breach Alert
-              </Badge>
-            </div>
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Client Onboarding Pipelines</h2>
 
-            <div className="space-y-4">
-              {ops.onboarding.map((onb) => (
-                <div key={onb.id} className="p-4 rounded-lg border border-border bg-card space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          {ops.onboarding.length === 0 ? (
+            <Card className="p-8 text-center text-sm text-muted-foreground">
+              No clients currently in the onboarding stage. Marking a sales opportunity as "Won" will automatically initiate their onboarding pipeline.
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {ops.onboarding.map((workflow) => (
+                <Card key={workflow.id} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-base font-bold text-foreground">{onb.clientName}</h4>
-                        {onb.isBreached && (
-                          <Badge variant="destructive" className="text-[10px] uppercase font-bold">
-                            SLA Breached ({onb.workingHoursAge} hrs age)
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Account Manager: <strong>{onb.accountManager}</strong> &bull; Stage Owner: <strong>{onb.stageOwner}</strong>
-                      </p>
+                      <h3 className="font-semibold text-foreground">{workflow.clientName}</h3>
+                      <p className="text-xs text-muted-foreground">Stage: <strong className="text-primary">{workflow.currentStage}</strong> &bull; Lead: {workflow.accountManager}</p>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          toast.success("Readiness verifier checked all platform access tokens.");
-                        }}
-                      >
-                        <ShieldCheck className="mr-1 h-3.5 w-3.5 text-emerald-500" /> Verify Readiness Gate
-                      </Button>
-                    </div>
+                    <span className="text-xs font-bold text-foreground">{workflow.progress}%</span>
                   </div>
-
-                  {/* Stage Progress Pipeline */}
-                  <div>
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                      <span>Current Stage: <strong className="text-foreground">{onb.currentStage}</strong></span>
-                      <span>{onb.progress}% Completed</span>
-                    </div>
-                    <Progress value={onb.progress} className="h-2" />
-                  </div>
-
-                  {/* Platform Access Matrix */}
-                  <div className="pt-2 border-t border-border">
-                    <span className="text-xs font-semibold text-muted-foreground">Platform Access & Asset Verification:</span>
-                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {Object.entries(onb.accessChecklist).map(([key, val]) => (
-                        <div key={key} className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
-                          <span className="capitalize text-muted-foreground">{key.replace(/([A-Z])/g, " $1")}:</span>
-                          <span className={`font-bold ${val === "Verified" ? "text-emerald-600" : val === "Missing" ? "text-rose-500" : "text-muted-foreground"}`}>
-                            {val}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                  <Progress value={workflow.progress} className="h-2" />
+                </Card>
               ))}
             </div>
-          </Card>
+          )}
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 4: SALES EXECUTION & SLAs (Section 7)                                  */}
+      {/* VIEW: ESCALATIONS                                                         */}
+      {/* ========================================================================= */}
+      {activeTab === "escalations" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Active Operational Escalations</h2>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setNewEscalation((e) => ({ ...e, owner: ops.employees[0]?.name || "" }));
+                setEscalationModalOpen(true);
+              }}
+            >
+              <AlertTriangle className="mr-2 h-4 w-4" /> Raise Issue
+            </Button>
+          </div>
+
+          {ops.escalations.length === 0 ? (
+            <Card className="p-8 text-center text-sm text-muted-foreground">
+              No open escalations currently logged.
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {ops.escalations.map((esc) => (
+                <Card key={esc.id} className="p-5 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <Badge variant="destructive" className="text-xs">{esc.priority}</Badge>
+                      <h3 className="text-base font-semibold text-foreground mt-2">{esc.title}</h3>
+                      <p className="text-xs text-muted-foreground">{esc.clientOrTeam} &bull; Owner: {esc.owner}</p>
+                    </div>
+                    <Badge variant="outline">{esc.status}</Badge>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground bg-secondary/30 p-2.5 rounded-md">
+                    {esc.actionsTaken || "Investigation in progress."}
+                  </p>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        ops.updateEscalation(esc.id, { status: "Resolved" });
+                        toast.success("Escalation resolved");
+                      }}
+                    >
+                      Mark Resolved
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW: SALES & LEADS                                                       */}
       {/* ========================================================================= */}
       {activeTab === "sales" && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Sales Execution & Revenue Handover</h2>
-              <p className="text-xs text-muted-foreground">
-                Inbound response SLA: &le;15 working mins &bull; First human action: &le;1 working hr &bull; Proposal: &le;1 business day after consultation
-              </p>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Sales Opportunities & Leads</h2>
             <Button size="sm" onClick={() => setLeadModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Add Lead
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredLeads.map((lead) => (
-              <Card key={lead.id} className="p-4 space-y-3 border-border hover:border-primary/40 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">{lead.businessName}</h3>
-                    <p className="text-xs text-muted-foreground">Contact: {lead.contactPerson} ({lead.leadSource})</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
-                    {lead.stage}
-                  </Badge>
-                </div>
-
-                <p className="text-xs text-muted-foreground line-clamp-2">{lead.need}</p>
-
-                <div className="p-2.5 rounded-md bg-muted/40 text-[11px] space-y-1">
-                  <div className="flex justify-between"><span>Estimated Value:</span> <strong className="text-foreground">R{lead.estimatedValue.toLocaleString()} ZAR</strong></div>
-                  <div className="flex justify-between"><span>Inbound Response SLA:</span> <strong className="text-emerald-600 font-bold">{lead.inboundResponseMins} mins (Pass)</strong></div>
-                  <div className="flex justify-between"><span>Assigned Salesperson:</span> <strong className="text-foreground">{lead.assignedSalesperson}</strong></div>
-                  <div className="flex justify-between"><span>Follow-up Date:</span> <strong className="text-foreground">{lead.followUpDate}</strong></div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
-                  <span className="text-muted-foreground">Proposal: <strong>{lead.proposalStatus}</strong></span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toast.info(`Opened GHL opportunity sync for ${lead.businessName}`)}
-                  >
-                    View CRM Record
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* TAB 5: SERVICE PLANNING WORKFLOWS (Section 8)                              */}
-      {/* ========================================================================= */}
-      {activeTab === "workflows" && (
-        <div className="space-y-6">
-          <Card className="p-5 border-border">
-            <h3 className="text-base font-bold text-foreground mb-1">Technology, SEO & Creative Service Timelines</h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              Proposed planning templates (from accepted scope & prerequisite completion). Signed custom estimates override defaults.
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                { title: "Landing Page", days: "5 Business Days", steps: "Brief & Access → Design → Build → Responsive & Form QA → Acceptance → Deploy" },
-                { title: "Standard Company Website", days: "15 Business Days", steps: "Scope & Sitemap → Design → Build → GHL Routing → QA → Client Review → Launch" },
-                { title: "Ecommerce Store", days: "20–30 Business Days", steps: "Catalog & Payment Data → Design → Store Build → Checkout & Shipping QA → Acceptance" },
-                { title: "GHL CRM & Automation", days: "5–10 Business Days", steps: "Pipeline & Routing → Workflow Setup → Booking Calendar → Tests & Staff Training" },
-                { title: "WhatsApp AI Agent", days: "5–10 Business Days", steps: "Approved Knowledge Base → Qualification Prompts → Escalation Setup → Test Scenarios" },
-                { title: "Tracking & Analytics (GA4/CAPI)", days: "3–5 Business Days", steps: "Event Plan → CAPI Implementation → Test Events → Source Matching → Handover" },
-              ].map((template) => (
-                <div key={template.title} className="p-4 rounded-lg border border-border bg-card space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-foreground">{template.title}</h4>
-                    <Badge variant="outline" className="text-xs bg-primary/10 text-primary">{template.days}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground"><strong>Milestone Chain:</strong> {template.steps}</p>
-                </div>
-              ))}
-            </div>
+          <Card className="p-0 overflow-hidden">
+            {filteredLeads.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No active leads found. Click "Add Lead" to register a prospective client.
+              </div>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+                  <tr>
+                    <th className="p-3.5">Business</th>
+                    <th className="p-3.5">Contact Person</th>
+                    <th className="p-3.5">Sales Lead</th>
+                    <th className="p-3.5">Monthly Value</th>
+                    <th className="p-3.5">Pipeline Stage</th>
+                    <th className="p-3.5 text-right">Update Stage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredLeads.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-muted/30">
+                      <td className="p-3.5 font-semibold text-foreground">{lead.businessName}</td>
+                      <td className="p-3.5 text-muted-foreground">{lead.contactPerson}</td>
+                      <td className="p-3.5 font-medium">{lead.assignedSalesperson}</td>
+                      <td className="p-3.5 font-semibold">R{lead.estimatedValue.toLocaleString()}</td>
+                      <td className="p-3.5">
+                        <Badge variant={lead.stage === "Won" ? "default" : "secondary"}>
+                          {lead.stage}
+                        </Badge>
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <Select
+                          value={lead.stage}
+                          onValueChange={(val) => {
+                            ops.updateLead(lead.id, { stage: val as any });
+                            if (val === "Won") {
+                              toast.success(`Deal Won! Converted to onboarding workflow.`);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-32 h-8 inline-flex"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">New</SelectItem>
+                            <SelectItem value="Contacted">Contacted</SelectItem>
+                            <SelectItem value="Qualified">Qualified</SelectItem>
+                            <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
+                            <SelectItem value="Won">Won (Convert)</SelectItem>
+                            <SelectItem value="Lost">Lost</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </Card>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 6: ESCALATIONS & INCIDENTS (Section 11)                                */}
+      {/* MODALS: CREATE TASK                                                       */}
       {/* ========================================================================= */}
-      {activeTab === "escalations" && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Escalation Engine & Incident Log</h2>
-              <p className="text-xs text-muted-foreground">
-                Automatic routing: 4h late &rarr; Operations & MD &bull; 1 day late / promise breach &rarr; CEO Mavis Muchena
-              </p>
-            </div>
-            <Button size="sm" variant="destructive" onClick={() => setEscalationModalOpen(true)}>
-              <AlertTriangle className="mr-2 h-4 w-4" /> Raise Escalation
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {ops.escalations.map((esc) => (
-              <Card key={esc.id} className="p-4 border-border space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-foreground">{esc.title}</h3>
-                      <Badge variant="destructive" className="text-xs">{esc.escalationLevel}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Client: <strong>{esc.clientOrTeam}</strong> &bull; Raised by: <strong>{esc.raisedBy}</strong> &bull; Date: {esc.dateRaised}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-600 border-rose-500/30">
-                    Status: {esc.status}
-                  </Badge>
-                </div>
-
-                <p className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded">{esc.actionsTaken}</p>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
-                  <span className="text-muted-foreground">Working Hours Late: <strong className="text-rose-600 font-bold">{esc.workingHoursLate} hrs</strong></span>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      ops.resolveEscalation(esc.id, "Resolved by Operations & CEO intervention.");
-                      toast.success("Escalation resolved!");
-                    }}
-                  >
-                    Resolve Escalation
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* TAB 7: KPI DICTIONARY (Section 10)                                         */}
-      {/* ========================================================================= */}
-      {activeTab === "kpis" && (
-        <div className="space-y-6">
-          <Card className="p-5 border-border">
-            <h3 className="text-base font-bold text-foreground mb-1">MSP Operational KPI Dictionary</h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              Formulas, denominators, and live calculated values. Overdue open tasks remain in the denominator.
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                { name: "Due Work Accepted On Time", formula: "Tasks accepted by baseline due date ÷ all non-cancelled tasks due in period", value: "94%" },
-                { name: "Submission Timeliness", formula: "Tasks submitted by baseline deadline ÷ tasks due for submission", value: "96%" },
-                { name: "Launch Within Target", formula: "Campaigns verified live within service clock limit ÷ campaigns whose launch deadline falls in period", value: "88%" },
-                { name: "Onboarding Within Target", formula: "Onboarding accepted within 18 working hours ÷ onboardings due in period", value: "82%" },
-                { name: "Follow-Up Compliance", formula: "Due follow-ups completed by due time ÷ all follow-ups due in period", value: "91%" },
-                { name: "Sales Win Rate", formula: "Won opportunities ÷ (Won + Lost opportunities closed in period)", value: "37.5%" },
-              ].map((kpi) => (
-                <div key={kpi.name} className="p-4 rounded-lg border border-border bg-card space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-foreground">{kpi.name}</h4>
-                    <span className="text-base font-extrabold text-primary">{kpi.value}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground"><strong>Formula:</strong> {kpi.formula}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* TAB 8: ACCEPTANCE TEST SUITE (Section 14 & 15)                             */}
-      {/* ========================================================================= */}
-      {activeTab === "acceptance" && (
-        <div className="space-y-6">
-          <Card className="p-5 border-border">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" /> Developer Acceptance Test Matrix (Section 14)
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Seeded test scenarios verifying all business rules before CEO sign-off.
-                </p>
-              </div>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
-                All 8 Core Acceptance Tests Passed
-              </Badge>
-            </div>
-
-            <div className="space-y-3">
-              {ops.acceptanceTests.map((test) => (
-                <div key={test.id} className="p-4 rounded-lg border border-border bg-card space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-primary font-mono">Test #{test.testNumber}</span>
-                      <h4 className="text-sm font-bold text-foreground">{test.title}</h4>
-                      <Badge variant="outline" className="text-[10px]">{test.specSection}</Badge>
-                    </div>
-                    <Badge variant="default" className="bg-emerald-600 text-white">
-                      <Check className="mr-1 h-3 w-3" /> {test.status}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground"><strong>Expected Behavior:</strong> {test.expectedBehavior}</p>
-                  <p className="text-muted-foreground bg-muted/30 p-2 rounded"><strong>Verification Evidence:</strong> {test.evidenceSummary}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ─── MODAL 1: TASK TIMELINE & EVIDENCE DRAWER ─────────────────────── */}
-      {selectedTaskTimeline && (
-        <Dialog open={Boolean(selectedTaskTimeline)} onOpenChange={() => setSelectedTaskTimeline(null)}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-lg">
-                <Clock className="h-5 w-5 text-primary" /> Task Timeline & Delay Attribution History
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {selectedTaskTimeline.clientOrTeam} &bull; {selectedTaskTimeline.serviceType}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 text-xs">
-              <div className="p-3 rounded-lg bg-muted/40 space-y-2">
-                <h4 className="font-bold text-sm text-foreground">{selectedTaskTimeline.title}</h4>
-                <p className="text-muted-foreground">{selectedTaskTimeline.description}</p>
-              </div>
-
-              {/* Business Clock Breakdown */}
-              <div className="grid grid-cols-3 gap-3 p-3 rounded-lg border border-border bg-card">
-                <div>
-                  <span className="text-muted-foreground block text-[11px]">Gross Client Age</span>
-                  <strong className="text-sm font-bold">{selectedTaskTimeline.clientElapsedTimeHrs} Hours</strong>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px]">Internal Working Time</span>
-                  <strong className="text-sm font-bold text-primary">{selectedTaskTimeline.internalServiceTimeHrs} Working Hours</strong>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px]">Stage Time & Delay</span>
-                  <strong className="text-sm font-bold text-rose-500">{selectedTaskTimeline.stageTimeHrs} Working Hours</strong>
-                </div>
-              </div>
-
-              {/* Attribution details */}
-              <div className="space-y-2">
-                <span className="font-bold text-foreground block">Confirmed Responsibility Attribution:</span>
-                <div className="p-3 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300">
-                  <p><strong>Category:</strong> {selectedTaskTimeline.delayCategory || "Manager Approval Delay"}</p>
-                  <p className="mt-1"><strong>Blocker:</strong> {selectedTaskTimeline.blockReason || "Manager budget approval pending"}</p>
-                  <p className="mt-1"><strong>Escalated To:</strong> {selectedTaskTimeline.escalationRecipient || "Operations Lead (Xongile Mhlari)"}</p>
-                </div>
-              </div>
-
-              {/* Evidence submission details */}
-              {selectedTaskTimeline.evidenceSubmitted && (
-                <div className="space-y-2">
-                  <span className="font-bold text-foreground block">Submitted Completion Evidence:</span>
-                  <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300">
-                    <p><strong>Deliverable Type:</strong> {selectedTaskTimeline.evidenceSubmitted.deliverableType}</p>
-                    <p><strong>Evidence Reference:</strong> {selectedTaskTimeline.evidenceSubmitted.evidenceLinkOrRef}</p>
-                    <p><strong>Submitted At:</strong> {selectedTaskTimeline.evidenceSubmitted.submittedAt}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button size="sm" variant="outline" onClick={() => setSelectedTaskTimeline(null)}>
-                Close Timeline
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* ─── MODAL 2: TASK EVIDENCE SUBMISSION FORM ───────────────────────── */}
-      {evidenceSubmissionTask && (
-        <Dialog open={Boolean(evidenceSubmissionTask)} onOpenChange={() => setEvidenceSubmissionTask(null)}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" /> Submit Deliverable Verification Evidence
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                Proof of completion required before QA review. A task cannot be completed without verified evidence.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <Label>Deliverable Evidence Link or Reference</Label>
-                <Input
-                  placeholder="https://app.gohighlevel.com/... or campaign ID"
-                  value={evidenceForm.evidenceLinkOrRef}
-                  onChange={(e) => setEvidenceForm((f) => ({ ...f, evidenceLinkOrRef: e.target.value }))}
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              <div className="space-y-2 p-3 rounded-md bg-muted/40">
-                <span className="font-bold text-foreground block">Verification Checklist:</span>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={evidenceForm.qaChecklistVerified}
-                    onChange={(e) => setEvidenceForm((f) => ({ ...f, qaChecklistVerified: e.target.checked }))}
-                  />
-                  <span>Agreed scope & QA checklist verified</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={evidenceForm.platformLiveVerified}
-                    onChange={(e) => setEvidenceForm((f) => ({ ...f, platformLiveVerified: e.target.checked }))}
-                  />
-                  <span>Platform live status / deployment verified</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={evidenceForm.testLeadVerified}
-                    onChange={(e) => setEvidenceForm((f) => ({ ...f, testLeadVerified: e.target.checked }))}
-                  />
-                  <span>CRM lead capture & form test verified</span>
-                </label>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button size="sm" variant="outline" onClick={() => setEvidenceSubmissionTask(null)}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (!evidenceForm.evidenceLinkOrRef) {
-                    toast.error("Please provide an evidence link or reference.");
-                    return;
-                  }
-                  ops.submitTaskEvidence(evidenceSubmissionTask.id, {
-                    deliverableType: evidenceForm.deliverableType,
-                    qaChecklistVerified: evidenceForm.qaChecklistVerified,
-                    platformLiveVerified: evidenceForm.platformLiveVerified,
-                    testLeadVerified: evidenceForm.testLeadVerified,
-                    evidenceLinkOrRef: evidenceForm.evidenceLinkOrRef,
-                    submittedAt: new Date().toISOString(),
-                    submitterName: profileData?.profile?.full_name || "Tinashe Moyo",
-                  });
-                  setEvidenceSubmissionTask(null);
-                  toast.success("Deliverable evidence submitted for independent QA review!");
-                }}
-              >
-                Submit for QA Review
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* ─── MODAL 3: CREATE TASK ─────────────────────────────────────────── */}
       <Dialog open={taskModalOpen} onOpenChange={setTaskModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Operational Task</DialogTitle>
-            <DialogDescription className="text-xs">
-              Assign task with single accountable owner, manager, and evidence requirements.
-            </DialogDescription>
+            <DialogTitle>Create Task</DialogTitle>
+            <DialogDescription>Assign a deliverable with an owner and target deadline.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 text-xs">
+          <div className="space-y-3 py-2 text-sm">
             <div>
-              <Label>Client or Project Name</Label>
+              <Label>Task Title *</Label>
               <Input
-                placeholder="e.g. Apex Solar SA"
-                value={newTask.clientOrTeam}
-                onChange={(e) => setNewTask((t) => ({ ...t, clientOrTeam: e.target.value }))}
-                className="mt-1 text-xs"
-              />
-            </div>
-            <div>
-              <Label>Task Title</Label>
-              <Input
-                placeholder="e.g. Meta Ads Launch & CAPI Setup"
+                placeholder="e.g. Meta Conversions API Setup"
                 value={newTask.title}
-                onChange={(e) => setNewTask((t) => ({ ...t, title: e.target.value }))}
-                className="mt-1 text-xs"
+                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
               />
             </div>
             <div>
-              <Label>Service Stream</Label>
-              <Select
-                value={newTask.serviceType}
-                onValueChange={(val: any) => setNewTask((t) => ({ ...t, serviceType: val }))}
-              >
-                <SelectTrigger className="mt-1 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Paid Ads">Paid Ads</SelectItem>
-                  <SelectItem value="Website">Website</SelectItem>
-                  <SelectItem value="CRM & AI">CRM & AI</SelectItem>
-                  <SelectItem value="SEO">SEO</SelectItem>
-                  <SelectItem value="Creative">Creative</SelectItem>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Client or Project</Label>
+              <Input
+                placeholder="Client name"
+                value={newTask.clientOrTeam}
+                onChange={(e) => setNewTask({ ...newTask, clientOrTeam: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Owner</Label>
+                <Select value={newTask.ownerName} onValueChange={(val) => setNewTask({ ...newTask, ownerName: val })}>
+                  <SelectTrigger><SelectValue placeholder="Select staff" /></SelectTrigger>
+                  <SelectContent>
+                    {ops.employees.map((e) => (
+                      <SelectItem key={e.id} value={e.name}>{e.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Priority</Label>
+                <Select value={newTask.priority} onValueChange={(val: any) => setNewTask({ ...newTask, priority: val })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
-              <Label>Accountable Owner Name</Label>
+              <Label>Deadline</Label>
               <Input
-                placeholder="e.g. Tinashe Moyo"
-                value={newTask.ownerName}
-                onChange={(e) => setNewTask((t) => ({ ...t, ownerName: e.target.value }))}
-                className="mt-1 text-xs"
+                type="date"
+                value={newTask.deadline}
+                onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button size="sm" variant="outline" onClick={() => setTaskModalOpen(false)}>
+            <Button variant="outline" onClick={() => setTaskModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!newTask.title) {
+                  toast.error("Please enter a title.");
+                  return;
+                }
+                const emp = ops.employees.find((e) => e.name === newTask.ownerName);
+                ops.addTask({
+                  ...newTask,
+                  ownerId: emp?.id || "emp-1",
+                  assignedDate: new Date().toISOString().split("T")[0],
+                });
+                toast.success("Task assigned successfully");
+                setTaskModalOpen(false);
+              }}
+            >
+              Assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODALS: LOG ESCALATION                                                    */}
+      {/* ========================================================================= */}
+      <Dialog open={escalationModalOpen} onOpenChange={setEscalationModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Log Operational Issue</DialogTitle>
+            <DialogDescription>Record a blocker or client delivery concern.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-sm">
+            <div>
+              <Label>Issue Summary *</Label>
+              <Input
+                placeholder="Brief summary of the issue"
+                value={newEscalation.title}
+                onChange={(e) => setNewEscalation({ ...newEscalation, title: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Client / Team</Label>
+                <Input
+                  placeholder="Affected account"
+                  value={newEscalation.clientOrTeam}
+                  onChange={(e) => setNewEscalation({ ...newEscalation, clientOrTeam: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Priority</Label>
+                <Select value={newEscalation.priority} onValueChange={(val: any) => setNewEscalation({ ...newEscalation, priority: val })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEscalationModalOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!newEscalation.title) {
+                  toast.error("Please enter an issue summary.");
+                  return;
+                }
+                ops.addEscalation({
+                  ...newEscalation,
+                  dateRaised: new Date().toISOString().split("T")[0],
+                });
+                toast.success("Issue logged successfully");
+                setEscalationModalOpen(false);
+              }}
+            >
+              Log Issue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODALS: ADD LEAD                                                          */}
+      {/* ========================================================================= */}
+      <Dialog open={leadModalOpen} onOpenChange={setLeadModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Lead</DialogTitle>
+            <DialogDescription>Register a new sales prospect.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-sm">
+            <div>
+              <Label>Business Name *</Label>
+              <Input
+                placeholder="Company name"
+                value={newLead.businessName}
+                onChange={(e) => setNewLead({ ...newLead, businessName: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Contact Person</Label>
+                <Input
+                  placeholder="Name"
+                  value={newLead.contactPerson}
+                  onChange={(e) => setNewLead({ ...newLead, contactPerson: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Monthly Value (ZAR)</Label>
+                <Input
+                  type="number"
+                  placeholder="35000"
+                  value={newLead.estimatedValue}
+                  onChange={(e) => setNewLead({ ...newLead, estimatedValue: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeadModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!newLead.businessName) {
+                  toast.error("Please enter a business name.");
+                  return;
+                }
+                ops.addLead(newLead);
+                toast.success("Lead added to pipeline");
+                setLeadModalOpen(false);
+              }}
+            >
+              Save Lead
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODALS: UPDATE CLIENT HEALTH                                              */}
+      {/* ========================================================================= */}
+      <Dialog
+        open={clientHealthModal.open}
+        onOpenChange={(open) => setClientHealthModal({ ...clientHealthModal, open })}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Client Health</DialogTitle>
+            <DialogDescription>Set account health status and next action.</DialogDescription>
+          </DialogHeader>
+
+          {clientHealthModal.client && (
+            <div className="space-y-3 py-2 text-sm">
+              <div>
+                <Label>Health Status</Label>
+                <Select
+                  value={clientHealthModal.health}
+                  onValueChange={(val: any) => setClientHealthModal({ ...clientHealthModal, health: val })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Green">Green (Healthy)</SelectItem>
+                    <SelectItem value="Amber">Amber (Attention Required)</SelectItem>
+                    <SelectItem value="Red">Red (Critical Risk)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Health Assessment Reason</Label>
+                <Input
+                  value={clientHealthModal.reason}
+                  onChange={(e) => setClientHealthModal({ ...clientHealthModal, reason: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label>Next Action</Label>
+                <Input
+                  value={clientHealthModal.nextAction}
+                  onChange={(e) => setClientHealthModal({ ...clientHealthModal, nextAction: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClientHealthModal({ ...clientHealthModal, open: false })}>
               Cancel
             </Button>
             <Button
-              size="sm"
               onClick={() => {
-                if (!newTask.title || !newTask.clientOrTeam) {
-                  toast.error("Please fill in task title and client name.");
-                  return;
+                if (clientHealthModal.client) {
+                  ops.updateClientHealth(
+                    clientHealthModal.client.id,
+                    clientHealthModal.health,
+                    clientHealthModal.reason,
+                    clientHealthModal.nextAction
+                  );
+                  toast.success("Client health updated");
+                  setClientHealthModal({ ...clientHealthModal, open: false });
                 }
-                ops.addTask({
-                  title: newTask.title,
-                  clientOrTeam: newTask.clientOrTeam,
-                  serviceType: newTask.serviceType,
-                  description: newTask.description || newTask.title,
-                  ownerId: "emp-1",
-                  ownerName: newTask.ownerName || "Tinashe Moyo",
-                  managerName: newTask.managerName,
-                  reviewerName: newTask.reviewerName,
-                  priority: newTask.priority,
-                  status: "In progress",
-                  progress: 25,
-                  plannedStart: new Date().toISOString(),
-                  originalDueDate: newTask.originalDueDate,
-                  revisedDueDate: newTask.originalDueDate,
-                  promisedClientDate: newTask.promisedClientDate,
-                  dueDeadline: newTask.originalDueDate,
-                  workingHoursLate: 0,
-                  clientElapsedTimeHrs: 4,
-                  internalServiceTimeHrs: 4,
-                  stageTimeHrs: 4,
-                  nextAction: newTask.nextAction,
-                  evidenceRequirement: newTask.evidenceRequirement,
-                  commentsCount: 0,
-                });
-                setTaskModalOpen(false);
-                toast.success("Task created and assigned successfully!");
               }}
             >
-              Create Task
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

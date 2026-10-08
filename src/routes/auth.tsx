@@ -51,9 +51,6 @@ function AuthPage() {
   );
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpType, setHelpType] = useState<"forgot" | "support">("forgot");
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [verificationOpen, setVerificationOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
