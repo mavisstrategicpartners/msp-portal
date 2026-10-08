@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedCeoRouteImport } from './routes/_authenticated/ceo'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticated/glossary'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
@@ -52,6 +53,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCeoRoute = AuthenticatedCeoRouteImport.update({
+  id: '/ceo',
+  path: '/ceo',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDepartmentsRoute =
   AuthenticatedDepartmentsRouteImport.update({
@@ -195,6 +201,7 @@ const AuthenticatedPortalOtherRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ceo': typeof AuthenticatedCeoRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ceo': typeof AuthenticatedCeoRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/ceo': typeof AuthenticatedCeoRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
   '/_authenticated/glossary': typeof AuthenticatedGlossaryRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/ceo'
     | '/departments'
     | '/glossary'
     | '/home'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/ceo'
     | '/departments'
     | '/glossary'
     | '/home'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/ceo'
     | '/_authenticated/departments'
     | '/_authenticated/glossary'
     | '/_authenticated/home'
@@ -406,6 +418,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/ceo': {
+      id: '/_authenticated/ceo'
+      path: '/ceo'
+      fullPath: '/ceo'
+      preLoaderRoute: typeof AuthenticatedCeoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/departments': {
       id: '/_authenticated/departments'
@@ -593,6 +612,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCeoRoute: typeof AuthenticatedCeoRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
   AuthenticatedGlossaryRoute: typeof AuthenticatedGlossaryRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
@@ -622,6 +642,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCeoRoute: AuthenticatedCeoRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
   AuthenticatedGlossaryRoute: AuthenticatedGlossaryRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
