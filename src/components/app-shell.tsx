@@ -276,7 +276,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
             <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
               {workspaceTitle}
             </p>
-            {(isAdmin || isManagerOrAbove || data?.isHR) && (
+            {(isAdmin || isManagerOrAbove || data?.isHR) && currentPortal !== "ceo" && (
               <div className="flex items-center gap-1">
                 {!isAdmin && currentPortal !== "admin" && (
                   <button

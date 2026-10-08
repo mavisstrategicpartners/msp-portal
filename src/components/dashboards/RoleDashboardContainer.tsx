@@ -14,14 +14,12 @@ import {
   Users,
 } from "lucide-react";
 import { DASHBOARD_ROLES, DashboardRole } from "./types";
-import { CeoDashboard } from "./CeoDashboard";
 import { GeneralManagerDashboard } from "./GeneralManagerDashboard";
 import { OperationsDashboard } from "./OperationsDashboard";
 import { DepartmentManagerDashboard } from "./DepartmentManagerDashboard";
 import { FinanceAdminDashboard } from "./FinanceAdminDashboard";
 
 const ROLE_ICONS: Record<DashboardRole, any> = {
-  ceo: Award,
   general_manager: Briefcase,
   operations: Activity,
   department_manager: Layers,
@@ -29,7 +27,7 @@ const ROLE_ICONS: Record<DashboardRole, any> = {
 };
 
 export function RoleDashboardContainer() {
-  const [activeRole, setActiveRole] = useState<DashboardRole>("ceo");
+  const [activeRole, setActiveRole] = useState<DashboardRole>("general_manager");
 
   const currentRoleConfig = DASHBOARD_ROLES.find((r) => r.id === activeRole) || DASHBOARD_ROLES[0];
 
@@ -91,7 +89,6 @@ export function RoleDashboardContainer() {
       </div>
 
       {/* ─── Render Active Role Dashboard ──────────────────────────────────── */}
-      {activeRole === "ceo" && <CeoDashboard />}
       {activeRole === "general_manager" && <GeneralManagerDashboard />}
       {activeRole === "operations" && <OperationsDashboard />}
       {activeRole === "department_manager" && <DepartmentManagerDashboard />}

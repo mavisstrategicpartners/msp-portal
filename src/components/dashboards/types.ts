@@ -1,5 +1,4 @@
 export type DashboardRole =
-  | "ceo"
   | "general_manager"
   | "operations"
   | "department_manager"
@@ -14,13 +13,6 @@ export interface RoleConfig {
 }
 
 export const DASHBOARD_ROLES: RoleConfig[] = [
-  {
-    id: "ceo",
-    title: "Chief Executive Officer",
-    shortLabel: "CEO",
-    description: "Company health, finances, strategic escalations & overdue executive decisions",
-    authority: "All five health views, company finances, department scorecards, escalations and strategic actions.",
-  },
   {
     id: "general_manager",
     title: "General Manager / MD",
