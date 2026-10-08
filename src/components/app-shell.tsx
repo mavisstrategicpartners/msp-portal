@@ -6,7 +6,7 @@ import {
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
   Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard, Clock, Activity, Calculator, Folder,
+  LayoutDashboard, Clock, Activity, Calculator, Folder, TrendingUp, DollarSign, CheckSquare,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -109,8 +109,13 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
   ]},
   // CEO Workspace
-  { group: "Executive", rootOnly: true, portals: ["ceo"], items: [
-    { to: "/ceo", label: "Command Centre", icon: Crown },
+  { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
+    { to: "/ceo", label: "Action Queue", icon: Crown },
+    { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
+    { to: "/ceo/revenue", label: "Revenue Health", icon: DollarSign },
+    { to: "/ceo/clients", label: "Client Health", icon: Building2 },
+    { to: "/ceo/delivery", label: "Delivery Health", icon: CheckSquare },
+    { to: "/ceo/team", label: "Team Health", icon: Users },
   ]},
 ];
 

@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CeoDashboard } from "@/components/dashboards/CeoDashboard";
 import { Crown } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/ceo")({
-  head: () => ({ meta: [{ title: "CEO Command Centre — MSP Portal" }] }),
-  component: CeoPage,
+export const Route = createFileRoute("/_authenticated/ceo/")({
+  head: () => ({ meta: [{ title: "Action Queue — CEO Command Centre" }] }),
+  component: CeoIndexPage,
 });
 
-function CeoPage() {
+function CeoIndexPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between bg-card p-6 rounded-xl border border-border shadow-sm">
@@ -16,9 +16,9 @@ function CeoPage() {
             <Crown className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">CEO Command Centre</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">CEO Action Queue</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Executive oversight, escalations, and automated health views.
+              Executive oversight, escalations, and overdue interventions.
             </p>
           </div>
         </div>
