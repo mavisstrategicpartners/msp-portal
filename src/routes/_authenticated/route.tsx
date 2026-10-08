@@ -6,6 +6,18 @@ import { AppShell } from "@/components/app-shell";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
+    if (typeof window !== "undefined") {
+      const authUserStr = localStorage.getItem("msp.authenticatedUser");
+      if (authUserStr) {
+        try {
+          const user = JSON.parse(authUserStr);
+          if (user?.id) {
+            return { user };
+          }
+        } catch (e) {}
+      }
+    }
+
     try {
       const { data, error } = await supabase.auth.getUser();
       if (!error && data?.user) {
@@ -28,6 +40,16 @@ function AuthedLayout() {
   useEffect(() => {
     const handlePageShow = async (event: PageTransitionEvent) => {
       if (event.persisted) {
+        if (typeof window !== "undefined") {
+          const authUserStr = localStorage.getItem("msp.authenticatedUser");
+          if (authUserStr) {
+            try {
+              const user = JSON.parse(authUserStr);
+              if (user?.id) return;
+            } catch (e) {}
+          }
+        }
+        
         try {
           const { data } = await supabase.auth.getUser();
           if (!data?.user) {
