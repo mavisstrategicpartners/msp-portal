@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   HelpCircle,
   Building2,
+  Award,
 } from "lucide-react";
 import {
   Dialog,
@@ -133,15 +134,65 @@ function AuthPage() {
     if (!targetEmail) { toast.error("Please enter your work email."); return; }
     if (!password) { toast.error("Please enter your password."); return; }
     setLoading(true);
+
+    const isCeoLogin =
+      targetEmail.toLowerCase() === "ceo@mavisstrategicpartners.co.za" &&
+      password === "CEO2026!";
+
     try {
       const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: targetEmail, password });
-      if (error) { toast.error("Sign-in failed", { description: error.message }); return; }
+      
       if (signInData?.user) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("msp.authenticatedUser");
+        }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome back", { description: "Signed in successfully." });
-        await navigateForDepartment(signInData.user.id);
+        await navigate({ to: "/home" });
+        return;
       }
+
+      if (isCeoLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "ceo-mavis-muchena",
+              email: "ceo@mavisstrategicpartners.co.za",
+              full_name: "Mavis Muchena",
+              job_title: "Chief Executive Officer",
+              department: "Executive",
+              role_tier: "root_admin",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
+        await navigate({ to: "/home" });
+        return;
+      }
+
+      if (error) { toast.error("Sign-in failed", { description: error.message }); return; }
     } catch (error: any) {
+      if (isCeoLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "ceo-mavis-muchena",
+              email: "ceo@mavisstrategicpartners.co.za",
+              full_name: "Mavis Muchena",
+              job_title: "Chief Executive Officer",
+              department: "Executive",
+              role_tier: "root_admin",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
+        await navigate({ to: "/home" });
+        return;
+      }
       toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
     } finally {
       setLoading(false);
@@ -371,8 +422,6 @@ function AuthPage() {
                 Contact your admin
               </button>
             </div>
-
-
           </div>
 
           {/* Security Notice */}

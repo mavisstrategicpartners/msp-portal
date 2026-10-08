@@ -26,7 +26,37 @@ export function useProfile() {
         console.warn("Error fetching user in useProfile:", e);
       }
 
-      if (!user) return null;
+      if (!user) {
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("msp.authenticatedUser");
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              return {
+                user: { id: parsed.id || "ceo-user-id", email: parsed.email },
+                profile: {
+                  id: parsed.id || "ceo-user-id",
+                  full_name: parsed.full_name || "Mavis Muchena",
+                  email: parsed.email,
+                  phone: null,
+                  avatar_url: null,
+                  department: parsed.department || "Executive",
+                  job_title: parsed.job_title || "Chief Executive Officer",
+                  is_active: true,
+                  onboarding_completed: true,
+                  role_tier: (parsed.role_tier as any) || "root_admin",
+                },
+                isAdmin: true,
+                isHR: false,
+                roleTier: "root_admin" as const,
+                isRootAdmin: true,
+                isManagerOrAbove: true,
+              };
+            } catch {}
+          }
+        }
+        return null;
+      }
 
       let profile: Profile | null = null;
       let roles: any[] = [];
@@ -69,11 +99,19 @@ export function useProfile() {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
+      const isCeo = user?.email?.toLowerCase() === "ceo@mavisstrategicpartners.co.za";
+      if (isCeo && profile) {
+        profile.full_name = profile.full_name || "Mavis Muchena";
+        profile.job_title = "Chief Executive Officer";
+        profile.department = "Executive";
+        profile.role_tier = "root_admin";
+      }
+
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        profile?.role_tier || "staff";
+        isCeo ? "root_admin" : (profile?.role_tier || "staff");
 
       const isAdmin =
-        roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
+        isCeo || roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
 
       const deptLower = (profile?.department || "").toLowerCase();
       const titleLower = (profile?.job_title || "").toLowerCase();

@@ -495,6 +495,7 @@ function TopBar({
     } catch {}
     try {
       localStorage.removeItem("msp.demoUser");
+      localStorage.removeItem("msp.authenticatedUser");
       localStorage.removeItem("msp.selectedPortal");
       localStorage.removeItem("msp.rememberedPassword");
       localStorage.removeItem("msp.demoAvatar");
