@@ -168,7 +168,7 @@ function AuthPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
-        await navigate({ to: "/home" });
+        await navigate({ to: "/ceo" as any });
         return;
       }
 
@@ -190,7 +190,7 @@ function AuthPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
-        await navigate({ to: "/home" });
+        await navigate({ to: "/ceo" as any });
         return;
       }
       toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
