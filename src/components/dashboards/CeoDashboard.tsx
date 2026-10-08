@@ -88,6 +88,7 @@ const SAMPLE_ACTION_QUEUE: CeoActionItem[] = [
 
 export function CeoDashboard() {
   const [selectedItem, setSelectedItem] = useState<CeoActionItem | null>(null);
+  const [activeHealthView, setActiveHealthView] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
@@ -141,7 +142,7 @@ export function CeoDashboard() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {/* 1. Sales Health */}
-          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border cursor-pointer hover:shadow-md" onClick={() => setActiveHealthView("Sales Health")}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">1. Sales Health</span>
               <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -164,7 +165,7 @@ export function CeoDashboard() {
           </Card>
 
           {/* 2. Revenue Health */}
-          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border cursor-pointer hover:shadow-md" onClick={() => setActiveHealthView("Revenue Health")}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">2. Revenue Health</span>
               <DollarSign className="h-4 w-4 text-primary" />
@@ -187,7 +188,7 @@ export function CeoDashboard() {
           </Card>
 
           {/* 3. Client Health */}
-          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border cursor-pointer hover:shadow-md" onClick={() => setActiveHealthView("Client Health")}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">3. Client Health</span>
               <Building2 className="h-4 w-4 text-amber-500" />
@@ -212,7 +213,7 @@ export function CeoDashboard() {
           </Card>
 
           {/* 4. Delivery Health */}
-          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border cursor-pointer hover:shadow-md" onClick={() => setActiveHealthView("Delivery Health")}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">4. Delivery Health</span>
               <CheckSquare className="h-4 w-4 text-rose-500" />
@@ -235,7 +236,7 @@ export function CeoDashboard() {
           </Card>
 
           {/* 5. Team Health */}
-          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border">
+          <Card className="p-4 space-y-3 hover:border-primary/40 transition-all border-border cursor-pointer hover:shadow-md" onClick={() => setActiveHealthView("Team Health")}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">5. Team Health</span>
               <Users className="h-4 w-4 text-primary" />
@@ -384,6 +385,218 @@ export function CeoDashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* ─── Health View Detail Modal ─────────────────────────────────────────── */}
+      <Dialog open={Boolean(activeHealthView)} onOpenChange={(open) => !open && setActiveHealthView(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileBarChart2 className="h-5 w-5 text-primary" /> {activeHealthView} Underlying Records
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Live KPI calculations, verified completion status, and linked client records.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {activeHealthView === "Sales Health" && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="p-2.5">Lead / Client</th>
+                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5">Value</th>
+                    <th className="p-2.5">Last Contact</th>
+                    <th className="p-2.5">Next Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-amber-500"></div> Omega Corp</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-amber-500 border-amber-500/30 bg-amber-500/10 text-[10px]">Overdue Follow-up</Badge></td>
+                    <td className="p-2.5 font-bold">R45,000</td>
+                    <td className="p-2.5 text-muted-foreground">3 days ago</td>
+                    <td className="p-2.5">Call to discuss proposal</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div> TechNova</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 text-[10px]">Won</Badge></td>
+                    <td className="p-2.5 font-bold">R140,000</td>
+                    <td className="p-2.5 text-muted-foreground">Today</td>
+                    <td className="p-2.5">Handover to Operations</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div> Global Logistics</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-rose-500 border-rose-500/30 bg-rose-500/10 text-[10px]">Unanswered</Badge></td>
+                    <td className="p-2.5 font-bold text-muted-foreground">Unknown</td>
+                    <td className="p-2.5 text-muted-foreground">Never</td>
+                    <td className="p-2.5 text-rose-500 font-medium">Initial Contact Required</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeHealthView === "Revenue Health" && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="p-2.5">Client</th>
+                    <th className="p-2.5">Invoice #</th>
+                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5">Amount</th>
+                    <th className="p-2.5">Due Date</th>
+                    <th className="p-2.5">Escalation / Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div> Client Alpha</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">INV-2026-089</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-rose-500 border-rose-500/30 bg-rose-500/10 text-[10px]">Overdue</Badge></td>
+                    <td className="p-2.5 font-bold">R60,000</td>
+                    <td className="p-2.5 text-rose-500">2026-09-30</td>
+                    <td className="p-2.5 font-medium text-rose-500">Finance Follow-up (Auto)</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div> Apex Solar SA</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">INV-2026-092</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 text-[10px]">Paid</Badge></td>
+                    <td className="p-2.5 font-bold">R120,000</td>
+                    <td className="p-2.5 text-muted-foreground">2026-10-05</td>
+                    <td className="p-2.5 text-muted-foreground">-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeHealthView === "Client Health" && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="p-2.5">Client</th>
+                    <th className="p-2.5">Health Score</th>
+                    <th className="p-2.5">Risk Factor</th>
+                    <th className="p-2.5">Latest CRM Feedback</th>
+                    <th className="p-2.5">Account Manager</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div> Client Alpha</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-rose-500 border-rose-500/30 bg-rose-500/10 text-[10px]">Red (At Risk)</Badge></td>
+                    <td className="p-2.5 font-bold text-rose-500">Delivery Delay Breach</td>
+                    <td className="p-2.5 text-muted-foreground italic">"Where is the launch?"</td>
+                    <td className="p-2.5">Sarah Jenkins</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-amber-500"></div> Nexus Retail</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-amber-500 border-amber-500/30 bg-amber-500/10 text-[10px]">Amber (Warning)</Badge></td>
+                    <td className="p-2.5 font-bold text-amber-500">Missed Check-in</td>
+                    <td className="p-2.5 text-muted-foreground italic">No contact for 14 days</td>
+                    <td className="p-2.5">David Cole</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div> Apex Solar SA</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 text-[10px]">Green (Healthy)</Badge></td>
+                    <td className="p-2.5 font-bold text-emerald-500">None</td>
+                    <td className="p-2.5 text-muted-foreground italic">"Happy with the CRM so far"</td>
+                    <td className="p-2.5">Sarah Jenkins</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeHealthView === "Delivery Health" && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="p-2.5">Service Workflow</th>
+                    <th className="p-2.5">Task / Milestone</th>
+                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5">QA Verified</th>
+                    <th className="p-2.5">Task Owner</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div> Meta Ads (Client Alpha)</td>
+                    <td className="p-2.5 font-semibold">Live Campaign Launch</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-rose-500 border-rose-500/30 bg-rose-500/10 text-[10px]">Blocked - Overdue</Badge></td>
+                    <td className="p-2.5"><XCircle className="h-4 w-4 text-rose-500" /></td>
+                    <td className="p-2.5">Media Buying Lead</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-amber-500"></div> SEO (TechNova)</td>
+                    <td className="p-2.5 font-semibold">Audit Report</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-amber-500 border-amber-500/30 bg-amber-500/10 text-[10px]">Pending QA Verification</Badge></td>
+                    <td className="p-2.5"><Clock className="h-4 w-4 text-amber-500" /></td>
+                    <td className="p-2.5">SEO Specialist</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div> Web Dev (Apex Solar)</td>
+                    <td className="p-2.5 font-semibold">Wireframes Approval</td>
+                    <td className="p-2.5"><Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 text-[10px]">Completed</Badge></td>
+                    <td className="p-2.5"><Check className="h-4 w-4 text-emerald-500" /></td>
+                    <td className="p-2.5">UX Designer</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeHealthView === "Team Health" && (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="p-2.5">Team Member</th>
+                    <th className="p-2.5">Role</th>
+                    <th className="p-2.5">Active Workload</th>
+                    <th className="p-2.5">On-Time Delivery Rate</th>
+                    <th className="p-2.5">Overdue Approvals/Tasks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div> John Smith</td>
+                    <td className="p-2.5 text-muted-foreground">Media Buying Lead</td>
+                    <td className="p-2.5 font-bold">14 tasks (High)</td>
+                    <td className="p-2.5 font-bold text-amber-500">85%</td>
+                    <td className="p-2.5 font-bold text-rose-500">1 Overdue Manager Approval</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div> Emma Watson</td>
+                    <td className="p-2.5 text-muted-foreground">CRM Specialist</td>
+                    <td className="p-2.5 font-bold">8 tasks (Optimal)</td>
+                    <td className="p-2.5 font-bold text-emerald-500">100%</td>
+                    <td className="p-2.5 text-emerald-500">0</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="p-2.5 font-medium flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-amber-500"></div> Liam Brown</td>
+                    <td className="p-2.5 text-muted-foreground">Account Manager</td>
+                    <td className="p-2.5 font-bold">12 clients</td>
+                    <td className="p-2.5 font-bold text-amber-500">92%</td>
+                    <td className="p-2.5 font-bold text-amber-500">1 Missed Check-in</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button size="sm" variant="outline" onClick={() => setActiveHealthView(null)}>Close</Button>
+            <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Open Full Report <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
