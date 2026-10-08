@@ -30,7 +30,7 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other" | "hr";
+type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo";
 
 const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
@@ -107,6 +107,10 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
+  ]},
+  // CEO Workspace
+  { group: "Executive", rootOnly: true, portals: ["ceo"], items: [
+    { to: "/ceo", label: "Command Centre", icon: Crown },
   ]},
 ];
 
@@ -189,15 +193,20 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isHRPath = pathname.startsWith('/host/hr') || pathname.startsWith('/hr');
   const isHostPath = pathname.startsWith('/host') && !isHRPath;
   const isAdminPath = pathname.startsWith('/admin');
+  const isCeoPath = pathname.startsWith('/ceo');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
-  if (isHRPath) {
+  if (isCeoPath) {
+    currentPortal = "ceo";
+  } else if (isHRPath) {
     currentPortal = "hr";
   } else if (isAdminPath) {
     currentPortal = "admin";
   } else if (isHostPath) {
     currentPortal = "manager";
+  } else if (isRootAdmin) {
+    currentPortal = "ceo";
   } else if (data?.isHR) {
     currentPortal = "hr";
   } else if (isAdmin) {
@@ -225,12 +234,16 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       window.location.href = '/host';
     } else if (portal === "admin") {
       navigate({ to: '/admin/attendance' as any });
+    } else if (portal === "ceo") {
+      navigate({ to: '/ceo' as any });
     } else {
       navigate({ to: '/home' as any });
     }
   };
 
-  const workspaceTitle = currentPortal === "hr"
+  const workspaceTitle = currentPortal === "ceo"
+    ? "CEO Workspace"
+    : currentPortal === "hr"
     ? "HR Workspace"
     : currentPortal === "admin"
     ? "Admin Control"
@@ -238,7 +251,9 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? "Host Operations"
     : "Staff Portal";
 
-  const workspaceSub = currentPortal === "hr"
+  const workspaceSub = currentPortal === "ceo"
+    ? "Executive Command & Analytics"
+    : currentPortal === "hr"
     ? "Human Resources Management"
     : currentPortal === "admin"
     ? "MSP Admin Control Panel"
@@ -293,7 +308,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                     Host
                   </button>
                 )}
-                {isAdmin && (
+                {isAdmin && !isRootAdmin && (
                   <button
                     type="button"
                     onClick={() => switchWorkspace("admin")}
@@ -301,6 +316,16 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                     className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "admin" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
                   >
                     Admin
+                  </button>
+                )}
+                {isRootAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("ceo")}
+                    title="CEO Command Centre"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "ceo" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    CEO
                   </button>
                 )}
               </div>
