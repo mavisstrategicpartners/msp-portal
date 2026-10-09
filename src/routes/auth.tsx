@@ -98,12 +98,12 @@ function AuthPage() {
   }, [navigate]);
 
   async function navigateForDepartment(userId: string) {
-    let profile: { department?: string | null; role_tier?: string | null } | null = null;
+    let profile: { department?: string | null; role_tier?: string | null; job_title?: string | null } | null = null;
     let roles: { role?: string | null }[] = [];
     try {
       const profileResult = await supabase
         .from("profiles")
-        .select("department, role_tier")
+        .select("department, role_tier, job_title")
         .eq("id", userId)
         .maybeSingle();
       const rolesResult = await supabase
@@ -120,11 +120,10 @@ function AuthPage() {
       await navigate({ to: "/home" });
       return;
     }
+    const isCeo = profile?.department === "Executive" || profile?.job_title === "Chief Executive Officer";
     const isHR = profile?.department === "Human Resources";
-    const isSuperAdmin = profile?.role_tier === "root_admin";
-    const isAdmin = roles?.some((role) => role.role === "admin") ?? false;
     const isManager = profile?.role_tier === "manager";
-    const destination = isHR ? "/host/hr" : isSuperAdmin || isAdmin || isManager ? "/host" : "/home";
+    const destination = isCeo ? "/ceo" : isHR ? "/host/hr" : isManager ? "/host" : "/home";
     await navigate({ to: destination as any });
   }
 

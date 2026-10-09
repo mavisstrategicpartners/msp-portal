@@ -32,15 +32,24 @@ type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolea
 
 type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo";
 
-const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
-  { group: "Home", portals: ["staff"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
-  { group: "Learn MSP", portals: ["staff"], items: [
+const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
+  { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
+  { group: "Admin Dashboard", adminOnly: true, portals: ["admin"], items: [
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/admin/users", label: "Manage Staff", icon: Users },
+    { to: "/admin/operations", label: "Operations Control", icon: Activity },
+    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
+    { to: "/admin/content", label: "Content Editor", icon: Settings },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
+    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
+  ]},
+  { group: "Learn MSP", portals: ["staff", "admin"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/glossary", label: "Glossary", icon: ListTree },
   ]},
-  { group: "How We Work", portals: ["staff"], items: [
+  { group: "How We Work", portals: ["staff", "admin"], items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
@@ -88,29 +97,9 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
-  // Admin-only dashboard section
-  { group: "Admin Dashboard", adminOnly: true, managerOnly: true, portals: ["admin"], items: [
-    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/admin/users", label: "Manage Staff", icon: Users },
-    { to: "/admin/operations", label: "Operations Control", icon: Activity },
-    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
-    { to: "/admin/content", label: "Content Editor", icon: Settings },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
-  ]},
-  // Admin also sees standard admin tools within staff portal view
-  { group: "Admin Tools", managerOnly: true, portals: ["staff", "hr"], items: [
-    { to: "/admin/operations", label: "Operations Control", icon: Activity },
-    { to: "/admin/users", label: "Manage Staff", icon: Users },
-    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/admin/content", label: "Content Editor", icon: Settings },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
-    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
-  ]},
-  // CEO Workspace
+  // CEO Workspace — strictly for CEO
   { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
-    { to: "/ceo", label: "Action Queue", icon: Crown },
+    { to: "/ceo", label: "Executive Dashboard", icon: Crown },
     { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
     { to: "/ceo/revenue", label: "Revenue Health", icon: DollarSign },
     { to: "/ceo/clients", label: "Client Health", icon: Building2 },
@@ -281,38 +270,17 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
             <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
               {workspaceTitle}
             </p>
-            {(isAdmin || isManagerOrAbove || data?.isHR) && currentPortal !== "ceo" && (
+            {(isAdmin || isManagerOrAbove || data?.isHR || isRootAdmin) && (
               <div className="flex items-center gap-1">
-                {!isAdmin && currentPortal !== "admin" && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("staff")}
-                    title="Staff Portal"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    Staff
-                  </button>
-                )}
-                {(data?.isHR || isAdmin) && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("hr")}
-                    title="Human Resources Portal"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    HR
-                  </button>
-                )}
-                {isManagerOrAbove && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("manager")}
-                    title="Host Operations"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "manager" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    Host
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => switchWorkspace("staff")}
+                  title="Staff Portal"
+                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                >
+                  Staff
+                </button>
+
                 {isAdmin && !isRootAdmin && (
                   <button
                     type="button"
@@ -323,6 +291,29 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                     Admin
                   </button>
                 )}
+
+                {data?.isHR && !isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("hr")}
+                    title="Human Resources Portal"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    HR
+                  </button>
+                )}
+
+                {isManagerOrAbove && !isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => switchWorkspace("manager")}
+                    title="Host Operations"
+                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "manager" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
+                  >
+                    Host
+                  </button>
+                )}
+
                 {isRootAdmin && (
                   <button
                     type="button"

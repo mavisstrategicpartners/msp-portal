@@ -99,7 +99,10 @@ export function useProfile() {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
-      const isCeo = user?.email?.toLowerCase() === "ceo@mavisstrategicpartners.co.za";
+      const isCeo =
+        user?.email?.toLowerCase() === "ceo@mavisstrategicpartners.co.za" ||
+        profile?.job_title === "Chief Executive Officer";
+
       if (isCeo && profile) {
         profile.full_name = profile.full_name || "Mavis Muchena";
         profile.job_title = "Chief Executive Officer";
@@ -108,18 +111,21 @@ export function useProfile() {
       }
 
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        isCeo ? "root_admin" : (profile?.role_tier || "staff");
+        profile?.role_tier || (isCeo ? "root_admin" : "staff");
 
       const isAdmin =
-        isCeo || roles.some((r) => r.role === "admin") || resolvedTier === "root_admin";
+        roles.some((r) => r.role === "admin") ||
+        resolvedTier === "root_admin" ||
+        isCeo;
 
       const deptLower = (profile?.department || "").toLowerCase();
       const titleLower = (profile?.job_title || "").toLowerCase();
       const isHR =
         deptLower.includes("human resources") ||
         deptLower.includes("hr") ||
-        titleLower.includes("hr") ||
-        isAdmin;
+        titleLower.includes("hr");
+
+      const isManagerOrAbove = resolvedTier === "manager";
 
       return {
         user,
@@ -127,8 +133,8 @@ export function useProfile() {
         isAdmin,
         isHR,
         roleTier: resolvedTier,
-        isRootAdmin: resolvedTier === "root_admin" || isAdmin,
-        isManagerOrAbove: ["root_admin", "manager"].includes(resolvedTier) || isAdmin,
+        isRootAdmin: Boolean(isCeo),
+        isManagerOrAbove,
       };
     },
     staleTime: 60_000,
