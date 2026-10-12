@@ -20,6 +20,9 @@ import {
   ArrowLeft,
   RefreshCw,
   Sparkles,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -62,6 +65,7 @@ function AuthPage() {
   const [resetStep, setResetStep] = useState<"request" | "verify_code" | "new_password" | "success">("request");
   const [resetEmail, setResetEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
+  const [showCodeInput, setShowCodeInput] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -104,26 +108,76 @@ function AuthPage() {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  // Listen for password recovery from email link or active session
+  // Robust detection of recovery from email link (both PKCE code and implicit hash)
   useEffect(() => {
-    const checkRecoveryFromUrl = () => {
-      if (typeof window === "undefined") return false;
+    let isCancelled = false;
+
+    const initRecovery = async () => {
+      if (typeof window === "undefined") return;
+
       const hash = window.location.hash || "";
       const search = window.location.search || "";
-      return (
-        hash.includes("type=recovery") ||
-        search.includes("type=recovery") ||
-        search.includes("mode=recovery")
-      );
+      const searchParams = new URLSearchParams(search);
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+
+      // Check for errors in redirect URL
+      const errorDesc = searchParams.get("error_description") || hashParams.get("error_description");
+      if (errorDesc) {
+        toast.error("Password reset link issue", {
+          description: decodeURIComponent(errorDesc).replace(/\+/g, " "),
+        });
+        window.history.replaceState(null, "", window.location.pathname);
+        return;
+      }
+
+      // Check for PKCE exchange code
+      const code = searchParams.get("code");
+      const isRecoveryParam =
+        searchParams.get("type") === "recovery" ||
+        searchParams.get("mode") === "recovery" ||
+        hash.includes("type=recovery");
+
+      if (code && isRecoveryParam) {
+        setIsRecoveryActive(true);
+        setResetLoading(true);
+        try {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (isCancelled) return;
+          if (error) {
+            console.warn("Could not exchange code:", error);
+            toast.error("Recovery link issue", { description: error.message });
+          } else if (data?.user) {
+            setIsRecoveryActive(true);
+            setResetEmail(data.user.email || "");
+            setResetStep("new_password");
+            setResetModalOpen(true);
+            toast.success("Link confirmed", { description: "Please choose your new password." });
+          }
+        } catch (err: any) {
+          console.warn("Exchange code exception:", err);
+        } finally {
+          if (!isCancelled) setResetLoading(false);
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+        return;
+      }
+
+      // Check for hash access token recovery
+      if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+        setIsRecoveryActive(true);
+        setResetStep("new_password");
+        setResetModalOpen(true);
+        supabase.auth.getSession().then(({ data }) => {
+          if (!isCancelled && data?.session?.user?.email) {
+            setResetEmail(data.session.user.email);
+          }
+        });
+      }
     };
 
-    const isRecovery = checkRecoveryFromUrl();
-    if (isRecovery) {
-      setIsRecoveryActive(true);
-      setResetModalOpen(true);
-      setResetStep("new_password");
-    }
+    initRecovery();
 
+    // Supabase auth state change subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecoveryActive(true);
@@ -132,14 +186,22 @@ function AuthPage() {
         if (session?.user?.email) {
           setResetEmail(session.user.email);
         }
+        toast.success("Link verified", { description: "You can now enter your new password." });
       }
     });
 
-    if (!isRecovery) {
+    // Check normal session only if not arriving from recovery
+    const isUrlRecovery =
+      typeof window !== "undefined" &&
+      (window.location.hash.includes("type=recovery") ||
+        window.location.search.includes("type=recovery") ||
+        window.location.search.includes("code="));
+
+    if (!isUrlRecovery) {
       supabase.auth
         .getSession()
         .then(({ data }) => {
-          if (data?.session?.user && !isRecoveryActive) {
+          if (!isCancelled && data?.session?.user && !isRecoveryActive) {
             navigateForDepartment(data.session.user.id);
           }
         })
@@ -147,6 +209,7 @@ function AuthPage() {
     }
 
     return () => {
+      isCancelled = true;
       subscription?.unsubscribe();
     };
   }, [navigate, isRecoveryActive]);
@@ -263,6 +326,7 @@ function AuthPage() {
     const current = email.trim();
     setResetEmail(current || "");
     setResetCode("");
+    setShowCodeInput(false);
     setNewPassword("");
     setConfirmNewPassword("");
     setResetStep("request");
@@ -292,7 +356,7 @@ function AuthPage() {
         return;
       }
 
-      toast.success("Reset link & code sent", {
+      toast.success("Reset email sent", {
         description: `Check your inbox at ${cleanEmail}`,
       });
       setResetStep("verify_code");
@@ -324,7 +388,7 @@ function AuthPage() {
 
       if (error) {
         toast.error("Invalid verification code", {
-          description: error.message || "Please check the latest code sent to your email.",
+          description: error.message || "Please check the code or click the direct link in your email.",
         });
         return;
       }
@@ -404,6 +468,7 @@ function AuthPage() {
     setIsRecoveryActive(false);
     setResetStep("request");
     setResetCode("");
+    setShowCodeInput(false);
     setNewPassword("");
     setConfirmNewPassword("");
     if (remembered) {
@@ -605,7 +670,7 @@ function AuthPage() {
       </footer>
 
       {/* =========================================================================
-          PASSWORD RESET MODAL (REQUEST, OTP / LINK CONFIRMATION, UPDATE, CONFIRMATION)
+          PASSWORD RESET MODAL (REQUEST, LINK / CODE INSTRUCTIONS, NEW PASSWORD, SUCCESS)
           ========================================================================= */}
       <Dialog open={resetModalOpen} onOpenChange={(open) => {
         if (!open && resetStep === "success") {
@@ -626,7 +691,7 @@ function AuthPage() {
                   <div>
                     <DialogTitle className="text-lg font-bold">Reset Password</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                      Request a reset link or verification code for your staff account.
+                      Enter your work email to receive a password reset link.
                     </DialogDescription>
                   </div>
                 </div>
@@ -664,7 +729,7 @@ function AuthPage() {
 
                 <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
                   <p className="leading-relaxed">
-                    We will send an email with both a <strong>direct reset link</strong> and a <strong>6-digit verification code</strong>. You can use either method to choose a new password.
+                    We will send an email with a <strong>direct password reset link</strong>. Clicking the link will allow you to choose a new password immediately.
                   </p>
                 </div>
 
@@ -689,7 +754,7 @@ function AuthPage() {
                         Sending...
                       </>
                     ) : (
-                      "Send Reset Link & Code"
+                      "Send Reset Link"
                     )}
                   </Button>
                 </div>
@@ -697,7 +762,7 @@ function AuthPage() {
             </div>
           )}
 
-          {/* STEP 2: Verify Code or Click Link */}
+          {/* STEP 2: Instructions (Click Link in Email OR Optional Code) */}
           {resetStep === "verify_code" && (
             <div className="space-y-5">
               <DialogHeader>
@@ -708,81 +773,106 @@ function AuthPage() {
                   <div>
                     <DialogTitle className="text-lg font-bold">Check Your Email</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                      Verification message sent to <span className="font-semibold text-foreground">{resetEmail}</span>
+                      Reset instructions sent to <span className="font-semibold text-foreground">{resetEmail}</span>
                     </DialogDescription>
                   </div>
                 </div>
               </DialogHeader>
 
-              <form onSubmit={handleVerifyCode} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-code" className="text-xs font-medium text-foreground">
-                    Enter 6-Digit Code / Token
-                  </Label>
-                  <Input
-                    id="reset-code"
-                    type="text"
-                    value={resetCode}
-                    onChange={(e) => setResetCode(e.target.value)}
-                    placeholder="Enter verification code"
-                    required
-                    maxLength={32}
-                    className="h-11 text-center font-mono text-base tracking-widest uppercase"
-                  />
+              {/* Primary Instruction: Click Link */}
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs space-y-2.5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-sm">
+                    1
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-foreground text-sm flex items-center gap-1.5">
+                      Click the link in your email
+                      <ExternalLink className="h-3.5 w-3.5 text-primary inline" />
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Open your inbox (or junk folder), find the email from <strong>Mavis Strategic Partners</strong>, and click the <strong>&quot;Reset Password&quot;</strong> link.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground space-y-1.5">
-                  <p className="font-medium text-foreground">Two ways to confirm:</p>
-                  <p>1. Enter the code from your email above and click <strong>Verify Code</strong>.</p>
-                  <p>2. Or, click the secure reset link inside the email — the portal will open the password form automatically.</p>
+                <div className="mt-2 rounded-md bg-background/80 border border-border/60 p-2.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                  <span>This portal will automatically open the password form as soon as you click the link.</span>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    type="button"
-                    disabled={resendCooldown > 0 || resetLoading}
-                    onClick={() => handleRequestReset()}
-                    className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
-                  </button>
+              {/* Alternative: Enter Verification Code if provided */}
+              <div className="space-y-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowCodeInput((prev) => !prev)}
+                  className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground py-1 px-1 transition"
+                >
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <KeyRound className="h-3.5 w-3.5 text-primary" />
+                    Did you receive a 6-digit code instead?
+                  </span>
+                  {showCodeInput ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setResetStep("request")}
-                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                  >
-                    <ArrowLeft className="h-3 w-3" /> Change email
-                  </button>
-                </div>
+                {showCodeInput && (
+                  <form onSubmit={handleVerifyCode} className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3.5 transition">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="reset-code" className="text-xs font-medium text-foreground">
+                        Enter 6-Digit Code / Token
+                      </Label>
+                      <Input
+                        id="reset-code"
+                        type="text"
+                        value={resetCode}
+                        onChange={(e) => setResetCode(e.target.value)}
+                        placeholder="e.g. 123456"
+                        maxLength={32}
+                        className="h-10 text-center font-mono text-base tracking-widest uppercase"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={resetLoading || !resetCode.trim()}
+                      className="w-full h-9 bg-primary text-xs font-semibold text-primary-foreground shadow-sm"
+                    >
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        "Confirm Code"
+                      )}
+                    </Button>
+                  </form>
+                )}
+              </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setResetModalOpen(false)}
-                    className="text-xs"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={resetLoading || !resetCode.trim()}
-                    className="h-10 bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                  >
-                    {resetLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      "Verify Code"
-                    )}
-                  </Button>
-                </div>
-              </form>
+              {/* Footer actions */}
+              <div className="flex items-center justify-between text-xs pt-2 border-t border-border/50">
+                <button
+                  type="button"
+                  disabled={resendCooldown > 0 || resetLoading}
+                  onClick={() => handleRequestReset()}
+                  className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {resendCooldown > 0 ? `Resend email in ${resendCooldown}s` : "Resend email"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setResetStep("request")}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-3 w-3" /> Change email
+                </button>
+              </div>
             </div>
           )}
 
