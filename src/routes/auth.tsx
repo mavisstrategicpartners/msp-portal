@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { sendPasswordChangeNotification } from "@/lib/auth.functions";
+import { sendPasswordChangeNotification, sendPasswordResetOtp } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -347,17 +347,29 @@ function AuthPage() {
 
     setResetLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
-      });
-
-      if (error) {
-        toast.error("Unable to send reset request", { description: error.message });
-        return;
+      let codeSentViaServer = false;
+      try {
+        const serverRes = await sendPasswordResetOtp({ data: { email: cleanEmail } });
+        if (serverRes?.success && serverRes?.method === "resend") {
+          codeSentViaServer = true;
+        }
+      } catch (srvErr) {
+        console.warn("Server reset OTP attempt:", srvErr);
       }
 
-      toast.success("Reset email sent", {
-        description: `Check your inbox at ${cleanEmail}`,
+      if (!codeSentViaServer) {
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: `${window.location.origin}/auth?type=recovery`,
+        });
+
+        if (error) {
+          toast.error("Unable to send verification code", { description: error.message });
+          return;
+        }
+      }
+
+      toast.success("Verification code sent", {
+        description: `Please check your inbox at ${cleanEmail} for your code.`,
       });
       setResetStep("verify_code");
       setResendCooldown(45);
@@ -729,7 +741,7 @@ function AuthPage() {
 
                 <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
                   <p className="leading-relaxed">
-                    We will send an email with a <strong>direct password reset link</strong>. Clicking the link will allow you to choose a new password immediately.
+                    We will send an email containing your <strong>verification code</strong>. Enter the code on the next screen to set your new password.
                   </p>
                 </div>
 
@@ -751,10 +763,10 @@ function AuthPage() {
                     {resetLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
+                        Sending Code...
                       </>
                     ) : (
-                      "Send Reset Link"
+                      "Send Verification Code"
                     )}
                   </Button>
                 </div>
@@ -762,96 +774,62 @@ function AuthPage() {
             </div>
           )}
 
-          {/* STEP 2: Instructions (Click Link in Email OR Optional Code) */}
+          {/* STEP 2: Enter Verification Code */}
           {resetStep === "verify_code" && (
             <div className="space-y-5">
               <DialogHeader>
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Mail className="h-5 w-5" />
+                    <KeyRound className="h-5 w-5" />
                   </div>
                   <div>
-                    <DialogTitle className="text-lg font-bold">Check Your Email</DialogTitle>
+                    <DialogTitle className="text-lg font-bold">Enter Verification Code</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                      Reset instructions sent to <span className="font-semibold text-foreground">{resetEmail}</span>
+                      We sent a verification code to <span className="font-semibold text-foreground">{resetEmail}</span>
                     </DialogDescription>
                   </div>
                 </div>
               </DialogHeader>
 
-              {/* Primary Instruction: Click Link */}
-              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 text-xs space-y-2.5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-sm">
-                    1
+              <form onSubmit={handleVerifyCode} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-code" className="text-xs font-medium text-foreground">
+                    Verification Code
+                  </Label>
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reset-code"
+                      type="text"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value.trim())}
+                      placeholder="e.g. 12345678"
+                      maxLength={16}
+                      autoFocus
+                      required
+                      className="h-12 pl-10 text-center font-mono text-lg font-bold tracking-widest uppercase bg-secondary/30"
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-foreground text-sm flex items-center gap-1.5">
-                      Click the link in your email
-                      <ExternalLink className="h-3.5 w-3.5 text-primary inline" />
-                    </p>
-                    <p className="text-muted-foreground leading-relaxed">
-                      Open your inbox (or junk folder), find the email from <strong>Mavis Strategic Partners</strong>, and click the <strong>&quot;Reset Password&quot;</strong> link.
-                    </p>
-                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Check your inbox (and spam folder) for the verification code from <strong>Mavis Strategic Partners</strong>.
+                  </p>
                 </div>
 
-                <div className="mt-2 rounded-md bg-background/80 border border-border/60 p-2.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                  </span>
-                  <span>This portal will automatically open the password form as soon as you click the link.</span>
-                </div>
-              </div>
-
-              {/* Alternative: Enter Verification Code if provided */}
-              <div className="space-y-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowCodeInput((prev) => !prev)}
-                  className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground py-1 px-1 transition"
+                <Button
+                  type="submit"
+                  disabled={resetLoading || !resetCode.trim()}
+                  className="w-full h-10.5 bg-primary text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                 >
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <KeyRound className="h-3.5 w-3.5 text-primary" />
-                    Did you receive a 6-digit code instead?
-                  </span>
-                  {showCodeInput ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                </button>
-
-                {showCodeInput && (
-                  <form onSubmit={handleVerifyCode} className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3.5 transition">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="reset-code" className="text-xs font-medium text-foreground">
-                        Enter 6-Digit Code / Token
-                      </Label>
-                      <Input
-                        id="reset-code"
-                        type="text"
-                        value={resetCode}
-                        onChange={(e) => setResetCode(e.target.value)}
-                        placeholder="e.g. 123456"
-                        maxLength={32}
-                        className="h-10 text-center font-mono text-base tracking-widest uppercase"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={resetLoading || !resetCode.trim()}
-                      className="w-full h-9 bg-primary text-xs font-semibold text-primary-foreground shadow-sm"
-                    >
-                      {resetLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        "Confirm Code"
-                      )}
-                    </Button>
-                  </form>
-                )}
-              </div>
+                  {resetLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying Code...
+                    </>
+                  ) : (
+                    "Verify Code & Continue"
+                  )}
+                </Button>
+              </form>
 
               {/* Footer actions */}
               <div className="flex items-center justify-between text-xs pt-2 border-t border-border/50">
@@ -862,7 +840,7 @@ function AuthPage() {
                   className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
                 >
                   <RefreshCw className="h-3 w-3" />
-                  {resendCooldown > 0 ? `Resend email in ${resendCooldown}s` : "Resend email"}
+                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
                 </button>
 
                 <button
