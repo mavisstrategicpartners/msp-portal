@@ -15,7 +15,11 @@ import {
   ShieldCheck,
   HelpCircle,
   Building2,
-  Award,
+  CheckCircle2,
+  KeyRound,
+  ArrowLeft,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { sendPasswordChangeNotification } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -42,19 +47,28 @@ function AuthPage() {
   });
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(
     () =>
       typeof window !== "undefined" &&
       (localStorage.getItem("msp-theme") ?? localStorage.getItem("msp.theme")) === "dark",
   );
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [helpType, setHelpType] = useState<"forgot" | "support">("forgot");
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [verificationOpen, setVerificationOpen] = useState(false);
+
+  // Corporate IT Support Modal state
+  const [supportOpen, setSupportOpen] = useState(false);
+
+  // Password Reset Modal states
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetStep, setResetStep] = useState<"request" | "verify_code" | "new_password" | "success">("request");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isRecoveryActive, setIsRecoveryActive] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -65,7 +79,6 @@ function AuthPage() {
 
   useEffect(() => {
     // When the user is logged out on the auth page, trap back navigation
-    // so the browser back button keeps them safely on the login page.
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
       window.history.pushState(null, "", window.location.href);
@@ -82,39 +95,74 @@ function AuthPage() {
     localStorage.setItem("msp.theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  // Resend cooldown timer
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("msp.rememberedPassword");
-        localStorage.removeItem("msp.demoUser");
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  // Listen for password recovery from email link or active session
+  useEffect(() => {
+    const checkRecoveryFromUrl = () => {
+      if (typeof window === "undefined") return false;
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      return (
+        hash.includes("type=recovery") ||
+        search.includes("type=recovery") ||
+        search.includes("mode=recovery")
+      );
+    };
+
+    const isRecovery = checkRecoveryFromUrl();
+    if (isRecovery) {
+      setIsRecoveryActive(true);
+      setResetModalOpen(true);
+      setResetStep("new_password");
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecoveryActive(true);
+        setResetModalOpen(true);
+        setResetStep("new_password");
+        if (session?.user?.email) {
+          setResetEmail(session.user.email);
+        }
       }
+    });
+
+    if (!isRecovery) {
       supabase.auth
         .getSession()
         .then(({ data }) => {
-          if (data?.session?.user) navigateForDepartment(data.session.user.id);
+          if (data?.session?.user && !isRecoveryActive) {
+            navigateForDepartment(data.session.user.id);
+          }
         })
         .catch(() => {});
-    } catch {}
-  }, [navigate]);
+    }
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [navigate, isRecoveryActive]);
 
   async function navigateForDepartment(userId: string) {
     let profile: { department?: string | null; role_tier?: string | null; job_title?: string | null } | null = null;
-    let roles: { role?: string | null }[] = [];
     try {
       const profileResult = await supabase
         .from("profiles")
         .select("department, role_tier, job_title")
         .eq("id", userId)
         .maybeSingle();
-      const rolesResult = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      if (profileResult.error || rolesResult.error) {
-        throw profileResult.error ?? rolesResult.error;
+      if (profileResult.error) {
+        throw profileResult.error;
       }
       profile = profileResult.data;
-      roles = rolesResult.data ?? [];
     } catch (error) {
       console.warn("Profile lookup failed; navigating to home.", error);
       await navigate({ to: "/home" });
@@ -130,8 +178,14 @@ function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const targetEmail = email.trim();
-    if (!targetEmail) { toast.error("Please enter your work email."); return; }
-    if (!password) { toast.error("Please enter your password."); return; }
+    if (!targetEmail) {
+      toast.error("Please enter your work email.");
+      return;
+    }
+    if (!password) {
+      toast.error("Please enter your password.");
+      return;
+    }
     setLoading(true);
 
     const isCeoLogin =
@@ -139,11 +193,15 @@ function AuthPage() {
       password === "CEO2026!";
 
     try {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: targetEmail, password });
-      
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+        email: targetEmail,
+        password,
+      });
+
       if (signInData?.user) {
         if (typeof window !== "undefined") {
           localStorage.removeItem("msp.authenticatedUser");
+          localStorage.setItem("msp.rememberedEmail", targetEmail);
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome back", { description: "Signed in successfully." });
@@ -171,7 +229,10 @@ function AuthPage() {
         return;
       }
 
-      if (error) { toast.error("Sign-in failed", { description: error.message }); return; }
+      if (error) {
+        toast.error("Sign-in failed", { description: error.message });
+        return;
+      }
     } catch (error: any) {
       if (isCeoLogin) {
         if (typeof window !== "undefined") {
@@ -198,49 +259,170 @@ function AuthPage() {
     }
   }
 
-  async function resendVerification() {
-    if (!verificationEmail) return;
-    setLoading(true);
+  function handleOpenForgotPassword() {
+    const current = email.trim();
+    setResetEmail(current || "");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setResetStep("request");
+    setResetModalOpen(true);
+  }
+
+  async function handleRequestReset(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    let cleanEmail = resetEmail.trim().toLowerCase();
+    if (!cleanEmail) {
+      toast.error("Please enter your work email.");
+      return;
+    }
+    if (!cleanEmail.includes("@")) {
+      cleanEmail = `${cleanEmail}@mavisstrategicpartners.co.za`;
+      setResetEmail(cleanEmail);
+    }
+
+    setResetLoading(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: verificationEmail });
-      if (error) throw error;
-      toast.success("Verification message sent", { description: `Check ${verificationEmail} for the code or link.` });
-    } catch {
-      toast.error("Could not resend verification", { description: "Wait a moment and try again." });
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      });
+
+      if (error) {
+        toast.error("Unable to send reset request", { description: error.message });
+        return;
+      }
+
+      toast.success("Reset link & code sent", {
+        description: `Check your inbox at ${cleanEmail}`,
+      });
+      setResetStep("verify_code");
+      setResendCooldown(45);
+    } catch (err: any) {
+      toast.error("Request failed", {
+        description: err?.message || "An unexpected error occurred. Please try again.",
+      });
     } finally {
-      setLoading(false);
+      setResetLoading(false);
     }
   }
 
-  async function verifyEmailCode() {
-    if (!verificationEmail || verificationCode.trim().length < 6) return;
-    setLoading(true);
+  async function handleVerifyCode(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    const token = resetCode.trim();
+    if (!token) {
+      toast.error("Please enter the verification code.");
+      return;
+    }
+
+    setResetLoading(true);
     try {
       const { data, error } = await supabase.auth.verifyOtp({
-        email: verificationEmail,
-        token: verificationCode.trim(),
-        type: "signup",
+        email: resetEmail.trim().toLowerCase(),
+        token,
+        type: "recovery",
       });
-      if (error) throw error;
-      if (data.user) {
-        toast.success("Email verified", { description: "Your staff account is ready." });
-        await supabase.auth.signOut();
-        setVerificationEmail("");
-        setVerificationCode("");
-        setVerificationOpen(false);
-        setPassword("");
-        setIsSignUp(false);
+
+      if (error) {
+        toast.error("Invalid verification code", {
+          description: error.message || "Please check the latest code sent to your email.",
+        });
+        return;
       }
-    } catch {
-      toast.error("Invalid verification code", { description: "Check the latest email and try again." });
+
+      if (data?.session || data?.user) {
+        setIsRecoveryActive(true);
+        toast.success("Code verified successfully", {
+          description: "Please set your new password.",
+        });
+        setResetStep("new_password");
+      }
+    } catch (err: any) {
+      toast.error("Verification failed", {
+        description: err?.message || "Failed to verify code. Please try again.",
+      });
     } finally {
-      setLoading(false);
+      setResetLoading(false);
+    }
+  }
+
+  async function handleUpdatePassword(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("Password too short", {
+        description: "Your new password must be at least 8 characters.",
+      });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Passwords do not match", {
+        description: "Please make sure both password fields match exactly.",
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        toast.error("Could not update password", { description: error.message });
+        return;
+      }
+
+      const targetEmail = resetEmail.trim().toLowerCase() || data?.user?.email || "";
+
+      // Dispatch security notification email via server function
+      try {
+        if (targetEmail) {
+          await sendPasswordChangeNotification({
+            data: { email: targetEmail },
+          });
+        }
+      } catch (notifErr) {
+        console.warn("Could not dispatch confirmation email notification:", notifErr);
+      }
+
+      toast.success("Password changed successfully", {
+        description: "A confirmation email has been sent to your address.",
+      });
+
+      setResetStep("success");
+    } catch (err: any) {
+      toast.error("Failed to update password", {
+        description: err?.message || "An unexpected error occurred.",
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  async function handleFinishReset() {
+    const remembered = resetEmail.trim().toLowerCase();
+    setResetModalOpen(false);
+    setIsRecoveryActive(false);
+    setResetStep("request");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    if (remembered) {
+      setEmail(remembered);
+    }
+    setPassword("");
+
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+
+    if (typeof window !== "undefined" && (window.location.hash || window.location.search)) {
+      window.history.replaceState(null, "", window.location.pathname);
     }
   }
 
   return (
     <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#3b1d4d] text-white dark:bg-[#21172f]">
-
+      {/* Top right theme switcher */}
       <div className="relative z-10 flex justify-end px-6 pt-6 sm:px-10">
         <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5 text-[11px] font-medium text-white/80 shadow-sm">
           <span className="px-2 py-1">Theme</span>
@@ -272,7 +454,7 @@ function AuthPage() {
       </div>
 
       {/* Center: Corporate Login Card */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-[420px]">
           <div className="space-y-6 rounded-lg border border-border bg-card p-8 shadow-md sm:p-9">
             {/* Header: Company Emblem & Title */}
@@ -289,7 +471,9 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Mavis Strategic Partners</h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Mavis Strategic Partners
+                </h1>
                 <p className="text-xs text-muted-foreground">
                   Sign in with your corporate credentials to continue.
                 </p>
@@ -297,7 +481,6 @@ function AuthPage() {
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
-
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-medium text-foreground">
                   Work Email
@@ -312,7 +495,7 @@ function AuthPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@mavisstrategicpartners.co.za"
                     required
-                    className="h-10.5 border-input bg-background pl-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
+                    className="h-10.5 border-input bg-background pl-10 text-sm text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -325,11 +508,8 @@ function AuthPage() {
                   </Label>
                   <button
                     type="button"
-                    onClick={() => {
-                      setHelpType("forgot");
-                      setHelpOpen(true);
-                    }}
-                    className="text-xs font-medium text-primary hover:underline"
+                    onClick={handleOpenForgotPassword}
+                    className="text-xs font-medium text-primary transition hover:underline"
                   >
                     Forgot password?
                   </button>
@@ -339,12 +519,12 @@ function AuthPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="h-10.5 border-input bg-background pl-10 pr-10 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
+                    className="h-10.5 border-input bg-background pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary"
                   />
                   <button
                     type="button"
@@ -357,25 +537,9 @@ function AuthPage() {
                 </div>
               </div>
 
-              {isSignUp && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="confirmPassword" className="text-xs font-medium text-foreground">Confirm password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat your password"
-                    required
-                    className="h-10.5 border-input bg-background pl-3 text-foreground placeholder:text-muted-foreground/50 transition focus-visible:border-primary focus-visible:ring-primary text-sm"
-                  />
-                </div>
-              )}
-
               {/* Remember Me */}
               <div className="flex items-center justify-between pt-0.5">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     defaultChecked
@@ -389,8 +553,8 @@ function AuthPage() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => { setHelpType("support"); setHelpOpen(true); }}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition flex items-center gap-1"
+                  onClick={() => setSupportOpen(true)}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-foreground"
                 >
                   <HelpCircle className="h-3 w-3" /> IT Help Desk
                 </button>
@@ -400,31 +564,33 @@ function AuthPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="mx-auto mt-2 block h-10.5 w-3/5 max-w-[220px] text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition active:scale-[0.99]"
+                className="mx-auto mt-2 block h-10.5 w-3/5 max-w-[220px] bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:scale-[0.99]"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
                     Signing in...
                   </>
-                ) : "Sign In"}
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
             <div className="text-center text-xs text-muted-foreground">
-              Don&apos;t have an account?{" "}
+              Need assistance?{" "}
               <button
                 type="button"
-                onClick={() => { setHelpType("support"); setHelpOpen(true); }}
+                onClick={() => setSupportOpen(true)}
                 className="font-medium text-primary hover:underline"
               >
-                Contact your admin
+                Contact IT Support
               </button>
             </div>
           </div>
 
           {/* Security Notice */}
-          <div className="mt-5 text-center text-[11px] text-muted-foreground space-y-1">
+          <div className="mt-5 space-y-1 text-center text-[11px] text-muted-foreground">
             <p className="flex items-center justify-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
               Authorized corporate personnel only. All access is logged and audited.
@@ -438,20 +604,348 @@ function AuthPage() {
         <p>© {new Date().getFullYear()} Mavis Strategic Partners (Pty) Ltd. All rights reserved.</p>
       </footer>
 
+      {/* =========================================================================
+          PASSWORD RESET MODAL (REQUEST, OTP / LINK CONFIRMATION, UPDATE, CONFIRMATION)
+          ========================================================================= */}
+      <Dialog open={resetModalOpen} onOpenChange={(open) => {
+        if (!open && resetStep === "success") {
+          handleFinishReset();
+        } else {
+          setResetModalOpen(open);
+        }
+      }}>
+        <DialogContent className="max-w-md border-border bg-card p-6 text-card-foreground shadow-2xl sm:p-7">
+          {/* STEP 1: Request Reset */}
+          {resetStep === "request" && (
+            <div className="space-y-5">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <KeyRound className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg font-bold">Reset Password</DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">
+                      Request a reset link or verification code for your staff account.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <form onSubmit={handleRequestReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email" className="text-xs font-medium text-foreground">
+                    Work Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="name@mavisstrategicpartners.co.za"
+                      required
+                      className="h-10.5 pl-10 text-sm"
+                    />
+                  </div>
+
+                  {resetEmail && !resetEmail.includes("@") && (
+                    <button
+                      type="button"
+                      onClick={() => setResetEmail(`${resetEmail.trim()}@mavisstrategicpartners.co.za`)}
+                      className="inline-flex items-center gap-1 rounded bg-secondary/80 px-2 py-1 text-[11px] text-primary transition hover:bg-secondary"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      Append @mavisstrategicpartners.co.za
+                    </button>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
+                  <p className="leading-relaxed">
+                    We will send an email with both a <strong>direct reset link</strong> and a <strong>6-digit verification code</strong>. You can use either method to choose a new password.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setResetModalOpen(false)}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="h-10 bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link & Code"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 2: Verify Code or Click Link */}
+          {resetStep === "verify_code" && (
+            <div className="space-y-5">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg font-bold">Check Your Email</DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">
+                      Verification message sent to <span className="font-semibold text-foreground">{resetEmail}</span>
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <form onSubmit={handleVerifyCode} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-code" className="text-xs font-medium text-foreground">
+                    Enter 6-Digit Code / Token
+                  </Label>
+                  <Input
+                    id="reset-code"
+                    type="text"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    placeholder="Enter verification code"
+                    required
+                    maxLength={32}
+                    className="h-11 text-center font-mono text-base tracking-widest uppercase"
+                  />
+                </div>
+
+                <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground space-y-1.5">
+                  <p className="font-medium text-foreground">Two ways to confirm:</p>
+                  <p>1. Enter the code from your email above and click <strong>Verify Code</strong>.</p>
+                  <p>2. Or, click the secure reset link inside the email — the portal will open the password form automatically.</p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0 || resetLoading}
+                    onClick={() => handleRequestReset()}
+                    className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResetStep("request")}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowLeft className="h-3 w-3" /> Change email
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setResetModalOpen(false)}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={resetLoading || !resetCode.trim()}
+                    className="h-10 bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify Code"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 3: Create New Password */}
+          {resetStep === "new_password" && (
+            <div className="space-y-5">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg font-bold">Set New Password</DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">
+                      Create a secure new password for your account.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-password" className="text-xs font-medium text-foreground">
+                    New Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Minimum 8 characters"
+                      required
+                      minLength={8}
+                      className="h-10.5 pl-10 pr-10 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-new-password" className="text-xs font-medium text-foreground">
+                    Confirm New Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="confirm-new-password"
+                      type={showConfirmNewPassword ? "text" : "password"}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      placeholder="Repeat your new password"
+                      required
+                      minLength={8}
+                      className="h-10.5 pl-10 pr-10 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmNewPassword((v) => !v)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                    >
+                      {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Password requirement checklist */}
+                <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className={newPassword.length >= 8 ? "text-emerald-500 font-bold" : "text-muted-foreground"}>
+                      {newPassword.length >= 8 ? "✓" : "•"}
+                    </span>
+                    <span className={newPassword.length >= 8 ? "text-foreground font-medium" : "text-muted-foreground"}>
+                      At least 8 characters
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={newPassword && newPassword === confirmNewPassword ? "text-emerald-500 font-bold" : "text-muted-foreground"}>
+                      {newPassword && newPassword === confirmNewPassword ? "✓" : "•"}
+                    </span>
+                    <span className={newPassword && newPassword === confirmNewPassword ? "text-foreground font-medium" : "text-muted-foreground"}>
+                      Passwords match
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setResetModalOpen(false)}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={resetLoading || newPassword.length < 8 || newPassword !== confirmNewPassword}
+                    className="h-10 bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Change Password"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 4: Success Confirmation */}
+          {resetStep === "success" && (
+            <div className="space-y-5 text-center py-2">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-foreground">Password Changed Successfully!</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                  Your corporate password has been updated. A security confirmation email has been dispatched to{" "}
+                  <strong className="text-foreground">{resetEmail || "your email"}</strong>.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
+                <p>
+                  You can now sign in using your new credentials.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  onClick={handleFinishReset}
+                  className="w-full h-10.5 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm"
+                >
+                  Return to Sign In
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Corporate IT Support Modal */}
-      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+      <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
         <DialogContent className="max-w-md border-border bg-card text-card-foreground shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
-              {helpType === "forgot" ? (
-                <>
-                  <Lock className="h-4 w-4 text-primary" /> Password Assistance
-                </>
-              ) : (
-                <>
-                  <Building2 className="h-4 w-4 text-primary" /> Corporate IT Support
-                </>
-              )}
+              <Building2 className="h-4 w-4 text-primary" /> Corporate IT Support
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Mavis Strategic Partners Internal IT & Directory Services
@@ -459,49 +953,33 @@ function AuthPage() {
           </DialogHeader>
 
           <div className="space-y-3 py-2 text-xs">
-            {helpType === "forgot" ? (
-              <div className="space-y-2.5">
-                <p className="text-muted-foreground leading-relaxed">
-                  For enterprise security, password resets are processed via the central directory administrator.
-                </p>
-                <div className="rounded-lg border border-border bg-secondary/40 p-3 space-y-1.5">
-                  <p className="font-semibold text-foreground">To reset your corporate password:</p>
-                  <p className="text-muted-foreground">
-                    1. Send an email to <strong className="text-primary">info@mavisstrategicpartners.co.za</strong>.
-                  </p>
-                  <p className="text-muted-foreground">
-                    2. Provide your employee ID and department.
-                  </p>
-                  <p className="text-muted-foreground">
-                    3. A secure reset link will be sent to your manager or verified work address.
-                  </p>
+            <div className="space-y-2.5">
+              <p className="text-muted-foreground leading-relaxed">
+                If you require new access provisioning, two-factor authentication reset, or system assistance, contact the help desk:
+              </p>
+              <div className="space-y-1.5 rounded-lg border border-border bg-secondary/40 p-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">IT Helpdesk:</span>
+                  <strong className="text-foreground">info@mavisstrategicpartners.co.za</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Domain:</span>
+                  <span className="text-foreground">mavisstrategicpartners.co.za</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Support Hours:</span>
+                  <span className="text-foreground">08:00 – 17:00 SAST (Mon – Fri)</span>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-2.5">
-                <p className="text-muted-foreground leading-relaxed">
-                  If you require access provisioning, two-factor reset, or have trouble signing in, contact the help desk:
-                </p>
-                <div className="rounded-lg border border-border bg-secondary/40 p-3 space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">IT Helpdesk:</span>
-                    <strong className="text-foreground">info@mavisstrategicpartners.co.za</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Support Hours:</span>
-                    <span className="text-foreground">08:00 – 17:00 SAST (Mon – Fri)</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
-          <div className="flex justify-end pt-2 border-t border-border/50">
+          <div className="flex justify-end border-t border-border/50 pt-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setHelpOpen(false)}
+              onClick={() => setSupportOpen(false)}
             >
               Close
             </Button>
