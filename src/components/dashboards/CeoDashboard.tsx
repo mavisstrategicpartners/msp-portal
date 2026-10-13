@@ -31,7 +31,7 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
-  DollarSign,
+  Banknote,
   CheckSquare,
   Users,
   Search,
@@ -670,7 +670,7 @@ export function CeoDashboard() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground">Revenue Health</span>
-              <DollarSign className="h-4 w-4 text-[#3b1d4d] dark:text-primary transition-transform group-hover:scale-110" />
+              <Banknote className="h-4 w-4 text-[#3b1d4d] dark:text-primary transition-transform group-hover:scale-110" />
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
               <span className="text-2xl font-bold tracking-tight text-foreground">R520,000</span>

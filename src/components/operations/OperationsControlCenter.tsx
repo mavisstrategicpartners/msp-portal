@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatZAR } from "@/lib/currency";
 import { useOperationsData } from "@/lib/operations.store";
 import { useProfile } from "@/lib/use-profile";
 import { Card } from "@/components/ui/card";
@@ -335,7 +336,7 @@ export function OperationsControlCenter() {
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <p className="mt-4 text-3xl font-bold text-foreground">
-                R{(ops.metrics.sales.pipelineValue / 1000).toFixed(0)}k
+                {formatZAR(ops.metrics.sales.pipelineValue, { compact: true })}
               </p>
               <Progress
                 value={ops.leads.length ? Math.round((ops.leads.filter((l) => l.stage === "Won").length / ops.leads.length) * 100) : 0}
@@ -814,7 +815,7 @@ export function OperationsControlCenter() {
                       <td className="p-3.5 font-semibold text-foreground">{lead.businessName}</td>
                       <td className="p-3.5 text-muted-foreground">{lead.contactPerson}</td>
                       <td className="p-3.5 font-medium">{lead.assignedSalesperson}</td>
-                      <td className="p-3.5 font-semibold">R{lead.estimatedValue.toLocaleString()}</td>
+                      <td className="p-3.5 font-semibold">{formatZAR(lead.estimatedValue)}</td>
                       <td className="p-3.5">
                         <Badge variant={lead.stage === "Won" ? "default" : "secondary"}>
                           {lead.stage}

@@ -6,7 +6,8 @@ import {
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
   Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard, Clock, Activity, Calculator, Folder, TrendingUp, DollarSign, CheckSquare,
+  LayoutDashboard, Clock, Activity, Calculator, Folder, TrendingUp, Banknote, CheckSquare,
+  Target, Layers, AlertTriangle, GitBranch,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,7 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo";
+type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm";
 
 const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
@@ -101,10 +102,20 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
     { to: "/ceo", label: "Executive Dashboard", icon: Crown },
     { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
-    { to: "/ceo/revenue", label: "Revenue Health", icon: DollarSign },
+    { to: "/ceo/revenue", label: "Revenue Health", icon: Banknote },
     { to: "/ceo/clients", label: "Client Health", icon: Building2 },
     { to: "/ceo/delivery", label: "Delivery Health", icon: CheckSquare },
     { to: "/ceo/team", label: "Team Health", icon: Users },
+  ]},
+  // GM Workspace — General Manager only
+  { group: "GM Command Centre", portals: ["gm"], items: [
+    { to: "/gm", label: "GM Dashboard", icon: LayoutDashboard },
+    { to: "/gm/execution", label: "Company Execution", icon: Target },
+    { to: "/gm/revenue", label: "Revenue Performance", icon: Banknote },
+    { to: "/gm/capacity", label: "Capacity & Workload", icon: Users },
+    { to: "/gm/approvals", label: "Manager Approvals", icon: CheckSquare },
+    { to: "/gm/dependencies", label: "Cross-Dept Dependencies", icon: GitBranch },
+    { to: "/gm/escalations", label: "Escalations", icon: AlertTriangle },
   ]},
 ];
 
@@ -188,11 +199,14 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isHostPath = pathname.startsWith('/host') && !isHRPath;
   const isAdminPath = pathname.startsWith('/admin');
   const isCeoPath = pathname.startsWith('/ceo');
+  const isGmPath = pathname.startsWith('/gm');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
   if (isCeoPath) {
     currentPortal = "ceo";
+  } else if (isGmPath) {
+    currentPortal = "gm";
   } else if (isHRPath) {
     currentPortal = "hr";
   } else if (isAdminPath) {
@@ -201,6 +215,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "manager";
   } else if (isRootAdmin) {
     currentPortal = "ceo";
+  } else if (data?.isGM) {
+    currentPortal = "gm";
   } else if (data?.isHR) {
     currentPortal = "hr";
   } else if (isAdmin) {
@@ -229,6 +245,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
 
   const workspaceTitle = currentPortal === "ceo"
     ? "CEO Workspace"
+    : currentPortal === "gm"
+    ? "GM Workspace"
     : currentPortal === "hr"
     ? "HR Workspace"
     : currentPortal === "admin"
@@ -239,6 +257,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
 
   const workspaceSub = currentPortal === "ceo"
     ? "Executive Command & Analytics"
+    : currentPortal === "gm"
+    ? "Company Execution & Operations"
     : currentPortal === "hr"
     ? "Human Resources Management"
     : currentPortal === "admin"

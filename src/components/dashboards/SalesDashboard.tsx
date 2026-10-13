@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   TrendingUp,
   Target,
-  DollarSign,
+  Banknote,
   Calendar,
   Clock,
   Mail,
@@ -187,13 +188,13 @@ export function SalesDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Pipeline Value</span>
-          <p className="text-2xl font-bold text-foreground mt-1">R{totalPipelineValue.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{formatZAR(totalPipelineValue)}</p>
           <p className="text-[11px] text-muted-foreground mt-1">{leads.length} active opportunities</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Monthly Closed Revenue</span>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">R{wonValue.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-emerald-500 mt-1">{formatZAR(wonValue)}</p>
           <p className="text-[11px] text-muted-foreground mt-1">{wonLeads.length} won contracts</p>
         </Card>
 
@@ -286,7 +287,7 @@ export function SalesDashboard() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 text-right">
                 <div>
                   <span className="text-[11px] text-muted-foreground uppercase font-semibold">Value</span>
-                  <p className="text-sm font-bold text-foreground">R{lead.estimatedValue.toLocaleString()}</p>
+                  <p className="text-sm font-bold text-foreground">{formatZAR(lead.estimatedValue)}</p>
                 </div>
 
                 <div className="flex items-center gap-1.5">

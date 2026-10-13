@@ -45,6 +45,7 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
 
   // 2. General Manager / Managing Director
   if (
+    email === "general.manager@mavisstrategicpartners.co.za" ||
     title.includes("general manager") ||
     title.includes("managing director") ||
     title === "gm" ||
@@ -191,6 +192,7 @@ export function useProfile() {
                 defaultDashboard: getDefaultDashboardRoute(fallbackRole),
                 isAdmin: fallbackRole === "admin" || fallbackRole === "ceo",
                 isHR: fallbackRole === "hr",
+                isGM: fallbackRole === "general_manager",
                 roleTier: (parsed.role_tier as any) || "root_admin",
                 isRootAdmin: fallbackRole === "ceo",
                 isManagerOrAbove: parsed.role_tier === "manager" || fallbackRole === "department_manager" || fallbackRole === "general_manager" || fallbackRole === "operations",
@@ -270,6 +272,7 @@ export function useProfile() {
         defaultDashboard: getDefaultDashboardRoute(systemRole),
         isAdmin,
         isHR,
+        isGM: systemRole === "general_manager",
         roleTier: resolvedTier,
         isRootAdmin: systemRole === "ceo",
         isManagerOrAbove,

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Banknote,
   Download,
   RefreshCw,
   Search,
@@ -487,7 +488,7 @@ function SalesHealthPage() {
                     {opp.package}
                   </td>
                   <td className="p-3.5 text-right font-mono font-bold text-sm text-foreground">
-                    R{opp.value.toLocaleString()}
+                    {formatZAR(opp.value)}
                   </td>
                   <td className="p-3.5 text-foreground">{opp.salesRep}</td>
                   <td className="p-3.5 text-center">
@@ -549,7 +550,7 @@ function SalesHealthPage() {
                 <div>
                   <span className="text-muted-foreground block text-[11px]">Contract Value</span>
                   <strong className="text-lg font-bold text-foreground">
-                    R{selectedOpp.value.toLocaleString()}
+                    {formatZAR(selectedOpp.value)}
                   </strong>
                 </div>
                 <div>

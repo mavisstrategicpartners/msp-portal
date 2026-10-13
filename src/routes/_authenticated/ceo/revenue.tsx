@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  DollarSign,
+  Banknote,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
@@ -237,7 +238,7 @@ function RevenueHealthPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-[#3b1d4d]/10 px-2.5 py-1 text-xs font-semibold text-[#3b1d4d] dark:bg-white/10 dark:text-white">
-                <DollarSign className="h-3.5 w-3.5" /> Financial Telemetry
+                <Banknote className="h-3.5 w-3.5" /> Financial Telemetry
               </span>
               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
                 Q4 Target: R650,000
@@ -517,7 +518,7 @@ function RevenueHealthPage() {
                     {inv.invoiceNo}
                   </td>
                   <td className="p-3.5 text-right font-mono font-bold text-sm text-foreground">
-                    R{inv.amount.toLocaleString()}
+                    {formatZAR(inv.amount)}
                   </td>
                   <td className="p-3.5 text-muted-foreground">{inv.issueDate}</td>
                   <td className={`p-3.5 font-medium ${inv.status === "overdue" ? "text-rose-600 dark:text-rose-400 font-bold" : "text-muted-foreground"}`}>
@@ -584,7 +585,7 @@ function RevenueHealthPage() {
                 <div>
                   <span className="text-muted-foreground block text-[11px]">Billed Amount</span>
                   <strong className="text-lg font-bold text-foreground">
-                    R{selectedInvoice.amount.toLocaleString()}
+                    {formatZAR(selectedInvoice.amount)}
                   </strong>
                 </div>
                 <div>

@@ -14,7 +14,7 @@ import {
   Printer,
   Download,
   Search,
-  DollarSign,
+  Banknote,
   TrendingUp,
   Gift,
   Award,

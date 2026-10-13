@@ -49,9 +49,11 @@ function Home() {
   const isAdmin = data?.isAdmin ?? false;
   const systemRole = data?.systemRole;
 
-  // HR users have their own dedicated dashboard — redirect them there
+  // GM and HR users have their own dedicated dashboards — redirect them there
   useEffect(() => {
-    if (systemRole === "hr") {
+    if (systemRole === "general_manager") {
+      router.navigate({ to: "/gm" as any, replace: true });
+    } else if (systemRole === "hr") {
       router.navigate({ to: "/host/hr" as any, replace: true });
     }
   }, [systemRole, router]);

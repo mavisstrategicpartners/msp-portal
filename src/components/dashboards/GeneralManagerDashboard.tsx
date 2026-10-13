@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,7 @@ export function GeneralManagerDashboard() {
             <span>Revenue Target vs Actual</span>
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">R520k / R600k</p>
+          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(520000, { compact: true })} / {formatZAR(600000, { compact: true })}</p>
           <Progress value={86.6} className="mt-2 h-1.5" />
           <p className="text-[11px] text-muted-foreground mt-1.5">86.6% of monthly revenue goal collected</p>
         </Card>

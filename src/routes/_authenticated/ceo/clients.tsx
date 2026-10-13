@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -497,7 +498,7 @@ function ClientHealthPage() {
                     <span className="text-muted-foreground text-[11px]">{cl.industry}</span>
                   </td>
                   <td className="p-3.5 text-right font-mono font-bold text-sm text-foreground">
-                    R{cl.mrr.toLocaleString()}
+                    {formatZAR(cl.mrr)}
                   </td>
                   <td className="p-3.5 text-center">
                     <Badge
@@ -553,7 +554,7 @@ function ClientHealthPage() {
                 Account Health Inspection — {selectedClient.client}
               </DialogTitle>
               <DialogDescription className="text-xs">
-                {selectedClient.industry} · Monitored MRR: R{selectedClient.mrr.toLocaleString()}
+                {selectedClient.industry} · Monitored MRR: {formatZAR(selectedClient.mrr)}
               </DialogDescription>
             </DialogHeader>
 
@@ -562,7 +563,7 @@ function ClientHealthPage() {
                 <div>
                   <span className="text-muted-foreground block text-[11px]">Monthly Retainer</span>
                   <strong className="text-lg font-bold text-foreground">
-                    R{selectedClient.mrr.toLocaleString()}
+                    {formatZAR(selectedClient.mrr)}
                   </strong>
                 </div>
                 <div>

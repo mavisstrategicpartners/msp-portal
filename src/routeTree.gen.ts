@@ -37,6 +37,13 @@ import { Route as AuthenticatedCeoDeliveryRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
 import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
 import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
+import { Route as AuthenticatedGmIndexRouteImport } from './routes/_authenticated/gm/index'
+import { Route as AuthenticatedGmApprovalsRouteImport } from './routes/_authenticated/gm/approvals'
+import { Route as AuthenticatedGmCapacityRouteImport } from './routes/_authenticated/gm/capacity'
+import { Route as AuthenticatedGmDependenciesRouteImport } from './routes/_authenticated/gm/dependencies'
+import { Route as AuthenticatedGmEscalationsRouteImport } from './routes/_authenticated/gm/escalations'
+import { Route as AuthenticatedGmExecutionRouteImport } from './routes/_authenticated/gm/execution'
+import { Route as AuthenticatedGmRevenueRouteImport } from './routes/_authenticated/gm/revenue'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
 import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
 import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
@@ -190,6 +197,45 @@ const AuthenticatedCeoTeamRoute = AuthenticatedCeoTeamRouteImport.update({
   path: '/ceo/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGmIndexRoute = AuthenticatedGmIndexRouteImport.update({
+  id: '/gm/',
+  path: '/gm/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGmApprovalsRoute =
+  AuthenticatedGmApprovalsRouteImport.update({
+    id: '/gm/approvals',
+    path: '/gm/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmCapacityRoute = AuthenticatedGmCapacityRouteImport.update({
+  id: '/gm/capacity',
+  path: '/gm/capacity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGmDependenciesRoute =
+  AuthenticatedGmDependenciesRouteImport.update({
+    id: '/gm/dependencies',
+    path: '/gm/dependencies',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmEscalationsRoute =
+  AuthenticatedGmEscalationsRouteImport.update({
+    id: '/gm/escalations',
+    path: '/gm/escalations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmExecutionRoute =
+  AuthenticatedGmExecutionRouteImport.update({
+    id: '/gm/execution',
+    path: '/gm/execution',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmRevenueRoute = AuthenticatedGmRevenueRouteImport.update({
+  id: '/gm/revenue',
+  path: '/gm/revenue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
   id: '/host/',
   path: '/host/',
@@ -256,6 +302,12 @@ export interface FileRoutesByFullPath {
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -263,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/gm/': typeof AuthenticatedGmIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
 }
 export interface FileRoutesByTo {
@@ -292,6 +345,12 @@ export interface FileRoutesByTo {
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -299,6 +358,7 @@ export interface FileRoutesByTo {
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo': typeof AuthenticatedCeoIndexRoute
+  '/gm': typeof AuthenticatedGmIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
 }
 export interface FileRoutesById {
@@ -330,6 +390,12 @@ export interface FileRoutesById {
   '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/_authenticated/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/_authenticated/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/_authenticated/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/_authenticated/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/_authenticated/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/_authenticated/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
@@ -337,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/_authenticated/portal/other': typeof AuthenticatedPortalOtherRoute
   '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
 }
 export interface FileRouteTypes {
@@ -368,6 +435,12 @@ export interface FileRouteTypes {
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
+    | '/gm/approvals'
+    | '/gm/capacity'
+    | '/gm/dependencies'
+    | '/gm/escalations'
+    | '/gm/execution'
+    | '/gm/revenue'
     | '/host/$'
     | '/me/declaration'
     | '/me/leave'
@@ -375,6 +448,7 @@ export interface FileRouteTypes {
     | '/portal/admin'
     | '/portal/other'
     | '/ceo/'
+    | '/gm/'
     | '/host/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -404,6 +478,12 @@ export interface FileRouteTypes {
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
+    | '/gm/approvals'
+    | '/gm/capacity'
+    | '/gm/dependencies'
+    | '/gm/escalations'
+    | '/gm/execution'
+    | '/gm/revenue'
     | '/host/$'
     | '/me/declaration'
     | '/me/leave'
@@ -411,6 +491,7 @@ export interface FileRouteTypes {
     | '/portal/admin'
     | '/portal/other'
     | '/ceo'
+    | '/gm'
     | '/host'
   id:
     | '__root__'
@@ -441,6 +522,12 @@ export interface FileRouteTypes {
     | '/_authenticated/ceo/revenue'
     | '/_authenticated/ceo/sales'
     | '/_authenticated/ceo/team'
+    | '/_authenticated/gm/approvals'
+    | '/_authenticated/gm/capacity'
+    | '/_authenticated/gm/dependencies'
+    | '/_authenticated/gm/escalations'
+    | '/_authenticated/gm/execution'
+    | '/_authenticated/gm/revenue'
     | '/_authenticated/host/$'
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
@@ -448,6 +535,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/admin'
     | '/_authenticated/portal/other'
     | '/_authenticated/ceo/'
+    | '/_authenticated/gm/'
     | '/_authenticated/host/'
   fileRoutesById: FileRoutesById
 }
@@ -655,6 +743,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCeoTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/gm/': {
+      id: '/_authenticated/gm/'
+      path: '/gm'
+      fullPath: '/gm/'
+      preLoaderRoute: typeof AuthenticatedGmIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/approvals': {
+      id: '/_authenticated/gm/approvals'
+      path: '/gm/approvals'
+      fullPath: '/gm/approvals'
+      preLoaderRoute: typeof AuthenticatedGmApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/capacity': {
+      id: '/_authenticated/gm/capacity'
+      path: '/gm/capacity'
+      fullPath: '/gm/capacity'
+      preLoaderRoute: typeof AuthenticatedGmCapacityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/dependencies': {
+      id: '/_authenticated/gm/dependencies'
+      path: '/gm/dependencies'
+      fullPath: '/gm/dependencies'
+      preLoaderRoute: typeof AuthenticatedGmDependenciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/escalations': {
+      id: '/_authenticated/gm/escalations'
+      path: '/gm/escalations'
+      fullPath: '/gm/escalations'
+      preLoaderRoute: typeof AuthenticatedGmEscalationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/execution': {
+      id: '/_authenticated/gm/execution'
+      path: '/gm/execution'
+      fullPath: '/gm/execution'
+      preLoaderRoute: typeof AuthenticatedGmExecutionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/revenue': {
+      id: '/_authenticated/gm/revenue'
+      path: '/gm/revenue'
+      fullPath: '/gm/revenue'
+      preLoaderRoute: typeof AuthenticatedGmRevenueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/host/': {
       id: '/_authenticated/host/'
       path: '/host'
@@ -732,6 +869,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
   AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
   AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
+  AuthenticatedGmApprovalsRoute: typeof AuthenticatedGmApprovalsRoute
+  AuthenticatedGmCapacityRoute: typeof AuthenticatedGmCapacityRoute
+  AuthenticatedGmDependenciesRoute: typeof AuthenticatedGmDependenciesRoute
+  AuthenticatedGmEscalationsRoute: typeof AuthenticatedGmEscalationsRoute
+  AuthenticatedGmExecutionRoute: typeof AuthenticatedGmExecutionRoute
+  AuthenticatedGmRevenueRoute: typeof AuthenticatedGmRevenueRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
@@ -739,6 +882,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPortalAdminRoute: typeof AuthenticatedPortalAdminRoute
   AuthenticatedPortalOtherRoute: typeof AuthenticatedPortalOtherRoute
   AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
+  AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
 }
 
@@ -767,6 +911,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
   AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
   AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,
+  AuthenticatedGmApprovalsRoute: AuthenticatedGmApprovalsRoute,
+  AuthenticatedGmCapacityRoute: AuthenticatedGmCapacityRoute,
+  AuthenticatedGmDependenciesRoute: AuthenticatedGmDependenciesRoute,
+  AuthenticatedGmEscalationsRoute: AuthenticatedGmEscalationsRoute,
+  AuthenticatedGmExecutionRoute: AuthenticatedGmExecutionRoute,
+  AuthenticatedGmRevenueRoute: AuthenticatedGmRevenueRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,
@@ -774,6 +924,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalAdminRoute: AuthenticatedPortalAdminRoute,
   AuthenticatedPortalOtherRoute: AuthenticatedPortalOtherRoute,
   AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
+  AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
 }
 

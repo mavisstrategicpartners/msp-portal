@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DollarSign,
+  Banknote,
   CheckCircle2,
   AlertTriangle,
   FileText,
@@ -86,25 +87,25 @@ export function FinanceAdminDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Booked Monthly Revenue</span>
-          <p className="text-2xl font-bold text-foreground mt-1">R650,000</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{formatZAR(650000)}</p>
           <p className="text-[11px] text-muted-foreground mt-1">Total contract value</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Invoiced Agency Fees</span>
-          <p className="text-2xl font-bold text-foreground mt-1">R580,000</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{formatZAR(580000)}</p>
           <p className="text-[11px] text-muted-foreground mt-1">Excludes client direct ad spend</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Verified Cash Collected</span>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">R520,000</p>
+          <p className="text-2xl font-bold text-emerald-500 mt-1">{formatZAR(520000)}</p>
           <p className="text-[11px] text-emerald-600 font-medium mt-1">89.6% collection rate</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Overdue Receivables</span>
-          <p className="text-2xl font-bold text-rose-500 mt-1">R60,000</p>
+          <p className="text-2xl font-bold text-rose-500 mt-1">{formatZAR(60000)}</p>
           <p className="text-[11px] text-rose-600 font-medium mt-1">1 invoice awaiting follow-up</p>
         </Card>
       </div>
@@ -145,10 +146,10 @@ export function FinanceAdminDashboard() {
                     <div className="text-[11px] font-normal text-muted-foreground">{inv.package}</div>
                   </td>
                   <td className="p-2.5 font-bold text-foreground">
-                    R{inv.monthlyServiceFeeZar.toLocaleString()} ZAR
+                    {formatZAR(inv.monthlyServiceFeeZar)}
                   </td>
                   <td className="p-2.5 text-muted-foreground">
-                    R{inv.clientMediaSpendZar.toLocaleString()} ZAR
+                    {formatZAR(inv.clientMediaSpendZar)}
                   </td>
                   <td className="p-2.5 font-mono text-muted-foreground">{inv.dueDate}</td>
                   <td className="p-2.5">
