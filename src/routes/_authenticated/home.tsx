@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
 import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock } from "lucide-react";
@@ -41,10 +42,19 @@ function greeting() {
 
 function Home() {
   const { data } = useProfile();
+  const router = useRouter();
   const greetingText = greeting();
   const name = data?.profile?.full_name?.trim() ?? "there";
   const tip = TIPS[new Date().getDate() % TIPS.length];
   const isAdmin = data?.isAdmin ?? false;
+  const systemRole = data?.systemRole;
+
+  // HR users have their own dedicated dashboard — redirect them there
+  useEffect(() => {
+    if (systemRole === "hr") {
+      router.navigate({ to: "/host/hr" as any, replace: true });
+    }
+  }, [systemRole, router]);
 
   if (isAdmin) {
     return (

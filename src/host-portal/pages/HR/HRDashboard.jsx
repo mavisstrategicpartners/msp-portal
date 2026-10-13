@@ -258,30 +258,32 @@ export default function HRDashboard() {
           </div>
         </div>
 
-        {/* Real-time Attendance & Time Tracking */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Live Workforce Attendance & Time Tracking
-            </div>
-            <div className="flex items-center gap-3">
-              <a href="/admin/attendance" className="text-xs text-primary font-semibold hover:underline">
-                Live Command Center (Teams View) ↗
-              </a>
-              <Link to="/host/hr/timesheets" className="text-xs text-muted-foreground hover:underline">
-                Timesheets Register →
-              </Link>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard label="Clocked In" value={attendanceRecords.filter(r => r.status === 'Clocked In' || r.status === 'Present').length} color="var(--success)" sub="Active right now" />
-            <StatCard label="On Break" value={attendanceRecords.filter(r => r.status === 'On Break').length} color="var(--warning)" sub="Temporary pause" />
-            <StatCard label="Clocked Out" value={attendanceRecords.filter(r => r.status === 'Clocked Out').length} sub="Shift completed" />
-            <StatCard label="On Leave / Absent" value={attendanceRecords.filter(r => r.status === 'On Leave' || r.status === 'Absent').length} color="var(--danger)" sub="Unavailable" />
-          </div>
-        </div>
+        
 
-        {/* Recruitment & Learning Grid */}
+{/* Real-time Attendance & Time Tracking */}
+<div>
+  <div className="flex items-center justify-between mb-2">
+    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+      Live Workforce Attendance & Time Tracking
+    </div>
+    <div className="flex items-center gap-3">
+<Link to="/host/hr/attendance" className="text-xs text-primary font-semibold hover:underline">
+  Live Command Center (Teams View) ↗
+</Link>
+      <Link to="/host/hr/timesheets" className="text-xs text-muted-foreground hover:underline">
+        Timesheets Register →
+      </Link>
+    </div>
+  </div>
+  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <StatCard label="Clocked In" value={attendanceRecords.filter(r => r.status === 'Clocked In' || r.status === 'Present').length} color="var(--success)" sub="Active right now" />
+    <StatCard label="On Break" value={attendanceRecords.filter(r => r.status === 'On Break').length} color="var(--warning)" sub="Temporary pause" />
+    <StatCard label="Clocked Out" value={attendanceRecords.filter(r => r.status === 'Clocked Out').length} sub="Shift completed" />
+    <StatCard label="On Leave / Absent" value={attendanceRecords.filter(r => r.status === 'On Leave' || r.status === 'Absent').length} color="var(--danger)" sub="Unavailable" />
+  </div>
+</div>
+
+{/* Recruitment & Learning Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card p-4 space-y-3">
             <div className="flex items-center justify-between">

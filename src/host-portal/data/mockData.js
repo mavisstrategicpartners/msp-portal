@@ -194,24 +194,17 @@ export const seedTasks = [
 export const LEAVE_TYPES = ['Annual', 'Sick', 'Family Responsibility', 'Maternity', 'Paternity', 'Study', 'Compassionate']
 
 export const seedEmployees = [
-  { id: 'E-1', full_name: 'Thandi Mokoena', role: 'HR & Talent Lead', department: 'People Ops', email: 'thandi@linkora.co.za', phone: '+27 11 555 1234', employment_type: 'Permanent', join_date: '2020-03-15', manager: 'Board', gender: 'Female', age_band: '30-39' },
-  { id: 'E-2', full_name: 'Sipho Dlamini', role: 'Senior Cloud Engineer', department: 'Engineering', email: 'sipho@linkora.co.za', phone: '+27 82 555 1122', employment_type: 'Permanent', join_date: '2021-07-01', manager: 'Thandi Mokoena', gender: 'Male', age_band: '30-39' },
-  { id: 'E-3', full_name: 'Lerato Khumalo', role: 'Data Analyst', department: 'Data', email: 'lerato@linkora.co.za', phone: '+27 82 555 3344', employment_type: 'Contract', join_date: '2023-01-10', manager: 'Sipho Dlamini', gender: 'Female', age_band: '20-29' },
-  { id: 'E-4', full_name: 'Naledi Nkosi', role: 'Product Designer', department: 'Design', email: 'naledi@linkora.co.za', phone: '+27 82 555 5566', employment_type: 'Permanent', join_date: '2022-05-04', manager: 'Thandi Mokoena', gender: 'Female', age_band: '20-29' },
-  { id: 'E-5', full_name: 'Bongani Zulu', role: 'Security Engineer', department: 'Engineering', email: 'bongani@linkora.co.za', phone: '+27 82 555 7788', employment_type: 'Permanent', join_date: '2019-10-20', manager: 'Sipho Dlamini', gender: 'Male', age_band: '40-49' },
-  { id: 'E-6', full_name: 'Karabo Mthembu', role: 'People Coordinator', department: 'People Ops', email: 'karabo@linkora.co.za', phone: '+27 82 555 9900', employment_type: 'Temporary', join_date: '2025-11-01', manager: 'Thandi Mokoena', gender: 'Female', age_band: '20-29' },
+  { id: '27dcc3a8-4721-4646-87cb-770fe721ee5a', full_name: 'MSP Human Resources', role: 'HR Manager', department: 'Human Resources', email: 'hr@mavisstrategicpartners.co.za', employment_type: 'Permanent', join_date: '2026-09-16', manager: 'Board' },
+  { id: 'a8657388-806a-4034-aba9-cdfec879e58a', full_name: 'Siphelele Malotana', role: 'Developer', department: 'IT Department', email: 'siphelele.malotana@mavisstrategicpartners.co.za', employment_type: 'Intern', join_date: '2026-09-29', manager: 'MSP Human Resources' },
 ]
 
 export const seedLeaveBalances = seedEmployees.map(e => ({
   employee_id: e.id, employee: e.full_name,
-  Annual: 15 + (e.id.charCodeAt(2) % 6),
-  Sick: 8, 'Family Responsibility': 3, Study: 5, Compassionate: 2,
+  Annual: 15, Sick: 8, 'Family Responsibility': 3, Study: 5, Compassionate: 2,
 }))
 
 export const seedLeave = [
-  { id: 'LV-1', employee: 'Thandi Mokoena', type: 'Annual', from: '2026-07-15', to: '2026-07-19', days: 5, status: 'Approved', reason: 'Family holiday' },
-  { id: 'LV-2', employee: 'Sipho Dlamini', type: 'Sick', from: '2026-06-28', to: '2026-06-28', days: 1, status: 'Approved', reason: 'Flu' },
-  { id: 'LV-3', employee: 'Lerato Khumalo', type: 'Study', from: '2026-08-02', to: '2026-08-04', days: 3, status: 'Pending', reason: 'Certification exam prep' },
+  { id: 'ff369013-9b10-458f-9c30-64ec604af1e1', employee: 'Siphelele Malotana', type: 'Family Responsibility', from: '2026-10-02', to: '2026-10-06', days: 3, status: 'Pending', reason: 'Family responsibility' },
 ]
 
 export const seedLearnerLeaveRequests = [

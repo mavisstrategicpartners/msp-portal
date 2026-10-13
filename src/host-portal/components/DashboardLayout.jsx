@@ -11,16 +11,7 @@ import {
   BookOpen,
   Settings,
   Wrench,
-  FileText,
-  CreditCard,
-  ShieldCheck,
   ChevronRight,
-  ArrowRight,
-  Layers,
-  Sparkles,
-  Building2,
-  CheckSquare,
-  FileSignature
 } from 'lucide-react'
 
 const hrNav = [
@@ -37,32 +28,15 @@ const hrNav = [
   { name: 'Integrations', path: '/host/hr/integrations', altPath: '/hr/integrations', icon: Wrench },
 ]
 
-const hostNav = [
-  { name: 'Dashboard', path: '/host', icon: LayoutDashboard },
-  { name: 'Workforce', path: '/host/workforce', icon: Users },
-  { name: 'Performance', path: '/host/performance', icon: BarChart3 },
-  { name: 'Coaching', path: '/host/coaching', icon: FileSignature },
-  { name: 'Onboarding', path: '/host/onboarding', icon: CheckSquare },
-  { name: 'Recruitment', path: '/host/recruitment', icon: Briefcase },
-  { name: 'Employer Check', path: '/host/check', icon: ShieldCheck },
-  { name: 'Calendar', path: '/host/calendar', icon: CalendarDays },
-  { name: 'Projects', path: '/host/projects', icon: Briefcase },
-  { name: 'Tasks', path: '/host/tasks', icon: CheckSquare },
-  { name: 'KPIs', path: '/host/kpi', icon: BarChart3 },
-  { name: 'Contracts', path: '/host/contracts', icon: FileText },
-  { name: 'Documents', path: '/host/documents', icon: BookOpen },
-  { name: 'Company Profile', path: '/host/company', icon: Building2 },
-  { name: 'Settings', path: '/host/settings', icon: Settings },
-]
+
 
 export default function DashboardLayout({ children, title }) {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isHR = location.pathname.startsWith('/hr') || location.pathname.startsWith('/host/hr')
-  const currentNav = isHR ? hrNav : hostNav
-  const portalLabel = isHR ? 'Human Resources Suite' : 'Host Employer Operations'
-  const portalBadge = isHR ? 'HR Portal' : 'Host Portal'
+  const currentNav = hrNav
+  const portalLabel = 'Human Resources Suite'
+  const portalBadge = 'HR Portal'
 
   const handleNav = (item) => {
     if (item.external) {
@@ -90,35 +64,7 @@ export default function DashboardLayout({ children, title }) {
             </h1>
           </div>
 
-          {/* Quick Workspace Switcher (Host vs HR) */}
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <div className="flex rounded-lg border border-border bg-muted/60 p-1">
-              <button
-                type="button"
-                onClick={() => { window.location.href = '/host/workforce' }}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                  !isHR
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Layers className="h-3.5 w-3.5" />
-                <span>Host Ops</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { navigate('/host/hr') }}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                  isHR
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>HR Module</span>
-              </button>
-            </div>
-          </div>
+
         </div>
       </div>
 

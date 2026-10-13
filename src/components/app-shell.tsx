@@ -221,19 +221,11 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     }
   };
 
-  const switchWorkspace = (portal: PortalKey) => {
-    if (portal === "hr") {
-      window.location.href = '/host/hr';
-    } else if (portal === "manager") {
-      window.location.href = '/host';
-    } else if (portal === "admin") {
-      navigate({ to: '/admin/attendance' as any });
-    } else if (portal === "ceo") {
-      navigate({ to: '/ceo' as any });
-    } else {
-      navigate({ to: '/home' as any });
-    }
-  };
+
+
+
+    
+
 
   const workspaceTitle = currentPortal === "ceo"
     ? "CEO Workspace"
@@ -270,62 +262,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
             <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
               {workspaceTitle}
             </p>
-            {(isAdmin || isManagerOrAbove || data?.isHR || isRootAdmin) && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => switchWorkspace("staff")}
-                  title="Staff Portal"
-                  className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "staff" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                >
-                  Staff
-                </button>
-
-                {isAdmin && !isRootAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("admin")}
-                    title="Admin Panel"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "admin" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    Admin
-                  </button>
-                )}
-
-                {data?.isHR && !isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("hr")}
-                    title="Human Resources Portal"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "hr" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    HR
-                  </button>
-                )}
-
-                {isManagerOrAbove && !isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("manager")}
-                    title="Host Operations"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "manager" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    Host
-                  </button>
-                )}
-
-                {isRootAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => switchWorkspace("ceo")}
-                    title="CEO Command Centre"
-                    className={cn("h-5 rounded px-1.5 text-[9px] font-bold transition", currentPortal === "ceo" ? "bg-primary text-white" : "text-white/60 hover:bg-white/10 hover:text-white")}
-                  >
-                    CEO
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Role switcher UI removed - server-side routing enforced */}
           </div>
           <p className="mt-1 text-xs text-white/80">
             {workspaceSub}
@@ -357,7 +294,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
-                  const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                  const isExactRoot = item.to === "/ceo" || item.to === "/host" || item.to === "/admin";
+                  const active = isExactRoot ? pathname === item.to : (pathname === item.to || pathname.startsWith(item.to + "/"));
                   return (
                     <li key={item.to}>
                       <a

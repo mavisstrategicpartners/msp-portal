@@ -14,6 +14,146 @@ export type Profile = {
   role_tier?: "root_admin" | "manager" | "staff" | "intern" | null;
 };
 
+export type MspSystemRole =
+  | "ceo"
+  | "general_manager"
+  | "operations"
+  | "department_manager"
+  | "staff"
+  | "finance_admin"
+  | "hr"
+  | "admin"
+  | "sales"
+  | "client_success";
+
+export function resolveSystemRole(profile: Profile | null, userEmail?: string, roles: any[] = []): MspSystemRole {
+  const email = (userEmail || profile?.email || "").toLowerCase();
+  const dept = (profile?.department || "").toLowerCase();
+  const title = (profile?.job_title || "").toLowerCase();
+  const tier = profile?.role_tier;
+
+  // 1. CEO
+  if (
+    email === "ceo@mavisstrategicpartners.co.za" ||
+    title === "chief executive officer" ||
+    title === "ceo" ||
+    (dept === "ceo" && tier === "root_admin") ||
+    (dept === "executive" && (title.includes("ceo") || title.includes("chief executive")))
+  ) {
+    return "ceo";
+  }
+
+  // 2. General Manager / Managing Director
+  if (
+    title.includes("general manager") ||
+    title.includes("managing director") ||
+    title === "gm" ||
+    title === "md"
+  ) {
+    return "general_manager";
+  }
+
+  // 3. Operations & Relationship Manager
+  if (
+    dept.includes("operations") ||
+    title.includes("operations manager") ||
+    title.includes("relationship manager") ||
+    title.includes("head of operations")
+  ) {
+    return "operations";
+  }
+
+  // 4. Finance & Administration
+  if (
+    dept.includes("finance") ||
+    dept.includes("accounting") ||
+    title.includes("finance") ||
+    title.includes("accountant") ||
+    title.includes("billing")
+  ) {
+    return "finance_admin";
+  }
+
+  // 5. HR and Performance
+  if (
+    dept.includes("human resources") ||
+    dept.includes("hr") ||
+    title.includes("hr") ||
+    title.includes("people & culture")
+  ) {
+    return "hr";
+  }
+
+  // 6. System Administrator
+  if (
+    roles.some((r) => r.role === "admin") ||
+    title.includes("superadmin") ||
+    title.includes("system admin") ||
+    title.includes("it admin") ||
+    email.startsWith("superadmin@")
+  ) {
+    return "admin";
+  }
+
+  // 7. Sales
+  if (
+    dept.includes("sales") ||
+    dept.includes("business development") ||
+    title.includes("sales") ||
+    title.includes("business development")
+  ) {
+    return "sales";
+  }
+
+  // 8. Client Success
+  if (
+    dept.includes("client success") ||
+    title.includes("client success") ||
+    title.includes("account manager")
+  ) {
+    return "client_success";
+  }
+
+  // 9. Department Manager
+  if (
+    tier === "manager" ||
+    title.includes("lead") ||
+    title.includes("manager") ||
+    title.includes("head of")
+  ) {
+    return "department_manager";
+  }
+
+  // 10. Default: Staff / Specialist Employee
+  return "staff";
+}
+
+export function getDefaultDashboardRoute(role: MspSystemRole): string {
+  switch (role) {
+    case "ceo":
+      return "/ceo";
+    case "general_manager":
+      return "/gm";
+    case "operations":
+      return "/operations";
+    case "department_manager":
+      return "/department";
+    case "finance_admin":
+      return "/finance";
+    case "hr":
+      return "/host/hr";
+    case "admin":
+      return "/admin/users";
+    case "sales":
+      return "/sales";
+    case "client_success":
+      return "/client-success";
+    case "staff":
+    default:
+      return "/home";
+  }
+}
+
 export function useProfile() {
   return useQuery({
     queryKey: ["profile"],
@@ -32,6 +172,7 @@ export function useProfile() {
           if (stored) {
             try {
               const parsed = JSON.parse(stored);
+              const fallbackRole = resolveSystemRole(parsed, parsed.email, [{ role: parsed.role_tier === "root_admin" ? "admin" : "user" }]);
               return {
                 user: { id: parsed.id || "ceo-user-id", email: parsed.email },
                 profile: {
@@ -46,11 +187,13 @@ export function useProfile() {
                   onboarding_completed: true,
                   role_tier: (parsed.role_tier as any) || "root_admin",
                 },
-                isAdmin: true,
-                isHR: false,
-                roleTier: "root_admin" as const,
-                isRootAdmin: true,
-                isManagerOrAbove: true,
+                systemRole: fallbackRole,
+                defaultDashboard: getDefaultDashboardRoute(fallbackRole),
+                isAdmin: fallbackRole === "admin" || fallbackRole === "ceo",
+                isHR: fallbackRole === "hr",
+                roleTier: (parsed.role_tier as any) || "root_admin",
+                isRootAdmin: fallbackRole === "ceo",
+                isManagerOrAbove: parsed.role_tier === "manager" || fallbackRole === "department_manager" || fallbackRole === "general_manager" || fallbackRole === "operations",
               };
             } catch {}
           }
@@ -99,41 +242,36 @@ export function useProfile() {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
-      const isCeo =
-        user?.email?.toLowerCase() === "ceo@mavisstrategicpartners.co.za" ||
-        profile?.job_title === "Chief Executive Officer";
+      const systemRole = resolveSystemRole(profile, user?.email, roles);
 
-      if (isCeo && profile) {
+      if (systemRole === "ceo" && profile) {
         profile.full_name = profile.full_name || "Mavis Muchena";
-        profile.job_title = "Chief Executive Officer";
-        profile.department = "Executive";
+        profile.job_title = profile.job_title || "Chief Executive Officer";
+        profile.department = profile.department || "Executive";
         profile.role_tier = "root_admin";
       }
 
       const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        profile?.role_tier || (isCeo ? "root_admin" : "staff");
+        profile?.role_tier || (systemRole === "ceo" || systemRole === "admin" ? "root_admin" : systemRole.includes("manager") ? "manager" : "staff");
 
-      const isAdmin =
-        roles.some((r) => r.role === "admin") ||
-        resolvedTier === "root_admin" ||
-        isCeo;
-
-      const deptLower = (profile?.department || "").toLowerCase();
-      const titleLower = (profile?.job_title || "").toLowerCase();
-      const isHR =
-        deptLower.includes("human resources") ||
-        deptLower.includes("hr") ||
-        titleLower.includes("hr");
-
-      const isManagerOrAbove = resolvedTier === "manager";
+      const isAdmin = systemRole === "admin" || systemRole === "ceo";
+      const isHR = systemRole === "hr";
+      const isManagerOrAbove =
+        resolvedTier === "manager" ||
+        systemRole === "department_manager" ||
+        systemRole === "general_manager" ||
+        systemRole === "operations" ||
+        systemRole === "ceo";
 
       return {
         user,
         profile,
+        systemRole,
+        defaultDashboard: getDefaultDashboardRoute(systemRole),
         isAdmin,
         isHR,
         roleTier: resolvedTier,
-        isRootAdmin: Boolean(isCeo),
+        isRootAdmin: systemRole === "ceo",
         isManagerOrAbove,
       };
     },
