@@ -352,33 +352,33 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
-                  const isExactRoot = item.to === "/ceo" || item.to === "/host" || item.to === "/admin";
-                  const active = isExactRoot ? pathname === item.to : (pathname === item.to || pathname.startsWith(item.to + "/"));
+                  // Resolve the actual navigation target — Home links go to role-specific dashboard
+                  const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
+                  const isExactRoot = toPath === "/ceo" || toPath === "/host" || toPath === "/admin";
+                  const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
                   return (
                     <li key={item.to}>
-                {/* Adjust Home link to use role-specific default dashboard */}
-                const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
-                <a
-                  href={toPath}
-                  onClick={(e) => handleNavClick(e, toPath)}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
-                    active
-                      ? "border-l-primary bg-white/12 text-white shadow-sm"
-                      : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
-                    collapsed && "justify-center px-2",
-                  )}
-                  title={collapsed ? item.label : undefined}
-                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-                >
-                  <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                  {!collapsed && (
-                    <span className="flex flex-1 items-center gap-1.5 truncate">
-                      {item.label}
-                      {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
-                    </span>
-                  )}
-                </a>
+                      <a
+                        href={toPath}
+                        onClick={(e) => handleNavClick(e, toPath)}
+                        className={cn(
+                          "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
+                          active
+                            ? "border-l-primary bg-white/12 text-white shadow-sm"
+                            : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
+                          collapsed && "justify-center px-2",
+                        )}
+                        title={collapsed ? item.label : undefined}
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                      >
+                        <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+                        {!collapsed && (
+                          <span className="flex flex-1 items-center gap-1.5 truncate">
+                            {item.label}
+                            {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
+                          </span>
+                        )}
+                      </a>
                     </li>
                   );
                 })}
