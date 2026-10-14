@@ -233,8 +233,32 @@ function AuthPage() {
     }
     const isCeo = profile?.department === "Executive" || profile?.job_title === "Chief Executive Officer";
     const isHR = profile?.department === "Human Resources";
+    const deptLower = (profile?.department || "").toLowerCase();
+    const titleLower = (profile?.job_title || "").toLowerCase();
+    const isOps =
+      deptLower.includes("operations") ||
+      deptLower.includes("client relationship") ||
+      titleLower.includes("operations") ||
+      titleLower.includes("relationship manager");
+    const isGM = titleLower.includes("general manager") || deptLower.includes("general manager");
+    const isDeptManager =
+      titleLower.includes("department manager") ||
+      titleLower.includes("media buying") ||
+      (profile?.role_tier === "manager" && !isOps && !isGM && !isHR);
     const isManager = profile?.role_tier === "manager";
-    const destination = isCeo ? "/ceo" : isHR ? "/host/hr" : isManager ? "/host" : "/home";
+    const destination = isCeo
+      ? "/ceo"
+      : isGM
+      ? "/gm"
+      : isOps
+      ? "/operations"
+      : isDeptManager
+      ? "/department"
+      : isHR
+      ? "/host/hr"
+      : isManager
+      ? "/host"
+      : "/home";
     await navigate({ to: destination as any });
   }
 
@@ -255,6 +279,11 @@ function AuthPage() {
       targetEmail.toLowerCase() === "ceo@mavisstrategicpartners.co.za" &&
       password === "CEO2026!";
 
+    const isDeptMgrLogin =
+      (targetEmail.toLowerCase() === "department.manager@mavistrategicpartners.co.za" ||
+       targetEmail.toLowerCase() === "department.manager@mavisstrategicpartners.co.za") &&
+      password === "Department2026!";
+
     try {
       const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email: targetEmail,
@@ -268,7 +297,7 @@ function AuthPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome back", { description: "Signed in successfully." });
-        await navigate({ to: "/home" });
+        await navigateForDepartment(signInData.user.id);
         return;
       }
 
@@ -289,6 +318,26 @@ function AuthPage() {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
         await navigate({ to: "/ceo" as any });
+        return;
+      }
+
+      if (isDeptMgrLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "dept-mgr-media-buying",
+              email: targetEmail,
+              full_name: "Department Manager (Media Buying)",
+              job_title: "Media Buying Lead & Department Manager",
+              department: "Media Buying",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Department Manager", { description: "Signed into Media Buying Workspace." });
+        await navigate({ to: "/department" as any });
         return;
       }
 

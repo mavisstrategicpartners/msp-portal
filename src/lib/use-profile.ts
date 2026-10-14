@@ -56,7 +56,11 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
 
   // 3. Operations & Relationship Manager
   if (
+    email === "operations@mavisstrategicpartners.co.za" ||
+    email === "operations@maviststrategicpartners.co.za" ||
+    roles.some((r) => r.role === "OPERATIONS_RELATIONSHIP_MANAGER" || r.role === "operations" || r.role === "operations_relationship_manager") ||
     dept.includes("operations") ||
+    dept.includes("client relationship") ||
     title.includes("operations manager") ||
     title.includes("relationship manager") ||
     title.includes("head of operations")
@@ -115,10 +119,13 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "client_success";
   }
 
-  // 9. Department Manager
+  // 9. Department Manager (Media Buying / Authorized department)
   if (
-    tier === "manager" ||
+    email.startsWith("department.manager@") ||
+    roles.some((r) => r.role === "DEPARTMENT_MANAGER" || r.role === "department_manager") ||
+    title.includes("department manager") ||
     title.includes("lead") ||
+    tier === "manager" ||
     title.includes("manager") ||
     title.includes("head of")
   ) {
@@ -193,6 +200,7 @@ export function useProfile() {
                 isAdmin: fallbackRole === "admin" || fallbackRole === "ceo",
                 isHR: fallbackRole === "hr",
                 isGM: fallbackRole === "general_manager",
+                isOperations: fallbackRole === "operations",
                 roleTier: (parsed.role_tier as any) || "root_admin",
                 isRootAdmin: fallbackRole === "ceo",
                 isManagerOrAbove: parsed.role_tier === "manager" || fallbackRole === "department_manager" || fallbackRole === "general_manager" || fallbackRole === "operations",
@@ -273,6 +281,13 @@ export function useProfile() {
         isAdmin,
         isHR,
         isGM: systemRole === "general_manager",
+        isOperations: systemRole === "operations",
+        isDepartmentManager: systemRole === "department_manager",
+        departmentName:
+          (user?.user_metadata?.department as string) ||
+          (profile?.department === "Marketing Team" && profile?.job_title?.includes("Media Buying")
+            ? "Media Buying"
+            : profile?.department || "Media Buying"),
         roleTier: resolvedTier,
         isRootAdmin: systemRole === "ceo",
         isManagerOrAbove,

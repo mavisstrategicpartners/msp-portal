@@ -31,7 +31,7 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm";
+type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department";
 
 const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
@@ -44,13 +44,13 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
   ]},
-  { group: "Learn MSP", portals: ["staff", "admin"], items: [
+  { group: "Learn MSP", portals: ["staff", "admin", "operations"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/glossary", label: "Glossary", icon: ListTree },
   ]},
-  { group: "How We Work", portals: ["staff", "admin"], items: [
+  { group: "How We Work", portals: ["staff", "admin", "operations"], items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
@@ -116,6 +116,28 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/gm/approvals", label: "Manager Approvals", icon: CheckSquare },
     { to: "/gm/dependencies", label: "Cross-Dept Dependencies", icon: GitBranch },
     { to: "/gm/escalations", label: "Escalations", icon: AlertTriangle },
+  ]},
+  // Operations & Relationship Manager Workspace
+  { group: "Operations & Relationships", portals: ["operations"], items: [
+    { to: "/operations", label: "Operations Dashboard", icon: LayoutDashboard },
+    { to: "/operations/workflows", label: "Client Workflows", icon: Layers },
+    { to: "/operations/onboarding", label: "Client Onboarding", icon: ClipboardList },
+    { to: "/operations/deadlines", label: "Service Deadlines", icon: Clock },
+    { to: "/operations/communications", label: "Client Communications", icon: MessageCircle },
+    { to: "/operations/recovery", label: "Recovery Plans", icon: ShieldCheck },
+    { to: "/operations/verifications", label: "Verification Queue", icon: CheckSquare },
+    { to: "/operations/escalations", label: "Operational Escalations", icon: AlertTriangle },
+  ]},
+  // Department Manager Workspace (Media Buying / Authorized Department)
+  { group: "Department Command", portals: ["department"], items: [
+    { to: "/department", label: "Department Dashboard", icon: LayoutDashboard },
+    { to: "/department/tasks", label: "My Department Tasks", icon: CheckSquare },
+    { to: "/department/performance", label: "Targets & Performance", icon: Target },
+    { to: "/department/workload", label: "Team Workload", icon: Users },
+    { to: "/department/qa", label: "Quality Assurance", icon: ShieldCheck },
+    { to: "/department/blockers", label: "Blockers & Dependencies", icon: AlertTriangle },
+    { to: "/department/approvals", label: "Approvals", icon: CheckSquare },
+    { to: "/department/clients", label: "Client Delivery Details", icon: Building2 },
   ]},
 ];
 
@@ -200,6 +222,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isAdminPath = pathname.startsWith('/admin');
   const isCeoPath = pathname.startsWith('/ceo');
   const isGmPath = pathname.startsWith('/gm');
+  const isOperationsPath = pathname.startsWith('/operations');
+  const isDepartmentPath = pathname.startsWith('/department');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
@@ -207,6 +231,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "ceo";
   } else if (isGmPath) {
     currentPortal = "gm";
+  } else if (isOperationsPath) {
+    currentPortal = "operations";
+  } else if (isDepartmentPath) {
+    currentPortal = "department";
   } else if (isHRPath) {
     currentPortal = "hr";
   } else if (isAdminPath) {
@@ -217,6 +245,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "ceo";
   } else if (data?.isGM) {
     currentPortal = "gm";
+  } else if (data?.isOperations) {
+    currentPortal = "operations";
+  } else if (data?.isDepartmentManager) {
+    currentPortal = "department";
   } else if (data?.isHR) {
     currentPortal = "hr";
   } else if (isAdmin) {
@@ -237,16 +269,15 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     }
   };
 
-
-
-
-    
-
-
+  const deptTitle = data?.departmentName ? `${data.departmentName} Workspace` : "Media Buying Workspace";
   const workspaceTitle = currentPortal === "ceo"
     ? "CEO Workspace"
     : currentPortal === "gm"
     ? "GM Workspace"
+    : currentPortal === "operations"
+    ? "Operations & Relationships"
+    : currentPortal === "department"
+    ? deptTitle
     : currentPortal === "hr"
     ? "HR Workspace"
     : currentPortal === "admin"
@@ -259,6 +290,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? "Executive Command & Analytics"
     : currentPortal === "gm"
     ? "Company Execution & Operations"
+    : currentPortal === "operations"
+    ? "Client Delivery & Retention"
+    : currentPortal === "department"
+    ? "Team Execution & QA Approval"
     : currentPortal === "hr"
     ? "Human Resources Management"
     : currentPortal === "admin"
@@ -274,7 +309,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
     )}>
       <div className={cn("flex h-[76px] items-center border-b border-white/10 px-4", collapsed && "justify-center px-2")}>
+      {/* Wrap logo in a Link to the default dashboard based on role */}
+      <Link to={data?.defaultDashboard ?? "/home"} className="flex items-center gap-2.5">
         <MspLogo showWord={!collapsed} />
+      </Link>
       </div>
       {!collapsed && (
         <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] p-2.5">
@@ -318,27 +356,29 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                   const active = isExactRoot ? pathname === item.to : (pathname === item.to || pathname.startsWith(item.to + "/"));
                   return (
                     <li key={item.to}>
-                      <a
-                        href={item.to}
-                        onClick={(e) => handleNavClick(e, item.to)}
-                        className={cn(
-                          "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
-                          active
-                            ? "border-l-primary bg-white/12 text-white shadow-sm"
-                            : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
-                          collapsed && "justify-center px-2",
-                        )}
-                        title={collapsed ? item.label : undefined}
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-                      >
-                        <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                        {!collapsed && (
-                          <span className="flex flex-1 items-center gap-1.5 truncate">
-                            {item.label}
-                            {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
-                          </span>
-                        )}
-                      </a>
+                {/* Adjust Home link to use role-specific default dashboard */}
+                const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
+                <a
+                  href={toPath}
+                  onClick={(e) => handleNavClick(e, toPath)}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
+                    active
+                      ? "border-l-primary bg-white/12 text-white shadow-sm"
+                      : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
+                    collapsed && "justify-center px-2",
+                  )}
+                  title={collapsed ? item.label : undefined}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                >
+                  <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+                  {!collapsed && (
+                    <span className="flex flex-1 items-center gap-1.5 truncate">
+                      {item.label}
+                      {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
+                    </span>
+                  )}
+                </a>
                     </li>
                   );
                 })}

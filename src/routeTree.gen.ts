@@ -37,6 +37,14 @@ import { Route as AuthenticatedCeoDeliveryRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
 import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
 import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
+import { Route as AuthenticatedDepartmentIndexRouteImport } from './routes/_authenticated/department/index'
+import { Route as AuthenticatedDepartmentApprovalsRouteImport } from './routes/_authenticated/department/approvals'
+import { Route as AuthenticatedDepartmentBlockersRouteImport } from './routes/_authenticated/department/blockers'
+import { Route as AuthenticatedDepartmentClientsRouteImport } from './routes/_authenticated/department/clients'
+import { Route as AuthenticatedDepartmentPerformanceRouteImport } from './routes/_authenticated/department/performance'
+import { Route as AuthenticatedDepartmentQaRouteImport } from './routes/_authenticated/department/qa'
+import { Route as AuthenticatedDepartmentTasksRouteImport } from './routes/_authenticated/department/tasks'
+import { Route as AuthenticatedDepartmentWorkloadRouteImport } from './routes/_authenticated/department/workload'
 import { Route as AuthenticatedGmIndexRouteImport } from './routes/_authenticated/gm/index'
 import { Route as AuthenticatedGmApprovalsRouteImport } from './routes/_authenticated/gm/approvals'
 import { Route as AuthenticatedGmCapacityRouteImport } from './routes/_authenticated/gm/capacity'
@@ -49,6 +57,14 @@ import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
 import { Route as AuthenticatedMeLeaveRouteImport } from './routes/_authenticated/me/leave'
 import { Route as AuthenticatedMeProfileRouteImport } from './routes/_authenticated/me/profile'
+import { Route as AuthenticatedOperationsIndexRouteImport } from './routes/_authenticated/operations/index'
+import { Route as AuthenticatedOperationsCommunicationsRouteImport } from './routes/_authenticated/operations/communications'
+import { Route as AuthenticatedOperationsDeadlinesRouteImport } from './routes/_authenticated/operations/deadlines'
+import { Route as AuthenticatedOperationsEscalationsRouteImport } from './routes/_authenticated/operations/escalations'
+import { Route as AuthenticatedOperationsOnboardingRouteImport } from './routes/_authenticated/operations/onboarding'
+import { Route as AuthenticatedOperationsRecoveryRouteImport } from './routes/_authenticated/operations/recovery'
+import { Route as AuthenticatedOperationsVerificationsRouteImport } from './routes/_authenticated/operations/verifications'
+import { Route as AuthenticatedOperationsWorkflowsRouteImport } from './routes/_authenticated/operations/workflows'
 import { Route as AuthenticatedPortalAdminRouteImport } from './routes/_authenticated/portal/admin'
 import { Route as AuthenticatedPortalOtherRouteImport } from './routes/_authenticated/portal/other'
 
@@ -197,6 +213,54 @@ const AuthenticatedCeoTeamRoute = AuthenticatedCeoTeamRouteImport.update({
   path: '/ceo/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDepartmentIndexRoute =
+  AuthenticatedDepartmentIndexRouteImport.update({
+    id: '/department/',
+    path: '/department/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentApprovalsRoute =
+  AuthenticatedDepartmentApprovalsRouteImport.update({
+    id: '/department/approvals',
+    path: '/department/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentBlockersRoute =
+  AuthenticatedDepartmentBlockersRouteImport.update({
+    id: '/department/blockers',
+    path: '/department/blockers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentClientsRoute =
+  AuthenticatedDepartmentClientsRouteImport.update({
+    id: '/department/clients',
+    path: '/department/clients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentPerformanceRoute =
+  AuthenticatedDepartmentPerformanceRouteImport.update({
+    id: '/department/performance',
+    path: '/department/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentQaRoute =
+  AuthenticatedDepartmentQaRouteImport.update({
+    id: '/department/qa',
+    path: '/department/qa',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentTasksRoute =
+  AuthenticatedDepartmentTasksRouteImport.update({
+    id: '/department/tasks',
+    path: '/department/tasks',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentWorkloadRoute =
+  AuthenticatedDepartmentWorkloadRouteImport.update({
+    id: '/department/workload',
+    path: '/department/workload',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGmIndexRoute = AuthenticatedGmIndexRouteImport.update({
   id: '/gm/',
   path: '/gm/',
@@ -262,6 +326,54 @@ const AuthenticatedMeProfileRoute = AuthenticatedMeProfileRouteImport.update({
   path: '/me/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOperationsIndexRoute =
+  AuthenticatedOperationsIndexRouteImport.update({
+    id: '/operations/',
+    path: '/operations/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsCommunicationsRoute =
+  AuthenticatedOperationsCommunicationsRouteImport.update({
+    id: '/operations/communications',
+    path: '/operations/communications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsDeadlinesRoute =
+  AuthenticatedOperationsDeadlinesRouteImport.update({
+    id: '/operations/deadlines',
+    path: '/operations/deadlines',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsEscalationsRoute =
+  AuthenticatedOperationsEscalationsRouteImport.update({
+    id: '/operations/escalations',
+    path: '/operations/escalations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsOnboardingRoute =
+  AuthenticatedOperationsOnboardingRouteImport.update({
+    id: '/operations/onboarding',
+    path: '/operations/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsRecoveryRoute =
+  AuthenticatedOperationsRecoveryRouteImport.update({
+    id: '/operations/recovery',
+    path: '/operations/recovery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsVerificationsRoute =
+  AuthenticatedOperationsVerificationsRouteImport.update({
+    id: '/operations/verifications',
+    path: '/operations/verifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsWorkflowsRoute =
+  AuthenticatedOperationsWorkflowsRouteImport.update({
+    id: '/operations/workflows',
+    path: '/operations/workflows',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalAdminRoute =
   AuthenticatedPortalAdminRouteImport.update({
     id: '/portal/admin',
@@ -302,6 +414,13 @@ export interface FileRoutesByFullPath {
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
   '/gm/capacity': typeof AuthenticatedGmCapacityRoute
   '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
@@ -312,11 +431,20 @@ export interface FileRoutesByFullPath {
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
+  '/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/department/': typeof AuthenticatedDepartmentIndexRoute
   '/gm/': typeof AuthenticatedGmIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
+  '/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -345,6 +473,13 @@ export interface FileRoutesByTo {
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
   '/gm/capacity': typeof AuthenticatedGmCapacityRoute
   '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
@@ -355,11 +490,20 @@ export interface FileRoutesByTo {
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
+  '/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo': typeof AuthenticatedCeoIndexRoute
+  '/department': typeof AuthenticatedDepartmentIndexRoute
   '/gm': typeof AuthenticatedGmIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
+  '/operations': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -390,6 +534,13 @@ export interface FileRoutesById {
   '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/_authenticated/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/_authenticated/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/_authenticated/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/_authenticated/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/_authenticated/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/_authenticated/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/_authenticated/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/_authenticated/gm/approvals': typeof AuthenticatedGmApprovalsRoute
   '/_authenticated/gm/capacity': typeof AuthenticatedGmCapacityRoute
   '/_authenticated/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
@@ -400,11 +551,20 @@ export interface FileRoutesById {
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
   '/_authenticated/me/profile': typeof AuthenticatedMeProfileRoute
+  '/_authenticated/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/_authenticated/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/_authenticated/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/_authenticated/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/_authenticated/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/_authenticated/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/_authenticated/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/_authenticated/portal/other': typeof AuthenticatedPortalOtherRoute
   '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
   '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
+  '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -435,6 +595,13 @@ export interface FileRouteTypes {
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
+    | '/department/approvals'
+    | '/department/blockers'
+    | '/department/clients'
+    | '/department/performance'
+    | '/department/qa'
+    | '/department/tasks'
+    | '/department/workload'
     | '/gm/approvals'
     | '/gm/capacity'
     | '/gm/dependencies'
@@ -445,11 +612,20 @@ export interface FileRouteTypes {
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
+    | '/operations/communications'
+    | '/operations/deadlines'
+    | '/operations/escalations'
+    | '/operations/onboarding'
+    | '/operations/recovery'
+    | '/operations/verifications'
+    | '/operations/workflows'
     | '/portal/admin'
     | '/portal/other'
     | '/ceo/'
+    | '/department/'
     | '/gm/'
     | '/host/'
+    | '/operations/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -478,6 +654,13 @@ export interface FileRouteTypes {
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
+    | '/department/approvals'
+    | '/department/blockers'
+    | '/department/clients'
+    | '/department/performance'
+    | '/department/qa'
+    | '/department/tasks'
+    | '/department/workload'
     | '/gm/approvals'
     | '/gm/capacity'
     | '/gm/dependencies'
@@ -488,11 +671,20 @@ export interface FileRouteTypes {
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
+    | '/operations/communications'
+    | '/operations/deadlines'
+    | '/operations/escalations'
+    | '/operations/onboarding'
+    | '/operations/recovery'
+    | '/operations/verifications'
+    | '/operations/workflows'
     | '/portal/admin'
     | '/portal/other'
     | '/ceo'
+    | '/department'
     | '/gm'
     | '/host'
+    | '/operations'
   id:
     | '__root__'
     | '/'
@@ -522,6 +714,13 @@ export interface FileRouteTypes {
     | '/_authenticated/ceo/revenue'
     | '/_authenticated/ceo/sales'
     | '/_authenticated/ceo/team'
+    | '/_authenticated/department/approvals'
+    | '/_authenticated/department/blockers'
+    | '/_authenticated/department/clients'
+    | '/_authenticated/department/performance'
+    | '/_authenticated/department/qa'
+    | '/_authenticated/department/tasks'
+    | '/_authenticated/department/workload'
     | '/_authenticated/gm/approvals'
     | '/_authenticated/gm/capacity'
     | '/_authenticated/gm/dependencies'
@@ -532,11 +731,20 @@ export interface FileRouteTypes {
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
     | '/_authenticated/me/profile'
+    | '/_authenticated/operations/communications'
+    | '/_authenticated/operations/deadlines'
+    | '/_authenticated/operations/escalations'
+    | '/_authenticated/operations/onboarding'
+    | '/_authenticated/operations/recovery'
+    | '/_authenticated/operations/verifications'
+    | '/_authenticated/operations/workflows'
     | '/_authenticated/portal/admin'
     | '/_authenticated/portal/other'
     | '/_authenticated/ceo/'
+    | '/_authenticated/department/'
     | '/_authenticated/gm/'
     | '/_authenticated/host/'
+    | '/_authenticated/operations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -743,6 +951,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCeoTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/department/': {
+      id: '/_authenticated/department/'
+      path: '/department'
+      fullPath: '/department/'
+      preLoaderRoute: typeof AuthenticatedDepartmentIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/approvals': {
+      id: '/_authenticated/department/approvals'
+      path: '/department/approvals'
+      fullPath: '/department/approvals'
+      preLoaderRoute: typeof AuthenticatedDepartmentApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/blockers': {
+      id: '/_authenticated/department/blockers'
+      path: '/department/blockers'
+      fullPath: '/department/blockers'
+      preLoaderRoute: typeof AuthenticatedDepartmentBlockersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/clients': {
+      id: '/_authenticated/department/clients'
+      path: '/department/clients'
+      fullPath: '/department/clients'
+      preLoaderRoute: typeof AuthenticatedDepartmentClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/performance': {
+      id: '/_authenticated/department/performance'
+      path: '/department/performance'
+      fullPath: '/department/performance'
+      preLoaderRoute: typeof AuthenticatedDepartmentPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/qa': {
+      id: '/_authenticated/department/qa'
+      path: '/department/qa'
+      fullPath: '/department/qa'
+      preLoaderRoute: typeof AuthenticatedDepartmentQaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/tasks': {
+      id: '/_authenticated/department/tasks'
+      path: '/department/tasks'
+      fullPath: '/department/tasks'
+      preLoaderRoute: typeof AuthenticatedDepartmentTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/workload': {
+      id: '/_authenticated/department/workload'
+      path: '/department/workload'
+      fullPath: '/department/workload'
+      preLoaderRoute: typeof AuthenticatedDepartmentWorkloadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/gm/': {
       id: '/_authenticated/gm/'
       path: '/gm'
@@ -827,6 +1091,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/operations/': {
+      id: '/_authenticated/operations/'
+      path: '/operations'
+      fullPath: '/operations/'
+      preLoaderRoute: typeof AuthenticatedOperationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/communications': {
+      id: '/_authenticated/operations/communications'
+      path: '/operations/communications'
+      fullPath: '/operations/communications'
+      preLoaderRoute: typeof AuthenticatedOperationsCommunicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/deadlines': {
+      id: '/_authenticated/operations/deadlines'
+      path: '/operations/deadlines'
+      fullPath: '/operations/deadlines'
+      preLoaderRoute: typeof AuthenticatedOperationsDeadlinesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/escalations': {
+      id: '/_authenticated/operations/escalations'
+      path: '/operations/escalations'
+      fullPath: '/operations/escalations'
+      preLoaderRoute: typeof AuthenticatedOperationsEscalationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/onboarding': {
+      id: '/_authenticated/operations/onboarding'
+      path: '/operations/onboarding'
+      fullPath: '/operations/onboarding'
+      preLoaderRoute: typeof AuthenticatedOperationsOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/recovery': {
+      id: '/_authenticated/operations/recovery'
+      path: '/operations/recovery'
+      fullPath: '/operations/recovery'
+      preLoaderRoute: typeof AuthenticatedOperationsRecoveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/verifications': {
+      id: '/_authenticated/operations/verifications'
+      path: '/operations/verifications'
+      fullPath: '/operations/verifications'
+      preLoaderRoute: typeof AuthenticatedOperationsVerificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/workflows': {
+      id: '/_authenticated/operations/workflows'
+      path: '/operations/workflows'
+      fullPath: '/operations/workflows'
+      preLoaderRoute: typeof AuthenticatedOperationsWorkflowsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal/admin': {
       id: '/_authenticated/portal/admin'
       path: '/portal/admin'
@@ -869,6 +1189,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
   AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
   AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
+  AuthenticatedDepartmentApprovalsRoute: typeof AuthenticatedDepartmentApprovalsRoute
+  AuthenticatedDepartmentBlockersRoute: typeof AuthenticatedDepartmentBlockersRoute
+  AuthenticatedDepartmentClientsRoute: typeof AuthenticatedDepartmentClientsRoute
+  AuthenticatedDepartmentPerformanceRoute: typeof AuthenticatedDepartmentPerformanceRoute
+  AuthenticatedDepartmentQaRoute: typeof AuthenticatedDepartmentQaRoute
+  AuthenticatedDepartmentTasksRoute: typeof AuthenticatedDepartmentTasksRoute
+  AuthenticatedDepartmentWorkloadRoute: typeof AuthenticatedDepartmentWorkloadRoute
   AuthenticatedGmApprovalsRoute: typeof AuthenticatedGmApprovalsRoute
   AuthenticatedGmCapacityRoute: typeof AuthenticatedGmCapacityRoute
   AuthenticatedGmDependenciesRoute: typeof AuthenticatedGmDependenciesRoute
@@ -879,11 +1206,20 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
   AuthenticatedMeProfileRoute: typeof AuthenticatedMeProfileRoute
+  AuthenticatedOperationsCommunicationsRoute: typeof AuthenticatedOperationsCommunicationsRoute
+  AuthenticatedOperationsDeadlinesRoute: typeof AuthenticatedOperationsDeadlinesRoute
+  AuthenticatedOperationsEscalationsRoute: typeof AuthenticatedOperationsEscalationsRoute
+  AuthenticatedOperationsOnboardingRoute: typeof AuthenticatedOperationsOnboardingRoute
+  AuthenticatedOperationsRecoveryRoute: typeof AuthenticatedOperationsRecoveryRoute
+  AuthenticatedOperationsVerificationsRoute: typeof AuthenticatedOperationsVerificationsRoute
+  AuthenticatedOperationsWorkflowsRoute: typeof AuthenticatedOperationsWorkflowsRoute
   AuthenticatedPortalAdminRoute: typeof AuthenticatedPortalAdminRoute
   AuthenticatedPortalOtherRoute: typeof AuthenticatedPortalOtherRoute
   AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
+  AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
   AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
+  AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -911,6 +1247,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
   AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
   AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,
+  AuthenticatedDepartmentApprovalsRoute: AuthenticatedDepartmentApprovalsRoute,
+  AuthenticatedDepartmentBlockersRoute: AuthenticatedDepartmentBlockersRoute,
+  AuthenticatedDepartmentClientsRoute: AuthenticatedDepartmentClientsRoute,
+  AuthenticatedDepartmentPerformanceRoute:
+    AuthenticatedDepartmentPerformanceRoute,
+  AuthenticatedDepartmentQaRoute: AuthenticatedDepartmentQaRoute,
+  AuthenticatedDepartmentTasksRoute: AuthenticatedDepartmentTasksRoute,
+  AuthenticatedDepartmentWorkloadRoute: AuthenticatedDepartmentWorkloadRoute,
   AuthenticatedGmApprovalsRoute: AuthenticatedGmApprovalsRoute,
   AuthenticatedGmCapacityRoute: AuthenticatedGmCapacityRoute,
   AuthenticatedGmDependenciesRoute: AuthenticatedGmDependenciesRoute,
@@ -921,11 +1265,24 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,
   AuthenticatedMeProfileRoute: AuthenticatedMeProfileRoute,
+  AuthenticatedOperationsCommunicationsRoute:
+    AuthenticatedOperationsCommunicationsRoute,
+  AuthenticatedOperationsDeadlinesRoute: AuthenticatedOperationsDeadlinesRoute,
+  AuthenticatedOperationsEscalationsRoute:
+    AuthenticatedOperationsEscalationsRoute,
+  AuthenticatedOperationsOnboardingRoute:
+    AuthenticatedOperationsOnboardingRoute,
+  AuthenticatedOperationsRecoveryRoute: AuthenticatedOperationsRecoveryRoute,
+  AuthenticatedOperationsVerificationsRoute:
+    AuthenticatedOperationsVerificationsRoute,
+  AuthenticatedOperationsWorkflowsRoute: AuthenticatedOperationsWorkflowsRoute,
   AuthenticatedPortalAdminRoute: AuthenticatedPortalAdminRoute,
   AuthenticatedPortalOtherRoute: AuthenticatedPortalOtherRoute,
   AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
+  AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
   AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
+  AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

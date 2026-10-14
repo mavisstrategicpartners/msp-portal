@@ -50,13 +50,15 @@ function Home() {
   const systemRole = data?.systemRole;
 
   // GM and HR users have their own dedicated dashboards — redirect them there
-  useEffect(() => {
-    if (systemRole === "general_manager") {
-      router.navigate({ to: "/gm" as any, replace: true });
-    } else if (systemRole === "hr") {
-      router.navigate({ to: "/host/hr" as any, replace: true });
-    }
-  }, [systemRole, router]);
+    useEffect(() => {
+      if (systemRole === "general_manager") {
+        router.navigate({ to: "/gm" as any, replace: true });
+      } else if (systemRole === "hr") {
+        router.navigate({ to: "/host/hr" as any, replace: true });
+      } else if (systemRole === "department_manager") {
+        router.navigate({ to: "/department" as any, replace: true });
+      }
+    }, [systemRole, router]);
 
   if (isAdmin) {
     return (
