@@ -54,6 +54,7 @@ import { Route as AuthenticatedGmExecutionRouteImport } from './routes/_authenti
 import { Route as AuthenticatedGmRevenueRouteImport } from './routes/_authenticated/gm/revenue'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
 import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
+import { Route as AuthenticatedHrAttendanceRouteImport } from './routes/_authenticated/hr/attendance'
 import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
 import { Route as AuthenticatedMeLeaveRouteImport } from './routes/_authenticated/me/leave'
 import { Route as AuthenticatedMeProfileRouteImport } from './routes/_authenticated/me/profile'
@@ -310,6 +311,12 @@ const AuthenticatedHostSplatRoute = AuthenticatedHostSplatRouteImport.update({
   path: '/host/$',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHrAttendanceRoute =
+  AuthenticatedHrAttendanceRouteImport.update({
+    id: '/hr/attendance',
+    path: '/hr/attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeDeclarationRoute =
   AuthenticatedMeDeclarationRouteImport.update({
     id: '/me/declaration',
@@ -428,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/gm/execution': typeof AuthenticatedGmExecutionRoute
   '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
+  '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
@@ -487,6 +495,7 @@ export interface FileRoutesByTo {
   '/gm/execution': typeof AuthenticatedGmExecutionRoute
   '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
+  '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
@@ -548,6 +557,7 @@ export interface FileRoutesById {
   '/_authenticated/gm/execution': typeof AuthenticatedGmExecutionRoute
   '/_authenticated/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
+  '/_authenticated/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
   '/_authenticated/me/profile': typeof AuthenticatedMeProfileRoute
@@ -609,6 +619,7 @@ export interface FileRouteTypes {
     | '/gm/execution'
     | '/gm/revenue'
     | '/host/$'
+    | '/hr/attendance'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | '/gm/execution'
     | '/gm/revenue'
     | '/host/$'
+    | '/hr/attendance'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
@@ -728,6 +740,7 @@ export interface FileRouteTypes {
     | '/_authenticated/gm/execution'
     | '/_authenticated/gm/revenue'
     | '/_authenticated/host/$'
+    | '/_authenticated/hr/attendance'
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
     | '/_authenticated/me/profile'
@@ -1070,6 +1083,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSplatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hr/attendance': {
+      id: '/_authenticated/hr/attendance'
+      path: '/hr/attendance'
+      fullPath: '/hr/attendance'
+      preLoaderRoute: typeof AuthenticatedHrAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/me/declaration': {
       id: '/_authenticated/me/declaration'
       path: '/me/declaration'
@@ -1203,6 +1223,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGmExecutionRoute: typeof AuthenticatedGmExecutionRoute
   AuthenticatedGmRevenueRoute: typeof AuthenticatedGmRevenueRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
+  AuthenticatedHrAttendanceRoute: typeof AuthenticatedHrAttendanceRoute
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
   AuthenticatedMeProfileRoute: typeof AuthenticatedMeProfileRoute
@@ -1262,6 +1283,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGmExecutionRoute: AuthenticatedGmExecutionRoute,
   AuthenticatedGmRevenueRoute: AuthenticatedGmRevenueRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
+  AuthenticatedHrAttendanceRoute: AuthenticatedHrAttendanceRoute,
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,
   AuthenticatedMeProfileRoute: AuthenticatedMeProfileRoute,

@@ -86,7 +86,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
-    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
     { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },
@@ -258,16 +258,13 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "manager";
   }
 
-  // Navigate host-portal routes via browser location so the embedded
-  // MemoryRouter inside HostPortalEmbedded always reinitialises correctly.
-  // Non-host routes use normal TanStack client-side navigation.
+  // Use TanStack Router for ALL sidebar navigation to maintain proper browser
+  // history (back/forward). The HostSplat component uses key={pathname} to
+  // force MemoryRouter reinitialisation on every path change, so client-side
+  // navigation works correctly for /host routes too.
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
     e.preventDefault();
-    if (to.startsWith('/host')) {
-      window.location.href = to;
-    } else {
-      navigate({ to } as any);
-    }
+    navigate({ to } as any);
   };
 
   const deptTitle = data?.departmentName ? `${data.departmentName} Workspace` : "Media Buying Workspace";

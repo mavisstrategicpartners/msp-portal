@@ -52,7 +52,7 @@ export const Route = createFileRoute("/_authenticated/admin/attendance")({
   component: AdminAttendanceCommandCenter,
 });
 
-function AdminAttendanceCommandCenter() {
+export function AdminAttendanceCommandCenter() {
   const [activeTab, setActiveTab] = useState<"live" | "register">("live");
 
   // Live Presence state

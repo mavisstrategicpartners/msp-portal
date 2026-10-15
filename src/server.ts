@@ -51,6 +51,11 @@ export default {
         return await handleStaffApi(request);
       }
 
+      if (url.pathname.startsWith("/api/operations")) {
+        const { handleOperationsApi } = await import("./lib/operations-server");
+        return await handleOperationsApi(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

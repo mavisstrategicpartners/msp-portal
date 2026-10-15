@@ -25,7 +25,7 @@ function RouterUrlSync() {
       target = `/host${rawPath}`;
     }
     if (window.location.pathname !== target && target.startsWith('/host')) {
-      window.history.pushState(null, '', target);
+      window.history.replaceState(null, '', target);
     }
   }, [location.pathname]);
 
