@@ -266,15 +266,15 @@ export function DepartmentWorkloadPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Assignee (Specialist)</Label>
+                <Label className="text-xs font-semibold">Assignee (All System Employees & Specialists)</Label>
                 <Select value={targetMemberId} onValueChange={setTargetMemberId}>
                   <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                    <SelectValue placeholder="Choose specialist..." />
+                    <SelectValue placeholder="Choose employee from system..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-72">
                     {teamMembers.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.name} — {m.role} ({m.capacityUtilizationPct}% Capacity)
+                        {m.name} — {m.role} ({m.department || "Operations"})
                       </SelectItem>
                     ))}
                   </SelectContent>

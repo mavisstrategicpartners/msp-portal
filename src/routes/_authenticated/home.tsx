@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
-import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock } from "lucide-react";
+import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock, Compass } from "lucide-react";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { StaffAttendanceBoard } from "@/components/StaffAttendanceBoard";
+import { StaffWorkspaceDashboard } from "@/components/dashboards/StaffWorkspaceDashboard";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — MSP Portal" }] }),
@@ -118,35 +119,19 @@ function Home() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {greetingText}, <span className="brand-text">{name}</span>
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Welcome to the Mavis Strategic Partners portal — your single source of truth for how we
-          work, what we sell, and how to do your job brilliantly.
-        </p>
-      </div>
+      {/* ─── Staff Workspace Dashboard Component ───────────────────────────── */}
+      <StaffWorkspaceDashboard />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card className="flex flex-col justify-center h-full gap-3 border-primary/20 bg-primary/[0.04] p-4">
-            <div className="flex items-center gap-2">
-              <div className="rounded-md border border-primary/20 bg-primary/10 p-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tip of the day</p>
-            </div>
-            <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground">
-              <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-              {tip}
-            </p>
-          </Card>
+      {/* ─── Learning & Portal Quicklinks ───────────────────────────────────── */}
+      <section className="pt-6 border-t border-border">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">Jump back in</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <QuickLink to="/sops" icon={BookOpen} title="SOP Library" desc="How every department works." />
+          <QuickLink to="/services" icon={Briefcase} title="Our Services" desc="The 7 services we sell." />
+          <QuickLink to="/tools" icon={Wrench} title="Tools & Systems" desc="GHL, Meta, Zoho, Slack…" />
+          <QuickLink to="/who-we-are" icon={Compass} title="Who We Are" desc="Our team, mission and values." />
         </div>
-        <div className="md:col-span-1">
-          <StaffAttendanceWidget />
-        </div>
-      </div>
+      </section>
 
       <section>
         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">The four core rules</h2>
@@ -158,16 +143,6 @@ function Home() {
               <p className="relative mt-1 text-xs text-muted-foreground">{r.desc}</p>
             </Card>
           ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Jump back in</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickLink to="/admin/operations" icon={Activity} title="Operations Control" desc="Workflows, attendance & client health." />
-          <QuickLink to="/sops" icon={BookOpen} title="SOP Library" desc="How every department works." />
-          <QuickLink to="/services" icon={Briefcase} title="Our Services" desc="The 7 services we sell." />
-          <QuickLink to="/tools" icon={Wrench} title="Tools & Systems" desc="GHL, Meta, Zoho, Slack…" />
         </div>
       </section>
     </div>

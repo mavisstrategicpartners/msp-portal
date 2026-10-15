@@ -486,7 +486,35 @@ export async function fetchDepartmentData(department = "Media Buying") {
   const tasks = getStored<DepartmentTask[]>(KEY_TASKS, INITIAL_TASKS);
   const approvals = getStored<DepartmentApprovalItem[]>(KEY_APPROVALS, INITIAL_APPROVALS);
   const targets = getStored<DepartmentTarget[]>(KEY_TARGETS, INITIAL_TARGETS);
-  const teamMembers = INITIAL_TEAM_MEMBERS;
+
+  // Build unified team members combining ALL system employees from profiles with department specialists
+  const unifiedMembers: DepartmentTeamMember[] = [];
+
+  if (dbProfiles && dbProfiles.length > 0) {
+    for (const p of dbProfiles) {
+      const activeCount = tasks.filter((t) => t.assignedToId === p.id && t.status !== "Accepted Complete").length;
+      unifiedMembers.push({
+        id: p.id,
+        name: p.full_name || p.email || "Employee",
+        role: p.job_title || "Specialist",
+        email: p.email || "",
+        department: p.department || "Operations",
+        activeTasksCount: activeCount,
+        capacityUtilizationPct: Math.min(100, Math.max(35, activeCount * 20 + 35)),
+        onTimeDeliveryRate: 98,
+        status: activeCount >= 4 ? "Near Capacity" : "Available",
+      });
+    }
+  }
+
+  // Include department initial specialists if not already listed
+  for (const init of INITIAL_TEAM_MEMBERS) {
+    if (!unifiedMembers.some((m) => m.id === init.id || (m.email && m.email.toLowerCase() === init.email.toLowerCase()))) {
+      unifiedMembers.push(init);
+    }
+  }
+
+  const teamMembers = unifiedMembers;
   const clients = CLIENT_DELIVERY_DETAILS;
 
   return {
@@ -504,8 +532,9 @@ export async function fetchDepartmentData(department = "Media Buying") {
 // ── Task Management Actions ─────────────────────────────────────────────────
 
 export async function mutateAssignTask(taskId: string, newAssigneeId: string, managerName: string) {
+  const { teamMembers } = await fetchDepartmentData();
   const tasks = getStored<DepartmentTask[]>(KEY_TASKS, INITIAL_TASKS);
-  const targetMember = INITIAL_TEAM_MEMBERS.find((m) => m.id === newAssigneeId);
+  const targetMember = teamMembers.find((m) => m.id === newAssigneeId);
 
   const updatedTasks = tasks.map((t) => {
     if (t.id === taskId) {
@@ -523,20 +552,140 @@ export async function mutateAssignTask(taskId: string, newAssigneeId: string, ma
 
   setStored(KEY_TASKS, updatedTasks);
 
-  // Log in Supabase audit_logs
-  try {
-    await supabase.from("audit_logs").insert({
-      action: "task_reassigned",
-      target_id: taskId,
-      details: {
-        taskId,
-        newAssignee: targetMember?.name,
-        assignedBy: managerName,
-        department: "Media Buying",
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch {}
+  // Sync assignment to Supabase staff tasks and audit logs
+  if (targetMember) {
+    try {
+      const assignedTask = updatedTasks.find((t) => t.id === taskId);
+      if (assignedTask) {
+        const staffTaskPayload = {
+          id: crypto.randomUUID(),
+          title: assignedTask.title,
+          description: assignedTask.evidenceRequired ? `Deliverable: ${assignedTask.evidenceRequired}` : `Deliverable for ${assignedTask.clientName}`,
+          assignedToId: targetMember.id,
+          assignedToName: targetMember.name,
+          assignedToEmail: targetMember.email,
+          assignedById: "dept-mgr-id",
+          assignedByName: managerName || "Department Manager",
+          assignedByRole: "Department Manager",
+          department: assignedTask.department || "Media Buying",
+          clientName: assignedTask.clientName,
+          priority: assignedTask.priority || "High",
+          status: "In Progress",
+          progress: 0,
+          dueDate: assignedTask.dueDate,
+          evidenceRequired: assignedTask.evidenceRequired,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        await supabase.from("audit_logs").insert({
+          action: "staff_task_upsert",
+          target_id: crypto.randomUUID(),
+          details: { task: staffTaskPayload },
+        });
+
+        await supabase.from("audit_logs").insert({
+          action: "staff_notif_upsert",
+          target_id: crypto.randomUUID(),
+          details: {
+            notification: {
+              id: crypto.randomUUID(),
+              userId: targetMember.id,
+              title: "Task Assigned",
+              message: `${managerName} assigned deliverable "${assignedTask.title}" to you for client ${assignedTask.clientName}.`,
+              type: "task_assigned",
+              relatedTaskId: staffTaskPayload.id,
+              read: false,
+              createdAt: new Date().toISOString(),
+            },
+          },
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to sync assigned task to staff ledger:", err);
+    }
+  }
+
+  return updatedTasks;
+}
+
+export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTask>, managerName: string) {
+  const { teamMembers } = await fetchDepartmentData();
+  const tasks = getStored<DepartmentTask[]>(KEY_TASKS, INITIAL_TASKS);
+  const targetMember = teamMembers.find((m) => m.id === taskData.assignedToId);
+
+  const newTask: DepartmentTask = {
+    id: `mb-task-${Date.now()}`,
+    title: taskData.title || "Untitled Deliverable",
+    clientId: taskData.clientId || "11111111-1111-1111-1111-111111111111",
+    clientName: taskData.clientName || "General Client",
+    assignedToId: targetMember?.id,
+    assignedToName: targetMember?.name || "Unassigned",
+    assignedToRole: targetMember?.role || "Unallocated",
+    department: taskData.department || "Media Buying",
+    priority: taskData.priority || "High",
+    status: (taskData.assignedToId ? "In Progress" : "Unassigned") as any,
+    dueDate: taskData.dueDate || new Date().toISOString().split("T")[0],
+    estimatedHours: taskData.estimatedHours || 8,
+    workingHoursLate: 0,
+    evidenceRequired: taskData.evidenceRequired || "Verification report",
+    approvedDeadlineChangesCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedTasks = [newTask, ...tasks];
+  setStored(KEY_TASKS, updatedTasks);
+
+  if (targetMember) {
+    try {
+      const staffTaskPayload = {
+        id: crypto.randomUUID(),
+        title: newTask.title,
+        description: newTask.evidenceRequired ? `Deliverable: ${newTask.evidenceRequired}` : `Deliverable for ${newTask.clientName}`,
+        assignedToId: targetMember.id,
+        assignedToName: targetMember.name,
+        assignedToEmail: targetMember.email,
+        assignedById: "dept-mgr-id",
+        assignedByName: managerName || "Department Manager",
+        assignedByRole: "Department Manager",
+        department: newTask.department,
+        clientName: newTask.clientName,
+        priority: newTask.priority,
+        status: "In Progress",
+        progress: 0,
+        dueDate: newTask.dueDate,
+        evidenceRequired: newTask.evidenceRequired,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await supabase.from("audit_logs").insert({
+        action: "staff_task_upsert",
+        target_id: crypto.randomUUID(),
+        details: { task: staffTaskPayload },
+      });
+
+      await supabase.from("audit_logs").insert({
+        action: "staff_notif_upsert",
+        target_id: crypto.randomUUID(),
+        details: {
+          notification: {
+            id: crypto.randomUUID(),
+            userId: targetMember.id,
+            title: "New Task Assignment",
+            message: `${managerName} assigned deliverable "${newTask.title}" to you for client ${newTask.clientName}.`,
+            type: "task_assigned",
+            relatedTaskId: staffTaskPayload.id,
+            read: false,
+            createdAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (err) {
+      console.warn("Failed to sync created task to staff ledger:", err);
+    }
+  }
 
   return updatedTasks;
 }

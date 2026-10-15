@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   CheckSquare, Search, Filter, RefreshCw, Building2, Calendar,
-  Clock, AlertTriangle, Users, ArrowRight, UserCheck, ShieldCheck,
+  Clock, AlertTriangle, AlertCircle, Users, ArrowRight, UserCheck, ShieldCheck,
   Edit, List, LayoutGrid, CalendarDays, ExternalLink, Plus
 } from "lucide-react";
 import {
   fetchDepartmentData,
   mutateAssignTask,
+  mutateCreateDepartmentTask,
   mutateTaskPriority,
   mutateTaskDeadline,
   DepartmentTask,
@@ -39,6 +40,7 @@ export function DepartmentTasksPage() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<DepartmentTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<DepartmentTeamMember[]>([]);
+  const [availableClients, setAvailableClients] = useState<{ id: string; name: string }[]>([]);
 
   // Filtering & view mode
   const [search, setSearch] = useState("");
@@ -52,6 +54,16 @@ export function DepartmentTasksPage() {
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
   const [targetMemberId, setTargetMemberId] = useState("");
   const [isSavingAssign, setIsSavingAssign] = useState(false);
+
+  // Create & Assign Task Modal
+  const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createClientId, setCreateClientId] = useState("");
+  const [createAssigneeId, setCreateAssigneeId] = useState("");
+  const [createDueDate, setCreateDueDate] = useState("");
+  const [createPriority, setCreatePriority] = useState<DepartmentTask["priority"]>("High");
+  const [createEvidenceReq, setCreateEvidenceReq] = useState("");
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Deadline Change Modal
   const [deadlineModalOpen, setDeadlineModalOpen] = useState(false);
@@ -72,6 +84,10 @@ export function DepartmentTasksPage() {
       const res = await fetchDepartmentData();
       setTasks(res.tasks);
       setTeamMembers(res.teamMembers);
+      const clientsList = (res.dbClients && res.dbClients.length > 0)
+        ? res.dbClients.map((c: any) => ({ id: c.id, name: c.name }))
+        : (res.clients || []).map((c: any) => ({ id: c.id, name: c.name }));
+      setAvailableClients(clientsList);
     } catch (err: any) {
       toast.error("Failed to load department tasks", { description: err?.message });
     } finally {
@@ -106,8 +122,8 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateAssignTask(selectedTask.id, targetMemberId, managerName);
       setTasks(updated);
-      toast.success("Task reassigned successfully.", {
-        description: `Reassigned to ${teamMembers.find((m) => m.id === targetMemberId)?.name}`,
+      toast.success("Task assigned successfully.", {
+        description: `Assigned to ${teamMembers.find((m) => m.id === targetMemberId)?.name}`,
       });
       setReassignModalOpen(false);
       setSelectedTask(null);
@@ -115,6 +131,44 @@ export function DepartmentTasksPage() {
       toast.error("Failed to reassign task", { description: err?.message });
     } finally {
       setIsSavingAssign(false);
+    }
+  }
+
+  async function handleCreateTask() {
+    if (!createTitle.trim()) {
+      toast.error("Please enter a deliverable title.");
+      return;
+    }
+    const clientObj = availableClients.find((c) => c.id === createClientId) || availableClients[0];
+    setIsCreatingTask(true);
+    try {
+      const updated = await mutateCreateDepartmentTask(
+        {
+          title: createTitle.trim(),
+          clientId: clientObj?.id,
+          clientName: clientObj?.name || "Client Deliverable",
+          assignedToId: createAssigneeId || undefined,
+          dueDate: createDueDate || new Date().toISOString().split("T")[0],
+          priority: createPriority,
+          evidenceRequired: createEvidenceReq || "Verified deliverables & completion report",
+        },
+        managerName
+      );
+      setTasks(updated);
+      toast.success("Task created and assigned successfully.", {
+        description: createAssigneeId
+          ? `Assigned to ${teamMembers.find((m) => m.id === createAssigneeId)?.name}`
+          : "Created as Unassigned deliverable",
+      });
+      setCreateTaskModalOpen(false);
+      setCreateTitle("");
+      setCreateAssigneeId("");
+      setCreateDueDate("");
+      setCreateEvidenceReq("");
+    } catch (err: any) {
+      toast.error("Failed to create task", { description: err?.message });
+    } finally {
+      setIsCreatingTask(false);
     }
   }
 
@@ -200,6 +254,17 @@ export function DepartmentTasksPage() {
               <Users className="h-3.5 w-3.5 mr-1" /> By Member
             </Button>
           </div>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              if (availableClients.length > 0) setCreateClientId(availableClients[0].id);
+              setCreateTaskModalOpen(true);
+            }}
+            className="h-9 px-3 bg-primary hover:bg-primary/90 text-white font-semibold text-xs shadow-xs gap-1.5 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" /> Create & Assign Task
+          </Button>
 
           <Button
             variant="outline"
@@ -579,13 +644,15 @@ export function DepartmentTasksPage() {
         </div>
       )}
 
-      {/* ── MODAL: Reassign Task ────────────────────────────────────────────── */}
+      {/* ── MODAL: Reassign / Assign Task ─────────────────────────────────── */}
       <Dialog open={reassignModalOpen} onOpenChange={setReassignModalOpen}>
         <DialogContent className="max-w-md bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle>Reassign Department Task</DialogTitle>
+            <DialogTitle>
+              {selectedTask?.status === "Unassigned" ? "Assign Deliverable" : "Reassign Deliverable"}
+            </DialogTitle>
             <DialogDescription className="text-xs">
-              Assign this deliverable to an authorised active specialist in the Media Buying department.
+              Assign this deliverable to any authorised employee across the organisation.
             </DialogDescription>
           </DialogHeader>
 
@@ -598,15 +665,15 @@ export function DepartmentTasksPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Select New Assignee (Department Specialist)</Label>
+                <Label className="text-xs font-semibold">Select Assignee (All System Employees & Specialists)</Label>
                 <Select value={targetMemberId} onValueChange={setTargetMemberId}>
                   <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                    <SelectValue placeholder="Choose specialist..." />
+                    <SelectValue placeholder="Choose employee from system..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-72">
                     {teamMembers.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.name} — {m.role} ({m.capacityUtilizationPct}% Capacity)
+                        {m.name} — {m.role} ({m.department || "Operations"})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -619,8 +686,111 @@ export function DepartmentTasksPage() {
             <Button variant="outline" size="sm" onClick={() => setReassignModalOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleConfirmReassign} disabled={isSavingAssign} className="bg-primary text-white">
-              {isSavingAssign ? "Reassigning..." : "Confirm Reassignment"}
+            <Button size="sm" onClick={handleConfirmReassign} disabled={isSavingAssign} className="bg-primary text-white font-semibold">
+              {isSavingAssign ? "Saving..." : selectedTask?.status === "Unassigned" ? "Confirm Assignment" : "Confirm Reassignment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL: Create & Assign Task ─────────────────────────────────────── */}
+      <Dialog open={createTaskModalOpen} onOpenChange={setCreateTaskModalOpen}>
+        <DialogContent className="max-w-md bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle>Create & Assign Deliverable</DialogTitle>
+            <DialogDescription className="text-xs">
+              Create a new operational task and assign it to any employee in the organisation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2 text-xs">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Deliverable Title</Label>
+              <Input
+                placeholder="e.g. Meta Performance Ads Campaign Launch"
+                value={createTitle}
+                onChange={(e) => setCreateTitle(e.target.value)}
+                className="h-9 text-xs bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Client</Label>
+              <Select value={createClientId} onValueChange={setCreateClientId}>
+                <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                  <SelectValue placeholder="Select client..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {availableClients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Assignee (All System Employees & Specialists)</Label>
+              <Select value={createAssigneeId} onValueChange={setCreateAssigneeId}>
+                <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                  <SelectValue placeholder="Choose employee from system (or leave unassigned)..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="">Unassigned (Open Deliverable)</SelectItem>
+                  {teamMembers.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name} — {m.role} ({m.department || "Operations"})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Target Deadline</Label>
+                <Input
+                  type="date"
+                  value={createDueDate}
+                  onChange={(e) => setCreateDueDate(e.target.value)}
+                  className="h-9 text-xs bg-background border-border text-foreground font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Priority</Label>
+                <Select value={createPriority} onValueChange={(v: any) => setCreatePriority(v)}>
+                  <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Required Evidence / Instructions</Label>
+              <Textarea
+                placeholder="Specify deliverable requirements, links, or verification checklists..."
+                value={createEvidenceReq}
+                onChange={(e) => setCreateEvidenceReq(e.target.value)}
+                className="text-xs bg-background border-border text-foreground min-h-[70px]"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setCreateTaskModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleCreateTask} disabled={isCreatingTask} className="bg-primary text-white font-semibold">
+              {isCreatingTask ? "Creating..." : "Create & Assign Task"}
             </Button>
           </DialogFooter>
         </DialogContent>

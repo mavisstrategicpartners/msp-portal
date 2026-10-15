@@ -13,6 +13,11 @@ import { RotateCcw, PowerOff, FileBarChart2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { useProfile } from "@/lib/use-profile";
+import {
+  useStaffNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/lib/staff-tasks.service";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -1345,12 +1350,68 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { data: notifData } = useStaffNotifications();
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
+  const notifications = notifData?.notifications || [];
+  const unreadCount = notifData?.unreadCount || 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Notifications</DialogTitle><DialogDescription>Portal alerts and reminders.</DialogDescription></DialogHeader>
-        <div className="space-y-3">
-          {["Monthly reports are due by the 7th.", "New users must be added by an admin only.", "Use Msp for SOP and pricing questions."].map((item) => <div key={item} className="flex gap-3 rounded-md border border-border p-3 text-sm"><Clock className="mt-0.5 h-4 w-4 text-primary" />{item}</div>)}
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between pr-4">
+            <div>
+              <DialogTitle className="text-base font-bold">Staff Notifications</DialogTitle>
+              <DialogDescription className="text-xs">
+                Assignments, deadline alerts, dependency responses & reviews.
+              </DialogDescription>
+            </div>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllReadMutation.mutate()}
+                className="text-[11px] h-7 text-primary font-semibold"
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          {notifications.length === 0 ? (
+            <div className="text-center py-8 text-xs text-muted-foreground">
+              No notifications at this time.
+            </div>
+          ) : (
+            notifications.map((n) => (
+              <div
+                key={n.id}
+                className={`p-3 rounded-lg border text-xs transition space-y-1 ${
+                  !n.read ? "bg-primary/5 border-primary/30" : "bg-card border-border opacity-80"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                    {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {n.title}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-muted-foreground">{n.message}</p>
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => markReadMutation.mutate({ id: n.id, read: !n.read })}
+                    className="text-[10px] text-primary hover:underline font-semibold"
+                  >
+                    {n.read ? "Mark unread" : "Mark as read"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </DialogContent>
     </Dialog>

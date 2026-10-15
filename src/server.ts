@@ -46,6 +46,11 @@ export default {
         return await handleAttendanceApi(request);
       }
 
+      if (url.pathname.startsWith("/api/staff")) {
+        const { handleStaffApi } = await import("./lib/staff-server");
+        return await handleStaffApi(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

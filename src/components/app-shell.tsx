@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/use-profile";
+import { useStaffNotifications } from "@/lib/staff-tasks.service";
 import { useTheme, ThemeProvider } from "@/components/theme-provider";
 import { MspLogo } from "@/components/msp-logo";
 import {
@@ -417,6 +418,8 @@ function TopBar({
 }) {
   const { theme, toggle } = useTheme();
   const { data } = useProfile();
+  const { data: notifData } = useStaffNotifications();
+  const unreadCount = notifData?.unreadCount || 0;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isCeoPath = pathname.startsWith('/ceo');
   const navigate = useNavigate();
@@ -540,7 +543,22 @@ function TopBar({
         </button>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>}
+        {!isCeoPath && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Notifications"
+            onClick={onOpenNotifications}
+            className="hidden sm:inline-flex relative"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Button>
+        )}
         {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>}
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
