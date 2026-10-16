@@ -26,53 +26,17 @@ interface ClientInvoice {
   dueDate: string;
 }
 
-const SAMPLE_INVOICES: ClientInvoice[] = [
-  {
-    id: "inv-1",
-    client: "Client Alpha",
-    package: "Growth Engine (Paid Ads + CRM)",
-    monthlyServiceFeeZar: 25000,
-    clientMediaSpendZar: 45000,
-    paymentStatus: "Paid & Verified",
-    invoiceNumber: "MSP-INV-2026-101",
-    dueDate: "2026-10-01",
-  },
-  {
-    id: "inv-2",
-    client: "Apex Solar SA",
-    package: "Full Scale (Ads + Web + AI Automation)",
-    monthlyServiceFeeZar: 38000,
-    clientMediaSpendZar: 60000,
-    paymentStatus: "Paid & Verified",
-    invoiceNumber: "MSP-INV-2026-102",
-    dueDate: "2026-10-02",
-  },
-  {
-    id: "inv-3",
-    client: "Vanguard Mining Supplies",
-    package: "Custom Web & Lead Generation",
-    monthlyServiceFeeZar: 42000,
-    clientMediaSpendZar: 0,
-    paymentStatus: "Paid & Verified",
-    invoiceNumber: "MSP-INV-2026-103",
-    dueDate: "2026-10-05",
-  },
-  {
-    id: "inv-4",
-    client: "Kasi Green Energy",
-    package: "Solar Performance Funnel",
-    monthlyServiceFeeZar: 30000,
-    clientMediaSpendZar: 50000,
-    paymentStatus: "Awaiting Payment",
-    invoiceNumber: "MSP-INV-2026-104",
-    dueDate: "2026-10-10",
-  },
-];
+// Load invoices from Supabase. The table may be empty for a fresh environment.
+// The useSupabaseTable hook returns [data, updateData, loading].
+import { useSupabaseTable } from "@/lib/useSupabaseTable";
+
+const [invoices, setInvoices, loading] = useSupabaseTable<ClientInvoice>("finance_invoices", []);
+
 
 export function FinanceAdminDashboard() {
-  const [invoices, setInvoices] = useState<ClientInvoice[]>(SAMPLE_INVOICES);
-
+  // invoices, setInvoices, loading are provided by the hook above
   const handleVerifyPayment = (id: string) => {
+    // Update the invoice status locally and persist via Supabase
     setInvoices((prev) =>
       prev.map((inv) =>
         inv.id === id ? { ...inv, paymentStatus: "Paid & Verified" } : inv
@@ -80,6 +44,10 @@ export function FinanceAdminDashboard() {
     );
     toast.success("Payment verified! Onboarding intake clock is now unlocked.");
   };
+
+  if (loading) {
+    return <div className="text-muted-foreground">Loading invoices…</div>;
+  }
 
   return (
     <div className="space-y-6">

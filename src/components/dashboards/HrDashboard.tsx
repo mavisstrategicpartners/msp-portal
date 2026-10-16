@@ -30,15 +30,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseTable } from "@/lib/useSupabaseTable";
-import {
-  seedEmployees,
-  seedVacancies,
-  seedApplicants,
-  seedLeave,
-  seedLearnerLeaveRequests,
-  seedTraining,
-  seedAttendance,
-} from "@/host-portal/data/mockData";
+// NOTE: Seed data removed – dashboard now reads live data from Supabase tables.
 
 /* ── tiny inline SVG bar chart (no external dep) ─────────────────────── */
 function MiniBarChart({
@@ -237,13 +229,13 @@ function StatCard({
    HR EXECUTIVE DASHBOARD
    ══════════════════════════════════════════════════════════════════════ */
 export function HrDashboard() {
-  const [employees] = useSupabaseTable("hr_employees", seedEmployees);
-  const [vacancies] = useSupabaseTable("hr_vacancies", seedVacancies);
-  const [applicants] = useSupabaseTable("hr_applicants", seedApplicants);
-  const [leave] = useSupabaseTable("hr_leave", seedLeave);
-  const [learnerLeave] = useSupabaseTable("hr_learner_leave", seedLearnerLeaveRequests);
-  const [training] = useSupabaseTable("hr_training", seedTraining);
-  const [attendanceRecords] = useSupabaseTable("hr_attendance", seedAttendance);
+  const [employees] = useSupabaseTable("hr_employees", []);
+  const [vacancies] = useSupabaseTable("hr_vacancies", []);
+  const [applicants] = useSupabaseTable("hr_applicants", []);
+  const [leave] = useSupabaseTable("hr_leave", []);
+  const [learnerLeave] = useSupabaseTable("hr_learner_leave", []);
+  const [training] = useSupabaseTable("hr_training", []);
+  const [attendanceRecords] = useSupabaseTable("hr_attendance", []);
   const [portalLeaveRequests, setPortalLeaveRequests] = useState<any[]>([]);
 
   useEffect(() => {

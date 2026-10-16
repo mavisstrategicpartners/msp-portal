@@ -43,59 +43,13 @@ interface LeadItem {
   notes: string;
 }
 
-const INITIAL_LEADS: LeadItem[] = [
-  {
-    id: "lead-1",
-    businessName: "Eskom Alternative Power Solutions",
-    contactPerson: "Dumisani Khumalo",
-    stage: "Proposal Sent",
-    leadQuality: "Hot",
-    estimatedValue: 48000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-14",
-    proposalStatus: "Sent",
-    notes: "Requires Meta performance ads + GHL WhatsApp CRM setup. Proposal sent yesterday.",
-  },
-  {
-    id: "lead-2",
-    businessName: "Pretoria Precision Engineering",
-    contactPerson: "Johan van der Merwe",
-    stage: "Discovery",
-    leadQuality: "Warm",
-    estimatedValue: 35000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-15",
-    proposalStatus: "Draft",
-    notes: "Discussed custom website redesign and Google Ads lead gen.",
-  },
-  {
-    id: "lead-3",
-    businessName: "Zambezi Logistics Group",
-    contactPerson: "Farai Moyo",
-    stage: "Won",
-    leadQuality: "Hot",
-    estimatedValue: 60000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-10",
-    proposalStatus: "Accepted",
-    notes: "Contract signed! Handed over to Operations for 2-day onboarding intake.",
-  },
-  {
-    id: "lead-4",
-    businessName: "Cape Coastal Hospitality",
-    contactPerson: "Anika Patel",
-    stage: "Contacted",
-    leadQuality: "Warm",
-    estimatedValue: 28000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-13",
-    proposalStatus: "Draft",
-    notes: "Inbound lead from Meta ads. Follow-up consultation scheduled.",
-  },
-];
+// NOTE: The static seed data is now replaced by live Supabase data via useSupabaseTable.
+// The constant is kept for reference but will not be used.
+
 
 export function SalesDashboard() {
-  const [leads, setLeads] = useState<LeadItem[]>(INITIAL_LEADS);
+  // Load live leads from Supabase
+  const [leads, updateLeads, loading] = useSupabaseTable<LeadItem>('sales_deals', []);
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [stageFilter, setStageFilter] = useState<string>("all");
 
@@ -112,7 +66,6 @@ export function SalesDashboard() {
       toast.error("Business name is required.");
       return;
     }
-
     const newLead: LeadItem = {
       id: `lead-${Date.now()}`,
       businessName: businessName.trim(),
@@ -125,8 +78,8 @@ export function SalesDashboard() {
       proposalStatus: "Draft",
       notes: notes.trim(),
     };
-
-    setLeads((prev) => [newLead, ...prev]);
+    // Use the update function from useSupabaseTable to sync to Supabase
+    updateLeads((prev) => [newLead, ...prev]);
     toast.success("Lead created successfully!", {
       description: `${newLead.businessName} added to pipeline.`,
     });
@@ -137,7 +90,7 @@ export function SalesDashboard() {
   };
 
   const handleAdvanceStage = (id: string, newStage: LeadItem["stage"]) => {
-    setLeads((prev) =>
+    updateLeads((prev) =>
       prev.map((l) => (l.id === id ? { ...l, stage: newStage } : l))
     );
     toast.success(`Lead moved to stage: ${newStage}`);
