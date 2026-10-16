@@ -32,10 +32,27 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department";
+type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department" | "sales" | "finance";
 
 const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
+  // Sales Workspace
+  { group: "Sales Command", portals: ["sales"], items: [
+    { to: "/sales", label: "Sales Dashboard", icon: TrendingUp },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
+    { to: "/services", label: "Our Services", icon: Briefcase },
+    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
+    { to: "/sops", label: "SOP Library", icon: BookOpen },
+    { to: "/glossary", label: "Sales Glossary", icon: ListTree },
+  ]},
+  // Finance & Administration Workspace
+  { group: "Finance & Admin", portals: ["finance"], items: [
+    { to: "/finance", label: "Finance Dashboard", icon: Banknote },
+    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
+    { to: "/services", label: "Agency Services", icon: Briefcase },
+    { to: "/sops", label: "Finance SOPs", icon: BookOpen },
+    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
+  ]},
   { group: "Admin Dashboard", adminOnly: true, portals: ["admin"], items: [
     { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/admin/users", label: "Manage Staff", icon: Users },
@@ -45,7 +62,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
   ]},
-  { group: "Learn MSP", portals: ["staff", "admin", "operations"], items: [
+  { group: "Learn MSP", portals: ["staff", "admin", "operations", "sales", "finance"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
@@ -225,6 +242,8 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isGmPath = pathname.startsWith('/gm');
   const isOperationsPath = pathname.startsWith('/operations');
   const isDepartmentPath = pathname.startsWith('/department');
+  const isSalesPath = pathname.startsWith('/sales');
+  const isFinancePath = pathname.startsWith('/finance');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
@@ -236,6 +255,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "operations";
   } else if (isDepartmentPath) {
     currentPortal = "department";
+  } else if (isSalesPath) {
+    currentPortal = "sales";
+  } else if (isFinancePath) {
+    currentPortal = "finance";
   } else if (isHRPath) {
     currentPortal = "hr";
   } else if (isAdminPath) {
@@ -252,6 +275,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "department";
   } else if (data?.isHR) {
     currentPortal = "hr";
+  } else if (data?.isFinance) {
+    currentPortal = "finance";
+  } else if (data?.isSales) {
+    currentPortal = "sales";
   } else if (isAdmin) {
     currentPortal = "admin";
   } else if (isManagerOrAbove) {
@@ -278,6 +305,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? deptTitle
     : currentPortal === "hr"
     ? "HR Workspace"
+    : currentPortal === "sales"
+    ? "Sales Workspace"
+    : currentPortal === "finance"
+    ? "Finance & Administration"
     : currentPortal === "admin"
     ? "Admin Control"
     : currentPortal === "manager"
@@ -294,6 +325,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? "Team Execution & QA Approval"
     : currentPortal === "hr"
     ? "Human Resources Management"
+    : currentPortal === "sales"
+    ? "Pipeline & Revenue Generation"
+    : currentPortal === "finance"
+    ? "Financial Oversight & Control"
     : currentPortal === "admin"
     ? "MSP Admin Control Panel"
     : currentPortal === "manager"

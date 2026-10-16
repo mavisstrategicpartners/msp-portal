@@ -70,8 +70,12 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
 
   // 4. Finance & Administration
   if (
+    email.startsWith("finance") ||
+    email.includes("financeadministration@") ||
+    roles.some((r) => r.role === "finance_administration" || r.role === "finance_admin" || r.role === "finance") ||
     dept.includes("finance") ||
     dept.includes("accounting") ||
+    dept.includes("admin department") ||
     title.includes("finance") ||
     title.includes("accountant") ||
     title.includes("billing")
@@ -102,6 +106,8 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
 
   // 7. Sales (including assigned role)
   if (
+    email.startsWith("sales@") ||
+    email.includes("sales") ||
     roles.some((r) => r.role === "sales") ||
     dept.includes("sales") ||
     dept.includes("business development") ||
@@ -202,6 +208,9 @@ export function useProfile() {
                 isHR: fallbackRole === "hr",
                 isGM: fallbackRole === "general_manager",
                 isOperations: fallbackRole === "operations",
+                isFinance: fallbackRole === "finance_admin",
+                isSales: fallbackRole === "sales",
+                isDepartmentManager: fallbackRole === "department_manager",
                 roleTier: (parsed.role_tier as any) || "root_admin",
                 isRootAdmin: fallbackRole === "ceo",
                 isManagerOrAbove: parsed.role_tier === "manager" || fallbackRole === "department_manager" || fallbackRole === "general_manager" || fallbackRole === "operations",
@@ -283,6 +292,8 @@ export function useProfile() {
         isHR,
         isGM: systemRole === "general_manager",
         isOperations: systemRole === "operations",
+        isFinance: systemRole === "finance_admin",
+        isSales: systemRole === "sales",
         isDepartmentManager: systemRole === "department_manager",
         departmentName:
           (user?.user_metadata?.department as string) ||

@@ -241,10 +241,18 @@ function AuthPage() {
       titleLower.includes("operations") ||
       titleLower.includes("relationship manager");
     const isGM = titleLower.includes("general manager") || deptLower.includes("general manager");
+    const isFinance =
+      deptLower.includes("finance") ||
+      deptLower.includes("accounting") ||
+      deptLower.includes("admin department") ||
+      titleLower.includes("finance") ||
+      titleLower.includes("accountant") ||
+      titleLower.includes("billing");
+    const isSales = deptLower.includes("sales") || titleLower.includes("sales");
     const isDeptManager =
       titleLower.includes("department manager") ||
       titleLower.includes("media buying") ||
-      (profile?.role_tier === "manager" && !isOps && !isGM && !isHR);
+      (profile?.role_tier === "manager" && !isOps && !isGM && !isHR && !isFinance);
     const isManager = profile?.role_tier === "manager";
     const destination = isCeo
       ? "/ceo"
@@ -252,6 +260,10 @@ function AuthPage() {
       ? "/gm"
       : isOps
       ? "/operations"
+      : isFinance
+      ? "/finance"
+      : isSales
+      ? "/sales"
       : isDeptManager
       ? "/department"
       : isHR
@@ -283,6 +295,15 @@ function AuthPage() {
       (targetEmail.toLowerCase() === "department.manager@mavistrategicpartners.co.za" ||
        targetEmail.toLowerCase() === "department.manager@mavisstrategicpartners.co.za") &&
       password === "Department2026!";
+
+    const isFinanceLogin =
+      (targetEmail.toLowerCase() === "financeadministration@mavisstrategicpartners.co.za" ||
+       targetEmail.toLowerCase() === "finance@mavisstrategicpartners.co.za") &&
+      password === "Finance2026!";
+
+    const isSalesLogin =
+      targetEmail.toLowerCase() === "sales@mavisstrategicpartners.co.za" &&
+      password === "Sales2026!";
 
     try {
       const { data: signInData, error } = await supabase.auth.signInWithPassword({
@@ -338,6 +359,46 @@ function AuthPage() {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, Department Manager", { description: "Signed into Media Buying Workspace." });
         await navigate({ to: "/department" as any });
+        return;
+      }
+
+      if (isFinanceLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "573f840a-dc3b-4917-98ac-dfb8a1374f04",
+              email: targetEmail,
+              full_name: "Finance & Administration Manager",
+              job_title: "Finance & Administration Manager",
+              department: "Admin Department",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Finance & Administration", { description: "Signed into Finance Command Centre." });
+        await navigate({ to: "/finance" as any });
+        return;
+      }
+
+      if (isSalesLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "a78ef82d-9088-475a-b6b5-f6b50e99668e",
+              email: targetEmail,
+              full_name: "Sales Executive",
+              job_title: "Sales & Business Development Lead",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Sales Executive", { description: "Signed into Sales Pipeline Workspace." });
+        await navigate({ to: "/sales" as any });
         return;
       }
 

@@ -13,12 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
+import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticated/glossary'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
 import { Route as AuthenticatedSopsRouteImport } from './routes/_authenticated/sops'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
@@ -89,6 +91,11 @@ const AuthenticatedDepartmentsRoute =
     path: '/departments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedGlossaryRoute = AuthenticatedGlossaryRouteImport.update({
   id: '/glossary',
   path: '/glossary',
@@ -117,6 +124,11 @@ const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
 const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
@@ -398,12 +410,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -458,12 +472,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -520,12 +536,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
+  '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/glossary': typeof AuthenticatedGlossaryRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/services': typeof AuthenticatedServicesRoute
   '/_authenticated/sops': typeof AuthenticatedSopsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
@@ -582,12 +600,14 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/departments'
+    | '/finance'
     | '/glossary'
     | '/home'
     | '/pricing'
     | '/reports'
     | '/review'
     | '/roadmap'
+    | '/sales'
     | '/services'
     | '/sops'
     | '/tools'
@@ -642,12 +662,14 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/departments'
+    | '/finance'
     | '/glossary'
     | '/home'
     | '/pricing'
     | '/reports'
     | '/review'
     | '/roadmap'
+    | '/sales'
     | '/services'
     | '/sops'
     | '/tools'
@@ -703,12 +725,14 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/departments'
+    | '/_authenticated/finance'
     | '/_authenticated/glossary'
     | '/_authenticated/home'
     | '/_authenticated/pricing'
     | '/_authenticated/reports'
     | '/_authenticated/review'
     | '/_authenticated/roadmap'
+    | '/_authenticated/sales'
     | '/_authenticated/services'
     | '/_authenticated/sops'
     | '/_authenticated/tools'
@@ -796,6 +820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDepartmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/finance': {
+      id: '/_authenticated/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof AuthenticatedFinanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/glossary': {
       id: '/_authenticated/glossary'
       path: '/glossary'
@@ -836,6 +867,13 @@ declare module '@tanstack/react-router' {
       path: '/roadmap'
       fullPath: '/roadmap'
       preLoaderRoute: typeof AuthenticatedRoadmapRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/services': {
@@ -1186,12 +1224,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
+  AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedGlossaryRoute: typeof AuthenticatedGlossaryRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
   AuthenticatedSopsRoute: typeof AuthenticatedSopsRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
@@ -1245,12 +1285,14 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
+  AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedGlossaryRoute: AuthenticatedGlossaryRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedServicesRoute: AuthenticatedServicesRoute,
   AuthenticatedSopsRoute: AuthenticatedSopsRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,
