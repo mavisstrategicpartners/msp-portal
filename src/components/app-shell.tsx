@@ -51,7 +51,6 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/services", label: "Agency Services", icon: Briefcase },
     { to: "/sops", label: "Finance SOPs", icon: BookOpen },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
   ]},
   { group: "Admin Dashboard", adminOnly: true, portals: ["admin"], items: [
     { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },

@@ -1198,14 +1198,33 @@ function EditUserDrawer({ row, onClose, onSaved }: { row: TeamRow | null; onClos
 
 // ============ AUDIT ============
 export function AuditPage() {
+  const { data: profileData, isLoading: profileLoading } = useProfile();
+  const isSuperOrAdmin = (profileData?.isAdmin || profileData?.isRootAdmin) && !profileData?.isFinance;
+
   const { data = [] } = useQuery({
     queryKey: ["audit-logs"],
+    enabled: !!isSuperOrAdmin,
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("audit_logs").select("*").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       return (data ?? []) as AuditLog[];
     },
   });
+
+  if (!profileLoading && !isSuperOrAdmin) {
+    return (
+      <div className="p-8 text-center max-w-lg mx-auto space-y-4">
+        <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+          <Lock className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
+        <p className="text-sm text-muted-foreground">
+          Audit Logs are restricted to the Chief Executive Officer and System Administrator. The Finance & Administration role is not authorized to view system audit events.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {pageTitle(ShieldCheck, "Admin", "Audit Logs", "System events and admin actions recorded for accountability.")}
@@ -1434,16 +1453,20 @@ export function HelpPanel({ open, onOpenChange }: { open: boolean; onOpenChange:
 }
 
 export function PortalSearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const items = [
+  const { data: profileData } = useProfile();
+  const isSuperOrAdmin = (profileData?.isAdmin || profileData?.isRootAdmin) && !profileData?.isFinance;
+
+  const items: readonly (readonly [string, string, ComponentType<{ className?: string }>])[] = [
     ["Dashboard", "/home", Compass], ["Who We Are", "/who-we-are", Compass], ["Services", "/services", Briefcase],
     ["Pricing", "/pricing", Tag], ["Glossary", "/glossary", ListTree], ["SOP Library", "/sops", BookOpen],
     ["Roadmap", "/roadmap", MapIcon], ["Tools", "/tools", Wrench], ["Departments", "/departments", Building2],
     ["My Profile", "/me/profile", User], ["Leave Requests", "/me/leave", CalendarDays], ["HR Documents", "/me/declaration", FileSignature],
-    ["Team Management", "/admin/team", Users], ["Audit Logs", "/admin/audit", ShieldCheck],
+    ["Team Management", "/admin/team", Users],
+    ...(isSuperOrAdmin ? [["Audit Logs", "/admin/audit", ShieldCheck] as const] : []),
     ["Sales Playbook", "/admin/sales-playbook", ClipboardList], ["KPI Dashboards", "/admin/kpis", BarChart3],
     ["Content Editor", "/admin/content", Edit3],
     ["Monthly Reports", "/reports", FileBarChart2],
-  ] as const;
+  ];
   const [query, setQuery] = useState("");
   const filtered = items.filter(([label]) => label.toLowerCase().includes(query.toLowerCase()));
   return (
