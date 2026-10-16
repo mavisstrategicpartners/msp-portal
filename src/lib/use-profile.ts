@@ -100,8 +100,9 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "admin";
   }
 
-  // 7. Sales
+  // 7. Sales (including assigned role)
   if (
+    roles.some((r) => r.role === "sales") ||
     dept.includes("sales") ||
     dept.includes("business development") ||
     title.includes("sales") ||

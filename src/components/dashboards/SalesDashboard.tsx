@@ -20,6 +20,9 @@ import {
   FileText,
   Filter,
 } from "lucide-react";
+
+import { useSupabaseTable } from "@/lib/useSupabaseTable";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -110,6 +113,11 @@ export function SalesDashboard() {
     <div className="space-y-6">
       {/* ─── Sales Header ─────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-5 rounded-xl border border-border shadow-sm">
+      {/* Navigation for Sales */}
+      <div className="flex gap-4 mb-4">
+        <Button size="sm" variant="outline" onClick={() => document.getElementById('sales-overview')?.scrollIntoView({ behavior: 'smooth' })}>Overview</Button>
+        <Button size="sm" variant="outline" onClick={() => document.getElementById('sales-leads')?.scrollIntoView({ behavior: 'smooth' })}>Leads</Button>
+      </div>
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold">
             <TrendingUp className="h-6 w-6" />
@@ -138,7 +146,7 @@ export function SalesDashboard() {
       </div>
 
       {/* ─── Pipeline KPI Summary ─────────────────────────────────────────── */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div id="sales-overview" className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Pipeline Value</span>
           <p className="text-2xl font-bold text-foreground mt-1">{formatZAR(totalPipelineValue)}</p>
@@ -167,7 +175,7 @@ export function SalesDashboard() {
       </div>
 
       {/* ─── Opportunities Table ──────────────────────────────────────────── */}
-      <Card className="p-5 border-border space-y-4">
+      <Card id="sales-leads" className="p-5 border-border space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
           <div>
             <h3 className="text-base font-bold text-foreground">Active Deals & Opportunities</h3>
@@ -371,6 +379,104 @@ export function SalesDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+{/* Edit Lead Modal */}
+<Dialog open={editLeadOpen} onOpenChange={setEditLeadOpen}>
+  <DialogContent className="max-w-md">
+    <DialogHeader>
+      <DialogTitle className="text-base font-bold">Edit Lead / Opportunity</DialogTitle>
+      <DialogDescription className="text-xs text-muted-foreground">
+        Update details for the selected lead.
+      </DialogDescription>
+    </DialogHeader>
+    <form onSubmit={handleEditLead} className="space-y-4 py-2">
+      <div className="space-y-1.5">
+        <Label htmlFor="edit-biz-name" className="text-xs font-medium">
+          Business / Company Name *
+        </Label>
+        <Input
+          id="edit-biz-name"
+          value={editBusinessName}
+          onChange={(e) => setEditBusinessName(e.target.value)}
+          placeholder="e.g. Apex Solar SA"
+          required
+          className="text-xs"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-contact-person" className="text-xs font-medium">
+            Contact Person
+          </Label>
+          <Input
+            id="edit-contact-person"
+            value={editContactPerson}
+            onChange={(e) => setEditContactPerson(e.target.value)}
+            placeholder="e.g. Thabo Mthembu"
+            className="text-xs"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-lead-val" className="text-xs font-medium">
+            Estimated Monthly Value (ZAR)
+          </Label>
+          <Input
+            id="edit-lead-val"
+            type="number"
+            value={editEstimatedValue}
+            onChange={(e) => setEditEstimatedValue(e.target.value)}
+            placeholder="30000"
+            className="text-xs"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium">Lead Quality</Label>
+        <div className="flex gap-2">
+          {(["Hot", "Warm", "Cold"] as const).map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => setEditLeadQuality(q)}
+              className={`flex-1 rounded-md py-1.5 text-xs font-semibold border transition ${
+                editLeadQuality === q
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="edit-lead-notes" className="text-xs font-medium">
+          Services Needed & Discovery Notes
+        </Label>
+        <Textarea
+          id="edit-lead-notes"
+          value={editNotes}
+          onChange={(e) => setEditNotes(e.target.value)}
+          placeholder="Client requires Meta ads and WhatsApp automation for Q4..."
+          className="text-xs min-h-[70px]"
+        />
+      </div>
+
+      <DialogFooter className="pt-2">
+        <Button type="button" variant="ghost" size="sm" onClick={() => setEditLeadOpen(false)}>
+          Cancel
+        </Button>
+        <Button type="submit" size="sm" className="bg-primary text-primary-foreground font-semibold">
+          Save Changes
+        </Button>
+      </DialogFooter>
+    </form>
+  </DialogContent>
+</Dialog>
     </div>
   );
 }
