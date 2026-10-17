@@ -72,6 +72,7 @@ function AuthPage() {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [verifyAttempts, setVerifyAttempts] = useState(0);
   const [isRecoveryActive, setIsRecoveryActive] = useState(false);
 
   useEffect(() => {
@@ -151,7 +152,7 @@ function AuthPage() {
             setResetEmail(data.user.email || "");
             setResetStep("new_password");
             setResetModalOpen(true);
-            toast.success("Link confirmed", { description: "Please choose your new password." });
+            toast.success("Recovery session confirmed", { description: "Please choose your new password." });
           }
         } catch (err: any) {
           console.warn("Exchange code exception:", err);
@@ -186,7 +187,7 @@ function AuthPage() {
         if (session?.user?.email) {
           setResetEmail(session.user.email);
         }
-        toast.success("Link verified", { description: "You can now enter your new password." });
+        toast.success("Recovery session verified", { description: "You can now enter your new password." });
       }
     });
 
@@ -483,6 +484,7 @@ function AuthPage() {
     setShowCodeInput(false);
     setNewPassword("");
     setConfirmNewPassword("");
+    setVerifyAttempts(0);
     setResetStep("request");
     setResetModalOpen(true);
   }
@@ -512,21 +514,33 @@ function AuthPage() {
       }
 
       if (!codeSentViaServer) {
-        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: `${window.location.origin}/auth?type=recovery`,
-        });
+        // Request OTP recovery directly from Supabase Auth without passing a redirect URL
+        // (to prevent generating or sending a clickable reset link)
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
 
         if (error) {
-          toast.error("Unable to send verification code", { description: error.message });
-          return;
+          if (
+            error.status === 429 ||
+            error.message.toLowerCase().includes("rate limit") ||
+            error.message.toLowerCase().includes("security purposes")
+          ) {
+            toast.error("Request limit reached", {
+              description: "For security, please wait a moment before requesting another verification code.",
+            });
+            return;
+          }
+          console.warn("Supabase recovery request notice:", error.message);
         }
       }
 
+      // Consistent message that does not expose account registration status
       toast.success("Verification code sent", {
-        description: `Please check your inbox at ${cleanEmail} for your code.`,
+        description: `If an account is associated with ${cleanEmail}, you will receive a verification code shortly.`,
       });
+      setResetCode("");
+      setVerifyAttempts(0);
       setResetStep("verify_code");
-      setResendCooldown(45);
+      setResendCooldown(60);
     } catch (err: any) {
       toast.error("Request failed", {
         description: err?.message || "An unexpected error occurred. Please try again.",
@@ -538,9 +552,17 @@ function AuthPage() {
 
   async function handleVerifyCode(e?: React.FormEvent) {
     if (e) e.preventDefault();
-    const token = resetCode.trim();
+    const token = resetCode.replace(/\s+/g, "").trim();
     if (!token) {
       toast.error("Please enter the verification code.");
+      return;
+    }
+
+    // Rate limiting: brute force protection
+    if (verifyAttempts >= 5) {
+      toast.error("Too many failed attempts", {
+        description: "For security, please click 'Resend code' to request a new verification code.",
+      });
       return;
     }
 
@@ -553,18 +575,32 @@ function AuthPage() {
       });
 
       if (error) {
-        toast.error("Invalid verification code", {
-          description: error.message || "Please check the code or click the direct link in your email.",
-        });
+        const newAttempts = verifyAttempts + 1;
+        setVerifyAttempts(newAttempts);
+        const remaining = 5 - newAttempts;
+        if (remaining > 0) {
+          toast.error("Invalid verification code", {
+            description: `The code entered is invalid or expired. (${remaining} attempt${remaining === 1 ? "" : "s"} remaining)`,
+          });
+        } else {
+          toast.error("Maximum attempts reached", {
+            description: "Please request a new verification code below to continue.",
+          });
+        }
         return;
       }
 
       if (data?.session || data?.user) {
         setIsRecoveryActive(true);
+        setVerifyAttempts(0);
         toast.success("Code verified successfully", {
-          description: "Please set your new password.",
+          description: "Please enter and confirm your new password.",
         });
         setResetStep("new_password");
+      } else {
+        toast.error("Verification could not be confirmed", {
+          description: "Please request a new code and try again.",
+        });
       }
     } catch (err: any) {
       toast.error("Verification failed", {
@@ -578,8 +614,8 @@ function AuthPage() {
   async function handleUpdatePassword(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!newPassword || newPassword.length < 8) {
-      toast.error("Password too short", {
-        description: "Your new password must be at least 8 characters.",
+      toast.error("Password requirement not met", {
+        description: "Your new password must be at least 8 characters long.",
       });
       return;
     }
@@ -615,7 +651,7 @@ function AuthPage() {
       }
 
       toast.success("Password changed successfully", {
-        description: "A confirmation email has been sent to your address.",
+        description: "Your corporate password has been updated. You can now sign in.",
       });
 
       setResetStep("success");
@@ -634,6 +670,7 @@ function AuthPage() {
     setIsRecoveryActive(false);
     setResetStep("request");
     setResetCode("");
+    setVerifyAttempts(0);
     setShowCodeInput(false);
     setNewPassword("");
     setConfirmNewPassword("");
@@ -857,7 +894,7 @@ function AuthPage() {
                   <div>
                     <DialogTitle className="text-lg font-bold">Reset Password</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                      Enter your work email to receive a password reset link.
+                      Enter your registered work email to receive a verification code.
                     </DialogDescription>
                   </div>
                 </div>
@@ -895,7 +932,7 @@ function AuthPage() {
 
                 <div className="rounded-lg border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
                   <p className="leading-relaxed">
-                    We will send an email containing your <strong>verification code</strong>. Enter the code on the next screen to set your new password.
+                    We will send a one-time <strong>verification code (OTP)</strong> to your registered email address. Enter the code on the next screen to set your new password.
                   </p>
                 </div>
 
@@ -939,7 +976,7 @@ function AuthPage() {
                   <div>
                     <DialogTitle className="text-lg font-bold">Enter Verification Code</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                      We sent a verification code to <span className="font-semibold text-foreground">{resetEmail}</span>
+                      We sent a one-time verification code to <span className="font-semibold text-foreground">{resetEmail}</span>
                     </DialogDescription>
                   </div>
                 </div>
@@ -957,13 +994,26 @@ function AuthPage() {
                       type="text"
                       value={resetCode}
                       onChange={(e) => setResetCode(e.target.value.trim())}
-                      placeholder="e.g. 12345678"
-                      maxLength={16}
+                      placeholder="e.g. 123456"
+                      maxLength={10}
                       autoFocus
                       required
-                      className="h-12 pl-10 text-center font-mono text-lg font-bold tracking-widest uppercase bg-secondary/30"
+                      disabled={resetLoading || verifyAttempts >= 5}
+                      className="h-12 pl-10 text-center font-mono text-lg font-bold tracking-widest uppercase bg-secondary/30 disabled:opacity-50"
                     />
                   </div>
+
+                  {verifyAttempts > 0 && verifyAttempts < 5 && (
+                    <p className="text-[11px] font-medium text-amber-500">
+                      ⚠️ {5 - verifyAttempts} attempt{5 - verifyAttempts === 1 ? "" : "s"} remaining before lockout.
+                    </p>
+                  )}
+                  {verifyAttempts >= 5 && (
+                    <p className="text-[11px] font-medium text-destructive">
+                      🚫 Maximum attempts exceeded. Please click &ldquo;Resend code&rdquo; below to request a new code.
+                    </p>
+                  )}
+
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     Check your inbox (and spam folder) for the verification code from <strong>Mavis Strategic Partners</strong>.
                   </p>
@@ -971,7 +1021,7 @@ function AuthPage() {
 
                 <Button
                   type="submit"
-                  disabled={resetLoading || !resetCode.trim()}
+                  disabled={resetLoading || !resetCode.trim() || verifyAttempts >= 5}
                   className="w-full h-10.5 bg-primary text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                 >
                   {resetLoading ? (
@@ -999,7 +1049,10 @@ function AuthPage() {
 
                 <button
                   type="button"
-                  onClick={() => setResetStep("request")}
+                  onClick={() => {
+                    setVerifyAttempts(0);
+                    setResetStep("request");
+                  }}
                   className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="h-3 w-3" /> Change email

@@ -1,1 +1,5 @@
 project_id = "tkjytjaerfjpghusrwom"
+
+[auth.email.template.recovery]
+subject = "Your Password Reset Verification Code — Mavis Strategic Partners"
+content_path = "./templates/recovery.html"
