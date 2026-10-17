@@ -179,17 +179,7 @@ export const sendPasswordResetOtp = createServerFn({ method: "POST" })
           return { success: false, method: "supabase" };
         }
 
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `Mavis Strategic Partners <${fromEmail}>`,
-            to: [email],
-            subject: "Your Password Reset Code — Mavis Strategic Partners",
-            html: `
+        const emailHtml = `
               <!DOCTYPE html>
               <html>
               <head>
@@ -235,14 +225,46 @@ export const sendPasswordResetOtp = createServerFn({ method: "POST" })
                 </table>
               </body>
               </html>
-            `,
+            `;
+
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `Mavis Strategic Partners <${fromEmail}>`,
+            to: [email],
+            subject: "Your Password Reset Code — Mavis Strategic Partners",
+            html: emailHtml,
           }),
         });
 
         if (response.ok) {
           return { success: true, method: "resend" };
         } else {
-          console.warn("[Password Reset OTP] Resend API error:", await response.text());
+          const errText = await response.text();
+          console.warn("[Password Reset OTP] Resend API error:", errText);
+          // If domain is unverified, fallback to onboarding sender
+          if (errText.includes("validation_error") || errText.includes("not verified") || errText.includes("domain")) {
+            const fallbackRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${resendApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                from: "Mavis Strategic Partners <onboarding@resend.dev>",
+                to: [email],
+                subject: "Your Password Reset Code — Mavis Strategic Partners",
+                html: emailHtml,
+              }),
+            });
+            if (fallbackRes.ok) {
+              return { success: true, method: "resend" };
+            }
+          }
         }
       } catch (err: any) {
         console.warn("[Password Reset OTP] Exception sending via Resend:", err);

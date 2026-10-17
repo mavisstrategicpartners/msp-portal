@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/admin/audit")({
           .eq("user_id", data.user.id),
       ]);
 
-      const systemRole = resolveSystemRole(profile, data.user.email, roles ?? []);
+      const systemRole = resolveSystemRole(profile as any, data.user.email, roles ?? []);
       const isSuperOrAdmin =
         systemRole === "admin" ||
         systemRole === "ceo" ||
