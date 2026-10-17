@@ -102,7 +102,8 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
-    { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/host/hr/attendance", label: "Work Attendance Register", icon: ClipboardList },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
     { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },

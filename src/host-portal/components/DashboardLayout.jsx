@@ -16,7 +16,8 @@ import {
 
 const hrNav = [
   { name: 'HR Dashboard', path: '/host/hr', altPath: '/hr', icon: LayoutDashboard },
-  { name: 'Live Presence', path: '/hr/attendance', external: true, icon: Clock },
+  { name: 'Live Staff Presence', path: '/admin/attendance', external: true, icon: Clock },
+  { name: 'Work Attendance Register', path: '/host/hr/attendance', altPath: '/hr/attendance', icon: ClipboardList },
   { name: 'Leave Management', path: '/host/hr/leave', altPath: '/hr/leave', icon: CalendarDays },
   { name: 'Timesheets', path: '/host/hr/timesheets', altPath: '/hr/timesheets', icon: ClipboardList },
   { name: 'Employee Relations', path: '/host/hr/relations', altPath: '/hr/relations', icon: Users },
