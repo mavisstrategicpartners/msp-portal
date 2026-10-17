@@ -194,7 +194,7 @@ npm run build
 | Sales Executive | `sales@mavisstrategicpartners.co.za` | `sales` | Sales Team | **Active** | `/sales` | Configured (`Sales2026!`) |
 | Finance & Admin Manager | `financeadministration@mavisstrategicpartners.co.za` | `finance_admin` | Admin Department | **Active** | `/finance` | Configured (`Finance2026!`) |
 | Department Manager | `department.manager@mavisstrategicpartners.co.za` | `department_manager` | Marketing Team | **Active** | `/department` | Configured (`Department2026!`) |
-| HR Lead | `hr@mavisstrategicpartners.co.za` | `hr` | Human Resources | **Active** | `/host/hr` | Password not retrievable — use reset |
+| HR Lead | `hr@mavisstrategicpartners.co.za` | `hr` | Human Resources | **Active** | `/host/hr` | Configured (`MspHr2026!`) |
 | System Administrator | `superadmin@mavisstrategicpartners.co.za` | `admin` | IT Administration | **Active** | `/admin/users` | Password not retrievable — use reset |
 | Siphelele Malotana | `siphelele.malotana@mavisstrategicpartners.co.za` | `staff` | IT Department | **Active** | `/home` | Password not retrievable — use reset |
 

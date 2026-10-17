@@ -52,6 +52,11 @@ const demoUsers = [
     password: 'Sales2026!',
     role: 'sales',
   },
+  {
+    email: 'hr@mavisstrategicpartners.co.za',
+    password: 'MspHr2026!',
+    role: 'staff',
+  },
 ];
 
 async function upsertUser({ email, password, role }) {
@@ -63,7 +68,8 @@ async function upsertUser({ email, password, role }) {
   }
   const existing = listData.users.find((u) => u.email === email);
   if (existing) {
-    console.log(`User ${email} already exists (id=${existing.id})`);
+    console.log(`User ${email} already exists (id=${existing.id}), updating password...`);
+    await supabase.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
     await assignRole(existing.id, role);
     return;
   }

@@ -36,6 +36,11 @@ const demoUsers: DemoUser[] = [
     password: 'Sales2026!',
     role: 'sales',
   },
+  {
+    email: 'hr@mavisstrategicpartners.co.za',
+    password: 'MspHr2026!',
+    role: 'staff',
+  },
 ];
 
 async function createUser(user: DemoUser) {
@@ -54,7 +59,7 @@ async function createUser(user: DemoUser) {
   // Assign role in user_roles table (assumes a simple schema: user_id, role)
   const { error: roleError } = await supabase
     .from('user_roles')
-    .insert({ user_id: authData.user.id, role: user.role });
+    .insert({ user_id: authData.user.id, role: user.role as any });
   if (roleError) {
     console.error(`Failed to assign role for ${user.email}:`, roleError.message);
   } else {

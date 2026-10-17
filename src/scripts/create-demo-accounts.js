@@ -28,6 +28,11 @@ const demoUsers = [
     password: 'Sales2026!',
     role: 'sales',
   },
+  {
+    email: 'hr@mavisstrategicpartners.co.za',
+    password: 'MspHr2026!',
+    role: 'staff',
+  },
 ];
 
 async function upsertUser({ email, password, role }) {

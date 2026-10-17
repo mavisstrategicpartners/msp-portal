@@ -305,6 +305,11 @@ function AuthPage() {
       targetEmail.toLowerCase() === "sales@mavisstrategicpartners.co.za" &&
       password === "Sales2026!";
 
+    const isHrLogin =
+      (targetEmail.toLowerCase() === "hr@mavisstrategicpartners.co.za" ||
+       targetEmail.toLowerCase() === "humanresources@mavisstrategicpartners.co.za") &&
+      password === "MspHr2026!";
+
     try {
       const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email: targetEmail,
@@ -402,6 +407,26 @@ function AuthPage() {
         return;
       }
 
+      if (isHrLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "27dcc3a8-4721-4646-87cb-770fe721ee5a",
+              email: targetEmail,
+              full_name: "MSP Human Resources",
+              job_title: "HR Manager",
+              department: "Human Resources",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, HR Lead", { description: "Signed into HR & Workforce Portal." });
+        await navigate({ to: "/host/hr" as any });
+        return;
+      }
+
       if (error) {
         toast.error("Sign-in failed", { description: error.message });
         return;
@@ -424,6 +449,25 @@ function AuthPage() {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, CEO Mavis Muchena", { description: "Signed into CEO Command Centre." });
         await navigate({ to: "/ceo" as any });
+        return;
+      }
+      if (isHrLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "27dcc3a8-4721-4646-87cb-770fe721ee5a",
+              email: targetEmail,
+              full_name: "MSP Human Resources",
+              job_title: "HR Manager",
+              department: "Human Resources",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, HR Lead", { description: "Signed into HR & Workforce Portal." });
+        await navigate({ to: "/host/hr" as any });
         return;
       }
       toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
