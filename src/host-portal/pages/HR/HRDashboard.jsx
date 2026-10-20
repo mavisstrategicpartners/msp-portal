@@ -267,9 +267,9 @@ export default function HRDashboard() {
       Live Workforce Attendance & Time Tracking
     </div>
     <div className="flex items-center gap-3">
-<Link to="/host/hr/attendance" className="text-xs text-primary font-semibold hover:underline">
-  Live Command Center (Teams View) ↗
-</Link>
+        <a href="/hr/attendance" className="text-xs text-primary font-semibold hover:underline">
+          Live Command Center (Teams View) ↗
+        </a>
       <Link to="/host/hr/timesheets" className="text-xs text-muted-foreground hover:underline">
         Timesheets Register →
       </Link>

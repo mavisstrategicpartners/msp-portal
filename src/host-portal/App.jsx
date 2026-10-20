@@ -1,7 +1,7 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import HRDashboard from './pages/HR/HRDashboard.jsx'
-import HRAttendance from './pages/HR/HRAttendance.jsx'
 import Leave from './pages/HR/Leave.jsx'
 import Timesheets from './pages/HR/Timesheets.jsx'
 import Relations from './pages/HR/Relations.jsx'
@@ -14,6 +14,13 @@ import HRIntegrations from './pages/HR/HRIntegrations.jsx'
 import HRDocuments from './pages/HR/Documents.jsx'
 import Payroll from './pages/HR/Payroll.jsx'
 
+function RedirectToLivePresence() {
+  useEffect(() => {
+    window.location.href = '/hr/attendance'
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <Routes>
@@ -24,8 +31,9 @@ export default function App() {
       <Route path="/hr" element={<HRDashboard />} />
       <Route path="/host/hr" element={<HRDashboard />} />
 
-      <Route path="/hr/attendance" element={<HRAttendance />} />
-      <Route path="/host/hr/attendance" element={<HRAttendance />} />
+      {/* Redirect attendance to the real live presence command center */}
+      <Route path="/hr/attendance" element={<RedirectToLivePresence />} />
+      <Route path="/host/hr/attendance" element={<RedirectToLivePresence />} />
 
       <Route path="/hr/leave" element={<Leave />} />
       <Route path="/host/hr/leave" element={<Leave />} />
