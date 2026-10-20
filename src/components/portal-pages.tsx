@@ -668,7 +668,7 @@ export function ProfilePage() {
   const queryClient = useQueryClient();
   const { data } = useProfile();
   const profile = data?.profile;
-  const [form, setForm] = useState({ full_name: "", phone: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "" });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -681,7 +681,7 @@ export function ProfilePage() {
   const [declaration, setDeclaration] = useState<any>(null);
 
   useEffect(() => {
-    if (profile) setForm({ full_name: profile.full_name || "", phone: profile.phone || "" });
+    if (profile) setForm({ full_name: profile.full_name || "", phone: profile.phone || "", email: profile.email || "" });
   }, [profile?.id]);
 
   useEffect(() => {
@@ -693,10 +693,32 @@ export function ProfilePage() {
 
   const saveProfile = useMutation({
     mutationFn: async () => {
-      const { error } = await (supabase as any).from("profiles").update({ full_name: form.full_name, phone: form.phone || null }).eq("id", profile!.id);
+      const cleanEmail = form.email.trim().toLowerCase();
+      const profileUpdate: any = { full_name: form.full_name, phone: form.phone || null };
+
+      // If email changed, update it in both profiles table and Supabase auth
+      const emailChanged = cleanEmail && cleanEmail !== profile!.email.toLowerCase();
+      if (emailChanged) {
+        profileUpdate.email = cleanEmail;
+        const { error: authError } = await supabase.auth.updateUser({ email: cleanEmail });
+        if (authError) throw new Error("Failed to update auth email: " + authError.message);
+      }
+
+      const { error } = await (supabase as any).from("profiles").update(profileUpdate).eq("id", profile!.id);
       if (error) throw error;
+
+      return emailChanged;
     },
-    onSuccess: () => { toast.success("Profile updated"); queryClient.invalidateQueries({ queryKey: ["profile"] }); },
+    onSuccess: (emailChanged) => {
+      if (emailChanged) {
+        toast.success("Profile updated — check your new email", {
+          description: "A confirmation link has been sent to your new email address. Please confirm it to complete the change.",
+        });
+      } else {
+        toast.success("Profile updated");
+      }
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -758,6 +780,7 @@ export function ProfilePage() {
           <h3 className="font-semibold">Your details</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Work Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@company.co.za" /></div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+27…" /></div>
             <div><Label>Department</Label><Input value={profile.department || "Not set"} disabled /><p className="mt-1 text-xs text-muted-foreground">Changed by an admin.</p></div>
             <div><Label>Job title</Label><Input value={profile.job_title || "Not set"} disabled /></div>
