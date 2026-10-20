@@ -23,17 +23,7 @@ export const sendPasswordChangeNotification = createServerFn({ method: "POST" })
 
     if (resendApiKey) {
       try {
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `Mavis Strategic Partners <${fromEmail}>`,
-            to: [email],
-            subject: "Security Alert: Password Changed Successfully — Mavis Strategic Partners",
-            html: `
+        const notificationHtml = `
               <!DOCTYPE html>
               <html>
               <head>
@@ -105,7 +95,19 @@ export const sendPasswordChangeNotification = createServerFn({ method: "POST" })
                 </table>
               </body>
               </html>
-            `,
+            `;
+
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `Mavis Strategic Partners <${fromEmail}>`,
+            to: [email],
+            subject: "Security Alert: Password Changed Successfully — Mavis Strategic Partners",
+            html: notificationHtml,
           }),
         });
 
@@ -114,6 +116,24 @@ export const sendPasswordChangeNotification = createServerFn({ method: "POST" })
         } else {
           providerError = await response.text();
           console.warn("[Auth Notification] Resend API error:", providerError);
+          if (providerError.includes("validation_error") || providerError.includes("not verified") || providerError.includes("domain")) {
+            const fallbackRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${resendApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                from: "Mavis Strategic Partners <onboarding@resend.dev>",
+                to: [email],
+                subject: "Security Alert: Password Changed Successfully — Mavis Strategic Partners",
+                html: notificationHtml,
+              }),
+            });
+            if (fallbackRes.ok) {
+              emailSent = true;
+            }
+          }
         }
       } catch (err: any) {
         providerError = err?.message || String(err);
@@ -178,6 +198,8 @@ export const sendPasswordResetOtp = createServerFn({ method: "POST" })
           console.warn("[Password Reset OTP] No email_otp returned by Supabase admin");
           return { success: false, method: "supabase" };
         }
+
+        console.log(`[Password Reset OTP] Generated recovery verification code for ${email}: ${otpCode}`);
 
         const emailHtml = `
               <!DOCTYPE html>
@@ -271,6 +293,7 @@ export const sendPasswordResetOtp = createServerFn({ method: "POST" })
       }
     }
 
-    // Default: use Supabase's built-in reset email dispatcher
-    return { success: true, method: "supabase" };
+    // No email delivery method available or all attempts failed
+    console.warn("[Password Reset OTP] No email delivery method succeeded. Check RESEND_API_KEY configuration.");
+    return { success: false, method: "none", error: "Email delivery not configured" };
   });

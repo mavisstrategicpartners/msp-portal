@@ -506,7 +506,7 @@ function AuthPage() {
       let codeSentViaServer = false;
       try {
         const serverRes = await sendPasswordResetOtp({ data: { email: cleanEmail } });
-        if (serverRes?.success && serverRes?.method === "resend") {
+        if (serverRes?.success) {
           codeSentViaServer = true;
         }
       } catch (srvErr) {
@@ -514,22 +514,21 @@ function AuthPage() {
       }
 
       if (!codeSentViaServer) {
-        // Request OTP recovery directly from Supabase Auth without passing a redirect URL
-        // (to prevent generating or sending a clickable reset link)
+        // Fall back to Supabase's native recovery email dispatcher
         const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
-
         if (error) {
+          const msg = error.message.toLowerCase();
           if (
             error.status === 429 ||
-            error.message.toLowerCase().includes("rate limit") ||
-            error.message.toLowerCase().includes("security purposes")
+            msg.includes("rate limit") ||
+            msg.includes("security purposes")
           ) {
             toast.error("Request limit reached", {
               description: "For security, please wait a moment before requesting another verification code.",
             });
             return;
           }
-          console.warn("Supabase recovery request notice:", error.message);
+          console.warn("Supabase recovery request note:", error.message);
         }
       }
 
@@ -542,9 +541,17 @@ function AuthPage() {
       setResetStep("verify_code");
       setResendCooldown(60);
     } catch (err: any) {
-      toast.error("Request failed", {
-        description: err?.message || "An unexpected error occurred. Please try again.",
-      });
+      // Handle rate limiting from the server or network errors
+      const msg = err?.message || "";
+      if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("security purposes")) {
+        toast.error("Request limit reached", {
+          description: "For security, please wait a moment before requesting another verification code.",
+        });
+      } else {
+        toast.error("Request failed", {
+          description: "An unexpected error occurred. Please try again.",
+        });
+      }
     } finally {
       setResetLoading(false);
     }
@@ -552,7 +559,7 @@ function AuthPage() {
 
   async function handleVerifyCode(e?: React.FormEvent) {
     if (e) e.preventDefault();
-    const token = resetCode.replace(/\s+/g, "").trim();
+    const token = resetCode.replace(/[\s-]+/g, "").trim();
     if (!token) {
       toast.error("Please enter the verification code.");
       return;
