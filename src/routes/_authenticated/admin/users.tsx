@@ -116,11 +116,13 @@ function ManageUsersPage() {
   const [editUser, setEditUser] = useState<StaffProfile | null>(null);
   const [editForm, setEditForm] = useState<{
     fullName: string;
+    email: string;
     jobTitle: string;
     department: string;
     roleTier: RoleTier;
   }>({
     fullName: "",
+    email: "",
     jobTitle: "",
     department: "",
     roleTier: "staff",
@@ -210,6 +212,7 @@ function ManageUsersPage() {
     setEditUser(s);
     setEditForm({
       fullName: s.full_name ?? "",
+      email: s.email ?? "",
       jobTitle: s.job_title ?? "",
       department: s.department ?? "",
       roleTier: s.role_tier ?? "staff",
@@ -221,10 +224,12 @@ function ManageUsersPage() {
     if (!editUser) return;
     setSaving(true);
     try {
+      const emailChanged = editForm.email.trim().toLowerCase() !== editUser.email.toLowerCase();
       await updateTeamMember({
         data: {
           userId: editUser.id,
           fullName: editForm.fullName || undefined,
+          ...(emailChanged ? { email: editForm.email.trim().toLowerCase() } : {}),
           jobTitle: editForm.jobTitle || null,
           department: editForm.department || null,
           roleTier: editForm.roleTier,
@@ -571,7 +576,7 @@ function ManageUsersPage() {
               <Pencil className="h-5 w-5 text-primary" />
               Edit Staff Profile
             </DialogTitle>
-            <DialogDescription>{editUser?.email}</DialogDescription>
+            <DialogDescription>{editForm.email || editUser?.email}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSaveEdit} className="space-y-4 mt-2">
             <div className="space-y-1.5">
@@ -580,6 +585,16 @@ function ManageUsersPage() {
                 id="edit-name"
                 value={editForm.fullName}
                 onChange={(e) => setEditForm((f) => ({ ...f, fullName: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-email">Work Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="employee@mavisstrategicpartners.co.za"
               />
             </div>
             <div className="space-y-1.5">

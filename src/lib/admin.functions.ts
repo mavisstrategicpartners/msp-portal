@@ -129,6 +129,7 @@ async function ensureAdmin(context: any) {
 const updateTeamMemberSchema = z.object({
   userId: z.string().uuid(),
   fullName: z.string().optional(),
+  email: z.string().email().optional(),
   jobTitle: z.string().nullable().optional(),
   department: z.string().nullable().optional(),
   roleTier: z.enum(["root_admin", "manager", "staff", "intern"]).optional(),
@@ -144,11 +145,21 @@ export const updateTeamMember = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: any = {};
     if (data.fullName !== undefined) patch.full_name = data.fullName;
+    if (data.email !== undefined) patch.email = data.email.trim().toLowerCase();
     if (data.jobTitle !== undefined) patch.job_title = data.jobTitle;
     if (data.department !== undefined) patch.department = normalizeDepartment(data.department);
     if (data.roleTier !== undefined) patch.role_tier = data.roleTier;
     if (data.phone !== undefined) patch.phone = data.phone;
     if (data.isActive !== undefined) patch.is_active = data.isActive;
+
+    // If email changed, also update in Supabase auth via admin API
+    if (data.email !== undefined) {
+      const { error: authEmailError } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+        email: data.email.trim().toLowerCase(),
+        email_confirm: true,
+      });
+      if (authEmailError) throw new Error("Failed to update auth email: " + authEmailError.message);
+    }
 
     const { error } = await (supabaseAdmin as any).from("profiles").update(patch).eq("id", data.userId);
     if (error) throw error;
