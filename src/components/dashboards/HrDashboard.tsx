@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseTable } from "@/lib/useSupabaseTable";
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 // NOTE: Seed data removed – dashboard now reads live data from Supabase tables.
 
 /* ── tiny inline SVG bar chart (no external dep) ─────────────────────── */
@@ -394,6 +395,9 @@ export function HrDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* ─── My Time Tracking (HR Staff Clock In / Clock Out) ────────────── */}
+      <StaffAttendanceWidget />
+
       {/* ─── Section: HR Functional Modules ─────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">

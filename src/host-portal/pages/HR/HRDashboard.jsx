@@ -14,6 +14,7 @@ import {
   performanceTrend
 } from '../../data/mockData.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
+import { StaffAttendanceWidget } from '@/components/StaffAttendanceWidget'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 import {
@@ -117,6 +118,9 @@ export default function HRDashboard() {
   return (
     <DashboardLayout title="HR Executive Dashboard">
       <div className="space-y-6">
+        {/* My Time Tracking (HR Staff Clock In / Clock Out) */}
+        <StaffAttendanceWidget />
+
         {/* Quick Module Navigation Hub */}
         <div>
           <div className="flex items-center justify-between mb-3">

@@ -18,7 +18,7 @@ const DEFAULT_RECORD: AttendanceRecord = {
   hoursWorked: "0h 0m",
 };
 
-export function StaffAttendanceWidget() {
+export function StaffAttendanceWidget({ className = "" }: { className?: string } = {}) {
   const [record, setRecord] = useState<AttendanceRecord>(DEFAULT_RECORD);
   const [now, setNow] = useState(Date.now());
   const [loading, setLoading] = useState(true);
@@ -146,7 +146,7 @@ export function StaffAttendanceWidget() {
 
   if (loading) {
     return (
-      <Card className="flex flex-col border-border/70 p-5 items-center justify-center min-h-[140px]">
+      <Card className={`flex flex-col border-border/70 p-5 items-center justify-center min-h-[140px] ${className}`}>
         <Clock className="w-5 h-5 animate-pulse text-primary" />
         <p className="text-xs text-muted-foreground mt-2">Connecting to attendance system…</p>
       </Card>
@@ -154,7 +154,7 @@ export function StaffAttendanceWidget() {
   }
 
   return (
-    <Card className="flex flex-col border-border/70 p-5 transition-colors hover:border-primary/40 relative overflow-hidden">
+    <Card className={`flex flex-col border-border/70 p-5 transition-colors hover:border-primary/40 relative overflow-hidden ${className}`}>
       {/* Glow highlight */}
       <div
         className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-20 pointer-events-none ${
