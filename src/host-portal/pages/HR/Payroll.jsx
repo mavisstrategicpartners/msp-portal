@@ -184,7 +184,6 @@ export default function Payroll() {
     const existing = periodRecords.find(r => r.employee_id === activeStaff?.id)
     if (existing) return existing
 
-    const defBasic = activeStaff?.default_basic || 25000
     return {
       id: '',
       employee_id: activeStaff?.id || '',
@@ -193,7 +192,7 @@ export default function Payroll() {
       period: selectedPeriod,
       pay_date: `${selectedPeriod}-25`,
       status: 'Draft',
-      basic_salary: defBasic,
+      basic_salary: 0,
       sales_amount: 0,
       sales_percent: 0,
       sales_commission: 0,
@@ -201,8 +200,8 @@ export default function Payroll() {
       incentive_type: '',
       gift: 0,
       gift_type: '',
-      uif: Math.min(defBasic * 0.01, 177.12),
-      paye: Math.round(defBasic * 0.18),
+      uif: 0,
+      paye: 0,
       loan: 0,
       advance_salary: 0,
       notes: ''
