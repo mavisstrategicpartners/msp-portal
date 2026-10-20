@@ -197,9 +197,10 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
           <Button
             onClick={handleClockIn}
             disabled={saving}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all hover:scale-[1.01]"
+            size="sm"
+            className="h-9 px-4 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 text-white shadow-sm transition-all hover:shadow-md"
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
             Clock In
           </Button>
         )}
@@ -210,18 +211,20 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
               onClick={handleStartBreak}
               disabled={saving}
               variant="outline"
-              className="flex-1 border-amber-300 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400"
+              size="sm"
+              className="h-9 px-4 text-sm font-medium border-amber-300 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-400/50 text-amber-700 dark:text-amber-400 transition-all"
             >
-              <Coffee className="w-4 h-4 mr-2" />
+              <Coffee className="w-3.5 h-3.5 mr-1.5" />
               Take Break
             </Button>
             <Button
               onClick={handleClockOut}
               disabled={saving}
               variant="destructive"
-              className="flex-1"
+              size="sm"
+              className="h-9 px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-destructive/50 transition-all"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
               Clock Out
             </Button>
           </>
@@ -232,18 +235,20 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
             <Button
               onClick={handleEndBreak}
               disabled={saving}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              size="sm"
+              className="h-9 px-4 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 text-white transition-all"
             >
-              <CheckCircle2 className="w-4 h-4 mr-2" />
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
               Resume Work
             </Button>
             <Button
               onClick={handleClockOut}
               disabled={saving}
               variant="destructive"
-              className="flex-1"
+              size="sm"
+              className="h-9 px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-destructive/50 transition-all"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
               Clock Out
             </Button>
           </>
