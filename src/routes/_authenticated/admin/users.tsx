@@ -105,6 +105,7 @@ function ManageUsersPage() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     jobTitle: "",
     department: "",
     accessLevel: "staff",
@@ -171,13 +172,10 @@ function ManageUsersPage() {
   };
 
   // ── Add user ──────────────────────────────────────────────────────────────
-  const derivedEmail = form.firstName && form.lastName
-    ? `${form.firstName.toLowerCase().trim()}.${form.lastName.toLowerCase().trim()}@mavisstrategicpartners.co.za`
-    : "";
-
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.department) {
+    const cleanEmail = form.email.trim().toLowerCase();
+    if (!form.firstName.trim() || !form.lastName.trim() || !cleanEmail || !form.department) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -185,9 +183,9 @@ function ManageUsersPage() {
     try {
       await createTeamMember({
         data: {
-          email: derivedEmail,
+          email: cleanEmail,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
-          jobTitle: form.jobTitle || undefined,
+          jobTitle: form.jobTitle.trim() || undefined,
           department: form.department,
           accessLevel: form.accessLevel as any,
           role: "user",
@@ -195,10 +193,10 @@ function ManageUsersPage() {
         },
       });
       toast.success("Staff member created!", {
-        description: `${form.firstName} ${form.lastName} can now log in at ${derivedEmail} with the password.`,
+        description: `${form.firstName} ${form.lastName} can now log in at ${cleanEmail} with the password.`,
       });
       setAddOpen(false);
-      setForm({ firstName: "", lastName: "", jobTitle: "", department: "", accessLevel: "staff", password: "Staff2026" });
+      setForm({ firstName: "", lastName: "", email: "", jobTitle: "", department: "", accessLevel: "staff", password: "Staff2026" });
       await loadStaff();
     } catch (err: any) {
       toast.error("Failed to create user", { description: err?.message ?? String(err) });
@@ -480,12 +478,17 @@ function ManageUsersPage() {
               </div>
             </div>
 
-            {derivedEmail && (
-              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
-                <span className="text-muted-foreground text-xs">Company email will be: </span>
-                <span className="font-mono font-medium text-foreground">{derivedEmail}</span>
-              </div>
-            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="workEmail">Work Email *</Label>
+              <Input
+                id="workEmail"
+                type="email"
+                placeholder="e.g. employee@mavisstrategicpartners.co.za"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                required
+              />
+            </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="jobTitle">Job Title</Label>
