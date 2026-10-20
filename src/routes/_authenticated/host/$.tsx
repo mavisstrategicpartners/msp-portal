@@ -5,7 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/host/$")({
   ssr: false,
   head: () => ({ meta: [{ title: "All In One — MSP Portal" }] }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
+    // Only HR sub-routes (/host/hr/*) are supported; Host Operations is removed
+    if (!location.pathname.startsWith("/host/hr")) {
+      throw redirect({ to: "/home" });
+    }
+
     try {
       const { data } = await supabase.auth.getUser();
       if (!data?.user) throw redirect({ to: "/auth" });
@@ -34,4 +39,4 @@ export const Route = createFileRoute("/_authenticated/host/$")({
 function HostSplat() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return <HostPortalEmbedded key={pathname} initialPath={pathname} />;
-}
+}

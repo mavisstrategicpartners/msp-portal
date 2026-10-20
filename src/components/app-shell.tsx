@@ -32,7 +32,7 @@ import {
 
 type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department" | "sales" | "finance";
+type PortalKey = "staff" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department" | "sales" | "finance";
 
 const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
   { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
@@ -80,25 +80,6 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   { group: "Client Delivery", managerOnly: true, portals: ["staff"], items: [
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
-  ]},
-  // Host section — only for manager portal, NOT shown to admin
-  { group: "All In One — Host", managerOnly: true, portals: ["manager"], items: [
-    { to: "/host/workforce", label: "Workforce", icon: Users },
-    { to: "/host/performance", label: "Performance", icon: BarChart3 },
-    { to: "/host/coaching", label: "Coaching Notes", icon: FileSignature },
-    { to: "/host/onboarding", label: "Onboarding", icon: ClipboardList },
-    { to: "/host/recruitment", label: "Recruitment", icon: Users },
-    { to: "/host/check", label: "Host Employer Check", icon: ShieldCheck },
-    { to: "/host/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/host/projects", label: "Projects", icon: Briefcase },
-    { to: "/host/tasks", label: "Tasks", icon: ListTree },
-    { to: "/host/kpi", label: "KPI Management", icon: BarChart3 },
-    { to: "/host/contracts", label: "Contracts", icon: FileSignature },
-    { to: "/host/documents", label: "Documents", icon: BookOpen },
-    { to: "/host/messages", label: "Messages", icon: MessageCircle },
-    { to: "/host/reports", label: "Host Reports", icon: FileBarChart2 },
-    { to: "/host/company", label: "Company Profile", icon: Building2 },
-    { to: "/host/settings", label: "Host Settings", icon: Settings },
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
@@ -235,7 +216,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isAdmin = data?.isAdmin ?? false;
 
   const isHRPath = pathname.startsWith('/host/hr') || pathname.startsWith('/hr');
-  const isHostPath = pathname.startsWith('/host') && !isHRPath;
   const isAdminPath = pathname.startsWith('/admin');
   const isCeoPath = pathname.startsWith('/ceo');
   const isGmPath = pathname.startsWith('/gm');
@@ -262,8 +242,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "hr";
   } else if (isAdminPath) {
     currentPortal = "admin";
-  } else if (isHostPath) {
-    currentPortal = "manager";
   } else if (isRootAdmin) {
     currentPortal = "ceo";
   } else if (data?.isGM) {
@@ -281,13 +259,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   } else if (isAdmin) {
     currentPortal = "admin";
   } else if (isManagerOrAbove) {
-    currentPortal = "manager";
+    currentPortal = "department";
   }
 
-  // Use TanStack Router for ALL sidebar navigation to maintain proper browser
-  // history (back/forward). The HostSplat component uses key={pathname} to
-  // force MemoryRouter reinitialisation on every path change, so client-side
-  // navigation works correctly for /host routes too.
+  // Use TanStack Router for ALL sidebar navigation to maintain proper browser history
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
     e.preventDefault();
     navigate({ to } as any);
@@ -310,8 +285,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? "Finance & Administration"
     : currentPortal === "admin"
     ? "Admin Control"
-    : currentPortal === "manager"
-    ? "Host Operations"
     : "Staff Portal";
 
   const workspaceSub = currentPortal === "ceo"
@@ -330,8 +303,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     ? "Financial Oversight & Control"
     : currentPortal === "admin"
     ? "MSP Admin Control Panel"
-    : currentPortal === "manager"
-    ? "Host Employer & Workforce"
     : "Internal operations portal";
 
   return (
@@ -386,7 +357,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                 {items.map((item) => {
                   // Resolve the actual navigation target — Home links go to role-specific dashboard
                   const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
-                  const isExactRoot = toPath === "/ceo" || toPath === "/host" || toPath === "/admin";
+                  const isExactRoot = toPath === "/ceo" || toPath === "/admin";
                   const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
                   return (
                     <li key={item.to}>

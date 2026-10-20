@@ -270,7 +270,7 @@ function AuthPage() {
       : isHR
       ? "/host/hr"
       : isManager
-      ? "/host"
+      ? "/department"
       : "/home";
     await navigate({ to: destination as any });
   }
