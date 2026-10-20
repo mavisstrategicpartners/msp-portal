@@ -134,7 +134,19 @@ export default function Payroll() {
     return Array.from(map.values())
   }, [employees, profiles])
 
-  const [selectedPeriod, setSelectedPeriod] = useState('2026-07')
+  const defaultPeriod = useMemo(() => {
+    const d = new Date()
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    return `${y}-${m}`
+  }, [])
+  const [selectedPeriod, setSelectedPeriod] = useState(defaultPeriod)
+
+  // Clear any legacy synthetic records if stored previously
+  useEffect(() => {
+    setRecords(prev => prev.filter(r => !r.id?.startsWith('PAY-2026-07-') && !r.id?.startsWith('PAY-2026-06-')))
+  }, [])
+
   const [viewMode, setViewMode] = useState('worksheet') // 'worksheet' | 'register'
   const [selectedStaffId, setSelectedStaffId] = useState(allStaff[0]?.id || 'E-1')
   const [staffSearch, setStaffSearch] = useState('')
@@ -378,7 +390,7 @@ export default function Payroll() {
                 <option value="2026-10">October 2026</option>
                 <option value="2026-09">September 2026</option>
                 <option value="2026-08">August 2026</option>
-                <option value="2026-07">July 2026 (Live Batch)</option>
+                <option value="2026-07">July 2026</option>
                 <option value="2026-06">June 2026</option>
                 <option value="2026-05">May 2026</option>
               </select>
@@ -1056,7 +1068,18 @@ export default function Payroll() {
                 </tr>
               </thead>
               <tbody>
-                {periodRecords.map(r => {
+                {periodRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={14} style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      <Calculator size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>No payroll entries for {selectedPeriod} yet</div>
+                      <div style={{ fontSize: 11.5, marginTop: 4 }}>
+                        Switch to the Calculator Worksheet to calculate and save pay runs for your team.
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  periodRecords.map(r => {
                   const calc = calculatePayrollTotals(r)
                   return (
                     <tr key={r.id || r.employee_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -1111,7 +1134,8 @@ export default function Payroll() {
                       </td>
                     </tr>
                   )
-                })}
+                })
+              )}
               </tbody>
             </table>
           </div>
