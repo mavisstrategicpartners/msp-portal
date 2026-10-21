@@ -47,52 +47,7 @@ interface OnboardingItem {
   };
 }
 
-const SAMPLE_ONBOARDING: OnboardingItem[] = [
-  {
-    id: "onb-1",
-    clientName: "Apex Solar SA",
-    package: "Growth Engine (Paid Ads + CRM & AI)",
-    accountManagerRole: "Relationship Manager",
-    stageOwnerRole: "Technical Onboarding Specialist",
-    currentStage: "Access & Assets Gate",
-    workingHoursAge: 21, // Target: 18 working hours (breached by 3 hrs)
-    totalElapsedDays: 5,
-    progress: 45,
-    isBreached: true,
-    accessChecklist: {
-      metaAds: "Missing",
-      googleAds: "Missing",
-      tikTokAds: "N/A",
-      ga4Analytics: "Verified",
-      metaPixel: "Missing",
-      capiServer: "Missing",
-      ghlCrm: "Verified",
-      websiteHosting: "Verified",
-    },
-  },
-  {
-    id: "onb-2",
-    clientName: "Vanguard Mining Supplies",
-    package: "Custom Web & Lead Generation",
-    accountManagerRole: "Relationship Manager",
-    stageOwnerRole: "Web Project Lead",
-    currentStage: "Strategy & Scope Accepted",
-    workingHoursAge: 12, // Within 18 working hours SLA
-    totalElapsedDays: 2,
-    progress: 70,
-    isBreached: false,
-    accessChecklist: {
-      metaAds: "Verified",
-      googleAds: "N/A",
-      tikTokAds: "N/A",
-      ga4Analytics: "Verified",
-      metaPixel: "Verified",
-      capiServer: "Verified",
-      ghlCrm: "Verified",
-      websiteHosting: "Verified",
-    },
-  },
-];
+const SAMPLE_ONBOARDING: OnboardingItem[] = [];
 
 interface PendingVerification {
   id: string;
@@ -105,28 +60,7 @@ interface PendingVerification {
   evidenceRef: string;
 }
 
-const SAMPLE_VERIFICATIONS: PendingVerification[] = [
-  {
-    id: "ver-1",
-    client: "Apex Solar SA",
-    deliverableTitle: "GHL WhatsApp Lead Ingestion & Webhook Journey",
-    service: "CRM & AI Automation",
-    submitterRole: "CRM Specialist",
-    reviewerRole: "Operations Lead (Independent Reviewer)",
-    submittedAt: "2026-10-07 16:30",
-    evidenceRef: "https://app.gohighlevel.com/v2/location/apex-solar/workflows/w201",
-  },
-  {
-    id: "ver-2",
-    client: "Highveld Logistics",
-    deliverableTitle: "Corporate Landing Page Mobile QA & Form Routing",
-    service: "Websites & Software",
-    submitterRole: "Frontend Developer",
-    reviewerRole: "Operations Lead (Independent Reviewer)",
-    submittedAt: "2026-10-08 08:15",
-    evidenceRef: "https://staging.highveldlogistics.co.za/quote",
-  },
-];
+const SAMPLE_VERIFICATIONS: PendingVerification[] = [];
 
 export function OperationsDashboard() {
   const [verifications, setVerifications] = useState<PendingVerification[]>(SAMPLE_VERIFICATIONS);
@@ -157,13 +91,13 @@ export function OperationsDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Onboarding Workflows</span>
-          <p className="text-2xl font-bold text-foreground mt-1">2 Clients</p>
-          <p className="text-[11px] text-rose-500 font-semibold mt-1">1 Approaching 2-Day SLA Breach</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{SAMPLE_ONBOARDING.length} Clients</p>
+          <p className="text-[11px] text-muted-foreground mt-1">0 Approaching 2-Day SLA Breach</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Campaigns Awaiting Launch</span>
-          <p className="text-2xl font-bold text-foreground mt-1">2 Campaigns</p>
+          <p className="text-2xl font-bold text-foreground mt-1">0 Campaigns</p>
           <p className="text-[11px] text-muted-foreground mt-1">Target: &le;2 days from verified readiness</p>
         </Card>
 
@@ -175,8 +109,8 @@ export function OperationsDashboard() {
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Delivery Blockers</span>
-          <p className="text-2xl font-bold text-amber-500 mt-1">2 Blockers</p>
-          <p className="text-[11px] text-muted-foreground mt-1">1 Client input pause, 1 Manager hold</p>
+          <p className="text-2xl font-bold text-foreground mt-1">0 Blockers</p>
+          <p className="text-[11px] text-muted-foreground mt-1">All delivery handoffs clear</p>
         </Card>
       </div>
 
@@ -197,7 +131,12 @@ export function OperationsDashboard() {
         </div>
 
         <div className="space-y-4">
-          {SAMPLE_ONBOARDING.map((onb) => (
+          {SAMPLE_ONBOARDING.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground text-xs">
+              No active onboarding workflows in progress.
+            </div>
+          ) : (
+            SAMPLE_ONBOARDING.map((onb) => (
             <div key={onb.id} className="p-4 rounded-lg border border-border bg-card space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -255,7 +194,8 @@ export function OperationsDashboard() {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
 
@@ -274,7 +214,7 @@ export function OperationsDashboard() {
         </div>
 
         {verifications.length === 0 ? (
-          <p className="text-xs text-muted-foreground p-4 text-center">No pending verifications in the queue.</p>
+          <p className="text-xs text-muted-foreground p-8 text-center">No pending approvals.</p>
         ) : (
           <div className="space-y-3">
             {verifications.map((item) => (
