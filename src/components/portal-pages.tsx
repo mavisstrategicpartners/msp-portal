@@ -6,10 +6,10 @@ import {
   CheckCircle2, ChevronRight, ClipboardCheck, ClipboardList, Clock, Compass, Edit3, ExternalLink,
   FileSignature, Gauge, ListTree, Lock, Mail, Map as MapIcon, MessageCircle, Phone, Plus, Search, Send,
   ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench, Eye, EyeOff, KeyRound,
+  RotateCcw, PowerOff, FileBarChart2, Crown, Laptop, Code2, Megaphone, Share2, Sliders, UserCheck, Layers, GitBranch, ArrowUpRight, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { RotateCcw, PowerOff, FileBarChart2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { useProfile } from "@/lib/use-profile";
@@ -53,26 +53,409 @@ async function copyToClipboard(text: string, successMessage: string) {
   catch { toast.info(text); }
 }
 
-const DEPARTMENTS = [
-  "CEO", "Managing Director", "Operations Manager", "Client Relationship Manager",
-  "Sales Team", "Social Media Manager", "Admin Department", "Human Resources",
-  "Graphics Team", "Marketing Team", "IT Department", "Intern",
+export type DepartmentDefinition = {
+  id: string;
+  name: string;
+  shortName: string;
+  category: "Executive & Management" | "Technology & Delivery" | "Growth & Revenue" | "Operations & Administration";
+  purpose: string;
+  reports_to: string;
+  oversees: string;
+  matchKeys: string[];
+  keyFunctions: string[];
+  primaryTools: string[];
+  sopSlug: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+export const DEPARTMENT_DEFINITIONS: DepartmentDefinition[] = [
+  {
+    id: "it-department",
+    name: "IT & Software Engineering",
+    shortName: "IT Department",
+    category: "Technology & Delivery",
+    purpose: "Engineers, maintains, and secures internal portal infrastructure, client web applications, database architectures, cloud hosting, and technical end-user support.",
+    reports_to: "General Manager / Managing Director",
+    oversees: "Software Development, Cloud Infrastructure, Database Architecture, IT Helpdesk & QA",
+    matchKeys: ["it department", "it support", "developer", "software", "scram", "scrum", "technical", "intern"],
+    keyFunctions: [
+      "Maintains and extends MSP internal portal systems, authentication, and attendance tracking.",
+      "Develops and tests custom client web applications, landing pages, and API integrations.",
+      "Monitors database performance, backups, and security policies on Supabase and cloud servers.",
+      "Provides responsive IT technical support, hardware setup, and access management."
+    ],
+    primaryTools: ["GitHub", "Supabase", "VS Code", "Vercel", "PostgreSQL", "Google Workspace"],
+    sopSlug: "it-department",
+    icon: Code2,
+  },
+  {
+    id: "marketing-team",
+    name: "Marketing & Growth",
+    shortName: "Marketing Team",
+    category: "Growth & Revenue",
+    purpose: "Drives MSP's market authority, organic search ranking, inbound lead funnels, and performance marketing campaigns for agency brand expansion.",
+    reports_to: "General Manager / Managing Director",
+    oversees: "SEO Strategy, Inbound Demand Generation, Content Marketing, Campaign QA",
+    matchKeys: ["marketing team", "marketing", "seo", "marketer", "account manager"],
+    keyFunctions: [
+      "Conducts full technical and on-page SEO audits, keyword research, and ranking optimizations.",
+      "Develops educational content and marketing assets that attract high-value agency clients.",
+      "Tracks and analyzes traffic acquisition, bounce rates, and conversion funnels via GA4 & Search Console.",
+      "Collaborates with sales and creative teams to align messaging with monthly growth targets."
+    ],
+    primaryTools: ["Google Search Console", "Google Analytics 4", "Ahrefs", "Canva", "GoHighLevel"],
+    sopSlug: "marketing-team",
+    icon: Megaphone,
+  },
+  {
+    id: "social-media",
+    name: "Social Media & Content Creation",
+    shortName: "Social Media Manager",
+    category: "Growth & Revenue",
+    purpose: "Formulates content strategies, designs high-converting multimedia assets, and stewards active online communities across Meta, LinkedIn, TikTok, and YouTube.",
+    reports_to: "Operations Manager / General Manager",
+    oversees: "Content Planning, Visual Design, Short-Form Video, Community Engagement",
+    matchKeys: ["social media manager", "social media", "social", "creative content", "graphics"],
+    keyFunctions: [
+      "Builds monthly multi-platform content calendars aligned with client marketing retainers.",
+      "Designs professional social carousels, ad creatives, infographics, and reel edits.",
+      "Manages day-to-day community interactions, message replies, and post distribution.",
+      "Monitors social metrics, follower engagement, and audience retention rates."
+    ],
+    primaryTools: ["Meta Business Suite", "Canva", "CapCut", "TikTok", "LinkedIn", "Instagram"],
+    sopSlug: "social-media",
+    icon: Share2,
+  },
+  {
+    id: "operations",
+    name: "Operations & Delivery Management",
+    shortName: "Operations Manager",
+    category: "Operations & Administration",
+    purpose: "Orchestrates agency-wide service delivery, governs client onboarding pipelines, resolves operational blockers, and upholds quality standards.",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Client Onboarding, Workflow Governance, Cross-Team Dependencies, Verification Queue",
+    matchKeys: ["operations manager", "operations", "delivery"],
+    keyFunctions: [
+      "Governs end-to-end client build roadmap from contract signing to final handover.",
+      "Resolves cross-departmental blockers and approves operational dependency handoffs.",
+      "Monitors project deadlines, sprint velocity, and service level agreements (SLAs).",
+      "Leads weekly delivery review meetings and coordinates client recovery plans."
+    ],
+    primaryTools: ["GoHighLevel", "Slack", "Google Drive", "MSP Portal", "Notion"],
+    sopSlug: "operations",
+    icon: Sliders,
+  },
+  {
+    id: "human-resources",
+    name: "Human Resources & People",
+    shortName: "Human Resources",
+    category: "Operations & Administration",
+    purpose: "Stewards talent recruitment, structured employee onboarding, performance governance, leave administration, statutory compliance, and workplace culture.",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Talent Acquisition, Employee Relations, Leave Approvals, Compliance & Declarations",
+    matchKeys: ["human resources", "hr", "people", "recruitment"],
+    keyFunctions: [
+      "Manages recruitment pipelines, interview scheduling, and employment agreements.",
+      "Administers employee leave balances, daily attendance presence, and timesheets.",
+      "Guides new team members through structured 14-day onboarding and training.",
+      "Maintains signed employee compliance declarations, NDAs, and workplace policies."
+    ],
+    primaryTools: ["MSP HR Portal", "Google Workspace", "Resend", "WhatsApp Business"],
+    sopSlug: "human-resources",
+    icon: UserCheck,
+  },
+  {
+    id: "admin-department",
+    name: "Admin & Financial Operations",
+    shortName: "Admin Department",
+    category: "Operations & Administration",
+    purpose: "Manages accounting reconciliation, client invoicing, accounts receivable, office facilities, front desk reception, and statutory paperwork.",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Client Invoicing, Accounts Receivable, Reception & Office Administration",
+    matchKeys: ["admin department", "admin", "administration", "receptionist", "finance"],
+    keyFunctions: [
+      "Generates and issues monthly retainer invoices, quotes, and payment receipts.",
+      "Tracks incoming client payments, aged debtors, and bank reconciliation.",
+      "Operates front desk reception, call routing, and client greeting protocols.",
+      "Maintains physical and digital administrative documentation and office supplies."
+    ],
+    primaryTools: ["Zoho Books", "Microsoft Excel", "Standard Bank", "Google Drive"],
+    sopSlug: "admin-department",
+    icon: ShieldCheck,
+  },
+  {
+    id: "managing-director",
+    name: "General Management & Managing Director",
+    shortName: "Managing Director",
+    category: "Executive & Management",
+    purpose: "Drives company-wide operational execution, financial revenue performance, department head accountability, and strategic resource allocation.",
+    reports_to: "Chief Executive Officer (CEO)",
+    oversees: "Operations Manager, IT Department, Marketing Team, HR, Admin & Finance",
+    matchKeys: ["managing director", "general manager", "general.manager", "gm"],
+    keyFunctions: [
+      "Translates executive vision into quarterly departmental execution targets and KPIs.",
+      "Monitors company revenue actuals versus monthly budget targets.",
+      "Approves senior personnel allocations, budget adjustments, and policy updates.",
+      "Chairs executive alignment sessions and unblocks high-level inter-departmental hurdles."
+    ],
+    primaryTools: ["MSP GM Command Centre", "Zoho Books", "Slack", "Google Workspace"],
+    sopSlug: "managing-director",
+    icon: Briefcase,
+  },
+  {
+    id: "ceo",
+    name: "Executive Leadership (CEO)",
+    shortName: "CEO",
+    category: "Executive & Management",
+    purpose: "Establishes corporate vision, strategic market positioning, shareholder governance, executive leadership, and major partnership acquisitions.",
+    reports_to: "Board of Directors / Founder",
+    oversees: "Managing Director, General Manager, Executive Functions, Legal & Compliance",
+    matchKeys: ["ceo", "executive", "shamah"],
+    keyFunctions: [
+      "Sets long-range commercial strategy, company mission, and core values.",
+      "Reviews macro financial health, operating profit margins, and expansion initiatives.",
+      "Fosters high-level stakeholder, enterprise, and institutional client relationships.",
+      "Exercises final approval on major contracts, corporate structure, and executive hires."
+    ],
+    primaryTools: ["MSP CEO Executive Dashboard", "Google Workspace", "Slack"],
+    sopSlug: "ceo",
+    icon: Crown,
+  },
+  {
+    id: "sales-team",
+    name: "Sales & Business Development",
+    shortName: "Sales Team",
+    category: "Growth & Revenue",
+    purpose: "Identifies prospective SME and enterprise clients, conducts discovery consultations, structures custom growth proposals, and secures new agency retainers.",
+    reports_to: "General Manager / Managing Director",
+    oversees: "Outbound Prospecting, Discovery & Pipeline, Deal Closing, Proposal Handoff",
+    matchKeys: ["sales team", "sales", "business development"],
+    keyFunctions: [
+      "Conducts rigorous discovery calls using BANT qualification criteria.",
+      "Builds tailored client proposals leveraging MSP standard service packages.",
+      "Maintains speed-to-lead under 10 minutes on all inbound inquiries.",
+      "Completes structured contract handovers to Operations upon deal closure."
+    ],
+    primaryTools: ["GoHighLevel", "Sales Playbook", "WhatsApp Business", "Google Meet"],
+    sopSlug: "sales-team",
+    icon: Target,
+  },
+  {
+    id: "client-relationship-manager",
+    name: "Client Relationship Management (CRM)",
+    shortName: "Client Relationship Manager",
+    category: "Growth & Revenue",
+    purpose: "Protects account retention, leads client communication cadence, coordinates monthly report calls, and identifies expansion opportunities.",
+    reports_to: "Operations Manager",
+    oversees: "Client Communications, Monthly Report Reviews, Retention & Upsells",
+    matchKeys: ["client relationship manager", "client relationship", "crm", "account manager"],
+    keyFunctions: [
+      "Acts as the dedicated client advocate and primary strategic point of contact.",
+      "Compiles and presents comprehensive monthly ROI and performance reports by the 7th.",
+      "Conducts quarterly account reviews to assess growth and identify upsell opportunities.",
+      "Resolves client concerns proactively to maintain retention rate above 92%."
+    ],
+    primaryTools: ["GoHighLevel", "Google Meet", "WhatsApp Business", "Manus AI"],
+    sopSlug: "client-relationship-manager",
+    icon: Users,
+  },
+  {
+    id: "media-buying",
+    name: "Media Buying & Paid Advertising",
+    shortName: "Media Buying",
+    category: "Growth & Revenue",
+    purpose: "Deploys, tests, and scales multi-channel paid ad campaigns on Meta, Google, and TikTok to generate predictable, cost-efficient customer leads.",
+    reports_to: "Operations Manager",
+    oversees: "Paid Campaigns, Tracking Pixels, Ad Set A/B Testing, Budget Optimization",
+    matchKeys: ["media buying", "media buyer", "paid ads", "ads"],
+    keyFunctions: [
+      "Sets up and validates tracking pixels, conversion events, and server-side tracking.",
+      "Builds high-intent audience segments, lookalikes, and retargeting campaigns.",
+      "Tests multiple creative hooks and ad angles to lower cost-per-lead (CPL).",
+      "Conducts daily spend monitoring and optimizes winning campaigns at Day 2 and Day 7."
+    ],
+    primaryTools: ["Meta Ads Manager", "Google Ads", "TikTok Ads Manager", "Google Tag Manager"],
+    sopSlug: "media-buying",
+    icon: BarChart3,
+  },
 ];
 
-const DEPARTMENT_META: Record<string, { purpose: string; reports_to: string; sop_slug?: string }> = {
-  "CEO": { purpose: "Sets vision, direction and final approvals across the company.", reports_to: "The board / founder" },
-  "Managing Director": { purpose: "Owns day-to-day execution against the CEO's strategy.", reports_to: "CEO" },
-  "Operations Manager": { purpose: "Runs delivery, workflows and cross-team coordination.", reports_to: "Managing Director" },
-  "Client Relationship Manager": { purpose: "Owns client retention, communication and reporting rhythm.", reports_to: "Operations Manager" },
-  "Sales Team": { purpose: "Books, qualifies and closes new business.", reports_to: "Managing Director" },
-  "Social Media Manager": { purpose: "Plans, produces and publishes client social content.", reports_to: "Operations Manager" },
-  "Admin Department": { purpose: "Invoicing, finance, HR admin and internal systems.", reports_to: "Managing Director" },
-  "Human Resources": { purpose: "People, culture, leave, declarations and onboarding.", reports_to: "Managing Director" },
-  "Graphics Team": { purpose: "Designs all client and internal visual assets — social graphics, ad creatives, presentation materials.", reports_to: "Operations Manager" },
-  "Marketing Team": { purpose: "Owns MSP's own brand marketing, lead generation, and market positioning — separate from client campaign work.", reports_to: "Managing Director" },
-  "IT Department": { purpose: "Manages internal tools, portal infrastructure, hosting, domains, and technical support for the team.", reports_to: "Operations Manager" },
-  "Intern": { purpose: "Learning across departments and supporting live delivery.", reports_to: "Assigned mentor / Operations Manager" },
+export const DEPARTMENTS = [
+  "IT Department", "Marketing Team", "Social Media Manager", "Operations Manager",
+  "Human Resources", "Admin Department", "Managing Director", "CEO",
+  "Sales Team", "Client Relationship Manager", "Media Buying",
+];
+
+export const DEPARTMENT_META: Record<string, { purpose: string; reports_to: string; sop_slug?: string }> = {
+  "IT Department": { purpose: "Manages internal portal infrastructure, client web applications, database security, and technical support.", reports_to: "General Manager / Managing Director", sop_slug: "it-department" },
+  "Marketing Team": { purpose: "Drives MSP's own brand marketing, SEO authority, inbound leads, and positioning.", reports_to: "General Manager / Managing Director", sop_slug: "marketing-team" },
+  "Social Media Manager": { purpose: "Plans, produces, designs, and publishes agency and client social content.", reports_to: "Operations Manager / General Manager", sop_slug: "social-media" },
+  "Operations Manager": { purpose: "Runs delivery workflows, onboarding, cross-team coordination, and blocker resolution.", reports_to: "Managing Director / General Manager", sop_slug: "operations" },
+  "Human Resources": { purpose: "Talent recruitment, onboarding, leave administration, declarations, and employee welfare.", reports_to: "Managing Director / General Manager", sop_slug: "human-resources" },
+  "Admin Department": { purpose: "Invoicing, accounts receivable, office management, and front desk reception.", reports_to: "Managing Director / General Manager", sop_slug: "admin-department" },
+  "Managing Director": { purpose: "Drives day-to-day company execution against strategy and financial targets.", reports_to: "Chief Executive Officer (CEO)", sop_slug: "managing-director" },
+  "CEO": { purpose: "Sets vision, strategic market direction, governance, and final executive approvals.", reports_to: "Board of Directors / Founder", sop_slug: "ceo" },
+  "Sales Team": { purpose: "Identifies, qualifies, structures proposals, and closes new business retainers.", reports_to: "General Manager / Managing Director", sop_slug: "sales-team" },
+  "Client Relationship Manager": { purpose: "Owns client retention, communications cadence, and monthly reporting rhythm.", reports_to: "Operations Manager", sop_slug: "client-relationship-manager" },
+  "Media Buying": { purpose: "Executes, optimizes, and scales paid ad campaigns on Meta, Google, and TikTok.", reports_to: "Operations Manager", sop_slug: "media-buying" },
 };
+
+export const DEFAULT_SOPS: Sop[] = [
+  {
+    id: "sop-it-default",
+    slug: "it-department",
+    department: "IT Department",
+    title: "IT Engineering & Systems Administration SOP",
+    reports_to: "General Manager / Managing Director",
+    oversees: "Software Development, Cloud Infrastructure, Database Architecture, IT Helpdesk & QA",
+    primary_tools: "GitHub, Supabase, VS Code, Vercel, PostgreSQL, Google Workspace",
+    role_purpose: "Ensures the highest standard of technical stability, security, portal availability, and software quality across MSP internal infrastructure and client digital deployments.",
+    core_responsibilities: "Develop and test custom portal features, authentication flows, and real-time workforce tracking · Maintain database schemas, backups, and security policies on Supabase · Provide prompt IT technical assistance, device provisioning, and access management · Enforce code review standards, PR approvals, and zero-defect QA verification before production release",
+    daily_weekly_monthly: "Daily: Morning technical standup, review overnight system logs and Supabase auth telemetry · Weekly: Sprint backlog planning, database index and storage audits · Monthly: Infrastructure security review, disaster recovery tests, and software license audit",
+    key_sops: "1. Code deployment protocol: feature branch -> local unit testing -> PR creation -> peer review -> staging check -> production deploy. 2. New employee hardware & account onboarding: provision Google Workspace account -> assign Supabase role -> grant GitHub/tool access -> 2FA enforcement. 3. Incident response: log issue severity -> isolate failing service -> apply patch/hotfix -> run verification -> post-incident retrospective within 24h.",
+    kpis: "Portal uptime >= 99.9% · P1 bug resolution < 2 hours · PR review turnaround < 6 hours · Zero unauthenticated security incidents",
+  },
+  {
+    id: "sop-marketing-default",
+    slug: "marketing-team",
+    department: "Marketing Team",
+    title: "Marketing Strategy & SEO Operations SOP",
+    reports_to: "General Manager / Managing Director",
+    oversees: "SEO Strategy, Inbound Demand Generation, Content Marketing, Campaign QA",
+    primary_tools: "Google Search Console, Google Analytics 4, Ahrefs, SEMrush, GoHighLevel, Canva",
+    role_purpose: "Drives organic acquisition, high-intent traffic, domain authority, and inbound qualified opportunities for MSP's core agency services.",
+    core_responsibilities: "Perform technical SEO audits, site speed optimization, and on-page keyword structuring · Produce high-value case studies, service landing pages, and lead magnets · Track and report organic keyword movements, impressions, and conversions monthly · Coordinate with the sales team to ensure inbound lead quality and attribution accuracy",
+    daily_weekly_monthly: "Daily: Monitor Google Search Console crawl errors and inbound lead form captures · Weekly: Keyword ranking checks, content publishing schedule, and backlink analysis · Monthly: Full organic performance audit and competitive positioning report",
+    key_sops: "1. SEO Audit Protocol: crawl website via audit tool -> identify indexing/schema/speed bottlenecks -> prioritize fixes -> verify in Search Console. 2. Content Brief & Publishing: research commercial keyword -> write structured outline (H1, H2, FAQ) -> draft copy with internal links -> QA metadata -> publish and request indexing. 3. Monthly SEO Report: extract Search Console & GA4 data -> highlight top performing pages and keyword gains -> identify next month's focus.",
+    kpis: "Month-on-month organic traffic growth >= 15% · Average ranking improvement for core terms · Speed-to-index for new content < 48 hours · Inbound qualified leads >= 25/month",
+  },
+  {
+    id: "sop-social-default",
+    slug: "social-media",
+    department: "Social Media Manager",
+    title: "Social Media Planning & Content Creation SOP",
+    reports_to: "Operations Manager / General Manager",
+    oversees: "Content Planning, Visual Design, Short-Form Video, Community Engagement",
+    primary_tools: "Meta Business Suite, Canva, CapCut, TikTok, LinkedIn, Instagram",
+    role_purpose: "Builds MSP's social presence and client social authority through consistent, engaging, high-retention content and proactive audience community management.",
+    core_responsibilities: "Design monthly content calendars mapped to strategic agency and client objectives · Produce creative carousels, static graphics, reel scripts, and video edits · Schedule all approved posts in platform schedulers with optimized captions and hashtags · Monitor comments, DMs, and mentions daily, maintaining responsive engagement",
+    daily_weekly_monthly: "Daily: Post scheduling verification, comment moderation, and story updates · Weekly: Performance analytics review (reach, engagement, shares) and creative ideation · Monthly: Content calendar submission by the 25th for following month's client approval",
+    key_sops: "1. Content Calendar Assembly: gather client promotional priorities -> assemble post grid with captions & media -> submit for client review by the 25th -> apply feedback. 2. Asset Creation: follow brand kit guidelines -> design in platform-native aspect ratios (4:5, 9:16) -> QA copy and visuals before scheduling. 3. Community Engagement: review notifications twice daily -> reply to genuine queries within 2 hours -> escalate sales leads to GHL.",
+    kpis: "100% on-time calendar approvals by the 28th · Engagement rate >= 3.5% across primary platforms · Zero missed scheduled posts · Community response time < 2 hours",
+  },
+  {
+    id: "sop-ops-default",
+    slug: "operations",
+    department: "Operations Manager",
+    title: "Operations Governance & Client Delivery SOP",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Client Onboarding, Workflow Governance, Cross-Team Dependencies, Verification Queue",
+    primary_tools: "GoHighLevel, Slack, Google Drive, MSP Portal, Notion",
+    role_purpose: "Guarantees smooth, on-time client execution from signed contract to final launch while eliminating delivery bottlenecks across all production teams.",
+    core_responsibilities: "Govern the 8-stage Client Build Roadmap across every active account · Review and resolve inter-departmental blocker escalations within 4 business hours · Enforce QA standards before client handoffs, website launches, or campaign live dates · Lead weekly cross-departmental delivery scrums and coordinate recovery plans",
+    daily_weekly_monthly: "Daily: Review Verification Queue and unblock urgent cross-team dependencies · Weekly: Project status scrum, SLA breach risk assessment, and resource capacity review · Monthly: Delivery efficiency audit, client turnaround time analysis, and process optimization",
+    key_sops: "1. Client Onboarding Handover: receive signed contract from Sales -> verify deposit payment -> trigger welcome email and GHL sub-account within 24 hours -> schedule kickoff call. 2. Blocker Escalation Protocol: review dependency request -> assign responsible department lead -> establish 24h turnaround target -> verify resolution. 3. Final Launch QA: complete 20-point pre-launch checklist -> obtain client sign-off in writing -> authorize live campaign/site.",
+    kpis: "Onboarding completion within 14 business days · Project delivery SLA adherence >= 95% · Blocker resolution time < 24 hours · Zero unauthorized campaign launches",
+  },
+  {
+    id: "sop-hr-default",
+    slug: "human-resources",
+    department: "Human Resources",
+    title: "Human Resources & Talent Management SOP",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Talent Acquisition, Employee Relations, Leave Approvals, Compliance & Declarations",
+    primary_tools: "MSP HR Portal, Google Workspace, Resend, WhatsApp Business",
+    role_purpose: "Attracts top-tier digital talent, fosters a disciplined and supportive company culture, and upholds strict statutory compliance and workforce records.",
+    core_responsibilities: "Manage recruitment pipelines, job postings, candidate screening, and employment offers · Administer employee leave requests, attendance monitoring, and timesheet validations · Lead comprehensive 14-day employee onboarding, orientation, and training schedules · Maintain employee records, confidentiality agreements, and compliance declarations",
+    daily_weekly_monthly: "Daily: Review morning presence board and process pending leave/declaration items · Weekly: Check in with new hires and monitor attendance discrepancies · Monthly: Payroll verification summary, timesheet sign-offs, and HR performance reporting",
+    key_sops: "1. Hiring & Onboarding: publish role brief -> screen applicants -> conduct two-stage interview -> issue formal offer -> collect signed contract & ID -> initialize portal profile. 2. Leave Administration: receive request -> verify leave balance -> check operational coverage with department manager -> approve or decline with written rationale within 24 hours. 3. Compliance Maintenance: issue annual policy declaration -> track signature status -> archive in employee digital file.",
+    kpis: "Leave request response time < 24 hours · 100% compliance declaration completion · 90-day new hire retention >= 90% · Zero unresolved employee relations grievances",
+  },
+  {
+    id: "sop-admin-default",
+    slug: "admin-department",
+    department: "Admin Department",
+    title: "Admin & Financial Operations SOP",
+    reports_to: "Managing Director / General Manager",
+    oversees: "Client Invoicing, Accounts Receivable, Reception & Office Administration",
+    primary_tools: "Zoho Books, Microsoft Excel, Standard Bank, Google Drive",
+    role_purpose: "Maintains financial accuracy, prompt client billing, healthy cash flow, and professional administrative operations across the organization.",
+    core_responsibilities: "Generate and dispatch monthly client retainer invoices and project quotes via Zoho Books · Reconcile incoming bank deposits, track accounts receivable, and follow up on overdue accounts · Operate office reception, manage call routing, and welcome visitors with professional hospitality · Oversee general procurement, office consumables, software subscriptions, and administrative filings",
+    daily_weekly_monthly: "Daily: Bank feed reconciliation, payment receipting, and front desk operations · Weekly: Aged debtors review, follow-up on invoices overdue by 5+ days · Monthly: Month-end billing run on the 25th, supplier payments reconciliation, and financial report summary",
+    key_sops: "1. Invoicing Protocol: verify active client retainers and scope changes -> generate invoice in Zoho Books -> send via email with banking details -> verify receipt. 2. Accounts Receivable Follow-up: automated reminder at Due Date -> personal reminder at Day 3 -> manager escalation at Day 7 -> service pause warning at Day 14. 3. Office Reception: greet guests immediately -> offer refreshments -> notify host team member -> ensure sign-in protocol is observed.",
+    kpis: "100% of recurring invoices dispatched by 25th · Aged receivables > 30 days kept below 5% · Bank reconciliation completed daily · Zero invoice billing discrepancies",
+  },
+  {
+    id: "sop-md-default",
+    slug: "managing-director",
+    department: "Managing Director",
+    title: "General Management & Operational Execution SOP",
+    reports_to: "Chief Executive Officer (CEO)",
+    oversees: "Operations Manager, IT Department, Marketing Team, HR, Admin & Finance",
+    primary_tools: "MSP GM Command Centre, Zoho Books, Slack, Google Workspace",
+    role_purpose: "Drives day-to-day operational execution, cross-departmental accountability, financial delivery against budgets, and tactical achievement of the CEO's growth mandate.",
+    core_responsibilities: "Translate strategic goals into measurable weekly and monthly departmental execution targets · Review company financial performance, revenue actuals, margins, and operational burn · Arbitrate complex cross-departmental blockers and approve critical resource shifts · Chair weekly leadership scrums and ensure healthy workload capacity utilization",
+    daily_weekly_monthly: "Daily: Review GM Command Centre execution metrics and critical escalations · Weekly: Leadership management scrum with department heads and capacity planning · Monthly: Comprehensive company performance review, financial reconciliation, and CEO briefing",
+    key_sops: "1. Cross-Department Arbitration: receive escalation from Operations or Department Lead -> assess business impact -> convene relevant heads -> issue binding decision within 4 hours. 2. Capacity & Resource Allocation: review team utilization rates -> identify over/under-utilized units -> authorize contractor or team shift. 3. Monthly Executive Reporting: synthesize departmental metrics -> compile executive summary -> present to CEO with recommendations.",
+    kpis: "Company-wide project SLA adherence >= 95% · Team capacity utilization 75%–85% · Operational budget variance < 5% · Departmental KPI achievement rate >= 90%",
+  },
+  {
+    id: "sop-ceo-default",
+    slug: "ceo",
+    department: "CEO",
+    title: "Executive Leadership & Corporate Governance SOP",
+    reports_to: "Board of Directors / Founder",
+    oversees: "Managing Director, General Manager, Executive Functions, Legal & Compliance",
+    primary_tools: "MSP CEO Executive Dashboard, Google Workspace, Slack",
+    role_purpose: "Sets corporate vision, strategic market positioning, shareholder governance, executive leadership, and major partnership acquisitions.",
+    core_responsibilities: "Define multi-year agency vision, core values, and strategic capital allocation · Evaluate long-term executive health, revenue profitability, and client retention trends · Negotiate high-value enterprise partnerships and institutional relationships · Hold final signing authority on executive mandates, corporate governance, and strategy",
+    daily_weekly_monthly: "Daily: Review executive pulse dashboard (revenue health, key client status) · Weekly: Strategic sync with Managing Director / General Manager · Monthly: Board reporting, commercial growth reviews, and major strategic milestone sign-offs",
+    key_sops: "1. Strategic Review: assess agency positioning and market trends quarterly -> adjust service offerings and package tiers -> issue executive directives. 2. High-Value Client Engagement: participate in enterprise client pitches and strategic QBRs -> cement relationship at executive level. 3. Corporate Governance: review statutory filings, legal compliance, and major partner agreements.",
+    kpis: "Annual revenue growth >= 40% · Client retention rate >= 90% · Net profit margin targets met · Executive employee satisfaction >= 90%",
+  },
+  {
+    id: "sop-sales-default",
+    slug: "sales-team",
+    department: "Sales Team",
+    title: "Sales Prospecting & Client Acquisition SOP",
+    reports_to: "General Manager / Managing Director",
+    oversees: "Outbound Prospecting, Discovery & Pipeline, Deal Closing, Proposal Handoff",
+    primary_tools: "GoHighLevel, Sales Playbook, WhatsApp Business, Google Meet",
+    role_purpose: "Identifies, qualifies, and closes prospective SME and corporate clients for MSP marketing retainers, web builds, and automation solutions.",
+    core_responsibilities: "Respond to new inbound leads within 10 minutes at minimum (target 5 minutes) · Conduct structured discovery calls using BANT qualification criteria · Prepare professional proposal documents aligned with MSP standard service tiers · Secure signed service agreements and initial deposit payments before handover",
+    daily_weekly_monthly: "Daily: Process pipeline in GHL, conduct discovery calls, and follow up with qualified deals · Weekly: Sales pipeline review meeting, deal velocity analysis, and conversion rate tracking · Monthly: Sales target reconciliation and review of won/lost reasons",
+    key_sops: "1. Speed-to-Lead Response: receive lead notification -> review lead context -> trigger WhatsApp/call within 10 minutes -> log outcome in GHL. 2. Discovery Call Flow: confirm business goals -> uncover current bottlenecks -> qualify budget and timeline -> agree next step. 3. Deal Closure & Handover: issue contract & invoice -> confirm signed agreement and deposit -> schedule kickoff handover with Operations.",
+    kpis: "Speed-to-lead < 10 minutes (90%+ under 5 mins) · Discovery to Proposal conversion >= 60% · Monthly new contract revenue targets met · 100% compliant handover documentation",
+  },
+  {
+    id: "sop-crm-default",
+    slug: "client-relationship-manager",
+    department: "Client Relationship Manager",
+    title: "Client Relationship Management & Retention SOP",
+    reports_to: "Operations Manager",
+    oversees: "Client Communications, Monthly Report Reviews, Retention & Upsells",
+    primary_tools: "GoHighLevel, Google Meet, WhatsApp Business, Manus AI",
+    role_purpose: "Serves as the dedicated advocate and trusted growth advisor for existing clients, securing high retention rates and identifying service expansion opportunities.",
+    core_responsibilities: "Manage day-to-day client communications via authorized WhatsApp Business channels · Coordinate and dispatch monthly performance reports by the 7th of every month · Conduct monthly reporting video calls to review deliverables and strategize next steps · Identify account growth triggers and present structured upsell proposals",
+    daily_weekly_monthly: "Daily: Monitor client WhatsApp channels and respond to client queries within 1 hour · Weekly: Review client deliverables status with Operations to ensure on-time completion · Monthly: Generate and send monthly reports by the 7th, host reporting review calls",
+    key_sops: "1. Monthly Reporting Protocol: pull analytics/lead data by the 3rd -> draft report using template -> QA figures with Delivery -> dispatch by the 7th -> book review call. 2. Client Escalation Handling: acknowledge concern within 30 minutes -> investigate with delivery team -> present concrete solution within 4 hours. 3. Retention & Upsell: identify milestone achievements -> prepare 1-page proposal for additional service -> present during monthly call.",
+    kpis: "Client retention rate >= 92% · 100% of reports sent by the 7th · Monthly report review call completion >= 85% · Client inquiry response time < 1 hour",
+  },
+  {
+    id: "sop-media-default",
+    slug: "media-buying",
+    department: "Media Buying",
+    title: "Paid Media Strategy & Campaign Optimization SOP",
+    reports_to: "Operations Manager",
+    oversees: "Paid Campaigns, Tracking Pixels, Ad Set A/B Testing, Budget Optimization",
+    primary_tools: "Meta Ads Manager, Google Ads, TikTok Ads Manager, Google Tag Manager",
+    role_purpose: "Engineers, monitors, and scales multi-channel paid ad campaigns to deliver predictable, cost-effective qualified leads for client accounts.",
+    core_responsibilities: "Build and verify tracking pixels, conversions, and server-side tracking before launch · Construct targeted audience segments, lookalikes, and custom retargeting layers · Write compelling ad copy angles and coordinate creative requirements with design team · Monitor campaign metrics daily, optimizing winning ad sets and pruning losers",
+    daily_weekly_monthly: "Daily: Check ad spend pacing, lead flow, and campaign delivery alerts · Weekly: Day 2 and Day 7 campaign performance reviews, creative fatigue audits · Monthly: Compile ad performance figures (CPL, CTR, ROAS, Spend) for the client monthly report",
+    key_sops: "1. Pre-Launch Tracking Verification: install pixel via GTM -> test lead event with Pixel Helper -> verify event in Events Manager -> confirm zero tracking errors. 2. Campaign Build: create campaign structure -> configure 3 audience sets -> load 3 creative variations per set -> set client direct-pay billing. 3. Optimization Protocol: review Day 2 (CTR/delivery) -> review Day 7 (CPL/conversions) -> pause ad sets with CPL 20%+ above benchmark -> scale top performers by 15-20%.",
+    kpis: "Cost-per-lead (CPL) maintained within agreed client benchmark · Click-through rate (CTR) >= 1.5% · Zero ad spend overruns · 100% tracking verification before any ad spend",
+  },
+];
 
 const ROADMAP = [
   { title: "Contract signed", owner: "Sales", detail: "Signed proposal, invoice, payment confirmation and kickoff handover." },
@@ -446,48 +829,96 @@ export function GlossaryPage() {
 export function SopsPage() {
   const { data = [], isLoading } = useTable<Sop>("sops", "sops");
   const [department, setDepartment] = useState("all");
-  const filtered = department === "all" ? data : data.filter((sop) => sop.department === department);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("dept");
+      if (p) {
+        // Find best match in DEPARTMENTS
+        const match = DEPARTMENTS.find(
+          (d) => d.toLowerCase() === p.toLowerCase() || d.toLowerCase().includes(p.toLowerCase())
+        );
+        setDepartment(match || p);
+      }
+    }
+  }, []);
+
+  const allSops = useMemo(() => {
+    if (data.length > 0) return data;
+    return DEFAULT_SOPS;
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    if (department === "all") return allSops;
+    const lower = department.toLowerCase();
+    return allSops.filter(
+      (sop) =>
+        sop.department.toLowerCase() === lower ||
+        sop.department.toLowerCase().includes(lower) ||
+        sop.slug.toLowerCase() === lower ||
+        lower.includes(sop.slug.toLowerCase())
+    );
+  }, [allSops, department]);
+
   return (
     <div>
       {pageTitle(BookOpen, "How we work", "SOP Library", "Department roles, reporting lines, KPIs, operating rhythms and key procedures from the master portal document.")}
-      <div className="mb-4 max-w-xs">
-        <Select value={department} onValueChange={setDepartment}>
-          <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All departments</SelectItem>
-            {DEPARTMENTS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="w-full max-w-xs">
+          <Select value={department} onValueChange={setDepartment}>
+            <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All departments ({allSops.length})</SelectItem>
+              {DEPARTMENTS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        {department !== "all" && (
+          <Button variant="ghost" size="sm" onClick={() => setDepartment("all")} className="text-xs text-muted-foreground">
+            Clear filter (show all)
+          </Button>
+        )}
       </div>
       {isLoading ? <EmptyState title="Loading SOPs" description="Pulling the latest SOP library." /> : (
         <div className="space-y-4">
-          {filtered.map((sop) => (
-            <Card key={sop.id} className="p-5">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <Badge variant="outline">{sop.department}</Badge>
-                  <h2 className="mt-3 text-xl font-semibold">{sop.title}</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">{sop.role_purpose}</p>
-                </div>
-                <div className="text-sm text-muted-foreground md:text-right">
-                  <p><span className="text-foreground">Reports to:</span> {sop.reports_to || "—"}</p>
-                  <p><span className="text-foreground">Tools:</span> {sop.primary_tools || "—"}</p>
-                </div>
-              </div>
-              <Tabs defaultValue="responsibilities" className="mt-5">
-                <TabsList className="flex h-auto flex-wrap justify-start">
-                  <TabsTrigger value="responsibilities">Responsibilities</TabsTrigger>
-                  <TabsTrigger value="rhythm">Rhythm</TabsTrigger>
-                  <TabsTrigger value="sops">Key SOPs</TabsTrigger>
-                  <TabsTrigger value="kpis">KPIs</TabsTrigger>
-                </TabsList>
-                <TabsContent value="responsibilities"><BulletList items={splitText(sop.core_responsibilities)} fallback={sop.core_responsibilities} /></TabsContent>
-                <TabsContent value="rhythm"><p className="text-sm leading-6 text-muted-foreground">{sop.daily_weekly_monthly}</p></TabsContent>
-                <TabsContent value="sops"><p className="text-sm leading-6 text-muted-foreground">{sop.key_sops}</p></TabsContent>
-                <TabsContent value="kpis"><BulletList items={splitText(sop.kpis)} fallback={sop.kpis} /></TabsContent>
-              </Tabs>
+          {filtered.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              <BookOpen className="mx-auto h-8 w-8 opacity-40" />
+              <p className="mt-3 text-sm font-medium">No standard operating procedures found for this filter.</p>
+              <Button variant="outline" size="sm" onClick={() => setDepartment("all")} className="mt-4">
+                View all SOPs
+              </Button>
             </Card>
-          ))}
+          ) : (
+            filtered.map((sop) => (
+              <Card key={sop.id} className="p-5 transition hover:border-primary/30">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">{sop.department}</Badge>
+                    <h2 className="mt-3 text-xl font-semibold">{sop.title}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{sop.role_purpose}</p>
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground md:text-right">
+                    <p><span className="font-medium text-foreground">Reports to:</span> {sop.reports_to || "—"}</p>
+                    {sop.oversees && <p><span className="font-medium text-foreground">Oversees:</span> {sop.oversees}</p>}
+                    <p><span className="font-medium text-foreground">Tools:</span> {sop.primary_tools || "—"}</p>
+                  </div>
+                </div>
+                <Tabs defaultValue="responsibilities" className="mt-5">
+                  <TabsList className="flex h-auto flex-wrap justify-start">
+                    <TabsTrigger value="responsibilities">Responsibilities</TabsTrigger>
+                    <TabsTrigger value="rhythm">Operating Rhythm</TabsTrigger>
+                    <TabsTrigger value="sops">Key SOPs</TabsTrigger>
+                    <TabsTrigger value="kpis">KPIs & Metrics</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="responsibilities"><BulletList items={splitText(sop.core_responsibilities)} fallback={sop.core_responsibilities} /></TabsContent>
+                  <TabsContent value="rhythm"><p className="text-sm leading-6 text-muted-foreground whitespace-pre-line">{sop.daily_weekly_monthly}</p></TabsContent>
+                  <TabsContent value="sops"><p className="text-sm leading-6 text-muted-foreground whitespace-pre-line">{sop.key_sops}</p></TabsContent>
+                  <TabsContent value="kpis"><BulletList items={splitText(sop.kpis)} fallback={sop.kpis} /></TabsContent>
+                </Tabs>
+              </Card>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -607,7 +1038,13 @@ function ToolCard({ tool }: { tool: Tool }) {
 
 // ============ DEPARTMENTS ============
 export function DepartmentsPage() {
-  const { data = [] } = useQuery({
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [activeDeptModal, setActiveDeptModal] = useState<
+    (DepartmentDefinition & { members: ProfileRow[]; memberCount: number }) | null
+  >(null);
+
+  const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["all-profiles"],
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("profiles").select("*");
@@ -615,50 +1052,431 @@ export function DepartmentsPage() {
       return (data ?? []) as ProfileRow[];
     },
   });
-  const byDept = useMemo(() => {
-    const map = new Map<string, ProfileRow[]>();
-    for (const p of data) {
-      const d = p.department || "Unassigned";
-      const list = map.get(d) ?? [];
-      list.push(p);
-      map.set(d, list);
-    }
-    return map;
-  }, [data]);
+
+  // Helper to map profiles to departments based on matchKeys and department field
+  const getDeptProfiles = (dept: DepartmentDefinition, allProfiles: ProfileRow[]) => {
+    return allProfiles.filter((p) => {
+      const rawDept = (p.department || "").toLowerCase().trim();
+      if (rawDept && dept.matchKeys.some((k) => rawDept.includes(k))) {
+        return true;
+      }
+      if (!rawDept || rawDept === "unassigned") {
+        const title = (p.job_title || "").toLowerCase().trim();
+        return dept.matchKeys.some((k) => title.includes(k));
+      }
+      return false;
+    });
+  };
+
+  const deptData = useMemo(() => {
+    return DEPARTMENT_DEFINITIONS.map((dept) => {
+      const members = getDeptProfiles(dept, profiles);
+      return {
+        ...dept,
+        members,
+        memberCount: members.length,
+      };
+    });
+  }, [profiles]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    DEPARTMENT_DEFINITIONS.forEach((d) => set.add(d.category));
+    return ["All", ...Array.from(set)];
+  }, []);
+
+  const filteredDepartments = useMemo(() => {
+    return deptData.filter((dept) => {
+      const matchesCategory = selectedCategory === "All" || dept.category === selectedCategory;
+      if (!matchesCategory) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const inName = dept.name.toLowerCase().includes(q) || dept.shortName.toLowerCase().includes(q);
+      const inPurpose = dept.purpose.toLowerCase().includes(q);
+      const inReportsTo = dept.reports_to.toLowerCase().includes(q);
+      const inMembers = dept.members.some(
+        (m) =>
+          (m.full_name || "").toLowerCase().includes(q) ||
+          (m.job_title || "").toLowerCase().includes(q) ||
+          (m.email || "").toLowerCase().includes(q)
+      );
+      return inName || inPurpose || inReportsTo || inMembers;
+    });
+  }, [deptData, selectedCategory, searchQuery]);
+
+  const totalStaffCount = useMemo(() => {
+    return profiles.filter((p) => p.is_active !== false).length;
+  }, [profiles]);
 
   return (
-    <div>
-      {pageTitle(Building2, "Org structure", "Departments", "Every department, its purpose, who it reports to and who's currently in it. Click through to that department's SOP.")}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {DEPARTMENTS.map((dept) => {
-          const meta = DEPARTMENT_META[dept];
-          const members = byDept.get(dept) ?? [];
-          return (
-            <Card key={dept} className="p-5">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-lg font-semibold">{dept}</h3>
-                <Badge variant="outline">{members.length}</Badge>
+    <div className="space-y-6">
+      {pageTitle(
+        Building2,
+        "Organization Directory",
+        "Company Departments",
+        "Explore the organizational structure, departmental responsibilities, reporting hierarchies, active staff members, and Standard Operating Procedures (SOPs) across all departments at Mavis Strategic Partners."
+      )}
+
+      {/* Overview Stat Badges */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card className="p-4 border-primary/20 bg-primary/5">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Departments</p>
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{DEPARTMENT_DEFINITIONS.length}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Official business units</p>
+        </Card>
+        <Card className="p-4 border-border/80 bg-card">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Workforce</p>
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-primary">
+            {isLoading ? "..." : totalStaffCount}
+          </p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Assigned staff members</p>
+        </Card>
+        <Card className="p-4 border-border/80 bg-card">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Functional Areas</p>
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">4 Categories</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Leadership, Tech, Growth, Ops</p>
+        </Card>
+        <Card className="p-4 border-border/80 bg-card">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">SOP Coverage</p>
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">100%</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Linked operational SOPs</p>
+        </Card>
+      </div>
+
+      {/* Search and Category Filter Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search departments or staff..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap gap-1.5">
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "border border-border bg-secondary/30 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                )}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Departments Grid */}
+      {filteredDepartments.length === 0 ? (
+        <Card className="p-10 text-center text-muted-foreground">
+          <Building2 className="mx-auto h-10 w-10 opacity-30" />
+          <h3 className="mt-3 text-base font-semibold text-foreground">No departments match your filter</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Try clearing your search query or choosing another category.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedCategory("All");
+            }}
+            className="mt-4"
+          >
+            Reset Filters
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {filteredDepartments.map((dept) => {
+            const IconComponent = dept.icon;
+            const previewMembers = dept.members.slice(0, 3);
+            const remainingCount = dept.members.length - previewMembers.length;
+
+            return (
+              <Card
+                key={dept.id}
+                onClick={() => setActiveDeptModal(dept)}
+                className="group relative flex flex-col justify-between overflow-hidden border border-border/80 bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md cursor-pointer"
+              >
+                <div>
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-base font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                          {dept.name}
+                        </h3>
+                        <p className="text-[11px] font-medium text-muted-foreground">{dept.category}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 font-medium">
+                      {dept.memberCount} {dept.memberCount === 1 ? "member" : "members"}
+                    </Badge>
+                  </div>
+
+                  {/* Purpose Paragraph */}
+                  <p className="mt-3.5 text-xs leading-relaxed text-muted-foreground line-clamp-3">
+                    {dept.purpose}
+                  </p>
+
+                  {/* Reporting Line Indicator */}
+                  <div className="mt-4 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+                    <GitBranch className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="truncate">
+                      <strong className="font-medium text-foreground">Reports to:</strong> {dept.reports_to}
+                    </span>
+                  </div>
+
+                  {/* Current Members Preview */}
+                  <div className="mt-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Current Personnel ({dept.memberCount})
+                    </p>
+                    {dept.members.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {previewMembers.map((m) => (
+                          <div
+                            key={m.id}
+                            title={`${m.full_name || m.email} — ${m.job_title || "Staff"}`}
+                            className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 py-0.5 pl-1 pr-2.5 text-xs text-foreground transition-colors hover:bg-secondary"
+                          >
+                            <Avatar className="h-5 w-5">
+                              <AvatarFallback className="bg-primary/15 text-[9px] font-semibold text-primary">
+                                {(m.full_name || m.email).slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate max-w-[110px] text-[11px] font-medium">
+                              {m.full_name || m.email.split("@")[0]}
+                            </span>
+                          </div>
+                        ))}
+                        {remainingCount > 0 && (
+                          <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            +{remainingCount} more
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-1.5 text-xs italic text-muted-foreground">No personnel currently assigned.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Action Footer */}
+                <div className="mt-5 flex items-center gap-2 pt-3 border-t border-border/60">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="flex-1 h-8 text-xs font-medium gap-1.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveDeptModal(dept);
+                    }}
+                  >
+                    <Eye className="h-3.5 w-3.5" /> View Details
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs font-medium gap-1.5 hover:bg-primary/10 hover:text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link to="/sops" search={{ dept: dept.name } as any}>
+                      <BookOpen className="h-3.5 w-3.5" /> View SOPs
+                    </Link>
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dedicated Department Details Modal */}
+      {activeDeptModal && (
+        <Dialog open={!!activeDeptModal} onOpenChange={(open) => !open && setActiveDeptModal(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-6 sm:p-7">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                  {(() => {
+                    const ModalIcon = activeDeptModal.icon;
+                    return <ModalIcon className="h-6 w-6" />;
+                  })()}
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                    {activeDeptModal.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    {activeDeptModal.category} &bull; Official Department Overview
+                  </DialogDescription>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{meta?.purpose}</p>
-              <p className="mt-2 text-xs text-muted-foreground"><span className="font-medium text-foreground">Reports to:</span> {meta?.reports_to}</p>
-              <div className="mt-4">
-                <p className="text-xs font-medium text-muted-foreground">Team members</p>
-                {members.length ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {members.map((m) => (
-                      <div key={m.id} className="flex items-center gap-2 rounded-full border border-border bg-secondary/40 py-1 pl-1 pr-3">
-                        <Avatar className="h-6 w-6"><AvatarFallback className="bg-primary/15 text-[10px] text-primary">{dept === "CEO" ? "EX" : (m.full_name || m.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                        <span className="text-xs">{dept === "CEO" ? "Executive team" : m.full_name || m.email.split("@")[0]}</span>
+            </DialogHeader>
+
+            <div className="mt-5 space-y-5 text-sm">
+              {/* Purpose & Operational Scope */}
+              <div className="rounded-lg border border-border/70 bg-secondary/20 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Operational Purpose & Mandate
+                </h4>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  {activeDeptModal.purpose}
+                </p>
+              </div>
+
+              {/* Hierarchy and Reporting Lines */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/70 bg-card p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Reporting Line
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    <GitBranch className="h-4 w-4 text-primary shrink-0" />
+                    Reports to: {activeDeptModal.reports_to}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Direct executive line management & governance
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/70 bg-card p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Direct Oversight
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-foreground">
+                    {activeDeptModal.oversees}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Core operational branches & team scopes
+                  </p>
+                </div>
+              </div>
+
+              {/* Core Operational Deliverables */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Key Department Functions
+                </h4>
+                <ul className="mt-2.5 space-y-1.5">
+                  {activeDeptModal.keyFunctions.map((func, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <span>{func}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Live Department Personnel Roster */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    Current Department Personnel ({activeDeptModal.members.length})
+                  </h4>
+                  <Badge variant="outline" className="text-[10px]">
+                    Live Supabase Roster
+                  </Badge>
+                </div>
+                {activeDeptModal.members.length > 0 ? (
+                  <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                    {activeDeptModal.members.map((m) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-2.5 rounded-lg border border-border/70 bg-card p-2.5 text-xs transition-colors hover:border-primary/40"
+                      >
+                        <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">
+                            {(m.full_name || m.email).slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-foreground">
+                            {m.full_name || m.email.split("@")[0]}
+                          </p>
+                          <p className="truncate text-[11px] font-medium text-primary">
+                            {m.job_title || "Team Member"}
+                          </p>
+                          <p className="truncate text-[10px] text-muted-foreground">
+                            {m.email}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
-                ) : <p className="mt-2 text-xs italic text-muted-foreground">No one assigned yet.</p>}
+                ) : (
+                  <div className="mt-2.5 rounded-lg border border-dashed border-border/80 p-4 text-center text-xs text-muted-foreground">
+                    No staff members currently assigned to this department.
+                  </div>
+                )}
               </div>
-              <Link to="/sops" className="mt-4 inline-flex text-sm text-primary hover:underline">View SOP <ChevronRight className="h-4 w-4" /></Link>
-            </Card>
-          );
-        })}
-      </div>
+
+              {/* Primary Tools & Digital Platforms */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Primary Tools & Platforms
+                </h4>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {activeDeptModal.primaryTools.map((tool) => (
+                    <Badge key={tool} variant="secondary" className="text-xs font-normal">
+                      {tool}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Department SOPs Action Box */}
+              <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4 text-primary" /> Standard Operating Procedures (SOPs)
+                  </h4>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Access operating rhythms, daily checklists, quality guidelines, and KPIs for {activeDeptModal.shortName}.
+                  </p>
+                </div>
+                <Button asChild size="sm" className="shrink-0 gap-1.5 font-medium">
+                  <Link
+                    to="/sops"
+                    search={{ dept: activeDeptModal.name } as any}
+                    onClick={() => setActiveDeptModal(null)}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" /> View SOPs
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setActiveDeptModal(null)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

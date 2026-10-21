@@ -61,13 +61,13 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
   ]},
-  { group: "Learn MSP", portals: ["staff", "admin", "operations", "sales", "finance"], items: [
+  { group: "Learn MSP", items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/glossary", label: "Glossary", icon: ListTree },
   ]},
-  { group: "How We Work", portals: ["staff", "admin", "operations"], items: [
+  { group: "How We Work", items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
@@ -128,7 +128,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   // Department Manager Workspace (Media Buying / Authorized Department)
   { group: "Department Command", portals: ["department"], items: [
-    { to: "/department", label: "Department Dashboard", icon: LayoutDashboard },
+    { to: "/department", label: "Workspace Overview", icon: LayoutDashboard },
     { to: "/department/tasks", label: "My Department Tasks", icon: CheckSquare },
     { to: "/department/performance", label: "Targets & Performance", icon: Target },
     { to: "/department/workload", label: "Team Workload", icon: Users },
