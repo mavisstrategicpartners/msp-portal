@@ -1498,19 +1498,27 @@ export function StaffWorkspaceDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {(scorecard?.trends ?? []).map((tr, i) => (
-                    <tr key={i} className="hover:bg-muted/30">
-                      <td className="py-3 px-4 font-bold text-foreground">{tr.period}</td>
-                      <td className="py-3 px-3">{tr.assigned}</td>
-                      <td className="py-3 px-3 font-semibold text-emerald-600">{tr.completed}</td>
-                      <td className="py-3 px-3 font-semibold text-primary">{tr.onTime}</td>
-                      <td className="py-3 px-4 text-right">
-                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
-                          Meets Standard
-                        </Badge>
+                  {(scorecard?.trends ?? []).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground text-xs">
+                        No historical performance evaluation periods recorded yet. Verified metrics will appear here as deliverables are assigned and completed.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    (scorecard?.trends ?? []).map((tr, i) => (
+                      <tr key={i} className="hover:bg-muted/30">
+                        <td className="py-3 px-4 font-bold text-foreground">{tr.period}</td>
+                        <td className="py-3 px-3">{tr.assigned}</td>
+                        <td className="py-3 px-3 font-semibold text-emerald-600">{tr.completed}</td>
+                        <td className="py-3 px-3 font-semibold text-primary">{tr.onTime}</td>
+                        <td className="py-3 px-4 text-right">
+                          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
+                            Meets Standard
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

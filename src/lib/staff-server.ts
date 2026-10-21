@@ -112,9 +112,14 @@ let dependenciesStore: Map<string, DependencyRequest> = new Map();
 let evidenceStore: Map<string, EvidenceSubmission> = new Map();
 let notificationsStore: Map<string, StaffNotification> = new Map();
 
-// Load persistent ledger from Supabase audit_logs on startup
-async function initLedgerFromSupabase() {
-  if (isInitialized) return;
+// Load persistent ledger from Supabase audit_logs
+async function initLedgerFromSupabase(force = false) {
+  if (isInitialized && !force) return;
+
+  tasksStore.clear();
+  dependenciesStore.clear();
+  evidenceStore.clear();
+  notificationsStore.clear();
 
   try {
     const { data: logs, error } = await (supabaseAdmin as any)
@@ -843,12 +848,54 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       const approvedEvidence = userEvidence.filter((e) => e.status === "Approved").length;
       const pendingEvidence = userEvidence.filter((e) => e.status === "Submitted for Review").length;
 
-      // Mock trend for the past 3 months
-      const trends = [
-        { period: "August 2026", assigned: 4, completed: 4, onTime: 4 },
-        { period: "September 2026", assigned: 6, completed: 5, onTime: 5 },
-        { period: "October 2026", assigned: totalAssigned, completed: completed.length, onTime: onTimeCompleted.length },
-      ];
+      // Group authentic user tasks by month for performance evaluation trends
+      const trendsMap = new Map<string, { period: string; assigned: number; completed: number; onTime: number }>();
+      for (const t of userTasks) {
+        const dateVal = t.assignmentDate || t.createdAt;
+        if (!dateVal) continue;
+        const d = new Date(dateVal);
+        const period = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        const entry = trendsMap.get(period) || { period, assigned: 0, completed: 0, onTime: 0 };
+        entry.assigned += 1;
+        if (t.status === "Completed") {
+          entry.completed += 1;
+          if (t.dueDate) {
+            const due = new Date(t.dueDate).getTime();
+            const finished = t.completionDate ? new Date(t.completionDate).getTime() : due;
+            if (finished <= due + 86400000) {
+              entry.onTime += 1;
+            }
+          }
+        }
+        trendsMap.set(period, entry);
+      }
+      const trends = Array.from(trendsMap.values());
+
+      // Tracked hours from real attendance today
+      let trackedHoursToday = 0;
+      try {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: attLog } = await (supabaseAdmin as any)
+          .from("audit_logs")
+          .select("details")
+          .eq("action", "attendance_record")
+          .gte("created_at", `${todayStr}T00:00:00.000Z`)
+          .order("created_at", { ascending: false });
+
+        if (attLog && attLog.length > 0) {
+          const userAtt = attLog.find((l: any) => l.details?.userId === targetUserId);
+          if (userAtt?.details?.hoursWorked) {
+            const match = userAtt.details.hoursWorked.match(/(\d+)h\s*(\d+)m/);
+            if (match) {
+              trackedHoursToday = Math.round((parseInt(match[1], 10) + parseInt(match[2], 10) / 60) * 10) / 10;
+            }
+          }
+        }
+      } catch {}
+
+      const complianceRate = totalAssigned > 0
+        ? Math.max(0, Math.round(100 - (overdue.length / totalAssigned) * 100))
+        : null;
 
       const scorecard: PersonalScorecard = {
         totalAssigned,
@@ -861,8 +908,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         onTimeCompletionRate,
         evidenceApprovedCount: approvedEvidence,
         evidenceAwaitingReviewCount: pendingEvidence,
-        trackedHoursToday: 6.5,
-        complianceRate: 98,
+        trackedHoursToday,
+        complianceRate,
         trends,
       };
 
