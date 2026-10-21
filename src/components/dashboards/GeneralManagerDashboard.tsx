@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,8 @@ const DEPARTMENTS_DATA: DepartmentScore[] = [
 export function GeneralManagerDashboard() {
   return (
     <div className="space-y-6">
+  {/* Clock‑in widget for General Manager */}
+  <StaffAttendanceWidget className="mb-4" />
       {/* ─── Top Execution & Capacity Summary ──────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
