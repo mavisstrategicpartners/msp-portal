@@ -8,6 +8,7 @@ import {
   AttendanceRecord,
   getTodayAttendance,
   recordAttendance,
+  formatElapsed,
 } from "@/lib/attendance-client";
 
 const DEFAULT_RECORD: AttendanceRecord = {
@@ -58,7 +59,7 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate live hours and minutes worked
+  // Calculate live net hours worked (excludes all breaks)
   const calculateHoursWorked = (): string => {
     if (!record.clockInTime || record.state === "Clocked Out") {
       return record.hoursWorked && record.hoursWorked !== "0h 0m"
@@ -69,10 +70,17 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
     if (record.state === "On Break" && record.breakStartTime) {
       elapsed -= now - record.breakStartTime;
     }
-    const totalMinutes = Math.max(0, Math.floor(elapsed / 60000));
-    const hours = Math.floor(totalMinutes / 60);
-    const mins = totalMinutes % 60;
-    return `${hours}h ${mins}m`;
+    return formatElapsed(Math.max(0, elapsed));
+  };
+
+  // Calculate total break duration (completed + ongoing)
+  const calculateBreakDuration = (): string => {
+    let total = record.totalBreakMs || 0;
+    if (record.state === "On Break" && record.breakStartTime) {
+      total += (now - record.breakStartTime);
+    }
+    if (total <= 0) return "0m";
+    return formatElapsed(total);
   };
 
   const updateRecord = async (newRecord: AttendanceRecord) => {
@@ -80,7 +88,19 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
     if (userIdRef.current) {
       setSaving(true);
       try {
-        const hoursStr = calculateHoursWorked();
+        // Calculate hours at the moment of the state change
+        let hoursStr: string;
+        if (!newRecord.clockInTime || newRecord.state === "Clocked Out") {
+          // For clock-out, compute final hours based on the record being saved
+          let elapsed = now - (record.clockInTime || now) - (newRecord.totalBreakMs || 0);
+          hoursStr = formatElapsed(Math.max(0, elapsed));
+        } else {
+          let elapsed = now - newRecord.clockInTime - (newRecord.totalBreakMs || 0);
+          if (newRecord.state === "On Break" && newRecord.breakStartTime) {
+            elapsed -= (now - newRecord.breakStartTime);
+          }
+          hoursStr = formatElapsed(Math.max(0, elapsed));
+        }
         await recordAttendance(userIdRef.current, newRecord, hoursStr);
       } finally {
         setSaving(false);
@@ -128,12 +148,15 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
       record.state === "On Break" && record.breakStartTime
         ? Date.now() - record.breakStartTime
         : 0;
-    const finalHours = calculateHoursWorked();
+    const finalTotalBreakMs = (record.totalBreakMs || 0) + extraBreak;
+    // Compute final hours: total elapsed - all breaks
+    const elapsed = record.clockInTime ? now - record.clockInTime - finalTotalBreakMs : 0;
+    const finalHours = formatElapsed(Math.max(0, elapsed));
     const newRecord: AttendanceRecord = {
       ...record,
       state: "Clocked Out",
       breakStartTime: null,
-      totalBreakMs: (record.totalBreakMs || 0) + extraBreak,
+      totalBreakMs: finalTotalBreakMs,
       hoursWorked: finalHours,
     };
     await updateRecord(newRecord);
@@ -143,6 +166,8 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
   };
 
   const { state } = record;
+  const breakDuration = calculateBreakDuration();
+  const hasBreaks = record.totalBreakMs > 0 || (record.state === "On Break" && record.breakStartTime);
 
   if (loading) {
     return (
@@ -187,10 +212,28 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
             {calculateHoursWorked()}
           </div>
           <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
-            {state === "Clocked In" ? "Working Time" : state === "On Break" ? "Paused (Break)" : "Total Logged"}
+            {state === "Clocked In" ? "Net Working Time" : state === "On Break" ? "Net Working Time" : "Total Logged"}
           </div>
         </div>
       </div>
+
+      {/* Break duration display — shown when any breaks have occurred */}
+      {hasBreaks && (
+        <div className="flex items-center gap-2 mb-3 relative z-10">
+          <Coffee className={`w-3.5 h-3.5 ${state === "On Break" ? "text-amber-500" : "text-muted-foreground"}`} />
+          <span className="text-xs text-muted-foreground">Break:</span>
+          <span className={`text-xs font-mono font-semibold ${
+            state === "On Break" ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+          }`}>
+            {breakDuration}
+          </span>
+          {state === "On Break" && (
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 uppercase tracking-wider font-semibold">
+              (active)
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-2 mt-2 relative z-10">
         {state === "Clocked Out" && (

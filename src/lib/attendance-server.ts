@@ -246,6 +246,15 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
         let timeStr = "—";
         let hoursWorkedStr = "0h 0m";
         let elapsedMinutes = 0;
+        let breakDurationStr = "—";
+        let liveBreakMs = 0;
+
+        // Compute total break ms including any ongoing break
+        let computedBreakMs = totalBreakMs;
+        if (state === "On Break" && breakStartTime) {
+          computedBreakMs += (now - breakStartTime);
+          liveBreakMs = now - breakStartTime;
+        }
 
         if (clockInTime && state !== "Clocked Out") {
           timeStr = new Date(clockInTime).toLocaleTimeString([], {
@@ -253,14 +262,22 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
             minute: "2-digit",
           });
 
-          let elapsedMs = now - clockInTime - totalBreakMs;
-          if (state === "On Break" && breakStartTime) {
-            elapsedMs -= now - breakStartTime;
-          }
+          // Net worked time = elapsed - all breaks (completed + ongoing)
+          let elapsedMs = now - clockInTime - computedBreakMs;
           elapsedMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
           const h = Math.floor(elapsedMinutes / 60);
           const m = elapsedMinutes % 60;
           hoursWorkedStr = `${h}h ${m}m`;
+
+          // Format break duration
+          if (computedBreakMs > 0) {
+            const bMins = Math.max(0, Math.floor(computedBreakMs / 60000));
+            const bH = Math.floor(bMins / 60);
+            const bM = bMins % 60;
+            breakDurationStr = bH > 0 ? `${bH}h ${bM}m` : `${bM}m`;
+          } else {
+            breakDurationStr = "0m";
+          }
         } else if (state === "Clocked Out" && live?.hours_worked) {
           hoursWorkedStr = live.hours_worked;
           if (clockInTime) {
@@ -268,6 +285,13 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
               hour: "2-digit",
               minute: "2-digit",
             });
+          }
+          // Show completed break duration for clocked-out employees
+          if (totalBreakMs > 0) {
+            const bMins = Math.max(0, Math.floor(totalBreakMs / 60000));
+            const bH = Math.floor(bMins / 60);
+            const bM = bMins % 60;
+            breakDurationStr = bH > 0 ? `${bH}h ${bM}m` : `${bM}m`;
           }
         }
 
@@ -289,6 +313,8 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
           time: timeStr,
           hours: hoursWorkedStr,
           elapsedMinutes,
+          breakDuration: breakDurationStr,
+          liveBreakMs,
           currentProject: "MSP Operations",
         };
       });

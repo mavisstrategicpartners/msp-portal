@@ -51,6 +51,7 @@ export interface LiveStaffMember {
   status: "Clocked In" | "On Break" | "Clocked Out";
   time: string;
   hours: string;
+  breakDuration?: string;
   currentProject?: string;
 }
 
@@ -145,12 +146,13 @@ export function exportLivePresencePdf(
     s.role,
     s.status,
     s.time || "—",
+    s.breakDuration || "—",
     s.hours || "0h 0m",
   ]);
 
   autoTable(doc, {
     startY: startY + 23,
-    head: [["#", "Staff Member", "Department", "Role / Title", "Current Status", "Clocked In", "Hours Worked"]],
+    head: [["#", "Staff Member", "Department", "Role / Title", "Current Status", "Clocked In", "Break", "Net Hours"]],
     body: tableData,
     theme: "grid",
     headStyles: {
@@ -170,12 +172,13 @@ export function exportLivePresencePdf(
     },
     columnStyles: {
       0: { cellWidth: 8, halign: "center" },
-      1: { fontStyle: "bold", cellWidth: 42 },
-      2: { cellWidth: 32 },
-      3: { cellWidth: 35 },
-      4: { cellWidth: 26, fontStyle: "bold" },
-      5: { cellWidth: 20, halign: "center" },
-      6: { cellWidth: 19, halign: "right", fontStyle: "bold" },
+      1: { fontStyle: "bold", cellWidth: 38 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 24, fontStyle: "bold" },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 16, halign: "center" },
+      7: { cellWidth: 18, halign: "right", fontStyle: "bold" },
     },
     didParseCell: (data) => {
       if (data.section === "body" && data.column.index === 4) {

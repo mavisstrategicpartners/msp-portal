@@ -4,7 +4,13 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Coffee, CheckCircle2, XCircle, Search, RefreshCw, Clock, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { getAttendanceBoard, StaffPresenceMember, formatElapsed } from "@/lib/attendance-client";
+import {
+  getAttendanceBoard,
+  StaffPresenceMember,
+  formatElapsed,
+  computeNetWorkedMs,
+  computeTotalBreakMs,
+} from "@/lib/attendance-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function StaffAttendanceBoard({
@@ -45,8 +51,8 @@ export function StaffAttendanceBoard({
       })
       .subscribe();
 
-    // 2. Background poll every 10 seconds to guarantee freshness
-    const pollInterval = setInterval(loadData, 10_000);
+    // 2. Background poll every 30 seconds to guarantee freshness
+    const pollInterval = setInterval(loadData, 30_000);
 
     // 3. Second-by-second ticker for continuous time calculation
     const tickInterval = setInterval(() => setNow(Date.now()), 1000);
@@ -58,19 +64,33 @@ export function StaffAttendanceBoard({
     };
   }, [loadData]);
 
-  // Compute live elapsed worked time for each member in real time
+  // Compute live elapsed worked time and break duration for each member in real time
   const enrichedStaff = useMemo(() => {
     return allStaff.map((staff) => {
-      if (staff.status === "Clocked In" && staff.clockInTime) {
-        let elapsedMs = now - staff.clockInTime - (staff.totalBreakMs || 0);
+      if ((staff.status === "Clocked In" || staff.status === "On Break") && staff.clockInTime) {
+        const netMs = computeNetWorkedMs(
+          staff.clockInTime,
+          staff.status,
+          staff.totalBreakMs || 0,
+          staff.breakStartTime,
+          now,
+        );
+        const breakMs = computeTotalBreakMs(
+          staff.totalBreakMs || 0,
+          staff.status,
+          staff.breakStartTime,
+          now,
+        );
         return {
           ...staff,
-          liveHours: formatElapsed(elapsedMs),
+          liveHours: formatElapsed(netMs),
+          liveBreakDuration: breakMs > 0 ? formatElapsed(breakMs) : "0m",
         };
       }
       return {
         ...staff,
         liveHours: staff.hours || "0h 0m",
+        liveBreakDuration: staff.breakDuration || "—",
       };
     });
   }, [allStaff, now]);
@@ -184,20 +204,21 @@ export function StaffAttendanceBoard({
                 <th className="py-2.5 px-3 font-semibold">Department</th>
                 <th className="py-2.5 px-3 font-semibold">Status</th>
                 <th className="py-2.5 px-3 font-semibold">Clocked In At</th>
-                <th className="py-2.5 px-3 font-semibold text-right">Hours Worked</th>
+                <th className="py-2.5 px-3 font-semibold text-center">Break Duration</th>
+                <th className="py-2.5 px-3 font-semibold text-right">Net Hours Worked</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading && allStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground">
                     <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
                     Connecting to live presence system…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground">
                     No team members found matching your search.
                   </td>
                 </tr>
@@ -252,11 +273,27 @@ export function StaffAttendanceBoard({
                       {staff.time}
                     </td>
 
+                    {/* Break Duration column */}
+                    <td className="py-2.5 px-3 text-center">
+                      <span
+                        className={`font-mono text-xs ${
+                          staff.status === "On Break"
+                            ? "text-amber-600 dark:text-amber-400 font-semibold"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {staff.liveBreakDuration}
+                      </span>
+                    </td>
+
+                    {/* Net Hours Worked column */}
                     <td className="py-2.5 px-3 text-right">
                       <span
                         className={`font-mono font-semibold ${
                           staff.status === "Clocked In"
                             ? "text-emerald-600 dark:text-emerald-400"
+                            : staff.status === "On Break"
+                            ? "text-amber-600 dark:text-amber-400"
                             : "text-foreground"
                         }`}
                       >
