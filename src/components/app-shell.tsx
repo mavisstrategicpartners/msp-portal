@@ -69,7 +69,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   { group: "How We Work", items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
-    { to: "/departments", label: "Departments", icon: Building2 },
+    { to: "/departments", label: "Department", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
     { to: "/tools", label: "Tools & Systems", icon: Wrench },
   ]},
@@ -220,13 +220,17 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isCeoPath = pathname.startsWith('/ceo');
   const isGmPath = pathname.startsWith('/gm');
   const isOperationsPath = pathname.startsWith('/operations');
-  const isDepartmentPath = pathname.startsWith('/department');
+  const isDepartmentsDirectory = pathname === '/departments' || pathname.startsWith('/departments');
+  const isDepartmentPath = (pathname === '/department' || pathname.startsWith('/department/')) && !isDepartmentsDirectory;
   const isSalesPath = pathname.startsWith('/sales');
   const isFinancePath = pathname.startsWith('/finance');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
-  if (isCeoPath) {
+  if (isDepartmentsDirectory) {
+    // When viewing company departments directory, maintain user's standard portal view
+    currentPortal = isRootAdmin ? "ceo" : data?.isGM ? "gm" : isAdmin ? "admin" : "staff";
+  } else if (isCeoPath) {
     currentPortal = "ceo";
   } else if (isGmPath) {
     currentPortal = "gm";
@@ -248,7 +252,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "gm";
   } else if (data?.isOperations) {
     currentPortal = "operations";
-  } else if (data?.isDepartmentManager) {
+  } else if (data?.isDepartmentManager && isDepartmentPath) {
     currentPortal = "department";
   } else if (data?.isHR) {
     currentPortal = "hr";
@@ -258,8 +262,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "sales";
   } else if (isAdmin) {
     currentPortal = "admin";
-  } else if (isManagerOrAbove) {
-    currentPortal = "department";
   }
 
   // Use TanStack Router for ALL sidebar navigation to maintain proper browser history

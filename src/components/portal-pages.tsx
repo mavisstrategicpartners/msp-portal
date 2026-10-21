@@ -1038,13 +1038,7 @@ function ToolCard({ tool }: { tool: Tool }) {
 
 // ============ DEPARTMENTS ============
 export function DepartmentsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [activeDeptModal, setActiveDeptModal] = useState<
-    (DepartmentDefinition & { members: ProfileRow[]; memberCount: number }) | null
-  >(null);
-
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [] } = useQuery({
     queryKey: ["all-profiles"],
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("profiles").select("*");
@@ -1074,409 +1068,75 @@ export function DepartmentsPage() {
       return {
         ...dept,
         members,
-        memberCount: members.length,
       };
     });
   }, [profiles]);
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    DEPARTMENT_DEFINITIONS.forEach((d) => set.add(d.category));
-    return ["All", ...Array.from(set)];
-  }, []);
-
-  const filteredDepartments = useMemo(() => {
-    return deptData.filter((dept) => {
-      const matchesCategory = selectedCategory === "All" || dept.category === selectedCategory;
-      if (!matchesCategory) return false;
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      const inName = dept.name.toLowerCase().includes(q) || dept.shortName.toLowerCase().includes(q);
-      const inPurpose = dept.purpose.toLowerCase().includes(q);
-      const inReportsTo = dept.reports_to.toLowerCase().includes(q);
-      const inMembers = dept.members.some(
-        (m) =>
-          (m.full_name || "").toLowerCase().includes(q) ||
-          (m.job_title || "").toLowerCase().includes(q) ||
-          (m.email || "").toLowerCase().includes(q)
-      );
-      return inName || inPurpose || inReportsTo || inMembers;
-    });
-  }, [deptData, selectedCategory, searchQuery]);
-
-  const totalStaffCount = useMemo(() => {
-    return profiles.filter((p) => p.is_active !== false).length;
-  }, [profiles]);
-
   return (
-    <div className="space-y-6">
+    <div>
       {pageTitle(
         Building2,
-        "Organization Directory",
-        "Company Departments",
-        "Explore the organizational structure, departmental responsibilities, reporting hierarchies, active staff members, and Standard Operating Procedures (SOPs) across all departments at Mavis Strategic Partners."
+        "Org structure",
+        "Departments",
+        "Every department, its purpose, who it reports to and who's currently in it. Click through to that department's SOP."
       )}
-
-      {/* Overview Stat Badges */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card className="p-4 border-primary/20 bg-primary/5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Departments</p>
-          <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{DEPARTMENT_DEFINITIONS.length}</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Official business units</p>
-        </Card>
-        <Card className="p-4 border-border/80 bg-card">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Workforce</p>
-          <p className="mt-1.5 text-2xl font-bold tracking-tight text-primary">
-            {isLoading ? "..." : totalStaffCount}
-          </p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Assigned staff members</p>
-        </Card>
-        <Card className="p-4 border-border/80 bg-card">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Functional Areas</p>
-          <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">4 Categories</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Leadership, Tech, Growth, Ops</p>
-        </Card>
-        <Card className="p-4 border-border/80 bg-card">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">SOP Coverage</p>
-          <p className="mt-1.5 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">100%</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Linked operational SOPs</p>
-        </Card>
-      </div>
-
-      {/* Search and Category Filter Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search departments or staff..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {deptData.map((dept) => {
+          const members = dept.members;
+          const targetSopName = dept.shortName || dept.name;
+          return (
+            <Card
+              key={dept.id}
+              className="flex flex-col justify-between p-5 transition hover:border-primary/40 hover:shadow-sm"
             >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {/* Category Filter Pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  isSelected
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "border border-border bg-secondary/30 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                )}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Departments Grid */}
-      {filteredDepartments.length === 0 ? (
-        <Card className="p-10 text-center text-muted-foreground">
-          <Building2 className="mx-auto h-10 w-10 opacity-30" />
-          <h3 className="mt-3 text-base font-semibold text-foreground">No departments match your filter</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Try clearing your search query or choosing another category.</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedCategory("All");
-            }}
-            className="mt-4"
-          >
-            Reset Filters
-          </Button>
-        </Card>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {filteredDepartments.map((dept) => {
-            const IconComponent = dept.icon;
-            const previewMembers = dept.members.slice(0, 3);
-            const remainingCount = dept.members.length - previewMembers.length;
-
-            return (
-              <Card
-                key={dept.id}
-                onClick={() => setActiveDeptModal(dept)}
-                className="group relative flex flex-col justify-between overflow-hidden border border-border/80 bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md cursor-pointer"
-              >
-                <div>
-                  {/* Card Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-base font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
-                          {dept.name}
-                        </h3>
-                        <p className="text-[11px] font-medium text-muted-foreground">{dept.category}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="shrink-0 font-medium">
-                      {dept.memberCount} {dept.memberCount === 1 ? "member" : "members"}
-                    </Badge>
-                  </div>
-
-                  {/* Purpose Paragraph */}
-                  <p className="mt-3.5 text-xs leading-relaxed text-muted-foreground line-clamp-3">
-                    {dept.purpose}
-                  </p>
-
-                  {/* Reporting Line Indicator */}
-                  <div className="mt-4 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
-                    <GitBranch className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">
-                      <strong className="font-medium text-foreground">Reports to:</strong> {dept.reports_to}
-                    </span>
-                  </div>
-
-                  {/* Current Members Preview */}
-                  <div className="mt-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Current Personnel ({dept.memberCount})
-                    </p>
-                    {dept.members.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        {previewMembers.map((m) => (
-                          <div
-                            key={m.id}
-                            title={`${m.full_name || m.email} — ${m.job_title || "Staff"}`}
-                            className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 py-0.5 pl-1 pr-2.5 text-xs text-foreground transition-colors hover:bg-secondary"
-                          >
-                            <Avatar className="h-5 w-5">
-                              <AvatarFallback className="bg-primary/15 text-[9px] font-semibold text-primary">
-                                {(m.full_name || m.email).slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="truncate max-w-[110px] text-[11px] font-medium">
-                              {m.full_name || m.email.split("@")[0]}
-                            </span>
-                          </div>
-                        ))}
-                        {remainingCount > 0 && (
-                          <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                            +{remainingCount} more
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="mt-1.5 text-xs italic text-muted-foreground">No personnel currently assigned.</p>
-                    )}
-                  </div>
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-lg font-semibold">{dept.name}</h3>
+                  <Badge variant="outline">{members.length}</Badge>
                 </div>
-
-                {/* Card Action Footer */}
-                <div className="mt-5 flex items-center gap-2 pt-3 border-t border-border/60">
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="flex-1 h-8 text-xs font-medium gap-1.5"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveDeptModal(dept);
-                    }}
-                  >
-                    <Eye className="h-3.5 w-3.5" /> View Details
-                  </Button>
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs font-medium gap-1.5 hover:bg-primary/10 hover:text-primary"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Link to="/sops" search={{ dept: dept.name } as any}>
-                      <BookOpen className="h-3.5 w-3.5" /> View SOPs
-                    </Link>
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Dedicated Department Details Modal */}
-      {activeDeptModal && (
-        <Dialog open={!!activeDeptModal} onOpenChange={(open) => !open && setActiveDeptModal(null)}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-6 sm:p-7">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                  {(() => {
-                    const ModalIcon = activeDeptModal.icon;
-                    return <ModalIcon className="h-6 w-6" />;
-                  })()}
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
-                    {activeDeptModal.name}
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground">
-                    {activeDeptModal.category} &bull; Official Department Overview
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-
-            <div className="mt-5 space-y-5 text-sm">
-              {/* Purpose & Operational Scope */}
-              <div className="rounded-lg border border-border/70 bg-secondary/20 p-4">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Operational Purpose & Mandate
-                </h4>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  {activeDeptModal.purpose}
+                <p className="mt-2 text-sm text-muted-foreground">{dept.purpose}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Reports to:</span> {dept.reports_to}
                 </p>
-              </div>
-
-              {/* Hierarchy and Reporting Lines */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-border/70 bg-card p-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Reporting Line
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground flex items-center gap-1.5">
-                    <GitBranch className="h-4 w-4 text-primary shrink-0" />
-                    Reports to: {activeDeptModal.reports_to}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Direct executive line management & governance
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border/70 bg-card p-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Direct Oversight
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-foreground">
-                    {activeDeptModal.oversees}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Core operational branches & team scopes
-                  </p>
-                </div>
-              </div>
-
-              {/* Core Operational Deliverables */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Key Department Functions
-                </h4>
-                <ul className="mt-2.5 space-y-1.5">
-                  {activeDeptModal.keyFunctions.map((func, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                      <span>{func}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Live Department Personnel Roster */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    Current Department Personnel ({activeDeptModal.members.length})
-                  </h4>
-                  <Badge variant="outline" className="text-[10px]">
-                    Live Supabase Roster
-                  </Badge>
-                </div>
-                {activeDeptModal.members.length > 0 ? (
-                  <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
-                    {activeDeptModal.members.map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-2.5 rounded-lg border border-border/70 bg-card p-2.5 text-xs transition-colors hover:border-primary/40"
-                      >
-                        <Avatar className="h-8 w-8 shrink-0">
-                          <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">
-                            {(m.full_name || m.email).slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-semibold text-foreground">
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-muted-foreground">Team members</p>
+                  {members.length ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {members.map((m) => (
+                        <div
+                          key={m.id}
+                          title={`${m.full_name || m.email} — ${m.job_title || "Team Member"}`}
+                          className="flex items-center gap-2 rounded-full border border-border bg-secondary/40 py-1 pl-1 pr-3"
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-primary/15 text-[10px] font-medium text-primary">
+                              {(m.full_name || m.email).slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs">
                             {m.full_name || m.email.split("@")[0]}
-                          </p>
-                          <p className="truncate text-[11px] font-medium text-primary">
-                            {m.job_title || "Team Member"}
-                          </p>
-                          <p className="truncate text-[10px] text-muted-foreground">
-                            {m.email}
-                          </p>
+                          </span>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-2.5 rounded-lg border border-dashed border-border/80 p-4 text-center text-xs text-muted-foreground">
-                    No staff members currently assigned to this department.
-                  </div>
-                )}
-              </div>
-
-              {/* Primary Tools & Digital Platforms */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Primary Tools & Platforms
-                </h4>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {activeDeptModal.primaryTools.map((tool) => (
-                    <Badge key={tool} variant="secondary" className="text-xs font-normal">
-                      {tool}
-                    </Badge>
-                  ))}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs italic text-muted-foreground">No one assigned yet.</p>
+                  )}
                 </div>
               </div>
-
-              {/* Department SOPs Action Box */}
-              <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <BookOpen className="h-4 w-4 text-primary" /> Standard Operating Procedures (SOPs)
-                  </h4>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Access operating rhythms, daily checklists, quality guidelines, and KPIs for {activeDeptModal.shortName}.
-                  </p>
-                </div>
-                <Button asChild size="sm" className="shrink-0 gap-1.5 font-medium">
-                  <Link
-                    to="/sops"
-                    search={{ dept: activeDeptModal.name } as any}
-                    onClick={() => setActiveDeptModal(null)}
-                  >
-                    <BookOpen className="h-3.5 w-3.5" /> View SOPs
-                  </Link>
-                </Button>
+              <div className="mt-4 pt-3 border-t border-border/50">
+                <Link
+                  to="/sops"
+                  search={{ dept: targetSopName } as any}
+                  className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+                >
+                  View SOP <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => setActiveDeptModal(null)}>
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
