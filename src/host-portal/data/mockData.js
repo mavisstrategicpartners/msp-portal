@@ -157,14 +157,7 @@ export const seedProjects = [
 ]
 
 export const TASK_STATUSES = ['To Do', 'In Progress', 'Review', 'Completed']
-export const seedTasks = [
-  { id: 'T-1', title: 'Set up React project scaffolding', project_id: 'P-1', assignee_learner_id: 'L-1001', status: 'Completed', priority: 'High', due_date: '2026-05-10', description: 'Vite + React + Tailwind starter, linting, CI.' },
-  { id: 'T-2', title: 'Build authentication screens', project_id: 'P-1', assignee_learner_id: 'L-1002', status: 'In Progress', priority: 'High', due_date: '2026-07-15', description: 'Sign-in, sign-up, password reset UI.' },
-  { id: 'T-3', title: 'Data model workshop', project_id: 'P-2', assignee_learner_id: 'L-1004', status: 'To Do', priority: 'Medium', due_date: '2026-07-25', description: 'Facilitate a two-hour workshop with stakeholders.' },
-  { id: 'T-4', title: 'Patch all Ubuntu servers', project_id: 'P-3', assignee_learner_id: 'L-1005', status: 'In Progress', priority: 'Critical', due_date: '2026-07-05', description: 'Kernel + package updates + reboot windows.' },
-  { id: 'T-5', title: 'Write incident-response playbook', project_id: 'P-3', assignee_learner_id: 'L-1003', status: 'Review', priority: 'High', due_date: '2026-07-20', description: 'Draft the initial playbook for review by the security lead.' },
-  { id: 'T-6', title: 'Kick-off meeting summary', project_id: 'P-4', assignee_learner_id: 'L-1007', status: 'Completed', priority: 'Low', due_date: '2026-02-05', description: '' },
-]
+export const seedTasks = []
 
 // ------- HR seed data -------
 export const LEAVE_TYPES = ['Annual', 'Sick', 'Family Responsibility', 'Maternity', 'Paternity', 'Study', 'Compassionate']

@@ -13,7 +13,11 @@ const priorityColor = (p) => p === 'Critical' ? 'var(--danger)' : p === 'High' ?
 const columnAccent = (c) => c === 'Completed' ? 'var(--success)' : c === 'Review' ? 'var(--warning)' : c === 'In Progress' ? 'var(--brand)' : 'var(--text-muted)'
 
 export default function Tasks() {
-  const [tasks, setTasks] = useLocalStorage('host.tasks', seedTasks)
+  const [storedTasks, setStoredTasks] = useLocalStorage('host.tasks', seedTasks)
+  const tasks = useMemo(() => {
+    return (storedTasks || []).filter(t => !['T-1','T-2','T-3','T-4','T-5','T-6'].includes(t.id))
+  }, [storedTasks])
+  const setTasks = setStoredTasks
   const [projects] = useLocalStorage('host.projects', seedProjects)
   const [learners] = useLocalStorage('host.learners', seedLearners)
   const [q, setQ] = useState('')
@@ -101,7 +105,15 @@ export default function Tasks() {
           <button className="btn btn-primary" onClick={openAdd}>+ New Task</button>
         </div>
 
-        {view === 'board' ? (
+        {tasks.length === 0 ? (
+          <div style={{ padding: '48px 16px', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: 12, margin: '16px 0' }}>
+            <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.6 }}>📋</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>No tasks have been assigned yet.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Tasks assigned to employees will appear here.</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>No upcoming deadlines.</div>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAdd}>+ Create First Task</button>
+          </div>
+        ) : view === 'board' ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> Drag any task between columns — in either direction.</div>
             <KanbanBoard columns={TASK_STATUSES} items={filtered} onMove={move} columnAccent={columnAccent}

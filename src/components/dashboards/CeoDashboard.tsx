@@ -161,348 +161,78 @@ export interface DepartmentScorecard {
 
 /* ─── Mock Enterprise Data ─────────────────────────────────────────────────── */
 
-const INITIAL_ACTION_QUEUE: ActionItem[] = [
-  {
-    id: "act-1",
-    severity: "critical",
-    priorityLabel: "P1 — Critical",
-    status: "awaiting_decision",
-    client: "Client Alpha",
-    department: "Media Buying",
-    service: "Paid Ads (Meta Performance)",
-    overdueMilestone: "Live Campaign Launch",
-    originalDue: "2026-10-06 17:00",
-    currentDue: "2026-10-07 12:00",
-    workingHoursLate: 9,
-    currentBlocker: "Budget approval pending with department manager",
-    blockerDetail:
-      "Media buyer submitted R12,500 ad spend budget 2 days ago. The Media Buying Lead has not responded after 2 operational reminders. Campaign is halted while client has already funded account.",
-    businessImpact: "R25,000 monthly retainer at immediate churn risk; client expectation breached.",
-    taskOwnerRole: "Media Buying Specialist",
-    taskOwnerName: "Siya Nkosi",
-    managerRole: "Media Buying Lead",
-    managerName: "Thabiso Mokoena",
-    delayCategory: "Manager approval bottleneck",
-    nextAction: "Operations to obtain manager budget sign-off or CEO override by 12:00 today",
-    nextActionDeadline: "Today, 12:00 SAST",
-    escalationRecipientRole: "Operations Lead & CEO",
-    clientElapsedTimeHrs: 45,
-    internalServiceTimeHrs: 27,
-    stageTimeHrs: 13,
-    clientPromiseStatus: "at-risk",
-    clientLastContacted: "Yesterday, 09:00 SAST",
-    ceoDecisionRequired: true,
-    ceoDecisionType: "Approve executive budget override or reassign authorization to Operations Lead.",
-    timeline: [
-      { timestamp: "Oct 5, 09:00", actor: "Siya Nkosi", action: "Task completed", detail: "Campaign creative and audience targeting submitted for review", type: "staff" },
-      { timestamp: "Oct 5, 14:30", actor: "Siya Nkosi", action: "Budget request submitted", detail: "R12,500 monthly ad spend budget sent to Media Buying Lead for approval", type: "staff" },
-      { timestamp: "Oct 6, 09:15", actor: "Operations", action: "Follow-up #1", detail: "Internal message sent to Thabiso Mokoena requesting budget approval", type: "system" },
-      { timestamp: "Oct 6, 17:00", actor: "System", action: "Milestone missed", detail: "Original due date passed — Live Campaign Launch not delivered", type: "system" },
-      { timestamp: "Oct 7, 08:30", actor: "Operations", action: "Follow-up #2", detail: "Email escalation sent to Thabiso Mokoena + CC Operations Lead", type: "system" },
-      { timestamp: "Oct 7, 12:00", actor: "System", action: "Deadline extended", detail: "Current due moved to Oct 7 12:00 — no approval received", type: "system" },
-      { timestamp: "Oct 8, 07:45", actor: "System", action: "CEO escalation triggered", detail: "9 working hours late. Auto-escalated to CEO queue.", type: "system" },
-    ],
-  },
-  {
-    id: "act-2",
-    severity: "high",
-    priorityLabel: "P2 — High Priority",
-    status: "in_progress",
-    client: "Apex Solar SA",
-    department: "Tech & Automation",
-    service: "CRM & AI Automation",
-    overdueMilestone: "GHL WhatsApp Qualification Journey",
-    originalDue: "2026-10-07 17:00",
-    currentDue: "2026-10-08 17:00",
-    workingHoursLate: 4,
-    currentBlocker: "Awaiting client delegate link for Meta Business Manager",
-    blockerDetail:
-      "CRM specialist cannot connect WhatsApp API to GoHighLevel without client delegate access. Account manager contacted POC on Oct 6. Client confirmed receipt but has not issued access.",
-    businessImpact: "Delayed go-live prevents 35 daily solar leads from automated qualification.",
-    taskOwnerRole: "CRM & Automation Specialist",
-    taskOwnerName: "Lesego Molefe",
-    managerRole: "Tech Delivery Lead",
-    managerName: "Kabelo Dlamini",
-    delayCategory: "Client input dependency",
-    nextAction: "Account manager phone call scheduled with Apex Solar POC at 14:00 today",
-    nextActionDeadline: "Today, 14:00 SAST",
-    escalationRecipientRole: "Operations Lead",
-    clientElapsedTimeHrs: 32,
-    internalServiceTimeHrs: 18,
-    stageTimeHrs: 8,
-    clientPromiseStatus: "intact",
-    clientLastContacted: "Yesterday, 16:00 SAST",
-    ceoDecisionRequired: false,
-    timeline: [
-      { timestamp: "Oct 6, 10:00", actor: "Lesego Molefe", action: "Access requested", detail: "Sent Meta Business Manager delegate request to Account Manager", type: "staff" },
-      { timestamp: "Oct 6, 14:00", actor: "Account Manager", action: "Client contacted", detail: "WhatsApp message to Apex Solar POC requesting delegate link", type: "manager" },
-      { timestamp: "Oct 7, 09:00", actor: "Apex Solar POC", action: "Acknowledged", detail: "Client replied: 'Will send by end of day'", type: "client" },
-      { timestamp: "Oct 7, 17:00", actor: "System", action: "Milestone missed", detail: "GHL WhatsApp Qualification Journey not delivered — waiting on client", type: "system" },
-      { timestamp: "Oct 8, 08:00", actor: "System", action: "Escalated to queue", detail: "4 working hours late. Added to CEO visibility queue.", type: "system" },
-    ],
-  },
-  {
-    id: "act-3",
-    severity: "medium",
-    priorityLabel: "P3 — Medium",
-    status: "new",
-    client: "BrightPath Education",
-    department: "Web Design",
-    service: "Website Development",
-    overdueMilestone: "Homepage Wireframe Approval",
-    originalDue: "2026-10-08 12:00",
-    currentDue: "2026-10-08 17:00",
-    workingHoursLate: 1,
-    currentBlocker: "Scope revision cycle (Round 3 requested without signed change order)",
-    blockerDetail:
-      "Client requested third round of revisions on homepage hero section. Standard contract includes 2 rounds. Design lead preparing revised package with revision limit notice.",
-    businessImpact: "Scope creep risk of 8 unpaid design hours if not formally capped.",
-    taskOwnerRole: "Web Designer",
-    taskOwnerName: "Naledi Khumalo",
-    managerRole: "Design Lead",
-    managerName: "Zanele Sithole",
-    delayCategory: "Client revision cycle",
-    nextAction: "Design lead to deliver final wireframe with formal revision-limit notice",
-    nextActionDeadline: "Today, 15:00 SAST",
-    escalationRecipientRole: "Design Lead",
-    clientElapsedTimeHrs: 60,
-    internalServiceTimeHrs: 22,
-    stageTimeHrs: 5,
-    clientPromiseStatus: "intact",
-    clientLastContacted: "Today, 08:30 SAST",
-    ceoDecisionRequired: false,
-    timeline: [
-      { timestamp: "Oct 6, 14:00", actor: "Naledi Khumalo", action: "Wireframe v1 delivered", detail: "Initial homepage wireframe sent to client via email", type: "staff" },
-      { timestamp: "Oct 7, 09:00", actor: "Client", action: "Revisions requested", detail: "Client requested colour and layout changes", type: "client" },
-      { timestamp: "Oct 7, 16:00", actor: "Naledi Khumalo", action: "Wireframe v2 delivered", detail: "Updated design sent — addressed all client feedback", type: "staff" },
-      { timestamp: "Oct 8, 08:30", actor: "Client", action: "Round 3 revisions", detail: "Client wants further adjustments to hero section", type: "client" },
-    ],
-  },
-];
+const INITIAL_ACTION_QUEUE: ActionItem[] = [];
 
 const DEPARTMENT_SCORECARDS: DepartmentScorecard[] = [
   {
     id: "dep-1",
     name: "Media Buying (Paid Ads)",
-    lead: "Thabiso Mokoena",
+    lead: "Department Manager",
     targetSla: 95,
-    actualSla: 85,
-    monthlyRevenue: "R210,000",
-    activeWorkload: 14,
-    overdueIssues: 1,
-    health: "warning",
-    highlight: "1 budget sign-off overdue by 9 hours (Client Alpha).",
+    actualSla: 100,
+    monthlyRevenue: "R0",
+    activeWorkload: 0,
+    overdueIssues: 0,
+    health: "healthy",
+    highlight: "No active blockers; ready for official assignments.",
   },
   {
     id: "dep-2",
     name: "Tech Delivery & Automation",
-    lead: "Kabelo Dlamini",
+    lead: "Tech Delivery Lead",
     targetSla: 90,
-    actualSla: 94,
-    monthlyRevenue: "R180,000",
-    activeWorkload: 11,
+    actualSla: 100,
+    monthlyRevenue: "R0",
+    activeWorkload: 0,
     overdueIssues: 0,
     health: "healthy",
-    highlight: "Apex Solar integration awaiting client delegate token.",
+    highlight: "Infrastructure operational; ready for campaign deliverables.",
   },
   {
     id: "dep-3",
     name: "Web Design & Development",
-    lead: "Zanele Sithole",
+    lead: "Design Lead",
     targetSla: 90,
-    actualSla: 92,
-    monthlyRevenue: "R140,000",
-    activeWorkload: 9,
+    actualSla: 100,
+    monthlyRevenue: "R0",
+    activeWorkload: 0,
     overdueIssues: 0,
     health: "healthy",
-    highlight: "BrightPath wireframe final delivery on schedule today.",
+    highlight: "Design systems ready; awaiting client asset packs.",
   },
   {
     id: "dep-4",
     name: "Client Strategy & Sales",
-    lead: "Sarah Jenkins",
+    lead: "Sales Lead",
     targetSla: 95,
-    actualSla: 96,
-    monthlyRevenue: "R185,000",
-    activeWorkload: 14,
+    actualSla: 100,
+    monthlyRevenue: "R0",
+    activeWorkload: 0,
     overdueIssues: 0,
     health: "healthy",
-    highlight: "TechNova R140k contract closed; Handover pack completed.",
+    highlight: "Sales pipelines operational; 0 overdue deliverables.",
   },
   {
     id: "dep-5",
     name: "Client Success & Retention",
-    lead: "David Cole",
+    lead: "Client Success Lead",
     targetSla: 98,
-    actualSla: 94,
-    monthlyRevenue: "R650,000 (Base)",
-    activeWorkload: 16,
-    overdueIssues: 1,
-    health: "warning",
-    highlight: "Nexus Retail 14-day check-in overdue; scheduling recovery call.",
+    actualSla: 100,
+    monthlyRevenue: "R0",
+    activeWorkload: 0,
+    overdueIssues: 0,
+    health: "healthy",
+    highlight: "Account health optimal; zero escalated issues.",
   },
 ];
 
-const MANAGER_COMMITMENTS: ManagerCommitment[] = [
-  {
-    id: "mc-1",
-    managerName: "Thabiso Mokoena",
-    managerRole: "Media Buying Lead",
-    promise: "Approve ad budget for Client Alpha campaign",
-    promisedDeadline: "2026-10-06 17:00",
-    client: "Client Alpha",
-    status: "missed",
-    hoursOverdue: 18,
-    lastUpdate: "No response",
-    lastUpdateDetail: "Two operational follow-ups sent (Oct 6, Oct 7). No reply.",
-  },
-  {
-    id: "mc-2",
-    managerName: "Kabelo Dlamini",
-    managerRole: "Tech Delivery Lead",
-    promise: "Ensure CRM onboarding completes for Apex Solar",
-    promisedDeadline: "2026-10-08 17:00",
-    client: "Apex Solar SA",
-    status: "on-track",
-    lastUpdate: "Today, 08:15",
-    lastUpdateDetail: "Account manager confirmed client check-in at 14:00 today.",
-  },
-  {
-    id: "mc-3",
-    managerName: "Zanele Sithole",
-    managerRole: "Design Lead",
-    promise: "Deliver final wireframe with scope notice to BrightPath",
-    promisedDeadline: "2026-10-08 15:00",
-    client: "BrightPath Education",
-    status: "on-track",
-    lastUpdate: "Today, 09:00",
-    lastUpdateDetail: "Wireframe v3 completed. Scope-limit notice attached.",
-  },
-];
+const MANAGER_COMMITMENTS: ManagerCommitment[] = [];
 
-const CLIENT_RISKS: ClientRisk[] = [
-  {
-    id: "cr-1",
-    client: "Client Alpha",
-    riskLevel: "critical",
-    riskSignals: [
-      "Campaign launch 9 hrs overdue",
-      "Client invoiced and funded ad spend",
-      "Internal budget sign-off stuck 2 days",
-    ],
-    daysSinceLastDelivery: 5,
-    openMilestones: 3,
-    overdueMilestones: 1,
-    monthlyRevenue: "R25,000",
-    accountManager: "Sarah Jenkins",
-    recommendedAction: "CEO budget override & direct phone call to assure 24h launch",
-  },
-  {
-    id: "cr-2",
-    client: "Nexus Retail",
-    riskLevel: "high",
-    riskSignals: [
-      "No account contact for 14 days",
-      "Executive quarterly review unscheduled",
-      "Renewal due in 45 days",
-    ],
-    daysSinceLastDelivery: 14,
-    openMilestones: 1,
-    overdueMilestones: 0,
-    monthlyRevenue: "R38,000",
-    accountManager: "David Cole",
-    recommendedAction: "Client Success lead to schedule executive review call today",
-  },
-  {
-    id: "cr-3",
-    client: "Omega Corp",
-    riskLevel: "watch",
-    riskSignals: [
-      "Proposal sent 5 days ago",
-      "Competitor pitch mentioned by CFO",
-    ],
-    daysSinceLastDelivery: 0,
-    openMilestones: 0,
-    overdueMilestones: 0,
-    monthlyRevenue: "R45,000 (Pipeline)",
-    accountManager: "Sarah Jenkins",
-    recommendedAction: "Senior executive touchpoint before proposal expires Friday",
-  },
-];
+const CLIENT_RISKS: ClientRisk[] = [];
 
-const TODAY_COMMITMENTS: TodayCommitment[] = [
-  {
-    id: "tc-1",
-    client: "Client Alpha",
-    deliverable: "Campaign Budget Approval & Go-Live",
-    promisedBy: "Operations Lead",
-    deadline: "12:00 SAST",
-    ownerName: "Operations Lead",
-    ownerRole: "Operations Lead",
-    status: "at-risk",
-    progressPct: 20,
-  },
-  {
-    id: "tc-2",
-    client: "BrightPath Education",
-    deliverable: "Homepage Wireframe Final + Revision Notice",
-    promisedBy: "Design Lead",
-    deadline: "15:00 SAST",
-    ownerName: "Naledi Khumalo",
-    ownerRole: "Web Designer",
-    status: "on-track",
-    progressPct: 80,
-  },
-  {
-    id: "tc-3",
-    client: "Apex Solar SA",
-    deliverable: "GHL WhatsApp Qualification Journey",
-    promisedBy: "Account Manager",
-    deadline: "17:00 SAST",
-    ownerName: "Lesego Molefe",
-    ownerRole: "CRM Specialist",
-    status: "at-risk",
-    progressPct: 65,
-  },
-  {
-    id: "tc-4",
-    client: "TechNova",
-    deliverable: "Operations Handover Pack & SLA Welcome",
-    promisedBy: "Sales Lead",
-    deadline: "11:00 SAST",
-    ownerName: "Sarah Jenkins",
-    ownerRole: "Account Manager",
-    status: "delivered",
-    progressPct: 100,
-  },
-];
+const TODAY_COMMITMENTS: TodayCommitment[] = [];
 
-const STRATEGIC_DECISIONS = [
-  {
-    id: "sd-1",
-    title: "Override Media Buying Lead budget sign-off for Client Alpha",
-    urgency: "Immediate — Before 12:00",
-    impact: "Unblocks R25,000 retainer & live ad campaign immediately.",
-    status: "Pending CEO Approval",
-    category: "Operational Governance",
-  },
-  {
-    id: "sd-2",
-    title: "Approve Q4 Tech Delivery headcount expansion (Senior Automation Dev)",
-    urgency: "Due Tomorrow, 17:00",
-    impact: "Prevents GHL onboarding bottleneck as active pipeline hits 14 accounts.",
-    status: "Review Required",
-    category: "Resource Allocation",
-  },
-  {
-    id: "sd-3",
-    title: "Sign off formal scope-limit notice for BrightPath Education",
-    urgency: "Today, 14:00",
-    impact: "Caps unpaid revision cycles and establishes professional boundary.",
-    status: "Ready for Execution",
-    category: "Contract Compliance",
-  },
-];
+const STRATEGIC_DECISIONS: any[] = [];
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */
 
@@ -510,7 +240,7 @@ export function CeoDashboard() {
   const navigate = useNavigate();
   const [actionQueue, setActionQueue] = useState<ActionItem[]>(INITIAL_ACTION_QUEUE);
   const [selectedItem, setSelectedItem] = useState<ActionItem | null>(null);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["act-1"]));
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [queueTab, setQueueTab] = useState<"all" | "critical" | "decision" | "overdue" | "resolved">("all");
   const [searchCommitment, setSearchCommitment] = useState("");
   const [ceoNotes, setCeoNotes] = useState<Record<string, string>>({});
@@ -727,20 +457,20 @@ export function CeoDashboard() {
               <Building2 className="h-4 w-4 text-amber-500 transition-transform group-hover:scale-110" />
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
-              <span className="text-2xl font-bold tracking-tight text-foreground">94.1%</span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">100%</span>
               <span className="text-xs text-muted-foreground">Retention</span>
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-                <TrendingDown className="h-3 w-3" /> 1 Breach
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3 w-3" /> 0 Breaches
               </span>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-                12G · 3A · 1R
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                2 Active Accounts
               </Badge>
             </div>
-            <Progress value={94} className="mt-3 h-1.5 bg-muted" />
+            <Progress value={100} className="mt-3 h-1.5 bg-muted" />
             <p className="mt-2 text-[11px] text-muted-foreground truncate">
-              16 accounts · Client Alpha at risk
+              Makurung & Imigidi in good standing
             </p>
           </Link>
 
@@ -754,20 +484,20 @@ export function CeoDashboard() {
               <CheckSquare className="h-4 w-4 text-[#3b1d4d] dark:text-primary transition-transform group-hover:scale-110" />
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
-              <span className="text-2xl font-bold tracking-tight text-foreground">94.0%</span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">100%</span>
               <span className="text-xs text-muted-foreground">On-Time SLA</span>
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-                <Clock className="h-3 w-3" /> 2 Overdue
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <Clock className="h-3 w-3" /> 0 Overdue
               </span>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-                8 Due Today
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                0 Due Today
               </Badge>
             </div>
-            <Progress value={94} className="mt-3 h-1.5 bg-muted" />
+            <Progress value={100} className="mt-3 h-1.5 bg-muted" />
             <p className="mt-2 text-[11px] text-muted-foreground truncate">
-              2 approvals pending in Media Buying
+              All systems operational · Ready for live tasks
             </p>
           </Link>
 
@@ -879,20 +609,20 @@ export function CeoDashboard() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-foreground">Client Health</span>
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-                  Warning
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                  Optimal
                 </Badge>
               </div>
-              <p className="mt-2 text-2xl font-bold text-foreground">16 Accounts</p>
-              <p className="text-xs text-muted-foreground">12 Healthy · 3 Watch · 1 Red</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">2 Accounts</p>
+              <p className="text-xs text-muted-foreground">Makurung & Imigidi Active</p>
               <div className="mt-3 rounded-md bg-muted/40 p-2 text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">At-Risk MRR:</span>
-                  <span className="font-semibold text-rose-600 dark:text-rose-400">R25,000</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">R0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">CSAT Score:</span>
-                  <span className="font-semibold text-foreground">4.8 / 5.0</span>
+                  <span className="font-semibold text-foreground">5.0 / 5.0</span>
                 </div>
               </div>
             </div>
@@ -910,20 +640,20 @@ export function CeoDashboard() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-foreground">Delivery Health</span>
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-                  SLA Watch
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                  Optimal
                 </Badge>
               </div>
-              <p className="mt-2 text-2xl font-bold text-foreground">94.0%</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">100%</p>
               <p className="text-xs text-muted-foreground">Deliverables on-time SLA</p>
               <div className="mt-3 rounded-md bg-muted/40 p-2 text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Due Today:</span>
-                  <span className="font-semibold text-foreground">8 tasks</span>
+                  <span className="font-semibold text-foreground">0 tasks</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Blocked Work:</span>
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">2 tasks</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">0 tasks</span>
                 </div>
               </div>
             </div>
@@ -1044,7 +774,14 @@ export function CeoDashboard() {
 
         {/* Inbox Items List */}
         <div className="divide-y divide-border">
-          {filteredQueue.length === 0 ? (
+          {actionQueue.length === 0 ? (
+            <div className="p-10 text-center">
+              <CheckSquare className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
+            </div>
+          ) : filteredQueue.length === 0 ? (
             <div className="p-8 text-center">
               <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500 mb-2" />
               <p className="text-sm font-semibold text-foreground">No items in this queue category</p>
@@ -1469,7 +1206,16 @@ export function CeoDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredCommitments.map((tc) => (
+              {filteredCommitments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <Target className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+                    <p className="text-sm font-bold text-foreground">No upcoming deadlines.</p>
+                    <p className="text-xs text-muted-foreground mt-1">No tasks have been assigned yet. Tasks and commitments will appear here.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredCommitments.map((tc) => (
                 <tr key={tc.id} className="hover:bg-muted/20 transition-colors">
                   <td className="p-3.5 font-bold text-foreground">{tc.client}</td>
                   <td className="p-3.5 font-medium text-foreground max-w-[220px]">
@@ -1507,7 +1253,8 @@ export function CeoDashboard() {
                     </Badge>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>
@@ -1530,29 +1277,37 @@ export function CeoDashboard() {
           </div>
 
           <div className="divide-y divide-border p-0">
-            {STRATEGIC_DECISIONS.map((sd) => (
-              <div key={sd.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold">
-                      {sd.category}
-                    </Badge>
-                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">
-                      {sd.urgency}
-                    </span>
-                  </div>
-                  <h4 className="text-sm font-bold text-foreground">{sd.title}</h4>
-                  <p className="text-xs text-muted-foreground">{sd.impact}</p>
-                </div>
-                <Button
-                  size="sm"
-                  className="bg-[#3b1d4d] hover:bg-[#3b1d4d]/90 text-white text-xs h-8 shrink-0 shadow-xs"
-                  onClick={() => toast.success(`Executive action recorded for: "${sd.title}"`)}
-                >
-                  <Check className="mr-1 h-3.5 w-3.5" /> Approve Decision
-                </Button>
+            {STRATEGIC_DECISIONS.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs">
+                <Crown className="h-8 w-8 mx-auto mb-2 opacity-30 text-[#3b1d4d] dark:text-primary" />
+                <p className="font-semibold text-foreground">No strategic decisions pending</p>
+                <p className="mt-1">All executive approvals are up to date. No high-level policy actions required.</p>
               </div>
-            ))}
+            ) : (
+              STRATEGIC_DECISIONS.map((sd) => (
+                <div key={sd.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/20 transition-colors">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold">
+                        {sd.category}
+                      </Badge>
+                      <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                        {sd.urgency}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-foreground">{sd.title}</h4>
+                    <p className="text-xs text-muted-foreground">{sd.impact}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-[#3b1d4d] hover:bg-[#3b1d4d]/90 text-white text-xs h-8 shrink-0 shadow-xs"
+                    onClick={() => toast.success(`Executive action recorded for: "${sd.title}"`)}
+                  >
+                    <Check className="mr-1 h-3.5 w-3.5" /> Approve Decision
+                  </Button>
+                </div>
+              ))
+            )}
           </div>
         </Card>
 
@@ -1569,50 +1324,58 @@ export function CeoDashboard() {
           </div>
 
           <div className="divide-y divide-border p-0">
-            {MANAGER_COMMITMENTS.map((mc) => (
-              <div key={mc.id} className="p-4 flex items-start gap-3 hover:bg-muted/20 transition-colors">
-                <div className="mt-0.5 shrink-0">
-                  {mc.status === "missed" ? (
-                    <ThumbsDown className="h-4 w-4 text-rose-500" />
-                  ) : (
-                    <ThumbsUp className="h-4 w-4 text-emerald-500" />
+            {MANAGER_COMMITMENTS.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs">
+                <UserCheck className="h-8 w-8 mx-auto mb-2 opacity-30 text-[#3b1d4d] dark:text-primary" />
+                <p className="font-semibold text-foreground">No manager commitments registered</p>
+                <p className="mt-1">Tasks assigned to employees and department commitments will appear here.</p>
+              </div>
+            ) : (
+              MANAGER_COMMITMENTS.map((mc) => (
+                <div key={mc.id} className="p-4 flex items-start gap-3 hover:bg-muted/20 transition-colors">
+                  <div className="mt-0.5 shrink-0">
+                    {mc.status === "missed" ? (
+                      <ThumbsDown className="h-4 w-4 text-rose-500" />
+                    ) : (
+                      <ThumbsUp className="h-4 w-4 text-emerald-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{mc.managerName}</span>
+                      <span className="text-xs text-muted-foreground">({mc.managerRole})</span>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-bold ${
+                          mc.status === "missed"
+                            ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
+                            : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                        }`}
+                      >
+                        {mc.status === "missed" ? `Missed · ${mc.hoursOverdue}h overdue` : "On Track"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-foreground font-medium">Promise: {mc.promise}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Client: <strong>{mc.client}</strong> · Promised: {mc.promisedDeadline}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground italic">
+                      Status: {mc.lastUpdateDetail}
+                    </p>
+                  </div>
+                  {mc.status === "missed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 shrink-0 text-rose-600 border-rose-500/30"
+                      onClick={() => toast.info(`Formal escalation sent to ${mc.managerName}`)}
+                    >
+                      <MailWarning className="mr-1 h-3 w-3" /> Escalate
+                    </Button>
                   )}
                 </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-foreground">{mc.managerName}</span>
-                    <span className="text-xs text-muted-foreground">({mc.managerRole})</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-bold ${
-                        mc.status === "missed"
-                          ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
-                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                      }`}
-                    >
-                      {mc.status === "missed" ? `Missed · ${mc.hoursOverdue}h overdue` : "On Track"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-foreground font-medium">Promise: {mc.promise}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Client: <strong>{mc.client}</strong> · Promised: {mc.promisedDeadline}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground italic">
-                    Status: {mc.lastUpdateDetail}
-                  </p>
-                </div>
-                {mc.status === "missed" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs h-7 shrink-0 text-rose-600 border-rose-500/30"
-                    onClick={() => toast.info(`Formal escalation sent to ${mc.managerName}`)}
-                  >
-                    <MailWarning className="mr-1 h-3 w-3" /> Escalate
-                  </Button>
-                )}
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </div>

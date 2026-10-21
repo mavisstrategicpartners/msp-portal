@@ -129,7 +129,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-foreground">{activeTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Across 3 active clients <ArrowRight className="h-3 w-3" />
+              {activeTasks.length > 0 ? "Active deliverables under progress" : "No active deliverables"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -146,7 +146,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-foreground">{dueTodayTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              On scheduled SLA <ArrowRight className="h-3 w-3" />
+              {dueTodayTasks.length > 0 ? `${dueTodayTasks.length} on scheduled SLA` : "No deliverables due today"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -163,7 +163,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{overdueTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Delayed by approval <ArrowRight className="h-3 w-3" />
+              {overdueTasks.length > 0 ? "Requires manager attention" : "All deliverables on schedule"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">{blockedTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Requires manager action <ArrowRight className="h-3 w-3" />
+              {blockedTasks.length > 0 ? "Requires manager action" : "Zero active blockers"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -197,7 +197,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-primary">{awaitingQATasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Deliverables submitted <ArrowRight className="h-3 w-3" />
+              {awaitingQATasks.length > 0 ? "Deliverables submitted" : "No submissions pending review"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -214,7 +214,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-foreground">{pendingApprovals.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Budget & QA decisions <ArrowRight className="h-3 w-3" />
+              {pendingApprovals.length > 0 ? "Budget & QA decisions" : "All requests processed"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -231,7 +231,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-foreground">{reworkTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Items under revision <ArrowRight className="h-3 w-3" />
+              {reworkTasks.length > 0 ? "Items under revision" : "No items requiring rework"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -248,7 +248,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-foreground">{targetPct}%</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              14 / 15 Deliverables <ArrowRight className="h-3 w-3" />
+              {tasks.length > 0 ? `${tasks.filter(t => t.status === "Accepted Complete").length} / ${tasks.length} Deliverables` : "Ready for assignments"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -265,7 +265,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">{unassignedTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Requires allocation <ArrowRight className="h-3 w-3" />
+              {unassignedTasks.length > 0 ? "Requires allocation" : "All tasks assigned"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -282,7 +282,7 @@ export function DepartmentDashboardPage() {
             </div>
             <div className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{commitmentRiskTasks.length}</div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-              Makurung & Client Alpha <ArrowRight className="h-3 w-3" />
+              {commitmentRiskTasks.length > 0 ? `${commitmentRiskTasks.length} deliverable(s) flagged` : "Zero commitments at risk"} <ArrowRight className="h-3 w-3" />
             </p>
           </CardContent>
         </Card>
@@ -311,6 +311,15 @@ export function DepartmentDashboardPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border">
+                {blockedTasks.length + awaitingQATasks.length + unassignedTasks.length === 0 ? (
+                  <div className="p-10 text-center">
+                    <CheckSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+                    <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
+                  </div>
+                ) : (
+                  <>
                 {/* 1. Critical Blocker Sign-off */}
                 {blockedTasks.map((task) => (
                   <div key={task.id} className="p-4 hover:bg-muted/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -422,6 +431,8 @@ export function DepartmentDashboardPage() {
                     </div>
                   </div>
                 ))}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -569,9 +580,9 @@ export function DepartmentDashboardPage() {
             <CardContent className="p-4 space-y-3">
               <div className="p-3 rounded-lg border border-border bg-muted/30">
                 <div className="flex items-center justify-between">
-                  <h5 className="text-xs font-bold text-foreground">Makurung Process Solutions</h5>
+                  <h5 className="text-xs font-bold text-foreground">Makurung Process Solutions (Pty) Ltd</h5>
                   <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium">
-                    2 Active Items
+                    {tasks.filter(t => t.clientName.toLowerCase().includes("makurung") && t.status !== "Accepted Complete").length} Active Items
                   </Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1 font-medium">
@@ -583,23 +594,11 @@ export function DepartmentDashboardPage() {
                 <div className="flex items-center justify-between">
                   <h5 className="text-xs font-bold text-foreground">Imigidi Authentic African Events</h5>
                   <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium">
-                    2 Active Items
+                    {tasks.filter(t => t.clientName.toLowerCase().includes("imigidi") && t.status !== "Accepted Complete").length} Active Items
                   </Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1 font-medium">
                   Equipment hire Google Search campaigns & CAPI server tracking setup.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-lg border border-border bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <h5 className="text-xs font-bold text-foreground">Kasi Green Energy</h5>
-                  <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium">
-                    1 Active Item
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1 font-medium">
-                  TikTok retargeting ads & solar calculator qualification.
                 </p>
               </div>
 

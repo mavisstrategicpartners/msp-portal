@@ -36,74 +36,11 @@ interface DeptTask {
   evidenceRequirement: string;
 }
 
-const SAMPLE_DEPT_TASKS: Record<string, DeptTask[]> = {
-  "Media Buying": [
-    {
-      id: "mb-1",
-      client: "Client Alpha",
-      title: "Meta Performance Ads Campaign Launch",
-      assigneeRole: "Media Buying Specialist",
-      priority: "Urgent",
-      status: "Blocked",
-      dueDate: "2026-10-06 17:00",
-      workingHoursLate: 9,
-      blockReason: "Budget approval pending with department manager",
-      evidenceRequirement: "Account IDs, copy QA checklist & live platform status",
-    },
-    {
-      id: "mb-2",
-      client: "Apex Solar SA",
-      title: "Google Search Ads CAPI Setup & Event Tracking",
-      assigneeRole: "Tracking Specialist",
-      priority: "High",
-      status: "In progress",
-      dueDate: "2026-10-09 17:00",
-      workingHoursLate: 0,
-      evidenceRequirement: "CAPI server events test & GA4 tag audit",
-    },
-    {
-      id: "mb-3",
-      client: "Kasi Green Energy",
-      title: "TikTok Ads Retargeting Campaign Setup",
-      assigneeRole: "Media Buying Specialist",
-      priority: "Medium",
-      status: "Submitted for review",
-      dueDate: "2026-10-08 17:00",
-      workingHoursLate: 0,
-      evidenceRequirement: "TikTok Ads Manager Campaign ID & Pixel check",
-    },
-  ],
-  "Websites & Software": [
-    {
-      id: "web-1",
-      client: "Vanguard Mining Supplies",
-      title: "5-Page Company Website Staging Deployment",
-      assigneeRole: "Full-Stack Developer",
-      priority: "High",
-      status: "In progress",
-      dueDate: "2026-10-15 17:00",
-      workingHoursLate: 0,
-      evidenceRequirement: "Staging URL, mobile QA checklist, GHL form routing test",
-    },
-  ],
-  "CRM & AI Automation": [
-    {
-      id: "crm-1",
-      client: "Apex Solar SA",
-      title: "Shammah WhatsApp AI Lead Qualification Workflow",
-      assigneeRole: "CRM & Automation Specialist",
-      priority: "Urgent",
-      status: "Submitted for review",
-      dueDate: "2026-10-08 17:00",
-      workingHoursLate: 0,
-      evidenceRequirement: "Workflow version ref & test lead journey log",
-    },
-  ],
-};
+const SAMPLE_DEPT_TASKS: Record<string, DeptTask[]> = {};
 
 export function DepartmentManagerDashboard() {
   const [selectedDept, setSelectedDept] = useState<string>("Media Buying");
-  const tasks = SAMPLE_DEPT_TASKS[selectedDept] || SAMPLE_DEPT_TASKS["Media Buying"];
+  const tasks = SAMPLE_DEPT_TASKS[selectedDept] || [];
 
   return (
     <div className="space-y-6">
@@ -179,74 +116,83 @@ export function DepartmentManagerDashboard() {
         </div>
 
         <div className="space-y-3">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="p-4 rounded-lg border border-border bg-card flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase text-muted-foreground">{task.client}</span>
-                  <Badge
-                    variant={
-                      task.status === "Blocked"
-                        ? "destructive"
-                        : task.status === "Submitted for review"
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className="text-[10px]"
-                  >
-                    {task.status}
-                  </Badge>
-                </div>
-                <h4 className="text-sm font-bold text-foreground mt-0.5">{task.title}</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Assignee Role: <strong>{task.assigneeRole}</strong> &bull; Due: <strong>{task.dueDate}</strong>
-                </p>
-
-                {task.blockReason && (
-                  <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-500/10 p-2 rounded">
-                    <strong>Blocker:</strong> {task.blockReason}
-                  </p>
-                )}
-
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  <strong>Evidence Required:</strong> {task.evidenceRequirement}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                {task.status === "Submitted for review" ? (
-                  <Button
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-                    onClick={() => toast.success(`Approved deliverable: ${task.title}`)}
-                  >
-                    <Check className="mr-1 h-3.5 w-3.5" /> Approve Deliverable
-                  </Button>
-                ) : task.status === "Blocked" ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs text-amber-600"
-                    onClick={() => toast.info("Reviewing blocker details with Operations.")}
-                  >
-                    Resolve Blocker
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
-                    onClick={() => toast.info(`Viewing details for ${task.title}`)}
-                  >
-                    Details
-                  </Button>
-                )}
-              </div>
+          {tasks.length === 0 ? (
+            <div className="p-10 text-center border border-dashed border-border rounded-xl">
+              <CheckSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
             </div>
-          ))}
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-4 rounded-lg border border-border bg-card flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase text-muted-foreground">{task.client}</span>
+                    <Badge
+                      variant={
+                        task.status === "Blocked"
+                          ? "destructive"
+                          : task.status === "Submitted for review"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="text-[10px]"
+                    >
+                      {task.status}
+                    </Badge>
+                  </div>
+                  <h4 className="text-sm font-bold text-foreground mt-0.5">{task.title}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Assignee Role: <strong>{task.assigneeRole}</strong> &bull; Due: <strong>{task.dueDate}</strong>
+                  </p>
+
+                  {task.blockReason && (
+                    <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-500/10 p-2 rounded">
+                      <strong>Blocker:</strong> {task.blockReason}
+                    </p>
+                  )}
+
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    <strong>Evidence Required:</strong> {task.evidenceRequirement}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {task.status === "Submitted for review" ? (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                      onClick={() => toast.success(`Approved deliverable: ${task.title}`)}
+                    >
+                      <Check className="mr-1 h-3.5 w-3.5" /> Approve Deliverable
+                    </Button>
+                  ) : task.status === "Blocked" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs text-amber-600"
+                      onClick={() => toast.info("Reviewing blocker details with Operations.")}
+                    >
+                      Resolve Blocker
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => toast.info(`Viewing details for ${task.title}`)}
+                    >
+                      Details
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>

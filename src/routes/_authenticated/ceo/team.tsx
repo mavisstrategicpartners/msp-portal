@@ -73,117 +73,117 @@ const TEAM_MEMBERS: TeamMember[] = [
     name: "Thabiso Mokoena",
     role: "Media Buying Lead",
     department: "Media Buying",
-    activeTasks: 14,
-    capacityPct: 96,
-    onTimeRate: 85,
-    overdueItems: 1,
-    hoursLogged: 38,
-    status: "bottleneck",
-    recentDeliverable: "Client Alpha Ad Budget Sign-off",
-    notes: "Overdue manager approval has stalled Client Alpha campaign launch.",
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
+    overdueItems: 0,
+    hoursLogged: 0,
+    status: "optimal",
+    recentDeliverable: "None assigned",
+    notes: "Ready for task assignments and campaign deliverables.",
   },
   {
     id: "tm-2",
     name: "Emma Watson",
     role: "Senior CRM & AI Specialist",
     department: "Tech Delivery",
-    activeTasks: 8,
-    capacityPct: 75,
+    activeTasks: 0,
+    capacityPct: 0,
     onTimeRate: 100,
     overdueItems: 0,
-    hoursLogged: 36,
+    hoursLogged: 0,
     status: "optimal",
-    recentDeliverable: "Vanguard Logistics GHL AI Receptionist",
-    notes: "Operating at 100% on-time milestone delivery; zero customer complaints.",
+    recentDeliverable: "None assigned",
+    notes: "Ready for CRM integrations and automation workflows.",
   },
   {
     id: "tm-3",
     name: "Siya Nkosi",
     role: "Media Buying Specialist",
     department: "Media Buying",
-    activeTasks: 9,
-    capacityPct: 90,
-    onTimeRate: 92,
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
     overdueItems: 0,
-    hoursLogged: 39,
+    hoursLogged: 0,
     status: "optimal",
-    recentDeliverable: "Silverline Properties Negative Keywords Architecture",
-    notes: "Ad copy and creative targeting delivered on schedule.",
+    recentDeliverable: "None assigned",
+    notes: "Ready for ad targeting and channel management.",
   },
   {
     id: "tm-4",
     name: "Lesego Molefe",
     role: "CRM & Automation Dev",
     department: "Tech Delivery",
-    activeTasks: 11,
-    capacityPct: 92,
-    onTimeRate: 94,
-    overdueItems: 1,
-    hoursLogged: 40,
-    status: "high_load",
-    recentDeliverable: "Apex Solar GHL WhatsApp Journey",
-    notes: "Capacity stretched; awaiting client delegate token for WhatsApp API.",
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
+    overdueItems: 0,
+    hoursLogged: 0,
+    status: "optimal",
+    recentDeliverable: "None assigned",
+    notes: "Ready for WhatsApp and API automations.",
   },
   {
     id: "tm-5",
     name: "Naledi Khumalo",
     role: "Lead Web Designer",
     department: "Web Design",
-    activeTasks: 7,
-    capacityPct: 82,
-    onTimeRate: 92,
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
     overdueItems: 0,
-    hoursLogged: 37,
+    hoursLogged: 0,
     status: "optimal",
-    recentDeliverable: "BrightPath Education Homepage Wireframe v3",
-    notes: "Completed 3 revision cycles; delivering with formal scope notice.",
+    recentDeliverable: "None assigned",
+    notes: "Ready for UX/UI wireframing and client asset staging.",
   },
   {
     id: "tm-6",
     name: "Sarah Jenkins",
     role: "Senior Account Director",
     department: "Client Strategy",
-    activeTasks: 12,
-    capacityPct: 88,
-    onTimeRate: 98,
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
     overdueItems: 0,
-    hoursLogged: 41,
+    hoursLogged: 0,
     status: "optimal",
-    recentDeliverable: "TechNova Onboarding Pack & SLA Welcome",
-    notes: "Successfully closed TechNova R140k contract and completed onboarding.",
+    recentDeliverable: "None assigned",
+    notes: "Ready for client onboarding and account management.",
   },
   {
     id: "tm-7",
     name: "David Cole",
     role: "Client Success Manager",
     department: "Client Success",
-    activeTasks: 15,
-    capacityPct: 94,
-    onTimeRate: 91,
-    overdueItems: 1,
-    hoursLogged: 39,
-    status: "high_load",
-    recentDeliverable: "Nexus Retail Q4 Executive Check-in",
-    notes: "14-day touchpoint overdue with Nexus Retail; recovery call scheduled.",
+    activeTasks: 0,
+    capacityPct: 0,
+    onTimeRate: 100,
+    overdueItems: 0,
+    hoursLogged: 0,
+    status: "optimal",
+    recentDeliverable: "None assigned",
+    notes: "Ready for client success check-ins and performance reviews.",
   },
 ];
 
 const DEPARTMENT_CAPACITY = [
-  { department: "Media Buying", load: 94, target: 85 },
-  { department: "Tech Delivery", load: 86, target: 85 },
-  { department: "Web Design", load: 82, target: 85 },
-  { department: "Client Strategy", load: 88, target: 85 },
-  { department: "Client Success", load: 92, target: 85 },
+  { department: "Media Buying", load: 0, target: 85 },
+  { department: "Tech Delivery", load: 0, target: 85 },
+  { department: "Web Design", load: 0, target: 85 },
+  { department: "Client Strategy", load: 0, target: 85 },
+  { department: "Client Success", load: 0, target: 85 },
 ];
 
 const ON_TIME_RANKINGS = [
   { name: "Emma Watson", rate: 100 },
-  { name: "Sarah Jenkins", rate: 98 },
-  { name: "Lesego Molefe", rate: 94 },
-  { name: "Siya Nkosi", rate: 92 },
-  { name: "Naledi Khumalo", rate: 92 },
-  { name: "David Cole", rate: 91 },
-  { name: "Thabiso Mokoena", rate: 85 },
+  { name: "Sarah Jenkins", rate: 100 },
+  { name: "Lesego Molefe", rate: 100 },
+  { name: "Siya Nkosi", rate: 100 },
+  { name: "Naledi Khumalo", rate: 100 },
+  { name: "David Cole", rate: 100 },
+  { name: "Thabiso Mokoena", rate: 100 },
 ];
 
 function TeamHealthPage() {
@@ -223,7 +223,7 @@ function TeamHealthPage() {
                 <Users className="h-3.5 w-3.5" /> Workforce Telemetry
               </span>
               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
-                Capacity: 88.0% (Optimal)
+                Capacity: 0.0% (Standby)
               </Badge>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -264,56 +264,56 @@ function TeamHealthPage() {
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">94.0%</span>
+            <span className="text-2xl font-bold text-foreground">100.0%</span>
             <span className="text-xs text-muted-foreground">Target: 90%</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> +1.8% MoM
+              <TrendingUp className="h-3 w-3" /> 100% On-Time SLA
             </span>
-            <span className="text-muted-foreground">Top: Emma Watson (100%)</span>
+            <span className="text-muted-foreground">All Specialists (100%)</span>
           </div>
-          <Progress value={94} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={100} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Capacity Utilization</span>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px]">
-              Optimal Load
+            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+              Standby
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">88.0%</span>
+            <span className="text-2xl font-bold text-foreground">0.0%</span>
             <span className="text-xs text-muted-foreground">Workforce Avg</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <ShieldCheck className="h-3 w-3" /> Balanced
+            <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
+              <ShieldCheck className="h-3 w-3" /> Ready
             </span>
-            <span className="text-muted-foreground">42 Active Tasks</span>
+            <span className="text-muted-foreground">0 Active Tasks</span>
           </div>
-          <Progress value={88} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Manager Overdue Approvals</span>
-            <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px]">
-              Bottleneck
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+              Nominal
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">1 Item</span>
-            <span className="text-xs text-muted-foreground">Media Buying</span>
+            <span className="text-2xl font-bold text-foreground">0 Items</span>
+            <span className="text-xs text-muted-foreground">Total</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-3 w-3" /> 18h Overdue
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-3 w-3" /> 0 Overdue
             </span>
-            <span className="text-muted-foreground">Thabiso Mokoena</span>
+            <span className="text-muted-foreground">No Overdue Approvals</span>
           </div>
-          <Progress value={20} className="mt-2.5 h-1.5 bg-muted [&>div]:bg-rose-500" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
@@ -333,7 +333,7 @@ function TeamHealthPage() {
             </span>
             <span className="text-muted-foreground">12 Specialists</span>
           </div>
-          <Progress value={90} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={100} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
       </div>
 
@@ -391,7 +391,7 @@ function TeamHealthPage() {
           <div className="mt-3 rounded-lg bg-muted/40 p-2.5 text-xs space-y-1">
             <span className="font-semibold text-foreground">Workforce Insights:</span>
             <p className="text-muted-foreground text-[11px] leading-relaxed">
-              Emma Watson and Sarah Jenkins maintaining 98–100% on-time delivery. Media Buying team capacity is operating at peak load (94%).
+              Workforce standing by at 100% SLA compliance. 0 active tasks assigned and 0 overdue approvals across all divisions.
             </p>
           </div>
         </Card>
@@ -475,61 +475,71 @@ function TeamHealthPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredMembers.map((tm) => (
-                <tr
-                  key={tm.id}
-                  onClick={() => setSelectedMember(tm)}
-                  className="hover:bg-muted/30 cursor-pointer transition-colors"
-                >
-                  <td className="p-3.5">
-                    <strong className="text-sm text-foreground block">{tm.name}</strong>
-                    <span className="text-muted-foreground text-[11px]">{tm.role}</span>
-                  </td>
-                  <td className="p-3.5 font-medium text-foreground">{tm.department}</td>
-                  <td className="p-3.5 text-center font-mono font-bold text-foreground">
-                    {tm.activeTasks} tasks
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-bold ${
-                        tm.capacityPct > 90
-                          ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
-                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                      }`}
-                    >
-                      {tm.capacityPct}% Capacity
-                    </Badge>
-                  </td>
-                  <td className="p-3.5 text-center font-mono font-bold text-xs">
-                    <span className={tm.onTimeRate < 90 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
-                      {tm.onTimeRate}%
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-center">
-                    {tm.overdueItems > 0 ? (
-                      <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px] font-bold">
-                        {tm.overdueItems} Overdue
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground font-mono">0</span>
-                    )}
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedMember(tm);
-                      }}
-                    >
-                      Inspect <ChevronRight className="h-3 w-3" />
-                    </Button>
+              {filteredMembers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-muted-foreground text-xs">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-30 text-[#3b1d4d] dark:text-primary" />
+                    <p className="font-semibold text-foreground text-sm">No team members found.</p>
+                    <p className="mt-1">Tasks assigned to employees will appear here.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredMembers.map((tm) => (
+                  <tr
+                    key={tm.id}
+                    onClick={() => setSelectedMember(tm)}
+                    className="hover:bg-muted/30 cursor-pointer transition-colors"
+                  >
+                    <td className="p-3.5">
+                      <strong className="text-sm text-foreground block">{tm.name}</strong>
+                      <span className="text-muted-foreground text-[11px]">{tm.role}</span>
+                    </td>
+                    <td className="p-3.5 font-medium text-foreground">{tm.department}</td>
+                    <td className="p-3.5 text-center font-mono font-bold text-foreground">
+                      {tm.activeTasks} tasks
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-bold ${
+                          tm.capacityPct > 90
+                            ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                            : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                        }`}
+                      >
+                        {tm.capacityPct}% Capacity
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 text-center font-mono font-bold text-xs">
+                      <span className={tm.onTimeRate < 90 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+                        {tm.onTimeRate}%
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-center">
+                      {tm.overdueItems > 0 ? (
+                        <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px] font-bold">
+                          {tm.overdueItems} Overdue
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground font-mono">0</span>
+                      )}
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMember(tm);
+                        }}
+                      >
+                        Inspect <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

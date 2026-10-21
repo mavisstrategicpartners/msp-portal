@@ -150,13 +150,13 @@ export function DepartmentBlockersPage() {
         </Card>
         <Card className="p-4 border-border bg-card shadow-xs">
           <div className="text-xs text-muted-foreground font-semibold uppercase">Average Duration Stalled</div>
-          <div className="text-2xl font-bold text-foreground mt-1">48 Hours</div>
-          <p className="text-[11px] text-muted-foreground mt-1">SLA target: resolution within 24h</p>
+          <div className="text-2xl font-bold text-foreground mt-1">{blockedTasks.length > 0 ? "48 Hours" : "0 Hours"}</div>
+          <p className="text-[11px] text-muted-foreground mt-1">{blockedTasks.length > 0 ? "SLA target: resolution within 24h" : "No stalled deliverables"}</p>
         </Card>
         <Card className="p-4 border-border bg-card shadow-xs">
           <div className="text-xs text-muted-foreground font-semibold uppercase">Client Commitments Affected</div>
-          <div className="text-2xl font-bold text-primary mt-1">1 Client</div>
-          <p className="text-[11px] text-muted-foreground mt-1">Makurung Process Solutions (Pty) Ltd</p>
+          <div className="text-2xl font-bold text-primary mt-1">{blockedTasks.length > 0 ? `${new Set(blockedTasks.map(t => t.clientName)).size} Client(s)` : "0 Clients"}</div>
+          <p className="text-[11px] text-muted-foreground mt-1">{blockedTasks.length > 0 ? Array.from(new Set(blockedTasks.map(t => t.clientName))).join(", ") : "All deliverables on schedule"}</p>
         </Card>
       </div>
 

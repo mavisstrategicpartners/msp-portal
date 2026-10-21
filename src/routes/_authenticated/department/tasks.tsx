@@ -352,7 +352,23 @@ export function DepartmentTasksPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredTasks.length === 0 ? (
+                  {tasks.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-14 text-center">
+                        <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
+                        <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
+                        <Button
+                          size="sm"
+                          onClick={() => setCreateTaskModalOpen(true)}
+                          className="mt-4 bg-primary text-white text-xs font-semibold"
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1" /> Create First Task
+                        </Button>
+                      </td>
+                    </tr>
+                  ) : filteredTasks.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-12 text-center text-muted-foreground font-medium">
                         No tasks match the active filters.
@@ -511,6 +527,21 @@ export function DepartmentTasksPage() {
 
       {/* ── KANBAN BOARD VIEW ──────────────────────────────────────────────── */}
       {viewMode === "kanban" && (
+        tasks.length === 0 ? (
+          <Card className="p-12 text-center border-border shadow-xs">
+            <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
+            <h4 className="text-sm font-bold text-foreground">No tasks have been assigned yet.</h4>
+            <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
+            <Button
+              size="sm"
+              onClick={() => setCreateTaskModalOpen(true)}
+              className="mt-4 bg-primary text-white text-xs font-semibold"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Create First Task
+            </Button>
+          </Card>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             { key: "In Progress", label: "In Progress", color: "border-purple-300 dark:border-purple-800" },
@@ -580,6 +611,7 @@ export function DepartmentTasksPage() {
             );
           })}
         </div>
+        )
       )}
 
       {/* ── WORKLOAD BY TEAM MEMBER VIEW ────────────────────────────────────── */}
@@ -611,32 +643,38 @@ export function DepartmentTasksPage() {
                   <div className="text-xs font-semibold text-muted-foreground uppercase text-[10px]">
                     Assigned Deliverables ({memberTasks.length})
                   </div>
-                  {memberTasks.map((t) => (
-                    <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="font-semibold text-primary">{t.clientName}</span>
-                        <span className="text-muted-foreground">{t.dueDate}</span>
-                      </div>
-                      <div className="text-xs font-bold text-foreground">{t.title}</div>
-                      <div className="flex items-center justify-between pt-1">
-                        <Badge variant="outline" className="text-[9px] rounded-full px-1.5 py-0.2">
-                          {t.status}
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
-                          onClick={() => {
-                            setSelectedTask(t);
-                            setTargetMemberId(t.assignedToId || "");
-                            setReassignModalOpen(true);
-                          }}
-                        >
-                          Reassign
-                        </Button>
-                      </div>
+                  {memberTasks.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                      No tasks have been assigned yet.
                     </div>
-                  ))}
+                  ) : (
+                    memberTasks.map((t) => (
+                      <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-semibold text-primary">{t.clientName}</span>
+                          <span className="text-muted-foreground">{t.dueDate}</span>
+                        </div>
+                        <div className="text-xs font-bold text-foreground">{t.title}</div>
+                        <div className="flex items-center justify-between pt-1">
+                          <Badge variant="outline" className="text-[9px] rounded-full px-1.5 py-0.2">
+                            {t.status}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
+                            onClick={() => {
+                              setSelectedTask(t);
+                              setTargetMemberId(t.assignedToId || "");
+                              setReassignModalOpen(true);
+                            }}
+                          >
+                            Reassign
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </CardContent>
               </Card>
             );

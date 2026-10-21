@@ -67,121 +67,22 @@ interface DeliveryWorkflow {
   nextStep: string;
 }
 
-const DELIVERY_WORKFLOWS: DeliveryWorkflow[] = [
-  {
-    id: "del-1",
-    client: "Client Alpha",
-    service: "Paid Ads (Meta Performance)",
-    milestone: "Live Campaign Launch",
-    department: "Media Buying",
-    taskOwner: "Siya Nkosi (Specialist)",
-    deadline: "Oct 7, 12:00 SAST",
-    hoursLate: 9,
-    qaVerified: false,
-    status: "blocked_overdue",
-    blockerDetail: "Ad creatives ready; budget sign-off pending with Media Buying Lead for 2 days.",
-    nextStep: "CEO or Operations Lead budget approval override.",
-  },
-  {
-    id: "del-2",
-    client: "Apex Solar SA",
-    service: "CRM & AI Automation",
-    milestone: "GHL WhatsApp Qualification Journey",
-    department: "Tech Delivery",
-    taskOwner: "Lesego Molefe (CRM Dev)",
-    deadline: "Today, 17:00 SAST",
-    hoursLate: 4,
-    qaVerified: false,
-    status: "blocked_overdue",
-    blockerDetail: "Waiting on client Meta Business Manager delegate token.",
-    nextStep: "Account manager phone touchpoint at 14:00 today.",
-  },
-  {
-    id: "del-3",
-    client: "TechNova Solutions",
-    service: "Operations Handover & SEO",
-    milestone: "Full SEO & Technical Audit Report",
-    department: "SEO & Content",
-    taskOwner: "Nico Ferreira (SEO Lead)",
-    deadline: "Today, 14:00 SAST",
-    hoursLate: 0,
-    qaVerified: false,
-    status: "pending_qa",
-    blockerDetail: "Audit generated, awaiting senior peer QA verification before client delivery.",
-    nextStep: "Operations Lead to sign off QA checklist.",
-  },
-  {
-    id: "del-4",
-    client: "BrightPath Education",
-    service: "Web Platform Development",
-    milestone: "Homepage Wireframe Final Delivery",
-    department: "Web Design",
-    taskOwner: "Naledi Khumalo (Designer)",
-    deadline: "Today, 15:00 SAST",
-    hoursLate: 0,
-    qaVerified: true,
-    status: "on_track",
-    blockerDetail: "None (Wireframe v3 packaged with scope-limit notice).",
-    nextStep: "Design Lead delivering formally by 15:00.",
-  },
-  {
-    id: "del-5",
-    client: "TechNova Solutions",
-    service: "Client Onboarding",
-    milestone: "Operations Handover Pack & Welcome SLA",
-    department: "Operations",
-    taskOwner: "Sarah Jenkins (Account Lead)",
-    deadline: "Today, 11:00 SAST",
-    hoursLate: 0,
-    qaVerified: true,
-    status: "completed",
-    blockerDetail: "Delivered and acknowledged by client POC.",
-    nextStep: "Handover complete; scheduled weekly check-ins.",
-  },
-  {
-    id: "del-6",
-    client: "Silverline Properties",
-    service: "Google Search Ads",
-    milestone: "Negative Keyword Architecture & CPL Tuning",
-    department: "Media Buying",
-    taskOwner: "Siya Nkosi (Specialist)",
-    deadline: "Today, 16:30 SAST",
-    hoursLate: 0,
-    qaVerified: true,
-    status: "on_track",
-    blockerDetail: "None; pacing ahead of lead quota.",
-    nextStep: "Publish updated keyword negatives by 16:30.",
-  },
-  {
-    id: "del-7",
-    client: "Zenith Health SA",
-    service: "Content Marketing",
-    milestone: "Q4 Community Editorial Calendar",
-    department: "Content & Copy",
-    taskOwner: "Khensani Baloyi (Copywriter)",
-    deadline: "Today, 13:00 SAST",
-    hoursLate: 0,
-    qaVerified: true,
-    status: "completed",
-    blockerDetail: "Client approved all 12 planned patient case study articles.",
-    nextStep: "Schedule posts into Buffer / GHL.",
-  },
-];
+const DELIVERY_WORKFLOWS: DeliveryWorkflow[] = [];
 
 const THROUGHPUT_DATA = [
-  { day: "Mon", Completed: 6, Delayed: 1 },
-  { day: "Tue", Completed: 8, Delayed: 1 },
-  { day: "Wed", Completed: 7, Delayed: 2 },
-  { day: "Thu (Today)", Completed: 4, Delayed: 2 },
-  { day: "Fri (Proj)", Completed: 9, Delayed: 0 },
+  { day: "Mon", Completed: 0, Delayed: 0 },
+  { day: "Tue", Completed: 0, Delayed: 0 },
+  { day: "Wed", Completed: 0, Delayed: 0 },
+  { day: "Thu (Today)", Completed: 0, Delayed: 0 },
+  { day: "Fri (Proj)", Completed: 0, Delayed: 0 },
 ];
 
 const DEPARTMENT_SLA_DATA = [
-  { department: "Media Buying", sla: 85 },
-  { department: "Tech Delivery", sla: 94 },
-  { department: "Web Design", sla: 92 },
-  { department: "SEO & Copy", sla: 96 },
-  { department: "Operations", sla: 98 },
+  { department: "Media Buying", sla: 100 },
+  { department: "Tech Delivery", sla: 100 },
+  { department: "Web Design", sla: 100 },
+  { department: "SEO & Copy", sla: 100 },
+  { department: "Operations", sla: 100 },
 ];
 
 function DeliveryHealthPage() {
@@ -220,8 +121,8 @@ function DeliveryHealthPage() {
               <span className="inline-flex items-center gap-1.5 rounded-md bg-[#3b1d4d]/10 px-2.5 py-1 text-xs font-semibold text-[#3b1d4d] dark:bg-white/10 dark:text-white">
                 <CheckSquare className="h-3.5 w-3.5" /> Operations Telemetry
               </span>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-xs">
-                SLA Compliance: 94.0%
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
+                SLA Compliance: 100.0%
               </Badge>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -257,81 +158,81 @@ function DeliveryHealthPage() {
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">On-Time SLA</span>
-            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-              SLA Watch
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+              Nominal
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">94.0%</span>
+            <span className="text-2xl font-bold text-foreground">100.0%</span>
             <span className="text-xs text-muted-foreground">Target: 95%</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> +2.1% vs Last Week
+              <TrendingUp className="h-3 w-3" /> 100% On-Time SLA
             </span>
-            <span className="text-muted-foreground">2 Overdue</span>
+            <span className="text-muted-foreground">0 Overdue</span>
           </div>
-          <Progress value={94} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={100} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Due Today</span>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px]">
-              8 Deliverables
+            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+              0 Deliverables
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">8 Tasks</span>
+            <span className="text-2xl font-bold text-foreground">0 Tasks</span>
             <span className="text-xs text-muted-foreground">Total</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-3 w-3" /> 2 Delivered
+            <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
+              <CheckCircle2 className="h-3 w-3" /> 0 Delivered
             </span>
-            <span className="text-muted-foreground">4 On Track · 2 At Risk</span>
+            <span className="text-muted-foreground">0 On Track · 0 At Risk</span>
           </div>
-          <Progress value={50} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Overdue Milestones</span>
-            <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px]">
-              Critical Risk
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+              Clear
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">2 Items</span>
+            <span className="text-2xl font-bold text-foreground">0 Items</span>
             <span className="text-xs text-muted-foreground">Late</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-3 w-3" /> 9h Late (Max)
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-3 w-3" /> 0h Late
             </span>
-            <span className="text-muted-foreground">Client Alpha Lead</span>
+            <span className="text-muted-foreground">No Overdue Tasks</span>
           </div>
-          <Progress value={25} className="mt-2.5 h-1.5 bg-muted [&>div]:bg-rose-500" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">QA Verification Queue</span>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
-              Optimal
+            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+              Empty
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">3 Items</span>
+            <span className="text-2xl font-bold text-foreground">0 Items</span>
             <span className="text-xs text-muted-foreground">Pending Review</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <Clock className="h-3 w-3" /> Avg 3.4h TAT
+            <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground">
+              <Clock className="h-3 w-3" /> Avg 0.0h TAT
             </span>
-            <span className="text-muted-foreground">SEO Audit Lead</span>
+            <span className="text-muted-foreground">No Items Pending</span>
           </div>
-          <Progress value={85} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
       </div>
 
@@ -386,10 +287,10 @@ function DeliveryHealthPage() {
             </div>
           </div>
 
-          <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs space-y-1">
-            <span className="font-semibold text-amber-600 dark:text-amber-400">Bottleneck Notice:</span>
+          <div className="mt-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-xs space-y-1">
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">System Status:</span>
             <p className="text-foreground text-[11px] leading-relaxed">
-              Media Buying SLA (85%) lagging due to managerial approval response latency. Tech Delivery & SEO operating at &gt;94%.
+              All departments operating at 100% SLA. No overdue deliverables or operational bottlenecks reported.
             </p>
           </div>
         </Card>
@@ -473,73 +374,83 @@ function DeliveryHealthPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredWorkflows.map((wf) => (
-                <tr
-                  key={wf.id}
-                  onClick={() => setSelectedWorkflow(wf)}
-                  className="hover:bg-muted/30 cursor-pointer transition-colors"
-                >
-                  <td className="p-3.5">
-                    <strong className="text-sm text-foreground block">{wf.client}</strong>
-                    <span className="text-muted-foreground text-[11px]">{wf.service}</span>
-                  </td>
-                  <td className="p-3.5 font-medium text-foreground max-w-[220px]">
-                    {wf.milestone}
-                  </td>
-                  <td className="p-3.5">
-                    <span className="font-semibold text-foreground">{wf.taskOwner}</span>
-                    <span className="block text-[10px] text-muted-foreground">{wf.department}</span>
-                  </td>
-                  <td className="p-3.5 font-mono">
-                    <span className={wf.status === "blocked_overdue" ? "text-rose-600 dark:text-rose-400 font-bold" : "text-foreground font-medium"}>
-                      {wf.deadline}
-                    </span>
-                    {wf.hoursLate > 0 && (
-                      <span className="block text-[10px] text-rose-500">({wf.hoursLate}h late)</span>
-                    )}
-                  </td>
-                  <td className="p-3.5 text-center">
-                    {wf.qaVerified ? (
-                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
-                        <Check className="mr-1 h-3 w-3 inline" /> Verified
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
-                        <Clock className="mr-1 h-3 w-3 inline" /> Pending
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="p-3.5">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-bold ${
-                        wf.status === "completed"
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                          : wf.status === "blocked_overdue"
-                          ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
-                          : wf.status === "pending_qa"
-                          ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
-                          : "bg-blue-500/10 text-blue-600 border-blue-500/30"
-                      }`}
-                    >
-                      {wf.status.replace("_", " ").toUpperCase()}
-                    </Badge>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedWorkflow(wf);
-                      }}
-                    >
-                      Inspect <ChevronRight className="h-3 w-3" />
-                    </Button>
+              {filteredWorkflows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-muted-foreground text-xs">
+                    <Layers className="h-8 w-8 mx-auto mb-2 opacity-30 text-[#3b1d4d] dark:text-primary" />
+                    <p className="font-semibold text-foreground text-sm">No tasks have been assigned yet.</p>
+                    <p className="mt-1">Tasks assigned to employees will appear here. No upcoming deadlines.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredWorkflows.map((wf) => (
+                  <tr
+                    key={wf.id}
+                    onClick={() => setSelectedWorkflow(wf)}
+                    className="hover:bg-muted/30 cursor-pointer transition-colors"
+                  >
+                    <td className="p-3.5">
+                      <strong className="text-sm text-foreground block">{wf.client}</strong>
+                      <span className="text-muted-foreground text-[11px]">{wf.service}</span>
+                    </td>
+                    <td className="p-3.5 font-medium text-foreground max-w-[220px]">
+                      {wf.milestone}
+                    </td>
+                    <td className="p-3.5">
+                      <span className="font-semibold text-foreground">{wf.taskOwner}</span>
+                      <span className="block text-[10px] text-muted-foreground">{wf.department}</span>
+                    </td>
+                    <td className="p-3.5 font-mono">
+                      <span className={wf.status === "blocked_overdue" ? "text-rose-600 dark:text-rose-400 font-bold" : "text-foreground font-medium"}>
+                        {wf.deadline}
+                      </span>
+                      {wf.hoursLate > 0 && (
+                        <span className="block text-[10px] text-rose-500">({wf.hoursLate}h late)</span>
+                      )}
+                    </td>
+                    <td className="p-3.5 text-center">
+                      {wf.qaVerified ? (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                          <Check className="mr-1 h-3 w-3 inline" /> Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
+                          <Clock className="mr-1 h-3 w-3 inline" /> Pending
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="p-3.5">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-bold ${
+                          wf.status === "completed"
+                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                            : wf.status === "blocked_overdue"
+                            ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
+                            : wf.status === "pending_qa"
+                            ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                            : "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                        }`}
+                      >
+                        {wf.status.replace("_", " ").toUpperCase()}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWorkflow(wf);
+                        }}
+                      >
+                        Inspect <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

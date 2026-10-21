@@ -631,84 +631,93 @@ export function StaffWorkspaceDashboard() {
                 </div>
 
                 <div className="space-y-3">
-                  {tasks
-                    .filter((t) => t.status !== "Completed")
-                    .slice(0, 3)
-                    .map((task) => (
-                      <div
-                        key={task.id}
-                        className="p-4 rounded-xl border border-border bg-card space-y-3 transition hover:border-primary/40 shadow-xs"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              {task.clientName && (
-                                <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-900 border-purple-200 dark:bg-purple-950/50 dark:text-purple-200 dark:border-purple-800">
-                                  {task.clientName}
+                  {tasks.filter((t) => t.status !== "Completed").length === 0 ? (
+                    <div className="p-8 text-center border border-dashed border-border rounded-xl">
+                      <CheckSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+                      <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
+                    </div>
+                  ) : (
+                    tasks
+                      .filter((t) => t.status !== "Completed")
+                      .slice(0, 3)
+                      .map((task) => (
+                        <div
+                          key={task.id}
+                          className="p-4 rounded-xl border border-border bg-card space-y-3 transition hover:border-primary/40 shadow-xs"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                {task.clientName && (
+                                  <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-900 border-purple-200 dark:bg-purple-950/50 dark:text-purple-200 dark:border-purple-800">
+                                    {task.clientName}
+                                  </Badge>
+                                )}
+                                <Badge
+                                  variant={task.priority === "Urgent" ? "destructive" : task.priority === "High" ? "default" : "secondary"}
+                                  className="text-[10px]"
+                                >
+                                  {task.priority}
                                 </Badge>
-                              )}
-                              <Badge
-                                variant={task.priority === "Urgent" ? "destructive" : task.priority === "High" ? "default" : "secondary"}
-                                className="text-[10px]"
-                              >
-                                {task.priority}
-                              </Badge>
-                              <Badge
-                                variant={
-                                  task.status === "Blocked"
-                                    ? "destructive"
-                                    : task.status === "Submitted for Review"
-                                    ? "secondary"
-                                    : "outline"
-                                }
-                                className="text-[10px]"
-                              >
-                                {task.status}
-                              </Badge>
+                                <Badge
+                                  variant={
+                                    task.status === "Blocked"
+                                      ? "destructive"
+                                      : task.status === "Submitted for Review"
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                  className="text-[10px]"
+                                >
+                                  {task.status}
+                                </Badge>
+                              </div>
+                              <h4 className="text-sm font-bold text-foreground mt-1">{task.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
                             </div>
-                            <h4 className="text-sm font-bold text-foreground mt-1">{task.title}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+
+                            <div className="text-right text-xs text-muted-foreground">
+                              <p className="font-semibold text-foreground flex items-center gap-1 sm:justify-end">
+                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                {task.dueDate ? `Due ${task.dueDate.split("T")[0]}` : "No due date set"}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                Assigned by: <strong>{task.assignedByName}</strong> ({task.assignedByRole})
+                              </p>
+                            </div>
                           </div>
 
-                          <div className="text-right text-xs text-muted-foreground">
-                            <p className="font-semibold text-foreground flex items-center gap-1 sm:justify-end">
-                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                              {task.dueDate ? `Due ${task.dueDate.split("T")[0]}` : "No due date set"}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              Assigned by: <strong>{task.assignedByName}</strong> ({task.assignedByRole})
-                            </p>
+                          {/* Progress Bar & Actions */}
+                          <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/50 text-xs">
+                            <div className="flex items-center gap-2 flex-1 max-w-xs">
+                              <span className="text-[10px] text-muted-foreground">Progress:</span>
+                              <Progress value={task.progress} className="h-1.5 flex-1" />
+                              <span className="text-[10px] font-bold text-foreground">{task.progress}%</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenTask(task)}
+                                className="h-7 text-xs font-semibold px-2.5"
+                              >
+                                Details
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenEvidenceModal(task)}
+                                className="h-7 text-xs bg-primary text-primary-foreground font-semibold px-2.5"
+                              >
+                                Submit Evidence
+                              </Button>
+                            </div>
                           </div>
                         </div>
-
-                        {/* Progress Bar & Actions */}
-                        <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/50 text-xs">
-                          <div className="flex items-center gap-2 flex-1 max-w-xs">
-                            <span className="text-[10px] text-muted-foreground">Progress:</span>
-                            <Progress value={task.progress} className="h-1.5 flex-1" />
-                            <span className="text-[10px] font-bold text-foreground">{task.progress}%</span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenTask(task)}
-                              className="h-7 text-xs font-semibold px-2.5"
-                            >
-                              Details
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenEvidenceModal(task)}
-                              className="h-7 text-xs bg-primary text-primary-foreground font-semibold px-2.5"
-                            >
-                              Submit Evidence
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                  )}
                 </div>
               </Card>
             </div>
@@ -804,10 +813,11 @@ export function StaffWorkspaceDashboard() {
             {filteredTasks.length === 0 ? (
               <Card className="p-12 text-center border-border shadow-xs">
                 <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                <h4 className="text-sm font-bold text-foreground">No assigned tasks found</h4>
+                <h4 className="text-sm font-bold text-foreground">No tasks have been assigned yet.</h4>
                 <p className="text-xs text-muted-foreground mt-1">
-                  You currently have no tasks matching the selected filters.
+                  Tasks assigned to employees will appear here.
                 </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
               </Card>
             ) : (
               filteredTasks.map((task) => {
@@ -982,169 +992,182 @@ export function StaffWorkspaceDashboard() {
             TAB 3: DEADLINES & TRACKING
         ══════════════════════════════════════════════════════════════════════ */}
         <TabsContent value="deadlines" className="space-y-6">
-          <div className="space-y-6">
-            {/* 1. OVERDUE TASKS */}
-            {deadlineCategories.overdue.length > 0 && (
-              <Card className="border-rose-300 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20 p-5 shadow-xs space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-5 w-5 text-rose-600" />
-                  <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
-                    Overdue Deliverables ({deadlineCategories.overdue.length})
-                  </h3>
-                </div>
-                <div className="space-y-2">
-                  {deadlineCategories.overdue.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-rose-200 dark:border-rose-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-foreground text-xs">{t.title}</span>
-                          <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
+          {tasks.length === 0 ? (
+            <Card className="p-12 text-center border-border shadow-xs">
+              <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+              <h4 className="text-sm font-bold text-foreground">No upcoming deadlines.</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Deadlines and milestone schedules will appear here once official tasks are assigned.
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-medium">
+                No tasks have been assigned yet.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* 1. OVERDUE TASKS */}
+              {deadlineCategories.overdue.length > 0 && (
+                <Card className="border-rose-300 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20 p-5 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-rose-600" />
+                    <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
+                      Overdue Deliverables ({deadlineCategories.overdue.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {deadlineCategories.overdue.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-rose-200 dark:border-rose-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-foreground text-xs">{t.title}</span>
+                            <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Assigned by: {t.assignedByName} &bull; Due: <strong className="text-rose-600">{t.dueDate?.split("T")[0]}</strong>
+                          </p>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Assigned by: {t.assignedByName} &bull; Due: <strong className="text-rose-600">{t.dueDate?.split("T")[0]}</strong>
-                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button size="sm" variant="outline" onClick={() => handleOpenNewDependency(t)} className="h-7 text-xs text-rose-600">
+                            Report Blocker
+                          </Button>
+                          <Button size="sm" onClick={() => handleOpenEvidenceModal(t)} className="h-7 text-xs bg-primary text-white">
+                            Submit Evidence
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button size="sm" variant="outline" onClick={() => handleOpenNewDependency(t)} className="h-7 text-xs text-rose-600">
-                          Report Blocker
-                        </Button>
-                        <Button size="sm" onClick={() => handleOpenEvidenceModal(t)} className="h-7 text-xs bg-primary text-white">
-                          Submit Evidence
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* 2. DUE TODAY */}
-            <Card className="border-border p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
-                  Due Today ({deadlineCategories.dueToday.length})
-                </h3>
-              </div>
-              {deadlineCategories.dueToday.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No deliverables due today.</p>
-              ) : (
-                <div className="space-y-2">
-                  {deadlineCategories.dueToday.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
-                      <div>
-                        <div className="font-bold text-foreground text-xs">{t.title}</div>
-                        <p className="text-[11px] text-muted-foreground">Client: {t.clientName || "Internal"} &bull; Priority: {t.priority}</p>
-                      </div>
-                      <Button size="sm" onClick={() => handleOpenEvidenceModal(t)} className="h-7 text-xs bg-primary text-white">
-                        Submit
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </Card>
               )}
-            </Card>
 
-            {/* 3. DUE THIS WEEK */}
-            <Card className="border-border p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
-                  Due This Week ({deadlineCategories.dueThisWeek.length})
-                </h3>
-              </div>
-              {deadlineCategories.dueThisWeek.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No additional tasks due this week.</p>
-              ) : (
-                <div className="space-y-2">
-                  {deadlineCategories.dueThisWeek.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
-                      <div>
-                        <div className="font-bold text-foreground text-xs">{t.title}</div>
-                        <p className="text-[11px] text-muted-foreground">Due: {t.dueDate?.split("T")[0]} &bull; Assigner: {t.assignedByName}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* 4. UPCOMING DEADLINES */}
-            <Card className="border-border p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
-                  Upcoming Deadlines ({deadlineCategories.upcoming.length})
-                </h3>
-              </div>
-              {deadlineCategories.upcoming.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No upcoming tasks scheduled past this week.</p>
-              ) : (
-                <div className="space-y-2">
-                  {deadlineCategories.upcoming.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
-                      <div>
-                        <div className="font-bold text-foreground text-xs">{t.title}</div>
-                        <p className="text-[11px] text-muted-foreground">Scheduled Due: {t.dueDate?.split("T")[0]}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">{t.priority}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* 5. TASKS WITHOUT DUE DATE SET */}
-            {deadlineCategories.noDueDate.length > 0 && (
+              {/* 2. DUE TODAY */}
               <Card className="border-border p-5 shadow-xs space-y-3">
                 <div className="flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  <Clock className="h-4 w-4 text-amber-500" />
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
-                    No Due Date Set ({deadlineCategories.noDueDate.length})
+                    Due Today ({deadlineCategories.dueToday.length})
                   </h3>
                 </div>
-                <div className="space-y-2">
-                  {deadlineCategories.noDueDate.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
-                      <div>
-                        <div className="font-bold text-foreground text-xs">{t.title}</div>
-                        <p className="text-[11px] text-muted-foreground">Awaiting authorized date scheduling by {t.assignedByName}</p>
+                {deadlineCategories.dueToday.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No deliverables due today.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deadlineCategories.dueToday.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <p className="text-[11px] text-muted-foreground">Client: {t.clientName || "Internal"} &bull; Priority: {t.priority}</p>
+                        </div>
+                        <Button size="sm" onClick={() => handleOpenEvidenceModal(t)} className="h-7 text-xs bg-primary text-white">
+                          Submit
+                        </Button>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">No due date set</Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </Card>
-            )}
 
-            {/* 6. COMPLETED TASKS */}
-            <Card className="border-border p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
-                  Completed Deliverables ({deadlineCategories.completed.length})
-                </h3>
-              </div>
-              {deadlineCategories.completed.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No completed tasks yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {deadlineCategories.completed.map((t) => (
-                    <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2 opacity-80">
-                      <div>
-                        <div className="font-bold text-foreground text-xs line-through">{t.title}</div>
-                        <p className="text-[11px] text-muted-foreground">Completed on {t.completionDate?.split("T")[0] || "verified date"}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
-                        Accepted Complete
-                      </Badge>
-                    </div>
-                  ))}
+              {/* 3. DUE THIS WEEK */}
+              <Card className="border-border p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                    Due This Week ({deadlineCategories.dueThisWeek.length})
+                  </h3>
                 </div>
+                {deadlineCategories.dueThisWeek.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No additional tasks due this week.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deadlineCategories.dueThisWeek.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <p className="text-[11px] text-muted-foreground">Due: {t.dueDate?.split("T")[0]} &bull; Assigner: {t.assignedByName}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* 4. UPCOMING DEADLINES */}
+              <Card className="border-border p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                    Upcoming Deadlines ({deadlineCategories.upcoming.length})
+                  </h3>
+                </div>
+                {deadlineCategories.upcoming.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No upcoming tasks scheduled past this week.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deadlineCategories.upcoming.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <p className="text-[11px] text-muted-foreground">Scheduled Due: {t.dueDate?.split("T")[0]}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">{t.priority}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* 5. TASKS WITHOUT DUE DATE SET */}
+              {deadlineCategories.noDueDate.length > 0 && (
+                <Card className="border-border p-5 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                      No Due Date Set ({deadlineCategories.noDueDate.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {deadlineCategories.noDueDate.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <p className="text-[11px] text-muted-foreground">Awaiting authorized date scheduling by {t.assignedByName}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">No due date set</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               )}
-            </Card>
-          </div>
+
+              {/* 6. COMPLETED TASKS */}
+              <Card className="border-border p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                    Completed Deliverables ({deadlineCategories.completed.length})
+                  </h3>
+                </div>
+                {deadlineCategories.completed.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No completed tasks yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deadlineCategories.completed.map((t) => (
+                      <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2 opacity-80">
+                        <div>
+                          <div className="font-bold text-foreground text-xs line-through">{t.title}</div>
+                          <p className="text-[11px] text-muted-foreground">Completed on {t.completionDate?.split("T")[0] || "verified date"}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
+                          Accepted Complete
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         {/* ══════════════════════════════════════════════════════════════════════

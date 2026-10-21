@@ -205,7 +205,12 @@ export function DepartmentWorkloadPage() {
                   <div className="font-semibold text-foreground text-xs uppercase text-[10px]">
                     Current Deliverables ({memberTasks.length})
                   </div>
-                  {memberTasks.map((t) => (
+                  {memberTasks.length === 0 ? (
+                    <div className="py-4 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                      No tasks have been assigned yet.
+                    </div>
+                  ) : (
+                    memberTasks.map((t) => (
                     <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-bold text-foreground truncate max-w-[170px]">{t.title}</span>
@@ -239,7 +244,8 @@ export function DepartmentWorkloadPage() {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
               </CardContent>
             </Card>

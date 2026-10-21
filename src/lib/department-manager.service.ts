@@ -98,7 +98,18 @@ function getStored<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      // Filter out any legacy synthetic demo IDs
+      const cleaned = parsed.filter((item: any) => {
+        if (!item || !item.id) return false;
+        const idStr = String(item.id);
+        return !idStr.startsWith("mb-task-") && !idStr.startsWith("appr-mb-") && !idStr.startsWith("tgt-");
+      });
+      return cleaned as unknown as T;
+    }
+    return parsed;
   } catch {
     return fallback;
   }
@@ -115,263 +126,13 @@ function setStored<T>(key: string, val: T): void {
 
 // ── Initial Authoritative Datasets ──────────────────────────────────────────
 
-const INITIAL_TEAM_MEMBERS: DepartmentTeamMember[] = [
-  {
-    id: "mb-tm-1",
-    name: "Siya Nkosi",
-    role: "Media Buying Specialist",
-    email: "siya.nkosi@mavisstrategicpartners.co.za",
-    department: "Media Buying",
-    activeTasksCount: 2,
-    capacityUtilizationPct: 92,
-    onTimeDeliveryRate: 98,
-    status: "Near Capacity",
-  },
-  {
-    id: "mb-tm-2",
-    name: "Emma Watson",
-    role: "Tracking & CAPI Specialist",
-    email: "emma.watson@mavisstrategicpartners.co.za",
-    department: "Media Buying",
-    activeTasksCount: 1,
-    capacityUtilizationPct: 82,
-    onTimeDeliveryRate: 100,
-    status: "Optimal",
-  },
-  {
-    id: "mb-tm-3",
-    name: "Sarah Jenkins",
-    role: "Digital Advertising Analyst",
-    email: "sarah.jenkins@mavisstrategicpartners.co.za",
-    department: "Media Buying",
-    activeTasksCount: 1,
-    capacityUtilizationPct: 85,
-    onTimeDeliveryRate: 99,
-    status: "Optimal",
-  },
-];
+const INITIAL_TEAM_MEMBERS: DepartmentTeamMember[] = [];
 
-const INITIAL_TASKS: DepartmentTask[] = [
-  {
-    id: "mb-task-1",
-    title: "Meta Performance Ads Campaign Launch",
-    clientId: "22222222-2222-2222-2222-222222222222",
-    clientName: "Makurung Process Solutions (Pty) Ltd",
-    assignedToId: "mb-tm-1",
-    assignedToName: "Siya Nkosi",
-    assignedToRole: "Media Buying Specialist",
-    department: "Media Buying",
-    priority: "Urgent",
-    status: "Blocked",
-    dueDate: "2026-10-16",
-    estimatedHours: 14,
-    dependencies: "Creative asset handover & R12,500 ad spend approval",
-    dependencyOwner: "Media Buying Lead (Department Manager)",
-    blocker: "Budget sign-off pending with Department Manager for 2 days. Media buyer submitted R12,500 ad spend allocation.",
-    blockerDate: "2026-10-12",
-    workingHoursLate: 9,
-    evidenceRequired: "Account IDs, copy QA checklist & live platform status screenshots",
-    evidenceSubmitted: "Ad account ID: act_984128120, Copy approved by client relationship manager, staging creatives uploaded.",
-    approvedDeadlineChangesCount: 0,
-    createdAt: "2026-10-04T10:00:00Z",
-    updatedAt: "2026-10-14T12:00:00Z",
-  },
-  {
-    id: "mb-task-2",
-    title: "Google Search Ads CAPI Setup & Event Tracking",
-    clientId: "11111111-1111-1111-1111-111111111111",
-    clientName: "Imigidi Authentic African Events",
-    assignedToId: "mb-tm-2",
-    assignedToName: "Emma Watson",
-    assignedToRole: "Tracking & CAPI Specialist",
-    department: "Media Buying",
-    priority: "High",
-    status: "In Progress",
-    dueDate: "2026-10-18",
-    estimatedHours: 8,
-    dependencies: "Client DNS verification & Google Tag Manager container access",
-    dependencyOwner: "Websites & Software Team",
-    workingHoursLate: 0,
-    evidenceRequired: "CAPI server events test payload & GA4 tag audit report",
-    approvedDeadlineChangesCount: 1,
-    createdAt: "2026-10-06T09:30:00Z",
-    updatedAt: "2026-10-14T08:15:00Z",
-  },
-  {
-    id: "mb-task-3",
-    title: "TikTok Ads Retargeting Campaign Setup",
-    clientId: "33333333-3333-3333-3333-333333333333",
-    clientName: "Kasi Green Energy",
-    assignedToId: "mb-tm-1",
-    assignedToName: "Siya Nkosi",
-    assignedToRole: "Media Buying Specialist",
-    department: "Media Buying",
-    priority: "Medium",
-    status: "Submitted for Review",
-    dueDate: "2026-10-17",
-    estimatedHours: 6,
-    dependencies: "TikTok pixel active on landing page",
-    workingHoursLate: 0,
-    evidenceRequired: "TikTok Ads Manager Campaign ID & Pixel check log",
-    evidenceSubmitted: "Campaign ID: tt_7718293910. Verified 12 server events in test debugger.",
-    qaReviewer: "Department Manager (Media Buying)",
-    approvedDeadlineChangesCount: 0,
-    createdAt: "2026-10-08T11:00:00Z",
-    updatedAt: "2026-10-13T16:20:00Z",
-  },
-  {
-    id: "mb-task-4",
-    title: "Monthly Paid Media ROAS & Attribution Audit",
-    clientId: "22222222-2222-2222-2222-222222222222",
-    clientName: "Makurung Process Solutions (Pty) Ltd",
-    assignedToId: "mb-tm-3",
-    assignedToName: "Sarah Jenkins",
-    assignedToRole: "Digital Advertising Analyst",
-    department: "Media Buying",
-    priority: "High",
-    status: "Accepted Complete",
-    dueDate: "2026-10-12",
-    estimatedHours: 10,
-    workingHoursLate: 0,
-    evidenceRequired: "Comprehensive ROAS sheet & client attribution dashboard link",
-    evidenceSubmitted: "Report file uploaded: makurung_oct2026_ads_audit.pdf",
-    qaReviewer: "Department Manager (Media Buying)",
-    qaDecisionNotes: "Approved. Cost per qualified mining inquiry reduced by 22%. Deliverable signed off.",
-    approvedDeadlineChangesCount: 0,
-    createdAt: "2026-10-01T08:00:00Z",
-    updatedAt: "2026-10-12T14:40:00Z",
-  },
-  {
-    id: "mb-task-5",
-    title: "High-Intent B2B Search Copy & Negative Keyword Expansion",
-    clientId: "11111111-1111-1111-1111-111111111111",
-    clientName: "Imigidi Authentic African Events",
-    assignedToName: "Unassigned",
-    assignedToRole: "Unallocated Responsibility",
-    department: "Media Buying",
-    priority: "High",
-    status: "Unassigned",
-    dueDate: "2026-10-19",
-    estimatedHours: 7,
-    dependencies: "Audience intent keyword analysis",
-    workingHoursLate: 0,
-    evidenceRequired: "Keyword list spreadsheet & approved headline variations",
-    approvedDeadlineChangesCount: 0,
-    createdAt: "2026-10-10T14:00:00Z",
-    updatedAt: "2026-10-10T14:00:00Z",
-  },
-];
+const INITIAL_TASKS: DepartmentTask[] = [];
 
-const INITIAL_APPROVALS: DepartmentApprovalItem[] = [
-  {
-    id: "appr-mb-1",
-    title: "R12,500 Ad Spend Budget Sign-off for Client Alpha / Makurung",
-    requestType: "Budget Sign-off",
-    requesterName: "Siya Nkosi",
-    requesterRole: "Media Buying Specialist",
-    relatedClientName: "Makurung Process Solutions (Pty) Ltd",
-    relatedTaskId: "mb-task-1",
-    description: "Requesting department manager sign-off for R12,500 monthly ad spend to activate LinkedIn Sponsored InMail and Meta retargeting campaigns. Account is funded by client.",
-    supportingEvidence: "Client deposit proof attached (REF: MPS-2026-092), Campaign structure in Ads Manager ID: act_984128120.",
-    amountZAR: 12500,
-    requestedDate: "2026-10-12",
-    decisionDeadline: "2026-10-14",
-    status: "Pending",
-  },
-  {
-    id: "appr-mb-2",
-    title: "QA Acceptance for TikTok Ads Retargeting Setup",
-    requestType: "QA Deliverable Approval",
-    requesterName: "Siya Nkosi",
-    requesterRole: "Media Buying Specialist",
-    relatedClientName: "Kasi Green Energy",
-    relatedTaskId: "mb-task-3",
-    description: "Completed full setup of TikTok retargeting ads, custom audience segments, and pixel tracking test. Awaiting manager acceptance.",
-    supportingEvidence: "Pixel debug log verified, 3 ad variations attached with CTA routing to solar calculator.",
-    requestedDate: "2026-10-13",
-    decisionDeadline: "2026-10-15",
-    status: "Pending",
-  },
-  {
-    id: "appr-mb-3",
-    title: "Deadline Adjustment: Google CAPI Setup (Client DNS Dependency)",
-    requestType: "Deadline Extension",
-    requesterName: "Emma Watson",
-    requesterRole: "Tracking & CAPI Specialist",
-    relatedClientName: "Imigidi Authentic African Events",
-    relatedTaskId: "mb-task-2",
-    description: "Client IT team took 3 days to delegate DNS records for server-side tagging subdomain. Requesting 24h deadline extension to 2026-10-18.",
-    supportingEvidence: "Email trail with client IT administrator and DNS propagation screenshot.",
-    requestedDate: "2026-10-11",
-    decisionDeadline: "2026-10-12",
-    status: "Approved",
-    decisionBy: "Department Manager (Media Buying)",
-    decisionDate: "2026-10-12",
-    decisionComments: "Approved. Legitimate external dependency; client IT delay recorded in operational communications log.",
-  },
-];
+const INITIAL_APPROVALS: DepartmentApprovalItem[] = [];
 
-const INITIAL_TARGETS: DepartmentTarget[] = [
-  {
-    id: "tgt-1",
-    metricName: "Target Deliverables Completed",
-    targetValue: 15,
-    currentValue: 14,
-    unit: "Deliverables",
-    achievementPct: 93.3,
-    status: "At Risk",
-    period: "October 2026",
-    definition: "Total paid ad launches, tracking setups, and performance audits delivered on schedule.",
-    correctiveAction: "Approve pending R12,500 ad spend budget to unblock Meta Performance Ads campaign launch.",
-  },
-  {
-    id: "tgt-2",
-    metricName: "Department Capacity Utilization",
-    targetValue: 85,
-    currentValue: 88,
-    unit: "%",
-    achievementPct: 103.5,
-    status: "At Risk",
-    period: "October 2026",
-    definition: "Average team operational capacity across media buyers and tracking specialists.",
-    correctiveAction: "Media Buying is operating at 88% capacity load. Rebalance unassigned search copy task.",
-  },
-  {
-    id: "tgt-3",
-    metricName: "On-Time Deadline Compliance (SLA)",
-    targetValue: 90,
-    currentValue: 85,
-    unit: "%",
-    achievementPct: 94.4,
-    status: "At Risk",
-    period: "October 2026",
-    definition: "Percentage of client deliverables signed off on or before original SLA date.",
-    correctiveAction: "Media Buying SLA lagging (85%) due to managerial approval response latency.",
-  },
-  {
-    id: "tgt-4",
-    metricName: "Quality Assurance First-Time Acceptance",
-    targetValue: 90,
-    currentValue: 93.3,
-    unit: "%",
-    achievementPct: 103.7,
-    status: "On Target",
-    period: "October 2026",
-    definition: "Percentage of deliverable submissions accepted without requiring rework.",
-  },
-  {
-    id: "tgt-5",
-    metricName: "Open Roadblocks / Critical Dependencies",
-    targetValue: 0,
-    currentValue: 1,
-    unit: "Blockers",
-    achievementPct: 0,
-    status: "At Risk",
-    period: "October 2026",
-    definition: "Active blockers halting client delivery within the department.",
-    correctiveAction: "Resolve budget sign-off blocker for Makurung Process Solutions.",
-  },
-];
+const INITIAL_TARGETS: DepartmentTarget[] = [];
 
 const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [
   {
@@ -382,26 +143,17 @@ const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [
     package: "SEO + Website Build & Paid Ads",
     accountManager: "Operations & Relationship Manager",
     scopeSummary: "B2B LinkedIn & Meta advertising for mining plant optimisation, tailings retreatment, and industrial EPC contracts across South Africa and SADC.",
-    activeDeliverablesCount: 2,
-    openIssuesCount: 1,
+    activeDeliverablesCount: 0,
+    openIssuesCount: 0,
     acceptanceCriteria: [
       "Target verified mining procurement managers and technical directors in SA",
       "Lead generation forms must route to Operations CRM with WhatsApp notifications",
-      "Monthly minimum 15 qualified EPC inquiries",
-      "Cost per qualified inquiry under R850",
     ],
-    deadlines: [
-      { title: "Meta Performance Ads Launch", due: "2026-10-16", status: "Blocked on Budget Sign-off" },
-      { title: "Monthly Attribution & ROAS Audit", due: "2026-10-12", status: "Accepted Complete" },
-    ],
-    communicationNotes: [
-      "Client confirmed monthly ad budget deposit of R12,500 on Oct 11.",
-      "Relationship Manager noted client is eager to start before industry mining indaba next week.",
-    ],
+    deadlines: [],
+    communicationNotes: [],
     requiredEvidenceChecklist: [
       "Ad account setup with billing threshold verified",
       "Pixel & CAPI server events firing with 0 dropped events",
-      "Negative audience exclusions applied (existing suppliers/competitors)",
     ],
   },
   {
@@ -412,48 +164,16 @@ const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [
     package: "Social Media + Ads Retainer",
     accountManager: "Operations & Relationship Manager",
     scopeSummary: "Equipment hire B2B Google Search ads & Luxury African experiences social lead generation.",
-    activeDeliverablesCount: 2,
+    activeDeliverablesCount: 0,
     openIssuesCount: 0,
     acceptanceCriteria: [
       "Google Search ads targeting B2B corporate planners & luxury private functions",
       "CAPI setup with Enhanced Conversions enabled",
-      "Track call conversions and equipment catalog downloads",
     ],
-    deadlines: [
-      { title: "Google Search Ads CAPI Setup", due: "2026-10-18", status: "In Progress" },
-      { title: "B2B Search Copy Expansion", due: "2026-10-19", status: "Unassigned" },
-    ],
-    communicationNotes: [
-      "Client requested focus on marquee tent and generator hire for corporate year-end functions.",
-    ],
+    deadlines: [],
+    communicationNotes: [],
     requiredEvidenceChecklist: [
       "Google Ads Conversion Tracking code verified in Tag Assistant",
-      "Negative keyword list with consumer search exclusions active",
-    ],
-  },
-  {
-    id: "33333333-3333-3333-3333-333333333333",
-    name: "Kasi Green Energy",
-    industry: "Solar & Clean Energy Solutions",
-    accountStatus: "Service Delivery",
-    package: "Growth Strategy & Paid Ads",
-    accountManager: "Operations & Relationship Manager",
-    scopeSummary: "Commercial & residential solar installation inquiries across Gauteng and Mpumalanga.",
-    activeDeliverablesCount: 1,
-    openIssuesCount: 0,
-    acceptanceCriteria: [
-      "TikTok ads targeting commercial property owners and residential homeowners",
-      "Solar calculator qualification form integration",
-    ],
-    deadlines: [
-      { title: "TikTok Retargeting Campaign Setup", due: "2026-10-17", status: "Awaiting Manager QA" },
-    ],
-    communicationNotes: [
-      "Client requested rapid deployment ahead of summer power tariff updates.",
-    ],
-    requiredEvidenceChecklist: [
-      "TikTok pixel event test logs attached to QA submission",
-      "Ad creative video captions match brand guidelines",
     ],
   },
 ];
@@ -500,8 +220,8 @@ export async function fetchDepartmentData(department = "Media Buying") {
         email: p.email || "",
         department: p.department || "Operations",
         activeTasksCount: activeCount,
-        capacityUtilizationPct: Math.min(100, Math.max(35, activeCount * 20 + 35)),
-        onTimeDeliveryRate: 98,
+        capacityUtilizationPct: activeCount === 0 ? 0 : Math.min(100, activeCount * 25),
+        onTimeDeliveryRate: 100,
         status: activeCount >= 4 ? "Near Capacity" : "Available",
       });
     }
