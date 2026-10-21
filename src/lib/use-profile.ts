@@ -129,14 +129,27 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "client_success";
   }
 
-  // 9. Department Manager (Media Buying / Authorized department)
+  // 9. Specialist roles that contain "manager" in the title but are staff-level
+  //    (e.g. SEO Manager, Social Media Manager, Content Manager)
+  const specialistManagerTitles = [
+    "seo manager",
+    "social media manager",
+    "content manager",
+    "community manager",
+    "campaign manager",
+  ];
+  const isSpecialistTitle = specialistManagerTitles.some((s) => title === s || title.startsWith(s));
+  if (isSpecialistTitle && tier !== "manager") {
+    return "staff";
+  }
+
+  // 10. Department Manager (Media Buying / Authorized department)
   if (
     email.startsWith("department.manager@") ||
     roles.some((r) => r.role === "DEPARTMENT_MANAGER" || r.role === "department_manager") ||
     title.includes("department manager") ||
     title.includes("lead") ||
     tier === "manager" ||
-    title.includes("manager") ||
     title.includes("head of")
   ) {
     return "department_manager";

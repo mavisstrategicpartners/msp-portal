@@ -250,11 +250,22 @@ function AuthPage() {
       titleLower.includes("accountant") ||
       titleLower.includes("billing");
     const isSales = deptLower.includes("sales") || titleLower.includes("sales");
+    // Specialist titles that contain "manager" but are staff-level roles
+    const specialistManagerTitles = [
+      "seo manager",
+      "social media manager",
+      "content manager",
+      "community manager",
+      "campaign manager",
+    ];
+    const isSpecialistTitle = specialistManagerTitles.some(
+      (s) => titleLower === s || titleLower.startsWith(s)
+    );
     const isDeptManager =
-      titleLower.includes("department manager") ||
-      titleLower.includes("media buying") ||
-      (profile?.role_tier === "manager" && !isOps && !isGM && !isHR && !isFinance);
-    const isManager = profile?.role_tier === "manager";
+      !isSpecialistTitle &&
+      (titleLower.includes("department manager") ||
+       titleLower.includes("media buying") ||
+       (profile?.role_tier === "manager" && !isOps && !isGM && !isHR && !isFinance));
     const destination = isCeo
       ? "/ceo"
       : isGM
@@ -269,8 +280,6 @@ function AuthPage() {
       ? "/department"
       : isHR
       ? "/host/hr"
-      : isManager
-      ? "/department"
       : "/home";
     await navigate({ to: destination as any });
   }
