@@ -1760,7 +1760,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: CREATE DEPENDENCY REQUEST ──────────────────────────────── */}
       <Dialog open={depModalOpen} onOpenChange={setDepModalOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground">
+        <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-rose-600 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5" /> Request Task Dependency
@@ -1770,11 +1770,11 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmitDependency} className="space-y-4 py-2 text-xs">
-            <div className="space-y-1.5">
+          <form onSubmit={handleSubmitDependency} className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Linked Blocked Task *</Label>
               <Select value={depTaskId} onValueChange={setDepTaskId}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue placeholder="Choose task..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -1787,10 +1787,10 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Target Department *</Label>
               <Select value={depDepartment} onValueChange={setDepDepartment}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1803,33 +1803,33 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Description of Roadblock *</Label>
               <Textarea
                 placeholder="Explain what is currently blocked..."
                 value={depBlockerDesc}
                 onChange={(e) => setDepBlockerDesc(e.target.value)}
                 required
-                className="text-xs min-h-[70px]"
+                className="text-xs min-h-[70px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Specific Needed Resource / Action *</Label>
               <Textarea
                 placeholder="e.g. CAPI delegate link from client, Google Tag Manager access..."
                 value={depNeededResource}
                 onChange={(e) => setDepNeededResource(e.target.value)}
                 required
-                className="text-xs min-h-[70px]"
+                className="text-xs min-h-[70px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-3 w-full min-w-0">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold">Urgency Level</Label>
                 <Select value={depUrgency} onValueChange={(v: any) => setDepUrgency(v)}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1841,18 +1841,18 @@ export function StaffWorkspaceDashboard() {
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold">Requested By Date</Label>
                 <Input
                   type="date"
                   value={depDueDate}
                   onChange={(e) => setDepDueDate(e.target.value)}
-                  className="h-9 text-xs"
+                  className="h-9 text-xs w-full min-w-0"
                 />
               </div>
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 w-full">
               <Button type="button" variant="outline" size="sm" onClick={() => setDepModalOpen(false)}>
                 Cancel
               </Button>
@@ -1866,7 +1866,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: SUBMIT EVIDENCE ────────────────────────────────────────── */}
       <Dialog open={evidenceModalOpen} onOpenChange={setEvidenceModalOpen}>
-        <DialogContent className="max-w-lg bg-card border-border text-foreground">
+        <DialogContent className="max-w-lg w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <FileUp className="h-5 w-5 text-primary" /> Submit Deliverable Evidence
@@ -1876,11 +1876,11 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmitEvidence} className="space-y-4 py-2 text-xs">
-            <div className="space-y-1.5">
+          <form onSubmit={handleSubmitEvidence} className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Select Task *</Label>
               <Select value={evidenceTaskId} onValueChange={setEvidenceTaskId}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue placeholder="Choose task..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -1894,37 +1894,37 @@ export function StaffWorkspaceDashboard() {
             </div>
 
             {/* Asset URL */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Deliverable Asset URL / Repository Link</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full min-w-0">
                 <Input
-                  placeholder="Link Title (e.g. Campaign Dashboard)"
+                  placeholder="Link Title (e.g. Dashboard)"
                   value={evidenceLinkTitle}
                   onChange={(e) => setEvidenceLinkTitle(e.target.value)}
-                  className="col-span-1 h-9 text-xs"
+                  className="sm:col-span-1 h-9 text-xs min-w-0 w-full"
                 />
                 <Input
                   placeholder="https://..."
                   value={evidenceLinkUrl}
                   onChange={(e) => setEvidenceLinkUrl(e.target.value)}
-                  className="col-span-2 h-9 text-xs"
+                  className="sm:col-span-2 h-9 text-xs min-w-0 w-full"
                 />
               </div>
             </div>
 
             {/* File Upload to Supabase Storage */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Upload Document or Screenshot (PDF, DOCX, PNG, ZIP &lt; 25MB)</Label>
               <Input
                 type="file"
                 onChange={handleFileUpload}
                 disabled={isUploadingFile}
-                className="h-9 text-xs file:text-xs file:font-semibold"
+                className="h-9 text-xs file:text-xs file:font-semibold w-full min-w-0"
               />
               {isUploadingFile && <p className="text-[11px] text-primary animate-pulse">Uploading file to secure storage...</p>}
 
               {evidenceFiles.length > 0 && (
-                <div className="space-y-1 pt-1">
+                <div className="space-y-1 pt-1 w-full min-w-0">
                   {evidenceFiles.map((f, i) => (
                     <div key={i} className="flex items-center justify-between text-[11px] bg-secondary/50 p-2 rounded">
                       <span className="font-semibold truncate max-w-xs">{f.name}</span>
@@ -1936,18 +1936,18 @@ export function StaffWorkspaceDashboard() {
             </div>
 
             {/* Written Explanation */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Written Explanation & Completion Note *</Label>
               <Textarea
                 placeholder="Explain what was implemented, how it meets acceptance criteria, test credentials..."
                 value={evidenceExplanation}
                 onChange={(e) => setEvidenceExplanation(e.target.value)}
                 required
-                className="text-xs min-h-[85px]"
+                className="text-xs min-h-[85px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 w-full">
               <Button type="button" variant="outline" size="sm" onClick={() => setEvidenceModalOpen(false)}>
                 Cancel
               </Button>
@@ -1961,7 +1961,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: MANAGER REVIEW EVIDENCE ─────────────────────────────────── */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground">
+        <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold">QA Deliverable Inspection</DialogTitle>
             <DialogDescription className="text-xs">
@@ -1969,16 +1969,16 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2 text-xs">
-            <div className="rounded-lg bg-secondary/30 p-3 space-y-1">
+          <div className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="rounded-lg bg-secondary/30 p-3 space-y-1 w-full min-w-0">
               <span className="font-semibold text-foreground">Staff Note:</span>
-              <p className="text-muted-foreground">{selectedEvidence?.writtenExplanation}</p>
+              <p className="text-muted-foreground break-words">{selectedEvidence?.writtenExplanation}</p>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">QA Decision</Label>
               <Select value={reviewDecision} onValueChange={(v: any) => setReviewDecision(v)}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1988,18 +1988,18 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Feedback / Correction Notes</Label>
               <Textarea
                 placeholder="Details of approval or specific adjustments needed..."
                 value={reviewerFeedback}
                 onChange={(e) => setReviewerFeedback(e.target.value)}
-                className="text-xs min-h-[80px]"
+                className="text-xs min-h-[80px] w-full min-w-0 resize-y"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="w-full">
             <Button variant="outline" size="sm" onClick={() => setReviewModalOpen(false)}>
               Cancel
             </Button>
