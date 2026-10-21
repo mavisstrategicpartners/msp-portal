@@ -21,7 +21,7 @@ export default function Workforce() {
   return (
     <DashboardLayout title="Workforce Management">
       <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {[['assigned','Assigned Learners'],['attendance','Attendance Monitor'],['performance','Performance'],['incidents','Incidents'],['coaching','Coaching Notes']].map(([k, l]) => (
+        {[['assigned','Assigned Interns'],['attendance','Attendance Monitor'],['performance','Performance'],['incidents','Incidents'],['coaching','Coaching Notes']].map(([k, l]) => (
           <button key={k} className={'btn ' + (tab === k ? 'btn-primary' : 'btn-ghost')} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
@@ -30,7 +30,7 @@ export default function Workforce() {
         <div className="card">
           <table>
             <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <th style={{ padding: '10px 0' }}>Learner</th><th>Program</th><th>Mentor</th><th>Status</th></tr></thead>
+              <th style={{ padding: '10px 0' }}>Intern</th><th>Program</th><th>Mentor</th><th>Status</th></tr></thead>
             <tbody>
               {learners.map(l => (
                 <tr key={l.id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 13 }}>
@@ -55,7 +55,7 @@ export default function Workforce() {
         <div className="card">
           <table>
             <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <th style={{ padding: '10px 0' }}>Learner</th><th>Attendance</th><th>Score</th><th>Progress</th></tr></thead>
+              <th style={{ padding: '10px 0' }}>Intern</th><th>Attendance</th><th>Score</th><th>Progress</th></tr></thead>
             <tbody>
               {learners.map(l => (
                 <tr key={l.id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 13 }}>
@@ -81,7 +81,7 @@ export default function Workforce() {
           </div>
           <table>
             <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <th style={{ padding: '10px 0' }}>Date</th><th>Learner</th><th>Category</th><th>Severity</th><th>Status</th><th>Details</th></tr></thead>
+              <th style={{ padding: '10px 0' }}>Date</th><th>Intern</th><th>Category</th><th>Severity</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
               {incidents.map(i => (
                 <tr key={i.id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 13 }}>

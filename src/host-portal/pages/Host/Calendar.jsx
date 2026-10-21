@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedCalendar } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 import { holidayOn } from '../../lib/holidays.js'
 import { formatLongDate, formatShortDate } from '../../lib/dateUtils.js'
 
@@ -29,6 +31,7 @@ export default function Calendar() {
   const [form, setForm] = useState(empty)
   const [selectedDate, setSelectedDate] = useState(null)
   const [activeMonth, setActiveMonth] = useState(() => { const t = new Date(); return { year: t.getFullYear(), month: t.getMonth() } })
+  const confirm = useConfirm()
 
   const eventsByDate = useMemo(() => {
     const map = {}
@@ -42,13 +45,31 @@ export default function Calendar() {
 
   const openCreate = (preDate) => { setForm({ ...empty, date: preDate || new Date().toISOString().slice(0, 10) }); setEditingId(null); setShowForm(true) }
   const openEdit = (e) => { setEditingId(e.id); setForm({ ...empty, ...e, date: toKey(e.date) }); setShowForm(true) }
-  const del = (e) => { if (!window.confirm(`Delete "${e.title}"?`)) return; setEvents(prev => prev.filter(x => x.id !== e.id)) }
+  const del = async (e) => {
+    const ok = await confirm({
+      title: 'Delete Event',
+      description: `Are you sure you want to delete "${e.title}" from the calendar?`,
+      variant: 'destructive',
+      confirmText: 'Delete Event',
+    })
+    if (!ok) return
+    setEvents(prev => prev.filter(x => x.id !== e.id))
+    toast.success('Event Deleted', { description: `"${e.title}" was removed.` })
+  }
 
   const submit = (ev) => {
     ev.preventDefault()
-    if (!form.title.trim() || !form.date) return alert('Title and date are required.')
-    if (editingId) setEvents(prev => prev.map(x => x.id === editingId ? { ...x, ...form } : x))
-    else setEvents(prev => [...prev, { ...form, id: uid('E') }])
+    if (!form.title.trim() || !form.date) {
+      toast.warning('Event Details Required', { description: 'Title and date are required.' })
+      return
+    }
+    if (editingId) {
+      setEvents(prev => prev.map(x => x.id === editingId ? { ...x, ...form } : x))
+      toast.success('Event Updated', { description: `"${form.title}" was updated.` })
+    } else {
+      setEvents(prev => [...prev, { ...form, id: uid('E') }])
+      toast.success('Event Scheduled', { description: `"${form.title}" was added to the calendar.` })
+    }
     setShowForm(false)
   }
 

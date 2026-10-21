@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import KanbanBoard from '../../components/KanbanBoard.jsx'
 import { seedTasks, seedProjects, seedLearners, TASK_STATUSES, PROJECT_PRIORITIES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
+import { Lightbulb } from 'lucide-react'
 
 const empty = { title: '', project_id: '', assignee_learner_id: '', status: 'To Do', priority: 'Medium', due_date: '', description: '' }
 const priorityColor = (p) => p === 'Critical' ? 'var(--danger)' : p === 'High' ? 'var(--warning)' : p === 'Low' ? 'var(--text-muted)' : 'var(--brand)'
 const columnAccent = (c) => c === 'Completed' ? 'var(--success)' : c === 'Review' ? 'var(--warning)' : c === 'In Progress' ? 'var(--brand)' : 'var(--text-muted)'
 
 export default function Tasks() {
-  const [tasks, setTasks] = useLocalStorage('host.tasks', seedTasks)
+  const [storedTasks, setStoredTasks] = useLocalStorage('host.tasks', seedTasks)
+  const tasks = useMemo(() => {
+    return (storedTasks || []).filter(t => !['T-1','T-2','T-3','T-4','T-5','T-6'].includes(t.id))
+  }, [storedTasks])
+  const setTasks = setStoredTasks
   const [projects] = useLocalStorage('host.projects', seedProjects)
   const [learners] = useLocalStorage('host.learners', seedLearners)
   const [q, setQ] = useState('')
@@ -19,6 +26,7 @@ export default function Tasks() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const confirm = useConfirm()
 
   const projectName = (id) => projects.find(p => p.id === id)?.name || '—'
   const learnerName = (id) => learners.find(l => l.id === id)?.full_name || '—'
@@ -30,14 +38,35 @@ export default function Tasks() {
 
   const openAdd = () => { setEditing(null); setForm({ ...empty, project_id: projects[0]?.id || '', assignee_learner_id: learners[0]?.id || '' }); setShowForm(true) }
   const openEdit = (t) => { setEditing(t.id); setForm({ ...empty, ...t }); setShowForm(true) }
-  const remove = (t) => { if (window.confirm(`Delete task "${t.title}"?`)) setTasks(prev => prev.filter(x => x.id !== t.id)) }
+  const remove = async (t) => {
+    const ok = await confirm({
+      title: 'Delete Task',
+      description: `Are you sure you want to delete task "${t.title}"? This cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete Task',
+    })
+    if (!ok) return
+    setTasks(prev => prev.filter(x => x.id !== t.id))
+    toast.success('Task Deleted', { description: `"${t.title}" was removed.` })
+  }
   const move = (id, status) => setTasks(prev => prev.map(x => x.id === id ? { ...x, status } : x))
   const submit = (e) => {
     e.preventDefault()
-    if (!form.title.trim()) return alert('Task title is required')
-    if (!form.project_id) return alert('Please pick a project')
-    if (editing) setTasks(prev => prev.map(x => x.id === editing ? { ...x, ...form } : x))
-    else setTasks(prev => [{ id: uid('T'), ...form }, ...prev])
+    if (!form.title.trim()) {
+      toast.warning('Task Title Required', { description: 'Please enter a name for the task.' })
+      return
+    }
+    if (!form.project_id) {
+      toast.warning('Project Required', { description: 'Please select an associated project.' })
+      return
+    }
+    if (editing) {
+      setTasks(prev => prev.map(x => x.id === editing ? { ...x, ...form } : x))
+      toast.success('Task Updated', { description: `"${form.title}" has been updated.` })
+    } else {
+      setTasks(prev => [{ id: uid('T'), ...form }, ...prev])
+      toast.success('Task Created', { description: `"${form.title}" has been added.` })
+    }
     setShowForm(false)
   }
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -76,9 +105,17 @@ export default function Tasks() {
           <button className="btn btn-primary" onClick={openAdd}>+ New Task</button>
         </div>
 
-        {view === 'board' ? (
+        {tasks.length === 0 ? (
+          <div style={{ padding: '48px 16px', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: 12, margin: '16px 0' }}>
+            <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.6 }}>📋</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>No tasks have been assigned yet.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Tasks assigned to employees will appear here.</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>No upcoming deadlines.</div>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAdd}>+ Create First Task</button>
+          </div>
+        ) : view === 'board' ? (
           <>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>💡 Drag any task between columns — in either direction.</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><Lightbulb size={14} /> Drag any task between columns — in either direction.</div>
             <KanbanBoard columns={TASK_STATUSES} items={filtered} onMove={move} columnAccent={columnAccent}
               renderCard={(t) => (
                 <div className="card" style={{ padding: 12, borderLeft: `4px solid ${priorityColor(t.priority)}` }}>

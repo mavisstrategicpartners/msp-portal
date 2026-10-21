@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useNotifications } from '../context/NotificationContext.jsx'
+import { Bell, Calendar, Circle, Clock, FileText, Users } from 'lucide-react'
 
 function timeAgo(ts) {
   const d = Math.floor((Date.now() - ts) / 1000)
@@ -9,7 +10,7 @@ function timeAgo(ts) {
   if (d < 86400) return Math.floor(d / 3600) + 'h ago'
   return Math.floor(d / 86400) + 'd ago'
 }
-const icons = { leave: '🗓', doc: '📄', timesheet: '⏱', recruit: '👥', reminder: '🔔' }
+const icons = { leave: Calendar, doc: FileText, timesheet: Clock, recruit: Users, reminder: Bell }
 
 export default function NotificationBell() {
   const { list, unreadCount, markRead, markAllRead, remove } = useNotifications()
@@ -22,7 +23,7 @@ export default function NotificationBell() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button className="btn btn-ghost" onClick={() => setOpen(o => !o)} style={{ position: 'relative', padding: '8px 10px' }} aria-label="Notifications">
-        <span style={{ fontSize: 16 }}>🔔</span>
+        <Bell size={16} />
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: 2, right: 2, background: 'var(--danger)', color: 'white',
@@ -48,7 +49,7 @@ export default function NotificationBell() {
                 background: n.unread ? 'var(--brand-soft)' : 'transparent',
                 display: 'flex', gap: 10,
               }}>
-                <div style={{ fontSize: 18 }}>{icons[n.kind] || '•'}</div>
+                <div style={{ color: 'var(--brand)' }}>{(() => { const Icon = icons[n.kind] || Circle; return <Icon size={18} /> })()}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Link to={n.link || '#'} onClick={() => { markRead(n.id); setOpen(false) }}
                     style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>{n.title}</Link>

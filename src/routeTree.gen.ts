@@ -9,96 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedWhoWeAreRouteImport } from './routes/_authenticated/who-we-are'
-import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
-import { Route as AuthenticatedSopsRouteImport } from './routes/_authenticated/sops'
-import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
-import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
-import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
-import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticated/glossary'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
-import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
-import { Route as AuthenticatedPortalOtherRouteImport } from './routes/_authenticated/portal/other'
-import { Route as AuthenticatedPortalAdminRouteImport } from './routes/_authenticated/portal/admin'
-import { Route as AuthenticatedMeProfileRouteImport } from './routes/_authenticated/me/profile'
-import { Route as AuthenticatedMeLeaveRouteImport } from './routes/_authenticated/me/leave'
-import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
-import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
-import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin/team'
-import { Route as AuthenticatedAdminSalesPlaybookRouteImport } from './routes/_authenticated/admin/sales-playbook'
-import { Route as AuthenticatedAdminKpisRouteImport } from './routes/_authenticated/admin/kpis'
-import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin/content'
+import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
+import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticated/glossary'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
+import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
+import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
+import { Route as AuthenticatedSopsRouteImport } from './routes/_authenticated/sops'
+import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
+import { Route as AuthenticatedWhoWeAreRouteImport } from './routes/_authenticated/who-we-are'
+import { Route as AuthenticatedAdminAttendanceRouteImport } from './routes/_authenticated/admin/attendance'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin/content'
+import { Route as AuthenticatedAdminKpisRouteImport } from './routes/_authenticated/admin/kpis'
+import { Route as AuthenticatedAdminOperationsRouteImport } from './routes/_authenticated/admin/operations'
+import { Route as AuthenticatedAdminSalesPlaybookRouteImport } from './routes/_authenticated/admin/sales-playbook'
+import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin/team'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedCeoIndexRouteImport } from './routes/_authenticated/ceo/index'
+import { Route as AuthenticatedCeoClientsRouteImport } from './routes/_authenticated/ceo/clients'
+import { Route as AuthenticatedCeoDeliveryRouteImport } from './routes/_authenticated/ceo/delivery'
+import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
+import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
+import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
+import { Route as AuthenticatedDepartmentIndexRouteImport } from './routes/_authenticated/department/index'
+import { Route as AuthenticatedDepartmentApprovalsRouteImport } from './routes/_authenticated/department/approvals'
+import { Route as AuthenticatedDepartmentBlockersRouteImport } from './routes/_authenticated/department/blockers'
+import { Route as AuthenticatedDepartmentClientsRouteImport } from './routes/_authenticated/department/clients'
+import { Route as AuthenticatedDepartmentPerformanceRouteImport } from './routes/_authenticated/department/performance'
+import { Route as AuthenticatedDepartmentQaRouteImport } from './routes/_authenticated/department/qa'
+import { Route as AuthenticatedDepartmentTasksRouteImport } from './routes/_authenticated/department/tasks'
+import { Route as AuthenticatedDepartmentWorkloadRouteImport } from './routes/_authenticated/department/workload'
+import { Route as AuthenticatedGmIndexRouteImport } from './routes/_authenticated/gm/index'
+import { Route as AuthenticatedGmApprovalsRouteImport } from './routes/_authenticated/gm/approvals'
+import { Route as AuthenticatedGmCapacityRouteImport } from './routes/_authenticated/gm/capacity'
+import { Route as AuthenticatedGmDependenciesRouteImport } from './routes/_authenticated/gm/dependencies'
+import { Route as AuthenticatedGmEscalationsRouteImport } from './routes/_authenticated/gm/escalations'
+import { Route as AuthenticatedGmExecutionRouteImport } from './routes/_authenticated/gm/execution'
+import { Route as AuthenticatedGmRevenueRouteImport } from './routes/_authenticated/gm/revenue'
+import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
+import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
+import { Route as AuthenticatedHrAttendanceRouteImport } from './routes/_authenticated/hr/attendance'
+import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
+import { Route as AuthenticatedMeLeaveRouteImport } from './routes/_authenticated/me/leave'
+import { Route as AuthenticatedMeProfileRouteImport } from './routes/_authenticated/me/profile'
+import { Route as AuthenticatedOperationsIndexRouteImport } from './routes/_authenticated/operations/index'
+import { Route as AuthenticatedOperationsCommunicationsRouteImport } from './routes/_authenticated/operations/communications'
+import { Route as AuthenticatedOperationsDeadlinesRouteImport } from './routes/_authenticated/operations/deadlines'
+import { Route as AuthenticatedOperationsEscalationsRouteImport } from './routes/_authenticated/operations/escalations'
+import { Route as AuthenticatedOperationsOnboardingRouteImport } from './routes/_authenticated/operations/onboarding'
+import { Route as AuthenticatedOperationsRecoveryRouteImport } from './routes/_authenticated/operations/recovery'
+import { Route as AuthenticatedOperationsVerificationsRouteImport } from './routes/_authenticated/operations/verifications'
+import { Route as AuthenticatedOperationsWorkflowsRouteImport } from './routes/_authenticated/operations/workflows'
+import { Route as AuthenticatedPortalAdminRouteImport } from './routes/_authenticated/portal/admin'
+import { Route as AuthenticatedPortalOtherRouteImport } from './routes/_authenticated/portal/other'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedWhoWeAreRoute = AuthenticatedWhoWeAreRouteImport.update({
-  id: '/who-we-are',
-  path: '/who-we-are',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSopsRoute = AuthenticatedSopsRouteImport.update({
-  id: '/sops',
-  path: '/sops',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
-  id: '/services',
-  path: '/services',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
-  id: '/roadmap',
-  path: '/roadmap',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedGlossaryRoute = AuthenticatedGlossaryRouteImport.update({
-  id: '/glossary',
-  path: '/glossary',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDepartmentsRoute =
   AuthenticatedDepartmentsRouteImport.update({
@@ -106,58 +91,75 @@ const AuthenticatedDepartmentsRoute =
     path: '/departments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
-  id: '/host/',
-  path: '/host/',
+const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPortalOtherRoute =
-  AuthenticatedPortalOtherRouteImport.update({
-    id: '/portal/other',
-    path: '/portal/other',
+const AuthenticatedGlossaryRoute = AuthenticatedGlossaryRouteImport.update({
+  id: '/glossary',
+  path: '/glossary',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSopsRoute = AuthenticatedSopsRouteImport.update({
+  id: '/sops',
+  path: '/sops',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWhoWeAreRoute = AuthenticatedWhoWeAreRouteImport.update({
+  id: '/who-we-are',
+  path: '/who-we-are',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminAttendanceRoute =
+  AuthenticatedAdminAttendanceRouteImport.update({
+    id: '/admin/attendance',
+    path: '/admin/attendance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPortalAdminRoute =
-  AuthenticatedPortalAdminRouteImport.update({
-    id: '/portal/admin',
-    path: '/portal/admin',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMeProfileRoute = AuthenticatedMeProfileRouteImport.update({
-  id: '/me/profile',
-  path: '/me/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMeLeaveRoute = AuthenticatedMeLeaveRouteImport.update({
-  id: '/me/leave',
-  path: '/me/leave',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMeDeclarationRoute =
-  AuthenticatedMeDeclarationRouteImport.update({
-    id: '/me/declaration',
-    path: '/me/declaration',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHostSplatRoute = AuthenticatedHostSplatRouteImport.update({
-  id: '/host/$',
-  path: '/host/$',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
-  id: '/admin/team',
-  path: '/admin/team',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminSalesPlaybookRoute =
-  AuthenticatedAdminSalesPlaybookRouteImport.update({
-    id: '/admin/sales-playbook',
-    path: '/admin/sales-playbook',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminKpisRoute = AuthenticatedAdminKpisRouteImport.update({
-  id: '/admin/kpis',
-  path: '/admin/kpis',
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminContentRoute =
@@ -166,65 +168,367 @@ const AuthenticatedAdminContentRoute =
     path: '/admin/content',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
-  id: '/admin/audit',
-  path: '/admin/audit',
+const AuthenticatedAdminKpisRoute = AuthenticatedAdminKpisRouteImport.update({
+  id: '/admin/kpis',
+  path: '/admin/kpis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminOperationsRoute =
+  AuthenticatedAdminOperationsRouteImport.update({
+    id: '/admin/operations',
+    path: '/admin/operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSalesPlaybookRoute =
+  AuthenticatedAdminSalesPlaybookRouteImport.update({
+    id: '/admin/sales-playbook',
+    path: '/admin/sales-playbook',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
+  id: '/admin/team',
+  path: '/admin/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCeoIndexRoute = AuthenticatedCeoIndexRouteImport.update({
+  id: '/ceo/',
+  path: '/ceo/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCeoClientsRoute = AuthenticatedCeoClientsRouteImport.update({
+  id: '/ceo/clients',
+  path: '/ceo/clients',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCeoDeliveryRoute =
+  AuthenticatedCeoDeliveryRouteImport.update({
+    id: '/ceo/delivery',
+    path: '/ceo/delivery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoRevenueRoute = AuthenticatedCeoRevenueRouteImport.update({
+  id: '/ceo/revenue',
+  path: '/ceo/revenue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCeoSalesRoute = AuthenticatedCeoSalesRouteImport.update({
+  id: '/ceo/sales',
+  path: '/ceo/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCeoTeamRoute = AuthenticatedCeoTeamRouteImport.update({
+  id: '/ceo/team',
+  path: '/ceo/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDepartmentIndexRoute =
+  AuthenticatedDepartmentIndexRouteImport.update({
+    id: '/department/',
+    path: '/department/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentApprovalsRoute =
+  AuthenticatedDepartmentApprovalsRouteImport.update({
+    id: '/department/approvals',
+    path: '/department/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentBlockersRoute =
+  AuthenticatedDepartmentBlockersRouteImport.update({
+    id: '/department/blockers',
+    path: '/department/blockers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentClientsRoute =
+  AuthenticatedDepartmentClientsRouteImport.update({
+    id: '/department/clients',
+    path: '/department/clients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentPerformanceRoute =
+  AuthenticatedDepartmentPerformanceRouteImport.update({
+    id: '/department/performance',
+    path: '/department/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentQaRoute =
+  AuthenticatedDepartmentQaRouteImport.update({
+    id: '/department/qa',
+    path: '/department/qa',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentTasksRoute =
+  AuthenticatedDepartmentTasksRouteImport.update({
+    id: '/department/tasks',
+    path: '/department/tasks',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDepartmentWorkloadRoute =
+  AuthenticatedDepartmentWorkloadRouteImport.update({
+    id: '/department/workload',
+    path: '/department/workload',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmIndexRoute = AuthenticatedGmIndexRouteImport.update({
+  id: '/gm/',
+  path: '/gm/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGmApprovalsRoute =
+  AuthenticatedGmApprovalsRouteImport.update({
+    id: '/gm/approvals',
+    path: '/gm/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmCapacityRoute = AuthenticatedGmCapacityRouteImport.update({
+  id: '/gm/capacity',
+  path: '/gm/capacity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGmDependenciesRoute =
+  AuthenticatedGmDependenciesRouteImport.update({
+    id: '/gm/dependencies',
+    path: '/gm/dependencies',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmEscalationsRoute =
+  AuthenticatedGmEscalationsRouteImport.update({
+    id: '/gm/escalations',
+    path: '/gm/escalations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmExecutionRoute =
+  AuthenticatedGmExecutionRouteImport.update({
+    id: '/gm/execution',
+    path: '/gm/execution',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGmRevenueRoute = AuthenticatedGmRevenueRouteImport.update({
+  id: '/gm/revenue',
+  path: '/gm/revenue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
+  id: '/host/',
+  path: '/host/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHostSplatRoute = AuthenticatedHostSplatRouteImport.update({
+  id: '/host/$',
+  path: '/host/$',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHrAttendanceRoute =
+  AuthenticatedHrAttendanceRouteImport.update({
+    id: '/hr/attendance',
+    path: '/hr/attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMeDeclarationRoute =
+  AuthenticatedMeDeclarationRouteImport.update({
+    id: '/me/declaration',
+    path: '/me/declaration',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMeLeaveRoute = AuthenticatedMeLeaveRouteImport.update({
+  id: '/me/leave',
+  path: '/me/leave',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeProfileRoute = AuthenticatedMeProfileRouteImport.update({
+  id: '/me/profile',
+  path: '/me/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOperationsIndexRoute =
+  AuthenticatedOperationsIndexRouteImport.update({
+    id: '/operations/',
+    path: '/operations/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsCommunicationsRoute =
+  AuthenticatedOperationsCommunicationsRouteImport.update({
+    id: '/operations/communications',
+    path: '/operations/communications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsDeadlinesRoute =
+  AuthenticatedOperationsDeadlinesRouteImport.update({
+    id: '/operations/deadlines',
+    path: '/operations/deadlines',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsEscalationsRoute =
+  AuthenticatedOperationsEscalationsRouteImport.update({
+    id: '/operations/escalations',
+    path: '/operations/escalations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsOnboardingRoute =
+  AuthenticatedOperationsOnboardingRouteImport.update({
+    id: '/operations/onboarding',
+    path: '/operations/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsRecoveryRoute =
+  AuthenticatedOperationsRecoveryRouteImport.update({
+    id: '/operations/recovery',
+    path: '/operations/recovery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsVerificationsRoute =
+  AuthenticatedOperationsVerificationsRouteImport.update({
+    id: '/operations/verifications',
+    path: '/operations/verifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOperationsWorkflowsRoute =
+  AuthenticatedOperationsWorkflowsRouteImport.update({
+    id: '/operations/workflows',
+    path: '/operations/workflows',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminRoute =
+  AuthenticatedPortalAdminRouteImport.update({
+    id: '/portal/admin',
+    path: '/portal/admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPortalOtherRoute =
+  AuthenticatedPortalOtherRouteImport.update({
+    id: '/portal/other',
+    path: '/portal/other',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/ceo/clients': typeof AuthenticatedCeoClientsRoute
+  '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
+  '/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
+  '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
+  '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
+  '/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
+  '/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/department/': typeof AuthenticatedDepartmentIndexRoute
+  '/gm/': typeof AuthenticatedGmIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
+  '/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
   '/sops': typeof AuthenticatedSopsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/ceo/clients': typeof AuthenticatedCeoClientsRoute
+  '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
+  '/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
+  '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
+  '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
+  '/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/portal/other': typeof AuthenticatedPortalOtherRoute
+  '/ceo': typeof AuthenticatedCeoIndexRoute
+  '/department': typeof AuthenticatedDepartmentIndexRoute
+  '/gm': typeof AuthenticatedGmIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
+  '/operations': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -232,28 +536,63 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
+  '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/glossary': typeof AuthenticatedGlossaryRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/services': typeof AuthenticatedServicesRoute
   '/_authenticated/sops': typeof AuthenticatedSopsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/who-we-are': typeof AuthenticatedWhoWeAreRoute
+  '/_authenticated/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/kpis': typeof AuthenticatedAdminKpisRoute
+  '/_authenticated/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/_authenticated/admin/sales-playbook': typeof AuthenticatedAdminSalesPlaybookRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/ceo/clients': typeof AuthenticatedCeoClientsRoute
+  '/_authenticated/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
+  '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
+  '/_authenticated/department/approvals': typeof AuthenticatedDepartmentApprovalsRoute
+  '/_authenticated/department/blockers': typeof AuthenticatedDepartmentBlockersRoute
+  '/_authenticated/department/clients': typeof AuthenticatedDepartmentClientsRoute
+  '/_authenticated/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
+  '/_authenticated/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/_authenticated/department/tasks': typeof AuthenticatedDepartmentTasksRoute
+  '/_authenticated/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
+  '/_authenticated/gm/approvals': typeof AuthenticatedGmApprovalsRoute
+  '/_authenticated/gm/capacity': typeof AuthenticatedGmCapacityRoute
+  '/_authenticated/gm/dependencies': typeof AuthenticatedGmDependenciesRoute
+  '/_authenticated/gm/escalations': typeof AuthenticatedGmEscalationsRoute
+  '/_authenticated/gm/execution': typeof AuthenticatedGmExecutionRoute
+  '/_authenticated/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
+  '/_authenticated/hr/attendance': typeof AuthenticatedHrAttendanceRoute
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
   '/_authenticated/me/profile': typeof AuthenticatedMeProfileRoute
+  '/_authenticated/operations/communications': typeof AuthenticatedOperationsCommunicationsRoute
+  '/_authenticated/operations/deadlines': typeof AuthenticatedOperationsDeadlinesRoute
+  '/_authenticated/operations/escalations': typeof AuthenticatedOperationsEscalationsRoute
+  '/_authenticated/operations/onboarding': typeof AuthenticatedOperationsOnboardingRoute
+  '/_authenticated/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
+  '/_authenticated/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
+  '/_authenticated/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRoute
   '/_authenticated/portal/other': typeof AuthenticatedPortalOtherRoute
+  '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
+  '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
+  '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
+  '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,83 +600,188 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/departments'
+    | '/finance'
     | '/glossary'
     | '/home'
     | '/pricing'
     | '/reports'
     | '/review'
     | '/roadmap'
+    | '/sales'
     | '/services'
     | '/sops'
     | '/tools'
     | '/who-we-are'
+    | '/admin/attendance'
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
+    | '/admin/operations'
     | '/admin/sales-playbook'
     | '/admin/team'
+    | '/admin/users'
+    | '/ceo/clients'
+    | '/ceo/delivery'
+    | '/ceo/revenue'
+    | '/ceo/sales'
+    | '/ceo/team'
+    | '/department/approvals'
+    | '/department/blockers'
+    | '/department/clients'
+    | '/department/performance'
+    | '/department/qa'
+    | '/department/tasks'
+    | '/department/workload'
+    | '/gm/approvals'
+    | '/gm/capacity'
+    | '/gm/dependencies'
+    | '/gm/escalations'
+    | '/gm/execution'
+    | '/gm/revenue'
     | '/host/$'
+    | '/hr/attendance'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
+    | '/operations/communications'
+    | '/operations/deadlines'
+    | '/operations/escalations'
+    | '/operations/onboarding'
+    | '/operations/recovery'
+    | '/operations/verifications'
+    | '/operations/workflows'
     | '/portal/admin'
     | '/portal/other'
+    | '/ceo/'
+    | '/department/'
+    | '/gm/'
     | '/host/'
+    | '/operations/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/departments'
+    | '/finance'
     | '/glossary'
     | '/home'
     | '/pricing'
     | '/reports'
     | '/review'
     | '/roadmap'
+    | '/sales'
     | '/services'
     | '/sops'
     | '/tools'
     | '/who-we-are'
+    | '/admin/attendance'
     | '/admin/audit'
     | '/admin/content'
     | '/admin/kpis'
+    | '/admin/operations'
     | '/admin/sales-playbook'
     | '/admin/team'
+    | '/admin/users'
+    | '/ceo/clients'
+    | '/ceo/delivery'
+    | '/ceo/revenue'
+    | '/ceo/sales'
+    | '/ceo/team'
+    | '/department/approvals'
+    | '/department/blockers'
+    | '/department/clients'
+    | '/department/performance'
+    | '/department/qa'
+    | '/department/tasks'
+    | '/department/workload'
+    | '/gm/approvals'
+    | '/gm/capacity'
+    | '/gm/dependencies'
+    | '/gm/escalations'
+    | '/gm/execution'
+    | '/gm/revenue'
     | '/host/$'
+    | '/hr/attendance'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
+    | '/operations/communications'
+    | '/operations/deadlines'
+    | '/operations/escalations'
+    | '/operations/onboarding'
+    | '/operations/recovery'
+    | '/operations/verifications'
+    | '/operations/workflows'
     | '/portal/admin'
     | '/portal/other'
+    | '/ceo'
+    | '/department'
+    | '/gm'
     | '/host'
+    | '/operations'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/departments'
+    | '/_authenticated/finance'
     | '/_authenticated/glossary'
     | '/_authenticated/home'
     | '/_authenticated/pricing'
     | '/_authenticated/reports'
     | '/_authenticated/review'
     | '/_authenticated/roadmap'
+    | '/_authenticated/sales'
     | '/_authenticated/services'
     | '/_authenticated/sops'
     | '/_authenticated/tools'
     | '/_authenticated/who-we-are'
+    | '/_authenticated/admin/attendance'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/content'
     | '/_authenticated/admin/kpis'
+    | '/_authenticated/admin/operations'
     | '/_authenticated/admin/sales-playbook'
     | '/_authenticated/admin/team'
+    | '/_authenticated/admin/users'
+    | '/_authenticated/ceo/clients'
+    | '/_authenticated/ceo/delivery'
+    | '/_authenticated/ceo/revenue'
+    | '/_authenticated/ceo/sales'
+    | '/_authenticated/ceo/team'
+    | '/_authenticated/department/approvals'
+    | '/_authenticated/department/blockers'
+    | '/_authenticated/department/clients'
+    | '/_authenticated/department/performance'
+    | '/_authenticated/department/qa'
+    | '/_authenticated/department/tasks'
+    | '/_authenticated/department/workload'
+    | '/_authenticated/gm/approvals'
+    | '/_authenticated/gm/capacity'
+    | '/_authenticated/gm/dependencies'
+    | '/_authenticated/gm/escalations'
+    | '/_authenticated/gm/execution'
+    | '/_authenticated/gm/revenue'
     | '/_authenticated/host/$'
+    | '/_authenticated/hr/attendance'
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
     | '/_authenticated/me/profile'
+    | '/_authenticated/operations/communications'
+    | '/_authenticated/operations/deadlines'
+    | '/_authenticated/operations/escalations'
+    | '/_authenticated/operations/onboarding'
+    | '/_authenticated/operations/recovery'
+    | '/_authenticated/operations/verifications'
+    | '/_authenticated/operations/workflows'
     | '/_authenticated/portal/admin'
     | '/_authenticated/portal/other'
+    | '/_authenticated/ceo/'
+    | '/_authenticated/department/'
+    | '/_authenticated/gm/'
     | '/_authenticated/host/'
+    | '/_authenticated/operations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -348,11 +792,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -362,74 +806,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/who-we-are': {
-      id: '/_authenticated/who-we-are'
-      path: '/who-we-are'
-      fullPath: '/who-we-are'
-      preLoaderRoute: typeof AuthenticatedWhoWeAreRouteImport
+    '/_authenticated/departments': {
+      id: '/_authenticated/departments'
+      path: '/departments'
+      fullPath: '/departments'
+      preLoaderRoute: typeof AuthenticatedDepartmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tools': {
-      id: '/_authenticated/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof AuthenticatedToolsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/sops': {
-      id: '/_authenticated/sops'
-      path: '/sops'
-      fullPath: '/sops'
-      preLoaderRoute: typeof AuthenticatedSopsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/services': {
-      id: '/_authenticated/services'
-      path: '/services'
-      fullPath: '/services'
-      preLoaderRoute: typeof AuthenticatedServicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/roadmap': {
-      id: '/_authenticated/roadmap'
-      path: '/roadmap'
-      fullPath: '/roadmap'
-      preLoaderRoute: typeof AuthenticatedRoadmapRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/review': {
-      id: '/_authenticated/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof AuthenticatedReviewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pricing': {
-      id: '/_authenticated/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof AuthenticatedPricingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/home': {
-      id: '/_authenticated/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+    '/_authenticated/finance': {
+      id: '/_authenticated/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof AuthenticatedFinanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/glossary': {
@@ -439,88 +834,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGlossaryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/departments': {
-      id: '/_authenticated/departments'
-      path: '/departments'
-      fullPath: '/departments'
-      preLoaderRoute: typeof AuthenticatedDepartmentsRouteImport
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/host/': {
-      id: '/_authenticated/host/'
-      path: '/host'
-      fullPath: '/host/'
-      preLoaderRoute: typeof AuthenticatedHostIndexRouteImport
+    '/_authenticated/pricing': {
+      id: '/_authenticated/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof AuthenticatedPricingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/portal/other': {
-      id: '/_authenticated/portal/other'
-      path: '/portal/other'
-      fullPath: '/portal/other'
-      preLoaderRoute: typeof AuthenticatedPortalOtherRouteImport
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/portal/admin': {
-      id: '/_authenticated/portal/admin'
-      path: '/portal/admin'
-      fullPath: '/portal/admin'
-      preLoaderRoute: typeof AuthenticatedPortalAdminRouteImport
+    '/_authenticated/review': {
+      id: '/_authenticated/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AuthenticatedReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/me/profile': {
-      id: '/_authenticated/me/profile'
-      path: '/me/profile'
-      fullPath: '/me/profile'
-      preLoaderRoute: typeof AuthenticatedMeProfileRouteImport
+    '/_authenticated/roadmap': {
+      id: '/_authenticated/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof AuthenticatedRoadmapRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/me/leave': {
-      id: '/_authenticated/me/leave'
-      path: '/me/leave'
-      fullPath: '/me/leave'
-      preLoaderRoute: typeof AuthenticatedMeLeaveRouteImport
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/me/declaration': {
-      id: '/_authenticated/me/declaration'
-      path: '/me/declaration'
-      fullPath: '/me/declaration'
-      preLoaderRoute: typeof AuthenticatedMeDeclarationRouteImport
+    '/_authenticated/services': {
+      id: '/_authenticated/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof AuthenticatedServicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/host/$': {
-      id: '/_authenticated/host/$'
-      path: '/host/$'
-      fullPath: '/host/$'
-      preLoaderRoute: typeof AuthenticatedHostSplatRouteImport
+    '/_authenticated/sops': {
+      id: '/_authenticated/sops'
+      path: '/sops'
+      fullPath: '/sops'
+      preLoaderRoute: typeof AuthenticatedSopsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/team': {
-      id: '/_authenticated/admin/team'
-      path: '/admin/team'
-      fullPath: '/admin/team'
-      preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
+    '/_authenticated/tools': {
+      id: '/_authenticated/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof AuthenticatedToolsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/sales-playbook': {
-      id: '/_authenticated/admin/sales-playbook'
-      path: '/admin/sales-playbook'
-      fullPath: '/admin/sales-playbook'
-      preLoaderRoute: typeof AuthenticatedAdminSalesPlaybookRouteImport
+    '/_authenticated/who-we-are': {
+      id: '/_authenticated/who-we-are'
+      path: '/who-we-are'
+      fullPath: '/who-we-are'
+      preLoaderRoute: typeof AuthenticatedWhoWeAreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/kpis': {
-      id: '/_authenticated/admin/kpis'
-      path: '/admin/kpis'
-      fullPath: '/admin/kpis'
-      preLoaderRoute: typeof AuthenticatedAdminKpisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/content': {
-      id: '/_authenticated/admin/content'
-      path: '/admin/content'
-      fullPath: '/admin/content'
-      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+    '/_authenticated/admin/attendance': {
+      id: '/_authenticated/admin/attendance'
+      path: '/admin/attendance'
+      fullPath: '/admin/attendance'
+      preLoaderRoute: typeof AuthenticatedAdminAttendanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/audit': {
@@ -530,59 +918,435 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/content': {
+      id: '/_authenticated/admin/content'
+      path: '/admin/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/kpis': {
+      id: '/_authenticated/admin/kpis'
+      path: '/admin/kpis'
+      fullPath: '/admin/kpis'
+      preLoaderRoute: typeof AuthenticatedAdminKpisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/operations': {
+      id: '/_authenticated/admin/operations'
+      path: '/admin/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AuthenticatedAdminOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/sales-playbook': {
+      id: '/_authenticated/admin/sales-playbook'
+      path: '/admin/sales-playbook'
+      fullPath: '/admin/sales-playbook'
+      preLoaderRoute: typeof AuthenticatedAdminSalesPlaybookRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/team': {
+      id: '/_authenticated/admin/team'
+      path: '/admin/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/': {
+      id: '/_authenticated/ceo/'
+      path: '/ceo'
+      fullPath: '/ceo/'
+      preLoaderRoute: typeof AuthenticatedCeoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/clients': {
+      id: '/_authenticated/ceo/clients'
+      path: '/ceo/clients'
+      fullPath: '/ceo/clients'
+      preLoaderRoute: typeof AuthenticatedCeoClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/delivery': {
+      id: '/_authenticated/ceo/delivery'
+      path: '/ceo/delivery'
+      fullPath: '/ceo/delivery'
+      preLoaderRoute: typeof AuthenticatedCeoDeliveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/revenue': {
+      id: '/_authenticated/ceo/revenue'
+      path: '/ceo/revenue'
+      fullPath: '/ceo/revenue'
+      preLoaderRoute: typeof AuthenticatedCeoRevenueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/sales': {
+      id: '/_authenticated/ceo/sales'
+      path: '/ceo/sales'
+      fullPath: '/ceo/sales'
+      preLoaderRoute: typeof AuthenticatedCeoSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/team': {
+      id: '/_authenticated/ceo/team'
+      path: '/ceo/team'
+      fullPath: '/ceo/team'
+      preLoaderRoute: typeof AuthenticatedCeoTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/': {
+      id: '/_authenticated/department/'
+      path: '/department'
+      fullPath: '/department/'
+      preLoaderRoute: typeof AuthenticatedDepartmentIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/approvals': {
+      id: '/_authenticated/department/approvals'
+      path: '/department/approvals'
+      fullPath: '/department/approvals'
+      preLoaderRoute: typeof AuthenticatedDepartmentApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/blockers': {
+      id: '/_authenticated/department/blockers'
+      path: '/department/blockers'
+      fullPath: '/department/blockers'
+      preLoaderRoute: typeof AuthenticatedDepartmentBlockersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/clients': {
+      id: '/_authenticated/department/clients'
+      path: '/department/clients'
+      fullPath: '/department/clients'
+      preLoaderRoute: typeof AuthenticatedDepartmentClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/performance': {
+      id: '/_authenticated/department/performance'
+      path: '/department/performance'
+      fullPath: '/department/performance'
+      preLoaderRoute: typeof AuthenticatedDepartmentPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/qa': {
+      id: '/_authenticated/department/qa'
+      path: '/department/qa'
+      fullPath: '/department/qa'
+      preLoaderRoute: typeof AuthenticatedDepartmentQaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/tasks': {
+      id: '/_authenticated/department/tasks'
+      path: '/department/tasks'
+      fullPath: '/department/tasks'
+      preLoaderRoute: typeof AuthenticatedDepartmentTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/department/workload': {
+      id: '/_authenticated/department/workload'
+      path: '/department/workload'
+      fullPath: '/department/workload'
+      preLoaderRoute: typeof AuthenticatedDepartmentWorkloadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/': {
+      id: '/_authenticated/gm/'
+      path: '/gm'
+      fullPath: '/gm/'
+      preLoaderRoute: typeof AuthenticatedGmIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/approvals': {
+      id: '/_authenticated/gm/approvals'
+      path: '/gm/approvals'
+      fullPath: '/gm/approvals'
+      preLoaderRoute: typeof AuthenticatedGmApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/capacity': {
+      id: '/_authenticated/gm/capacity'
+      path: '/gm/capacity'
+      fullPath: '/gm/capacity'
+      preLoaderRoute: typeof AuthenticatedGmCapacityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/dependencies': {
+      id: '/_authenticated/gm/dependencies'
+      path: '/gm/dependencies'
+      fullPath: '/gm/dependencies'
+      preLoaderRoute: typeof AuthenticatedGmDependenciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/escalations': {
+      id: '/_authenticated/gm/escalations'
+      path: '/gm/escalations'
+      fullPath: '/gm/escalations'
+      preLoaderRoute: typeof AuthenticatedGmEscalationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/execution': {
+      id: '/_authenticated/gm/execution'
+      path: '/gm/execution'
+      fullPath: '/gm/execution'
+      preLoaderRoute: typeof AuthenticatedGmExecutionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gm/revenue': {
+      id: '/_authenticated/gm/revenue'
+      path: '/gm/revenue'
+      fullPath: '/gm/revenue'
+      preLoaderRoute: typeof AuthenticatedGmRevenueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/host/': {
+      id: '/_authenticated/host/'
+      path: '/host'
+      fullPath: '/host/'
+      preLoaderRoute: typeof AuthenticatedHostIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/host/$': {
+      id: '/_authenticated/host/$'
+      path: '/host/$'
+      fullPath: '/host/$'
+      preLoaderRoute: typeof AuthenticatedHostSplatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/attendance': {
+      id: '/_authenticated/hr/attendance'
+      path: '/hr/attendance'
+      fullPath: '/hr/attendance'
+      preLoaderRoute: typeof AuthenticatedHrAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/me/declaration': {
+      id: '/_authenticated/me/declaration'
+      path: '/me/declaration'
+      fullPath: '/me/declaration'
+      preLoaderRoute: typeof AuthenticatedMeDeclarationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/me/leave': {
+      id: '/_authenticated/me/leave'
+      path: '/me/leave'
+      fullPath: '/me/leave'
+      preLoaderRoute: typeof AuthenticatedMeLeaveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/me/profile': {
+      id: '/_authenticated/me/profile'
+      path: '/me/profile'
+      fullPath: '/me/profile'
+      preLoaderRoute: typeof AuthenticatedMeProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/': {
+      id: '/_authenticated/operations/'
+      path: '/operations'
+      fullPath: '/operations/'
+      preLoaderRoute: typeof AuthenticatedOperationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/communications': {
+      id: '/_authenticated/operations/communications'
+      path: '/operations/communications'
+      fullPath: '/operations/communications'
+      preLoaderRoute: typeof AuthenticatedOperationsCommunicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/deadlines': {
+      id: '/_authenticated/operations/deadlines'
+      path: '/operations/deadlines'
+      fullPath: '/operations/deadlines'
+      preLoaderRoute: typeof AuthenticatedOperationsDeadlinesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/escalations': {
+      id: '/_authenticated/operations/escalations'
+      path: '/operations/escalations'
+      fullPath: '/operations/escalations'
+      preLoaderRoute: typeof AuthenticatedOperationsEscalationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/onboarding': {
+      id: '/_authenticated/operations/onboarding'
+      path: '/operations/onboarding'
+      fullPath: '/operations/onboarding'
+      preLoaderRoute: typeof AuthenticatedOperationsOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/recovery': {
+      id: '/_authenticated/operations/recovery'
+      path: '/operations/recovery'
+      fullPath: '/operations/recovery'
+      preLoaderRoute: typeof AuthenticatedOperationsRecoveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/verifications': {
+      id: '/_authenticated/operations/verifications'
+      path: '/operations/verifications'
+      fullPath: '/operations/verifications'
+      preLoaderRoute: typeof AuthenticatedOperationsVerificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/operations/workflows': {
+      id: '/_authenticated/operations/workflows'
+      path: '/operations/workflows'
+      fullPath: '/operations/workflows'
+      preLoaderRoute: typeof AuthenticatedOperationsWorkflowsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal/admin': {
+      id: '/_authenticated/portal/admin'
+      path: '/portal/admin'
+      fullPath: '/portal/admin'
+      preLoaderRoute: typeof AuthenticatedPortalAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal/other': {
+      id: '/_authenticated/portal/other'
+      path: '/portal/other'
+      fullPath: '/portal/other'
+      preLoaderRoute: typeof AuthenticatedPortalOtherRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
+  AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedGlossaryRoute: typeof AuthenticatedGlossaryRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
   AuthenticatedSopsRoute: typeof AuthenticatedSopsRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
   AuthenticatedWhoWeAreRoute: typeof AuthenticatedWhoWeAreRoute
+  AuthenticatedAdminAttendanceRoute: typeof AuthenticatedAdminAttendanceRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
   AuthenticatedAdminKpisRoute: typeof AuthenticatedAdminKpisRoute
+  AuthenticatedAdminOperationsRoute: typeof AuthenticatedAdminOperationsRoute
   AuthenticatedAdminSalesPlaybookRoute: typeof AuthenticatedAdminSalesPlaybookRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedCeoClientsRoute: typeof AuthenticatedCeoClientsRoute
+  AuthenticatedCeoDeliveryRoute: typeof AuthenticatedCeoDeliveryRoute
+  AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
+  AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
+  AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
+  AuthenticatedDepartmentApprovalsRoute: typeof AuthenticatedDepartmentApprovalsRoute
+  AuthenticatedDepartmentBlockersRoute: typeof AuthenticatedDepartmentBlockersRoute
+  AuthenticatedDepartmentClientsRoute: typeof AuthenticatedDepartmentClientsRoute
+  AuthenticatedDepartmentPerformanceRoute: typeof AuthenticatedDepartmentPerformanceRoute
+  AuthenticatedDepartmentQaRoute: typeof AuthenticatedDepartmentQaRoute
+  AuthenticatedDepartmentTasksRoute: typeof AuthenticatedDepartmentTasksRoute
+  AuthenticatedDepartmentWorkloadRoute: typeof AuthenticatedDepartmentWorkloadRoute
+  AuthenticatedGmApprovalsRoute: typeof AuthenticatedGmApprovalsRoute
+  AuthenticatedGmCapacityRoute: typeof AuthenticatedGmCapacityRoute
+  AuthenticatedGmDependenciesRoute: typeof AuthenticatedGmDependenciesRoute
+  AuthenticatedGmEscalationsRoute: typeof AuthenticatedGmEscalationsRoute
+  AuthenticatedGmExecutionRoute: typeof AuthenticatedGmExecutionRoute
+  AuthenticatedGmRevenueRoute: typeof AuthenticatedGmRevenueRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
+  AuthenticatedHrAttendanceRoute: typeof AuthenticatedHrAttendanceRoute
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
   AuthenticatedMeProfileRoute: typeof AuthenticatedMeProfileRoute
+  AuthenticatedOperationsCommunicationsRoute: typeof AuthenticatedOperationsCommunicationsRoute
+  AuthenticatedOperationsDeadlinesRoute: typeof AuthenticatedOperationsDeadlinesRoute
+  AuthenticatedOperationsEscalationsRoute: typeof AuthenticatedOperationsEscalationsRoute
+  AuthenticatedOperationsOnboardingRoute: typeof AuthenticatedOperationsOnboardingRoute
+  AuthenticatedOperationsRecoveryRoute: typeof AuthenticatedOperationsRecoveryRoute
+  AuthenticatedOperationsVerificationsRoute: typeof AuthenticatedOperationsVerificationsRoute
+  AuthenticatedOperationsWorkflowsRoute: typeof AuthenticatedOperationsWorkflowsRoute
   AuthenticatedPortalAdminRoute: typeof AuthenticatedPortalAdminRoute
   AuthenticatedPortalOtherRoute: typeof AuthenticatedPortalOtherRoute
+  AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
+  AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
+  AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
+  AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
+  AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedGlossaryRoute: AuthenticatedGlossaryRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedServicesRoute: AuthenticatedServicesRoute,
   AuthenticatedSopsRoute: AuthenticatedSopsRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,
   AuthenticatedWhoWeAreRoute: AuthenticatedWhoWeAreRoute,
+  AuthenticatedAdminAttendanceRoute: AuthenticatedAdminAttendanceRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
   AuthenticatedAdminKpisRoute: AuthenticatedAdminKpisRoute,
+  AuthenticatedAdminOperationsRoute: AuthenticatedAdminOperationsRoute,
   AuthenticatedAdminSalesPlaybookRoute: AuthenticatedAdminSalesPlaybookRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedCeoClientsRoute: AuthenticatedCeoClientsRoute,
+  AuthenticatedCeoDeliveryRoute: AuthenticatedCeoDeliveryRoute,
+  AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
+  AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
+  AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,
+  AuthenticatedDepartmentApprovalsRoute: AuthenticatedDepartmentApprovalsRoute,
+  AuthenticatedDepartmentBlockersRoute: AuthenticatedDepartmentBlockersRoute,
+  AuthenticatedDepartmentClientsRoute: AuthenticatedDepartmentClientsRoute,
+  AuthenticatedDepartmentPerformanceRoute:
+    AuthenticatedDepartmentPerformanceRoute,
+  AuthenticatedDepartmentQaRoute: AuthenticatedDepartmentQaRoute,
+  AuthenticatedDepartmentTasksRoute: AuthenticatedDepartmentTasksRoute,
+  AuthenticatedDepartmentWorkloadRoute: AuthenticatedDepartmentWorkloadRoute,
+  AuthenticatedGmApprovalsRoute: AuthenticatedGmApprovalsRoute,
+  AuthenticatedGmCapacityRoute: AuthenticatedGmCapacityRoute,
+  AuthenticatedGmDependenciesRoute: AuthenticatedGmDependenciesRoute,
+  AuthenticatedGmEscalationsRoute: AuthenticatedGmEscalationsRoute,
+  AuthenticatedGmExecutionRoute: AuthenticatedGmExecutionRoute,
+  AuthenticatedGmRevenueRoute: AuthenticatedGmRevenueRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
+  AuthenticatedHrAttendanceRoute: AuthenticatedHrAttendanceRoute,
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,
   AuthenticatedMeProfileRoute: AuthenticatedMeProfileRoute,
+  AuthenticatedOperationsCommunicationsRoute:
+    AuthenticatedOperationsCommunicationsRoute,
+  AuthenticatedOperationsDeadlinesRoute: AuthenticatedOperationsDeadlinesRoute,
+  AuthenticatedOperationsEscalationsRoute:
+    AuthenticatedOperationsEscalationsRoute,
+  AuthenticatedOperationsOnboardingRoute:
+    AuthenticatedOperationsOnboardingRoute,
+  AuthenticatedOperationsRecoveryRoute: AuthenticatedOperationsRecoveryRoute,
+  AuthenticatedOperationsVerificationsRoute:
+    AuthenticatedOperationsVerificationsRoute,
+  AuthenticatedOperationsWorkflowsRoute: AuthenticatedOperationsWorkflowsRoute,
   AuthenticatedPortalAdminRoute: AuthenticatedPortalAdminRoute,
   AuthenticatedPortalOtherRoute: AuthenticatedPortalOtherRoute,
+  AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
+  AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
+  AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
+  AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -596,3 +1360,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

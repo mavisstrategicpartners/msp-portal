@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, createOpenAiProvider, createOpenRouterProvider } from "@/lib/ai-gateway.server";
 
 const SYSTEM_PROMPT = `You are "Msp", the internal AI assistant for Mavis Strategic Partners (MSP), a South African digital growth & technology agency (paid ads, websites, CRM/automation, social, SEO, AI chatbots, mobile apps).
 
@@ -22,6 +22,26 @@ Portal routes you can suggest:
 
 Tone: crisp, practical, no fluff. 1–4 short paragraphs or a small bullet list. If a route is directly relevant, end with a single line like: "Open: /pricing".`;
 
+function localAnswer(question: string) {
+  const text = question.toLowerCase();
+  if (text.includes("lead") && (text.includes("fast") || text.includes("contact") || text.includes("speed"))) {
+    return "Contact new leads within 10 minutes at minimum. Where possible, aim for 5 minutes because speed materially improves conversion.\n\nOpen: /sops";
+  }
+  if (text.includes("growth pro") || (text.includes("growth") && text.includes("price"))) {
+    return "Growth Pro is R4,500 per month. It covers the approved growth-system retainer work; ad spend, website builds, CRM setup, and mobile app builds are scoped separately.\n\nOpen: /pricing";
+  }
+  if (text.includes("report")) {
+    return "Monthly reports go out by the 7th, followed by a client call in the same week. Use the reporting workflow and keep the client update tied to measurable outcomes.\n\nOpen: /reports";
+  }
+  if (text.includes("tool") || text.includes("system")) {
+    return "MSP uses tools across CRM and automation, paid media, analytics, SEO, communication, files, design, and reporting. The approved list and login links are in Tools & Systems.\n\nOpen: /tools";
+  }
+  if (text.includes("sop") || text.includes("procedure") || text.includes("how we work")) {
+    return "The SOP Library contains department responsibilities, reporting lines, KPIs, operating rhythms, and key procedures. Start there for the approved way of working.\n\nOpen: /sops";
+  }
+  return "I can help with MSP SOPs, services, pricing, tools, reporting, and portal workflows. Try asking about a specific service, package, tool, or process.";
+}
+
 export const askMsp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
@@ -34,13 +54,37 @@ export const askMsp = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("LOVABLE_API_KEY is not configured on the server.");
-    const gateway = createLovableAiGatewayProvider(key);
-    const { text } = await generateText({
-      model: gateway("google/gemini-3.6-flash"),
-      system: SYSTEM_PROMPT,
-      messages: data.messages,
-    });
-    return { text };
+    const openRouterKey =
+      process.env.OPENROUTER_API_KEY ||
+      (process.env.OPENAI_API_KEY?.startsWith("sk-or-") ? process.env.OPENAI_API_KEY : undefined);
+    const openAiKey = !openRouterKey ? process.env.OPENAI_API_KEY : undefined;
+    const lovableKey = process.env.LOVABLE_API_KEY;
+
+    if (!openRouterKey && !openAiKey && !lovableKey) {
+      throw new Error("AI API Key is not configured on the server.");
+    }
+
+    const gateway = openRouterKey
+      ? createOpenRouterProvider(openRouterKey)
+      : openAiKey
+      ? createOpenAiProvider(openAiKey)
+      : createLovableAiGatewayProvider(lovableKey!);
+
+    const modelName = openRouterKey
+      ? "openai/gpt-4o-mini"
+      : openAiKey
+      ? "gpt-4o-mini"
+      : "google/gemini-3.6-flash";
+
+    try {
+      const { text } = await generateText({
+        model: gateway(modelName),
+        system: SYSTEM_PROMPT,
+        messages: data.messages,
+      });
+      return { text, fallback: false };
+    } catch (error) {
+      console.warn("Msp live AI unavailable; using local knowledge fallback.", error);
+      return { text: localAnswer(data.messages[data.messages.length - 1].content), fallback: true };
+    }
   });

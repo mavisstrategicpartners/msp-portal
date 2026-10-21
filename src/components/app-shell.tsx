@@ -1,25 +1,27 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, Compass, BookOpen, Briefcase, Tag, ListTree, Wrench, Map, User, CalendarDays,
   FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
   Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
-  Crown, FileBarChart2, KeyRound, Menu,
-  LayoutDashboard,
+  Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
+  LayoutDashboard, Clock, Activity, Calculator, Folder, TrendingUp, Banknote, CheckSquare,
+  Target, Layers, AlertTriangle, GitBranch,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/use-profile";
+import { useStaffNotifications } from "@/lib/staff-tasks.service";
 import { useTheme, ThemeProvider } from "@/components/theme-provider";
 import { MspLogo } from "@/components/msp-logo";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HelpPanel,
   MspChatPanel,
@@ -28,72 +30,112 @@ import {
   SettingsPanel,
 } from "@/components/portal-pages";
 
-type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean };
+type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
 
-type PortalKey = "staff" | "manager" | "admin" | "other";
+type PortalKey = "staff" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department" | "sales" | "finance";
 
-const NAV: { group: string; managerOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
-  { group: "Home", portals: ["staff"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
-  { group: "Learn MSP", portals: ["staff"], items: [
+const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
+  { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
+  // Sales Workspace
+  { group: "Sales Command", portals: ["sales"], items: [
+    { to: "/sales", label: "Sales Dashboard", icon: TrendingUp },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
+    { to: "/services", label: "Our Services", icon: Briefcase },
+    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
+    { to: "/sops", label: "SOP Library", icon: BookOpen },
+    { to: "/glossary", label: "Sales Glossary", icon: ListTree },
+  ]},
+  // Finance & Administration Workspace
+  { group: "Finance & Admin", portals: ["finance"], items: [
+    { to: "/finance", label: "Finance Dashboard", icon: Banknote },
+    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
+    { to: "/services", label: "Agency Services", icon: Briefcase },
+    { to: "/sops", label: "Finance SOPs", icon: BookOpen },
+  ]},
+  { group: "Admin Dashboard", adminOnly: true, portals: ["admin"], items: [
+    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
+    { to: "/admin/users", label: "Manage Staff", icon: Users },
+    { to: "/admin/operations", label: "Operations Control", icon: Activity },
+    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
+    { to: "/admin/content", label: "Content Editor", icon: Settings },
+    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
+    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
+  ]},
+  { group: "Learn MSP", portals: ["staff", "admin", "operations", "sales", "finance"], items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/glossary", label: "Glossary", icon: ListTree },
   ]},
-  { group: "How We Work", portals: ["staff"], items: [
+  { group: "How We Work", portals: ["staff", "admin", "operations"], items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
     { to: "/departments", label: "Departments", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
     { to: "/tools", label: "Tools & Systems", icon: Wrench },
   ]},
+  // My Workspace — staff only (no Leave/HR docs for admin)
   { group: "My Workspace", portals: ["staff"], items: [
-    { to: "/me/profile", label: "My Profile", icon: User },
-    { to: "/me/leave", label: "Leave Requests", icon: CalendarDays },
-    { to: "/me/declaration", label: "HR Documents", icon: FileSignature },
+    { to: "/me/leave", label: "Leave Requests", icon: CalendarDays, adminHide: true },
+    { to: "/me/declaration", label: "HR Documents", icon: FileSignature, adminHide: true },
   ]},
   { group: "Client Delivery", managerOnly: true, portals: ["staff"], items: [
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
   ]},
-  { group: "All In One — Host", managerOnly: true, portals: ["manager"], items: [
-    { to: "/host", label: "Host Dashboard", icon: LayoutDashboard },
-    { to: "/host/learners", label: "Placed Learners", icon: Users },
-    { to: "/host/workforce", label: "Workforce", icon: Users },
-    { to: "/host/performance", label: "Performance", icon: BarChart3 },
-    { to: "/host/coaching", label: "Coaching Notes", icon: FileSignature },
-    { to: "/host/onboarding", label: "Onboarding", icon: ClipboardList },
-    { to: "/host/marketplace", label: "Learner Marketplace", icon: Compass },
-    { to: "/host/recruitment", label: "Recruitment", icon: Users },
-    { to: "/host/check", label: "Host Employer Check", icon: ShieldCheck },
-    { to: "/host/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/host/projects", label: "Projects", icon: Briefcase },
-    { to: "/host/tasks", label: "Tasks", icon: ListTree },
-    { to: "/host/kpi", label: "KPI Management", icon: BarChart3 },
-    { to: "/host/contracts", label: "Contracts", icon: FileSignature },
-    { to: "/host/documents", label: "Documents", icon: BookOpen },
-    { to: "/host/messages", label: "Messages", icon: MessageCircle },
-    { to: "/host/reports", label: "Host Reports", icon: FileBarChart2 },
-    { to: "/host/company", label: "Company Profile", icon: Building2 },
-    { to: "/host/settings", label: "Host Settings", icon: Settings },
-  ]},
-  { group: "All In One — HR", managerOnly: true, portals: ["manager"], items: [
+  { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
     { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
-    { to: "/host/hr/attendance", label: "Attendance Register", icon: CalendarDays },
+    { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
     { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
     { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
+    { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },
+    { to: "/host/hr/documents", label: "Employee Documents", icon: Folder },
     { to: "/host/hr/relations", label: "Employee Relations", icon: Users },
-    { to: "/host/hr/recruitment", label: "HR Recruitment", icon: Users },
+    { to: "/host/hr/recruitment", label: "Employee Recruitment", icon: Users },
     { to: "/host/hr/performance", label: "HR Performance", icon: BarChart3 },
     { to: "/host/hr/talent", label: "Talent Management", icon: Crown },
     { to: "/host/hr/training", label: "Training & Development", icon: BookOpen },
     { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
     { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
   ]},
-  { group: "Admin", managerOnly: true, portals: ["staff"], items: [
-    { to: "/admin/team", label: "Team Management", icon: Users },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck, rootOnly: true },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList, rootOnly: true },
-    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
-    { to: "/admin/content", label: "Content Editor", icon: Settings, rootOnly: true },
+  // CEO Workspace — strictly for CEO
+  { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
+    { to: "/ceo", label: "Executive Dashboard", icon: Crown },
+    { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
+    { to: "/ceo/revenue", label: "Revenue Health", icon: Banknote },
+    { to: "/ceo/clients", label: "Client Health", icon: Building2 },
+    { to: "/ceo/delivery", label: "Delivery Health", icon: CheckSquare },
+    { to: "/ceo/team", label: "Team Health", icon: Users },
+  ]},
+  // GM Workspace — General Manager only
+  { group: "GM Command Centre", portals: ["gm"], items: [
+    { to: "/gm", label: "GM Dashboard", icon: LayoutDashboard },
+    { to: "/gm/execution", label: "Company Execution", icon: Target },
+    { to: "/gm/revenue", label: "Revenue Performance", icon: Banknote },
+    { to: "/gm/capacity", label: "Capacity & Workload", icon: Users },
+    { to: "/gm/approvals", label: "Manager Approvals", icon: CheckSquare },
+    { to: "/gm/dependencies", label: "Cross-Dept Dependencies", icon: GitBranch },
+    { to: "/gm/escalations", label: "Escalations", icon: AlertTriangle },
+  ]},
+  // Operations & Relationship Manager Workspace
+  { group: "Operations & Relationships", portals: ["operations"], items: [
+    { to: "/operations", label: "Operations Dashboard", icon: LayoutDashboard },
+    { to: "/operations/workflows", label: "Client Workflows", icon: Layers },
+    { to: "/operations/onboarding", label: "Client Onboarding", icon: ClipboardList },
+    { to: "/operations/deadlines", label: "Service Deadlines", icon: Clock },
+    { to: "/operations/communications", label: "Client Communications", icon: MessageCircle },
+    { to: "/operations/recovery", label: "Recovery Plans", icon: ShieldCheck },
+    { to: "/operations/verifications", label: "Verification Queue", icon: CheckSquare },
+    { to: "/operations/escalations", label: "Operational Escalations", icon: AlertTriangle },
+  ]},
+  // Department Manager Workspace (Media Buying / Authorized Department)
+  { group: "Department Command", portals: ["department"], items: [
+    { to: "/department", label: "Department Dashboard", icon: LayoutDashboard },
+    { to: "/department/tasks", label: "My Department Tasks", icon: CheckSquare },
+    { to: "/department/performance", label: "Targets & Performance", icon: Target },
+    { to: "/department/workload", label: "Team Workload", icon: Users },
+    { to: "/department/qa", label: "Quality Assurance", icon: ShieldCheck },
+    { to: "/department/blockers", label: "Blockers & Dependencies", icon: AlertTriangle },
+    { to: "/department/approvals", label: "Approvals", icon: CheckSquare },
+    { to: "/department/clients", label: "Client Delivery Details", icon: Building2 },
   ]},
 ];
 
@@ -169,47 +211,168 @@ function ShellInner({ children }: { children: ReactNode }) {
 
 function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const selectedPortal = (typeof window !== "undefined"
-    ? (localStorage.getItem("msp.selectedPortal") as PortalKey | null)
-    : null) ?? "staff";
+  const navigate = useNavigate();
+  const { data } = useProfile();
+  const isAdmin = data?.isAdmin ?? false;
+
+  const isHRPath = pathname.startsWith('/host/hr') || pathname.startsWith('/hr');
+  const isAdminPath = pathname.startsWith('/admin');
+  const isCeoPath = pathname.startsWith('/ceo');
+  const isGmPath = pathname.startsWith('/gm');
+  const isOperationsPath = pathname.startsWith('/operations');
+  const isDepartmentPath = pathname.startsWith('/department');
+  const isSalesPath = pathname.startsWith('/sales');
+  const isFinancePath = pathname.startsWith('/finance');
+
+  // Determine current portal based on path or permission
+  let currentPortal: PortalKey = "staff";
+  if (isCeoPath) {
+    currentPortal = "ceo";
+  } else if (isGmPath) {
+    currentPortal = "gm";
+  } else if (isOperationsPath) {
+    currentPortal = "operations";
+  } else if (isDepartmentPath) {
+    currentPortal = "department";
+  } else if (isSalesPath) {
+    currentPortal = "sales";
+  } else if (isFinancePath) {
+    currentPortal = "finance";
+  } else if (isHRPath) {
+    currentPortal = "hr";
+  } else if (isAdminPath) {
+    currentPortal = "admin";
+  } else if (isRootAdmin) {
+    currentPortal = "ceo";
+  } else if (data?.isGM) {
+    currentPortal = "gm";
+  } else if (data?.isOperations) {
+    currentPortal = "operations";
+  } else if (data?.isDepartmentManager) {
+    currentPortal = "department";
+  } else if (data?.isHR) {
+    currentPortal = "hr";
+  } else if (data?.isFinance) {
+    currentPortal = "finance";
+  } else if (data?.isSales) {
+    currentPortal = "sales";
+  } else if (isAdmin) {
+    currentPortal = "admin";
+  } else if (isManagerOrAbove) {
+    currentPortal = "department";
+  }
+
+  // Use TanStack Router for ALL sidebar navigation to maintain proper browser history
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    e.preventDefault();
+    navigate({ to } as any);
+  };
+
+  const deptTitle = data?.departmentName ? `${data.departmentName} Workspace` : "Media Buying Workspace";
+  const workspaceTitle = currentPortal === "ceo"
+    ? "CEO Workspace"
+    : currentPortal === "gm"
+    ? "GM Workspace"
+    : currentPortal === "operations"
+    ? "Operations & Relationships"
+    : currentPortal === "department"
+    ? deptTitle
+    : currentPortal === "hr"
+    ? "HR Workspace"
+    : currentPortal === "sales"
+    ? "Sales Workspace"
+    : currentPortal === "finance"
+    ? "Finance & Administration"
+    : currentPortal === "admin"
+    ? "Admin Control"
+    : "Staff Portal";
+
+  const workspaceSub = currentPortal === "ceo"
+    ? "Executive Command & Analytics"
+    : currentPortal === "gm"
+    ? "Company Execution & Operations"
+    : currentPortal === "operations"
+    ? "Client Delivery & Retention"
+    : currentPortal === "department"
+    ? "Team Execution & QA Approval"
+    : currentPortal === "hr"
+    ? "Human Resources Management"
+    : currentPortal === "sales"
+    ? "Pipeline & Revenue Generation"
+    : currentPortal === "finance"
+    ? "Financial Oversight & Control"
+    : currentPortal === "admin"
+    ? "MSP Admin Control Panel"
+    : "Internal operations portal";
+
   return (
     <aside className={cn(
-      "shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+      "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
       mobile ? "flex h-full w-full" : "sticky top-0 hidden h-screen md:flex",
       !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
     )}>
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border px-4", collapsed && "justify-center px-2")}>
+      <div className={cn("flex h-[76px] items-center border-b border-white/10 px-4", collapsed && "justify-center px-2")}>
+      {/* Wrap logo in a Link to the default dashboard based on role */}
+      <Link to={data?.defaultDashboard ?? "/home"} className="flex items-center gap-2.5">
         <MspLogo showWord={!collapsed} />
+      </Link>
       </div>
+      {!collapsed && (
+        <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] p-2.5">
+          <div className="flex items-center justify-between">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
+              {workspaceTitle}
+            </p>
+            {/* Role switcher UI removed - server-side routing enforced */}
+          </div>
+          <p className="mt-1 text-xs text-white/80">
+            {workspaceSub}
+          </p>
+        </div>
+      )}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {NAV.map((section) => {
-          if (section.managerOnly && !isManagerOrAbove) return null;
-          if (section.portals && !section.portals.includes(selectedPortal)) return null;
-          const items = section.items.filter((it) => !it.rootOnly || isRootAdmin);
+          if (section.managerOnly && !isManagerOrAbove && !isAdmin) return null;
+          if (section.hrOnly && !(data?.isHR || isAdmin)) return null;
+          if (section.adminOnly && !isAdmin) return null;
+
+          // Filter by active workspace/portal
+          if (section.portals && !section.portals.includes(currentPortal)) return null;
+
+          const items = section.items.filter((it) => {
+            if (it.rootOnly && !isRootAdmin && !isAdmin) return false;
+            if (it.adminHide && currentPortal === "admin") return false;
+            return true;
+          });
           if (items.length === 0) return null;
           return (
             <div key={section.group} className="mb-5">
               {!collapsed && (
-                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/55">
                   {section.group}
                   {section.managerOnly && <Lock className="ml-1 inline h-2.5 w-2.5" />}
                 </p>
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
-                  const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                  // Resolve the actual navigation target — Home links go to role-specific dashboard
+                  const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
+                  const isExactRoot = toPath === "/ceo" || toPath === "/admin";
+                  const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
                   return (
                     <li key={item.to}>
-                      <Link
-                        to={item.to as any}
+                      <a
+                        href={toPath}
+                        onClick={(e) => handleNavClick(e, toPath)}
                         className={cn(
-                          "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
+                          "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
                           active
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                            ? "border-l-primary bg-white/12 text-white shadow-sm"
+                            : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
                           collapsed && "justify-center px-2",
                         )}
                         title={collapsed ? item.label : undefined}
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
                       >
                         <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
                         {!collapsed && (
@@ -218,7 +381,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                             {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
                           </span>
                         )}
-                      </Link>
+                      </a>
                     </li>
                   );
                 })}
@@ -227,10 +390,10 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
           );
         })}
       </nav>
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-white/10 p-3">
         {!collapsed && (
-          <p className="px-2 text-[10px] text-muted-foreground">
-            <span className="font-semibold text-foreground">Need help?</span> Tap Msp (bottom-right) and ask anything.
+          <p className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] leading-relaxed text-white/60">
+            <span className="font-semibold text-white">Need help?</span> Open MSP Assist in the bottom-right corner.
           </p>
         )}
       </div>
@@ -257,18 +420,114 @@ function TopBar({
 }) {
   const { theme, toggle } = useTheme();
   const { data } = useProfile();
+  const { data: notifData } = useStaffNotifications();
+  const unreadCount = notifData?.unreadCount || 0;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isCeoPath = pathname.startsWith('/ceo');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [initialsMode, setInitialsMode] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    setAvatarUrl(
+      data?.profile?.avatar_url ??
+        (typeof window !== "undefined" ? localStorage.getItem("msp.demoAvatar") : null),
+    );
+    setInitialsMode(typeof window !== "undefined" && localStorage.getItem("msp.initialsMode") === "true");
+  }, [data?.profile?.avatar_url]);
+
+  const initials = (data?.profile?.full_name || data?.user?.email || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part: string) => part[0])
+    .join("")
+    .toUpperCase();
+
+  async function updateAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !data?.user?.id) return;
+
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) return;
+
+    setUploadingAvatar(true);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${data.user.id}/avatar-${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = publicData.publicUrl;
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", data.user.id);
+
+      if (profileError) throw profileError;
+      setAvatarUrl(`${publicUrl}?v=${Date.now()}`);
+      setInitialsMode(false);
+      localStorage.removeItem("msp.initialsMode");
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const localUrl = typeof reader.result === "string" ? reader.result : null;
+        if (localUrl) {
+          setAvatarUrl(localUrl);
+          localStorage.setItem("msp.demoAvatar", localUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function useInitials() {
+    setInitialsMode(true);
+    localStorage.setItem("msp.initialsMode", "true");
+    setUploadingAvatar(true);
+    try {
+      if (data?.user?.id) {
+        await supabase.from("profiles").update({ avatar_url: null }).eq("id", data.user.id);
+      }
+      localStorage.removeItem("msp.demoAvatar");
+      setAvatarUrl(null);
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  function useAvatarIcon() {
+    setInitialsMode(false);
+    localStorage.removeItem("msp.initialsMode");
+  }
 
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    try {
+      localStorage.removeItem("msp.demoUser");
+      localStorage.removeItem("msp.authenticatedUser");
+      localStorage.removeItem("msp.selectedPortal");
+      localStorage.removeItem("msp.rememberedPassword");
+      localStorage.removeItem("msp.demoAvatar");
+    } catch {}
+    window.location.replace("/auth");
   }
-
-  const initials = (data?.profile?.full_name || data?.user?.email || "?")
-    .split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl sm:px-4 md:px-6">
@@ -285,34 +544,71 @@ function TopBar({
           <kbd className="ml-auto hidden rounded border border-border bg-background/80 px-1.5 py-0.5 text-[10px] font-medium md:inline">⌘K</kbd>
         </button>
       </div>
-      <Button variant="ghost" size="icon" aria-label="Notifications" onClick={onOpenNotifications} className="hidden sm:inline-flex"><Bell className="h-4 w-4" /></Button>
-      <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>
-      <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
-        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="ml-1 flex items-center gap-2 rounded-full p-0.5 transition hover:bg-secondary/60">
-            <Avatar className="h-8 w-8 border border-border">
-              <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">{initials}</AvatarFallback>
-            </Avatar>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="space-y-1">
-            <p className="text-sm">{data?.profile?.full_name || "Signed in"}</p>
-            <p className="truncate text-xs font-normal text-muted-foreground">{data?.user?.email}</p>
-            <RoleBadge tier={data?.roleTier} />
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onOpenSettings}>
-            <Settings className="mr-2 h-4 w-4" /> Portal settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
-            <LogOut className="mr-2 h-4 w-4" /> Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        {!isCeoPath && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Notifications"
+            onClick={onOpenNotifications}
+            className="hidden sm:inline-flex relative"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Button>
+        )}
+        {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>}
+        <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="ml-1 flex items-center gap-2 rounded-full border border-border px-1.5 py-1 transition hover:bg-secondary/60 sm:pr-3">
+              <Avatar className="h-8 w-8 border border-border">
+                <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
+                <AvatarFallback className="bg-primary/15 text-primary">
+                  {initialsMode ? <span className="text-xs font-semibold">{initials}</span> : <UserRound className="h-4 w-4" strokeWidth={1.8} />}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden max-w-[150px] text-left sm:block">
+                <span className="block truncate text-xs font-semibold text-foreground">{data?.profile?.full_name || "Signed in"}</span>
+                <span className="block truncate text-[10px] text-muted-foreground">{data?.profile?.job_title || "Staff member"}</span>
+              </span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="space-y-1">
+              <p className="text-sm">{data?.profile?.full_name || "Signed in"}</p>
+              <p className="truncate text-xs font-normal text-muted-foreground">{data?.user?.email}</p>
+              <RoleBadge tier={data?.roleTier} />
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
+              <Camera className="mr-2 h-4 w-4" /> {uploadingAvatar ? "Uploading picture..." : avatarUrl ? "Change profile picture" : "Add profile picture"}
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/me/profile" className="flex items-center cursor-pointer">
+                <User className="mr-2 h-4 w-4" /> My Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={updateAvatar}
+        className="hidden"
+        aria-label="Upload profile picture"
+      />
     </header>
   );
 }
@@ -322,7 +618,7 @@ function MspBubble({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-glow)] transition hover:scale-105"
+      className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition hover:bg-primary/90"
       title="Ask Msp"
     >
       <MessageCircle className="h-6 w-6" />

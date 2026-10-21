@@ -7,22 +7,57 @@
  * multi-day rewrite, so we run its internal router in a MemoryRouter,
  * scoped inside `.host-portal-root` so styles/tokens don't leak.
  */
-import { MemoryRouter } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import App from "./App.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 import "./index.css";
 
+function RouterUrlSync() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const rawPath = location.pathname;
+    let target = rawPath;
+    if (rawPath.startsWith('/hr')) {
+      target = `/host${rawPath}`;
+    }
+    if (window.location.pathname !== target && target.startsWith('/host')) {
+      window.history.replaceState(null, '', target);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const p = window.location.pathname;
+      if (p.startsWith('/host')) {
+        navigate(p);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [navigate]);
+
+  return null;
+}
+
 export function HostPortalEmbedded({ initialPath = "/host" }: { initialPath?: string }) {
+  const entries = [initialPath];
+  if (initialPath.startsWith("/host/hr")) {
+    entries.push(initialPath.replace("/host", ""));
+  }
   return (
     <div className="host-portal-root">
       <ThemeProvider>
         <NotificationProvider>
-          <MemoryRouter initialEntries={[initialPath]}>
+          <MemoryRouter initialEntries={entries} initialIndex={0} key={initialPath}>
+            <RouterUrlSync />
             <App />
           </MemoryRouter>
         </NotificationProvider>
       </ThemeProvider>
     </div>
   );
-}
+}

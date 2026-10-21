@@ -82,32 +82,8 @@ export const seedAvailableLearners = [
   { id: 'AL-6', full_name: 'Zanele Cele', program: 'Software Development NQF5', provider: 'CoTech Academy', years_experience: 0, availability: 'Immediate', location: 'Durban', skills: ['HTML','CSS','JavaScript'], bio: 'Junior full-stack learner ready to be placed in a supportive engineering team.', disability: 'Hearing impairment', match_score: 78, industry: 'Technology', match_reasons: ['Software Dev NQF5', 'Inclusive: hearing accommodation supported'] },
 ]
 
-export const seedAttendance = (() => {
-  const recs = []
-  const today = new Date()
-  seedLearners.forEach((l, li) => {
-    for (let d = 0; d < 10; d++) {
-      const dt = new Date(today); dt.setDate(today.getDate() - d)
-      const r = ((li * 7 + d * 13) % 100) / 100
-      recs.push({
-        id: `${l.id}-${d}`,
-        learner_id: l.id,
-        learner_name: l.full_name,
-        sponsor: l.sponsor,
-        host: HOST_COMPANY,
-        mentor: l.mentor,
-        mentor_phone: l.mentor_phone,
-        contact: l.phone,
-        date: dt.toISOString().slice(0, 10),
-        status: r > 0.9 ? 'Absent' : r > 0.85 ? 'On Leave' : r > 0.75 ? 'Clocked Out' : r > 0.4 ? 'Present' : 'Clocked In',
-        leave_flags: { SL: r > 0.9 && r < 0.92, PH: false, AL: r > 0.85 && r < 0.9, CL: false },
-        check_in: r > 0.8 ? '09:15' : '08:02',
-        check_out: '17:01',
-      })
-    }
-  })
-  return recs
-})()
+// Live attendance starts clean for go-live
+export const seedAttendance = []
 
 export const seedPerformance = seedLearners.slice(0, 12).map((l, i) => ({
   id: `R-${i + 1}`,
@@ -181,68 +157,31 @@ export const seedProjects = [
 ]
 
 export const TASK_STATUSES = ['To Do', 'In Progress', 'Review', 'Completed']
-export const seedTasks = [
-  { id: 'T-1', title: 'Set up React project scaffolding', project_id: 'P-1', assignee_learner_id: 'L-1001', status: 'Completed', priority: 'High', due_date: '2026-05-10', description: 'Vite + React + Tailwind starter, linting, CI.' },
-  { id: 'T-2', title: 'Build authentication screens', project_id: 'P-1', assignee_learner_id: 'L-1002', status: 'In Progress', priority: 'High', due_date: '2026-07-15', description: 'Sign-in, sign-up, password reset UI.' },
-  { id: 'T-3', title: 'Data model workshop', project_id: 'P-2', assignee_learner_id: 'L-1004', status: 'To Do', priority: 'Medium', due_date: '2026-07-25', description: 'Facilitate a two-hour workshop with stakeholders.' },
-  { id: 'T-4', title: 'Patch all Ubuntu servers', project_id: 'P-3', assignee_learner_id: 'L-1005', status: 'In Progress', priority: 'Critical', due_date: '2026-07-05', description: 'Kernel + package updates + reboot windows.' },
-  { id: 'T-5', title: 'Write incident-response playbook', project_id: 'P-3', assignee_learner_id: 'L-1003', status: 'Review', priority: 'High', due_date: '2026-07-20', description: 'Draft the initial playbook for review by the security lead.' },
-  { id: 'T-6', title: 'Kick-off meeting summary', project_id: 'P-4', assignee_learner_id: 'L-1007', status: 'Completed', priority: 'Low', due_date: '2026-02-05', description: '' },
-]
+export const seedTasks = []
 
 // ------- HR seed data -------
 export const LEAVE_TYPES = ['Annual', 'Sick', 'Family Responsibility', 'Maternity', 'Paternity', 'Study', 'Compassionate']
 
 export const seedEmployees = [
-  { id: 'E-1', full_name: 'Thandi Mokoena', role: 'HR & Talent Lead', department: 'People Ops', email: 'thandi@linkora.co.za', phone: '+27 11 555 1234', employment_type: 'Permanent', join_date: '2020-03-15', manager: 'Board', gender: 'Female', age_band: '30-39' },
-  { id: 'E-2', full_name: 'Sipho Dlamini', role: 'Senior Cloud Engineer', department: 'Engineering', email: 'sipho@linkora.co.za', phone: '+27 82 555 1122', employment_type: 'Permanent', join_date: '2021-07-01', manager: 'Thandi Mokoena', gender: 'Male', age_band: '30-39' },
-  { id: 'E-3', full_name: 'Lerato Khumalo', role: 'Data Analyst', department: 'Data', email: 'lerato@linkora.co.za', phone: '+27 82 555 3344', employment_type: 'Contract', join_date: '2023-01-10', manager: 'Sipho Dlamini', gender: 'Female', age_band: '20-29' },
-  { id: 'E-4', full_name: 'Naledi Nkosi', role: 'Product Designer', department: 'Design', email: 'naledi@linkora.co.za', phone: '+27 82 555 5566', employment_type: 'Permanent', join_date: '2022-05-04', manager: 'Thandi Mokoena', gender: 'Female', age_band: '20-29' },
-  { id: 'E-5', full_name: 'Bongani Zulu', role: 'Security Engineer', department: 'Engineering', email: 'bongani@linkora.co.za', phone: '+27 82 555 7788', employment_type: 'Permanent', join_date: '2019-10-20', manager: 'Sipho Dlamini', gender: 'Male', age_band: '40-49' },
-  { id: 'E-6', full_name: 'Karabo Mthembu', role: 'People Coordinator', department: 'People Ops', email: 'karabo@linkora.co.za', phone: '+27 82 555 9900', employment_type: 'Temporary', join_date: '2025-11-01', manager: 'Thandi Mokoena', gender: 'Female', age_band: '20-29' },
+  { id: '27dcc3a8-4721-4646-87cb-770fe721ee5a', full_name: 'MSP Human Resources', role: 'HR Manager', department: 'Human Resources', email: 'hr@mavisstrategicpartners.co.za', employment_type: 'Permanent', join_date: '2026-09-16', manager: 'Board' },
+  { id: 'a8657388-806a-4034-aba9-cdfec879e58a', full_name: 'Siphelele Malotana', role: 'Developer', department: 'IT Department', email: 'siphelele.malotana@mavisstrategicpartners.co.za', employment_type: 'Intern', join_date: '2026-09-29', manager: 'MSP Human Resources' },
 ]
 
 export const seedLeaveBalances = seedEmployees.map(e => ({
   employee_id: e.id, employee: e.full_name,
-  Annual: 15 + (e.id.charCodeAt(2) % 6),
-  Sick: 8, 'Family Responsibility': 3, Study: 5, Compassionate: 2,
+  Annual: 15, Sick: 8, 'Family Responsibility': 3, Study: 5, Compassionate: 2,
 }))
 
-export const seedLeave = [
-  { id: 'LV-1', employee: 'Thandi Mokoena', type: 'Annual', from: '2026-07-15', to: '2026-07-19', days: 5, status: 'Approved', reason: 'Family holiday' },
-  { id: 'LV-2', employee: 'Sipho Dlamini', type: 'Sick', from: '2026-06-28', to: '2026-06-28', days: 1, status: 'Approved', reason: 'Flu' },
-  { id: 'LV-3', employee: 'Lerato Khumalo', type: 'Study', from: '2026-08-02', to: '2026-08-04', days: 3, status: 'Pending', reason: 'Certification exam prep' },
-]
+export const seedLeave = []
 
-export const seedLearnerLeaveRequests = [
-  { id: 'LLV-1', learner_id: 'L-1001', learner_name: 'Sipho Dlamini', program: 'Software Development NQF5', type: 'Sick', from: '2026-07-02', to: '2026-07-03', days: 2, status: 'Pending', reason: 'Flu with fever, unable to attend site — see attached medical certificate.', submitted_at: '2026-07-01', document_name: 'Medical-Certificate-Sipho.pdf', document_url: null, document_type: 'application/pdf', doc_verification: { status: 'Verified', score: 86, reasons: ['Filename, size, and metadata all consistent'] } },
-  { id: 'LLV-2', learner_id: 'L-1005', learner_name: 'Karabo Mthembu', program: 'Cybersecurity NQF5', type: 'Family Responsibility', from: '2026-07-06', to: '2026-07-08', days: 3, status: 'Pending', reason: 'Passing of my grandfather — attending funeral in Limpopo. Death certificate attached.', submitted_at: '2026-07-04', document_name: 'Death-Certificate-Family.pdf', document_url: null, document_type: 'application/pdf', doc_verification: { status: 'Needs Review', score: 62, reasons: ['Filename suggests screenshot rather than original scan'] } },
-  { id: 'LLV-3', learner_id: 'L-1004', learner_name: 'Bongani Nkosi', program: 'Cloud Engineering NQF6', type: 'Study', from: '2026-07-10', to: '2026-07-10', days: 1, status: 'Approved', reason: 'AWS Solutions Architect exam — supporting registration attached.', submitted_at: '2026-06-28', document_name: 'AWS-Exam-Registration.pdf', document_url: null, document_type: 'application/pdf', decided_by: 'Thandi Mokoena', decided_at: '2026-06-29', doc_verification: { status: 'Verified', score: 94, reasons: ['Trusted external source'] } },
-]
+export const seedLearnerLeaveRequests = []
 
-export const ATTENDANCE_STATUSES = ['Present', 'Clocked In', 'Clocked Out', 'On Leave', 'Absent']
+export const ATTENDANCE_STATUSES = ['Present', 'Clocked In', 'On Break', 'Clocked Out', 'On Leave', 'Absent']
 
-export const seedTimesheets = [
-  { id: 'TS-1', employee: 'Thandi Mokoena', date: '2026-06-30', clock_in: '08:00', clock_out: '17:00',
-    projects: [ { name: 'HR Ops', hours: 4, manager_comment: 'Great progress on the recruitment pipeline.' }, { name: 'Recruitment Drive', hours: 4, manager_comment: 'Shortlisted 3 promising candidates.' } ],
-    status: 'Present', notes: '' },
-  { id: 'TS-2', employee: 'Sipho Dlamini', date: '2026-06-30', clock_in: '08:15', clock_out: '17:30',
-    projects: [ { name: 'Cloud Migration', hours: 3, manager_comment: 'Blocked on IAM policy review.' }, { name: 'Customer Portal Rebuild', hours: 3.25, manager_comment: 'Auth screens delivered.' }, { name: 'Internal Tooling', hours: 2, manager_comment: '' } ],
-    status: 'Clocked Out', notes: 'Split across three project streams.' },
-  { id: 'TS-3', employee: 'Naledi Nkosi', date: '2026-06-30', clock_in: '09:00', clock_out: '',
-    projects: [ { name: 'UX Research', hours: 4, manager_comment: 'User interviews completed.' }, { name: 'Design System', hours: 3, manager_comment: 'Colour tokens finalised.' } ],
-    status: 'Clocked In', notes: '' },
-  { id: 'TS-4', employee: 'Sipho Dlamini', date: '2026-06-27', clock_in: '08:00', clock_out: '17:00',
-    projects: [ { name: 'Cloud Migration', hours: 2, manager_comment: '' }, { name: 'Customer Portal Rebuild', hours: 2, manager_comment: '' }, { name: 'Security Hardening Sprint', hours: 2, manager_comment: 'Ubuntu patches complete.' }, { name: 'Internal Tooling', hours: 1, manager_comment: '' }, { name: 'Data Warehouse Migration', hours: 1, manager_comment: '' } ],
-    status: 'Present', notes: 'Very fragmented day — 5 projects.' },
-  { id: 'TS-5', employee: 'Karabo Mthembu', date: '2026-06-30', clock_in: '', clock_out: '',
-    projects: [], status: 'On Leave', notes: 'Approved family responsibility leave.' },
-]
+export const seedTimesheets = []
 
-export const seedRelations = [
-  { id: 'ER-1', employee: 'Bongani Zulu', type: 'Grievance', severity: 'Medium', date: '2026-06-20', status: 'Open', description: 'Concern about shift schedule fairness.' },
-  { id: 'ER-2', employee: 'Karabo Sithole', type: 'Warning', severity: 'Low', date: '2026-06-15', status: 'Closed', description: 'Late arrival — verbal warning issued.' },
-]
+export const seedRelations = []
+
 
 // Recruitment — restyled like SA Youth / PNet
 export const VACANCY_TYPES = ['Full-time', 'Contract', 'Part-time', 'Intern', 'Leanership', 'Temporary']
@@ -321,19 +260,10 @@ export const seedAnnouncements = [
 ]
 
 // HR letters
-export const seedLetters = [
-  { id: 'HL-1', employee: 'Sipho Dlamini', type: 'Employment Verification', generated: '2026-06-01' },
-  { id: 'HL-2', employee: 'Naledi Nkosi', type: 'Promotion Letter', generated: '2026-05-15' },
-  { id: 'HL-3', employee: 'Karabo Mthembu', type: 'Contract Renewal', generated: '2026-06-25' },
-]
+export const seedLetters = []
 
 // Audit logs
-export const seedAudit = [
-  { id: 'AU-1', at: '2026-07-01 09:14', actor: 'Thandi Mokoena', action: 'Approved leave request', target: 'LLV-3 (Bongani Nkosi)' },
-  { id: 'AU-2', at: '2026-06-30 17:02', actor: 'Sipho Dlamini', action: 'Clocked out', target: 'Timesheet TS-2' },
-  { id: 'AU-3', at: '2026-06-30 08:15', actor: 'Karabo Mthembu', action: 'Uploaded document', target: 'Medical-Certificate.pdf' },
-  { id: 'AU-4', at: '2026-06-29 11:00', actor: 'Thandi Mokoena', action: 'Signed contract', target: 'Host Agreement — Cohort 2026' },
-]
+export const seedAudit = []
 
 // Chart series
 export const attendanceTrend = [
@@ -349,6 +279,14 @@ export const hostActivityByMonth = [
   { label: 'Feb', value: 12 }, { label: 'Mar', value: 15 }, { label: 'Apr', value: 18 },
   { label: 'May', value: 22 }, { label: 'Jun', value: 26 }, { label: 'Jul', value: 30 },
 ]
+
+// HR Employee Documents & Folder Access Settings (Strictly Accessible to Human Resources Only)
+export const seedFolderSettings = []
+
+export const seedHrDocuments = []
+
+// HR Payroll records (live data starts clean)
+export const seedPayrollRecords = []
 
 export { ZA_PUBLIC_HOLIDAYS, holidayOn } from '../lib/holidays.js'
 

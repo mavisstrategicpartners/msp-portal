@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedPerformance, seedLearners } from '../../data/mockData.js'
@@ -46,8 +47,12 @@ export default function Performance() {
 
   const submit = (e) => {
     e.preventDefault()
-    if (!form.learner_name) return alert('Please pick the learner being reviewed.')
+    if (!form.learner_name) {
+      toast.warning('Intern Required', { description: 'Please pick the learner being reviewed.' })
+      return
+    }
     setReviews(prev => [{ ...form, id: uid('R') }, ...prev])
+    toast.success('Performance Review Submitted', { description: `Review recorded for ${form.learner_name}.` })
     setShowForm(false)
   }
 
@@ -104,8 +109,8 @@ export default function Performance() {
         </>}>
         <form id="review-form" onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
           <div>
-            <label style={labelStyle}>Learner *</label>
-            <input placeholder="Search learner by name or email…" style={field} value={learnerSearch} onChange={e => { setLearnerSearch(e.target.value); setForm(f => ({ ...f, learner_id: '', learner_name: '' })) }} />
+            <label style={labelStyle}>Intern *</label>
+            <input placeholder="Search intern by name or email…" style={field} value={learnerSearch} onChange={e => { setLearnerSearch(e.target.value); setForm(f => ({ ...f, learner_id: '', learner_name: '' })) }} />
             {learnerSearch && !form.learner_id && (
               <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid var(--border-color)', borderRadius: 8, marginTop: 6, background: 'var(--bg-primary)' }}>
                 {learnerMatches.length === 0 && <div style={{ padding: 10, fontSize: 12, color: 'var(--text-muted)' }}>No learners match.</div>}

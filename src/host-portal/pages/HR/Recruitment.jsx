@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react'
-import DashboardLayout from '../../components/DashboardLayout.jsx'
-import Modal, { field, labelStyle } from '../../components/Modal.jsx'
-import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
-import { useNotifications } from '../../context/NotificationContext.jsx'
+import { useMemo, useState } from 'react';
+import DashboardLayout from '../../components/DashboardLayout.jsx';
+import Modal, { field, labelStyle } from '../../components/Modal.jsx';
+import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../../data/mockData.js';
+import { uid } from '../../lib/useLocalStorage.js';
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js';
+import { useNotifications } from '../../context/NotificationContext.jsx';
+import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/modal-context';
 
 const empty = { title: '', department: '', type: 'Full-time', location: '', posted: '', closes: '', applicants: 0, status: 'Open', salary: '', description: '', requirements: [], tags: [] }
 
@@ -11,14 +14,15 @@ const typeColor = (t) => t === 'Leanership' ? 'var(--purple)' : t === 'Intern' ?
 
 export default function Recruitment() {
   const [tab, setTab] = useState('vacancies')
-  const [vacancies, setVacancies] = useLocalStorage('host.hr.vacancies', seedVacancies)
-  const [applicants, setApplicants] = useLocalStorage('host.hr.applicants', seedApplicants)
+  const [vacancies, setVacancies] = useSupabaseTable('hr_vacancies', seedVacancies)
+  const [applicants, setApplicants] = useSupabaseTable('hr_applicants', seedApplicants)
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('All')
   const [viewing, setViewing] = useState(null)
   const [form, setForm] = useState(null)
   const [applicantForm, setApplicantForm] = useState(null)
-  const { push } = useNotifications()
+  const { push } = useNotifications();
+  const confirm = useConfirm();
 
   const filtered = useMemo(() => vacancies.filter(v =>
     (typeFilter === 'All' || v.type === typeFilter) &&
@@ -29,13 +33,16 @@ export default function Recruitment() {
   const openEdit = (v) => setForm({ ...empty, ...v })
   const submitVacancy = (e) => {
     e.preventDefault()
-    if (!form.title.trim()) return alert('Title is required')
+    if (!form.title.trim()) return toast.warning('Title is required');
     const clean = { ...form, requirements: typeof form.requirements === 'string' ? form.requirements.split('\n').filter(Boolean) : form.requirements, tags: typeof form.tags === 'string' ? form.tags.split(',').map(s => s.trim()).filter(Boolean) : form.tags }
     if (form.id) setVacancies(prev => prev.map(x => x.id === form.id ? clean : x))
     else { setVacancies(prev => [{ id: uid('V'), ...clean }, ...prev]); push({ title: 'New vacancy posted', body: form.title, link: '/hr/recruitment', kind: 'recruit' }) }
     setForm(null)
   }
-  const remove = (v) => { if (window.confirm('Delete vacancy?')) setVacancies(prev => prev.filter(x => x.id !== v.id)) }
+  const remove = async (v) => {
+    const ok = await confirm({ title: 'Delete vacancy?', description: `Delete ${v.title}?` });
+    if (ok) setVacancies(prev => prev.filter(x => x.id !== v.id));
+  };
 
   const submitApplicant = (e) => {
     e.preventDefault()
@@ -82,7 +89,7 @@ export default function Recruitment() {
                       <span className="chip" style={{ color: typeColor(v.type), borderColor: typeColor(v.type) }}>{v.type}</span>
                       <span className="chip">📍 {v.location}</span>
                       {v.salary && <span className="chip">💰 {v.salary}</span>}
-                      <span className="chip">👥 {v.applicants} applicants</span>
+                      <span className="chip">{v.applicants} applicants</span>
                       {v.closes && <span className="chip">⏰ Closes {v.closes}</span>}
                     </div>
                     <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '10px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.description}</p>
@@ -103,26 +110,59 @@ export default function Recruitment() {
       )}
 
       {tab === 'applicants' && (
-        <div className="card">
-          <table>
-            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <th style={{ padding: '10px 0' }}>Name</th><th>Vacancy</th><th>Stage</th><th>Score</th><th>Applied</th><th></th></tr></thead>
-            <tbody>
-              {applicants.map(a => (
-                <tr key={a.id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 13 }}>
-                  <td style={{ padding: '10px 0', fontWeight: 600 }}>{a.name}</td>
-                  <td>{a.vacancy}</td>
-                  <td><span className="badge badge-info">{a.stage}</span></td>
-                  <td>{a.score}</td>
-                  <td>{a.applied}</td>
-                  <td>
-                    <button className="btn btn-ghost" onClick={() => setApplicantForm(a)}>Edit</button>
-                    <button className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={() => setApplicants(prev => prev.filter(x => x.id !== a.id))}>Delete</button>
-                  </td>
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-3 px-4">Candidate Name</th>
+                  <th className="py-3 px-4">Vacancy Applied</th>
+                  <th className="py-3 px-4">Pipeline Stage</th>
+                  <th className="py-3 px-4">Assessment Score</th>
+                  <th className="py-3 px-4">Applied Date</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {applicants.map(a => (
+                  <tr key={a.id} className="transition-colors hover:bg-muted/20 text-xs">
+                    <td className="py-3 px-4 font-semibold text-foreground">{a.name}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{a.vacancy}</td>
+                    <td className="py-3 px-4">
+                      <select
+                        value={a.stage}
+                        onChange={e => {
+                          const nextStage = e.target.value
+                          setApplicants(prev => prev.map(x => (x.id === a.id ? { ...x, stage: nextStage } : x)))
+                          toast.success('Stage Updated', { description: `${a.name} moved to ${nextStage}.` })
+                        }}
+                        className="rounded-md border border-input bg-background px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option>Screening</option>
+                        <option>Interview</option>
+                        <option>Assessment</option>
+                        <option>Offer</option>
+                        <option>Hired</option>
+                        <option>Rejected</option>
+                      </select>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`badge ${a.score >= 80 ? 'badge-success' : a.score >= 60 ? 'badge-info' : 'badge-warning'}`}>
+                        {a.score ? `${a.score}%` : 'Pending'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">{a.applied}</td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <button className="btn btn-ghost text-xs py-1 px-2" onClick={() => setApplicantForm(a)}>Edit</button>
+                        <button className="btn btn-ghost text-xs py-1 px-2 text-rose-600" onClick={() => setApplicants(prev => prev.filter(x => x.id !== a.id))}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -130,13 +170,13 @@ export default function Recruitment() {
         <Modal open onClose={() => setViewing(null)} title={viewing.title} subtitle={`${HOST_COMPANY} · ${viewing.department} · ${viewing.location}`} width={720}
           footer={<>
             <button className="btn btn-ghost" onClick={() => setViewing(null)}>Close</button>
-            <button className="btn btn-primary" onClick={() => alert('Applicants can apply from the public careers portal.')}>Share job link</button>
+            <button className="btn btn-primary" onClick={() => toast.info('Applicants can apply from the public careers portal.')}>Share job link</button>
           </>}>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
             <span className="chip" style={{ color: typeColor(viewing.type), borderColor: typeColor(viewing.type) }}>{viewing.type}</span>
             <span className="chip">💰 {viewing.salary}</span>
             <span className="chip">⏰ Closes {viewing.closes}</span>
-            <span className="chip">👥 {viewing.applicants} applicants</span>
+            <span className="chip">{viewing.applicants} applicants</span>
           </div>
           <div style={{ fontSize: 13, marginBottom: 14 }}><b>About the role</b><p style={{ marginTop: 4, color: 'var(--text-secondary)' }}>{viewing.description}</p></div>
           <div style={{ fontSize: 13 }}><b>Requirements</b>

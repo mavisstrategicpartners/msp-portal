@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeScript } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ModalProvider } from "@/components/ui/modal-context";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -37,7 +38,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: any; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -118,7 +119,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster position="top-right" offset={20} />
         <Scripts />
       </body>
     </html>
@@ -130,17 +131,25 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => sub.subscription.unsubscribe();
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        router.invalidate();
+        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      });
+      return () => {
+        sub?.subscription?.unsubscribe();
+      };
+    } catch (e) {
+      console.warn("Auth state change error:", e);
+    }
   }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <ModalProvider>
+        <Outlet />
+      </ModalProvider>
     </QueryClientProvider>
   );
 }

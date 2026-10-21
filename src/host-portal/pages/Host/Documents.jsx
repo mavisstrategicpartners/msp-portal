@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import SignaturePad from '../../components/SignaturePad.jsx'
@@ -7,6 +8,7 @@ import { seedDocuments, DOCUMENT_CATEGORIES } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
 import { verifyDocument } from '../../lib/docVerify.js'
 import { useNotifications } from '../../context/NotificationContext.jsx'
+import { useConfirm } from '@/components/ui/modal-context'
 
 const badgeFor = (status) => status === 'Verified' ? 'badge-success' : status === 'Needs Review' ? 'badge-warning' : 'badge-danger'
 
@@ -19,6 +21,7 @@ export default function Documents() {
   const [uploadForm, setUploadForm] = useState({ category: 'Policy', requires_signature: false, file: null, verification: null })
   const fileInput = useRef(null)
   const { push } = useNotifications()
+  const confirm = useConfirm()
 
   const filtered = docs.filter(d =>
     (category === 'All' || d.category === category) &&
@@ -32,7 +35,10 @@ export default function Documents() {
   }
 
   const doUpload = () => {
-    if (!uploadForm.file) return alert('Please pick a file first.')
+    if (!uploadForm.file) {
+      toast.warning('Document Required', { description: 'Please pick a file to upload first.' })
+      return
+    }
     const f = uploadForm.file
     const nextDoc = {
       id: uid('D'), name: f.name, category: uploadForm.category,
@@ -43,6 +49,7 @@ export default function Documents() {
     }
     setDocs(prev => [nextDoc, ...prev])
     push({ title: `Document uploaded — ${nextDoc.name}`, body: `Authenticity: ${nextDoc.verification.status} (${nextDoc.verification.score}/100).`, link: '/host/documents', kind: 'doc' })
+    toast.success('Document Uploaded', { description: `"${nextDoc.name}" uploaded successfully.` })
     setUploading(false)
     setUploadForm({ category: 'Policy', requires_signature: false, file: null, verification: null })
   }
@@ -50,10 +57,21 @@ export default function Documents() {
   const applySignature = (payload) => {
     setDocs(prev => prev.map(d => d.id === signing.id ? { ...d, signed: true, signature_url: payload.dataUrl, signature_method: payload.method, signed_at: new Date().toISOString().slice(0, 10), review_status: 'Signed' } : d))
     push({ title: 'Document signed', body: `${signing.name} was signed (${payload.method}).`, link: '/host/documents', kind: 'doc' })
+    toast.success('Document Signed', { description: `"${signing.name}" has been signed.` })
     setSigning(null)
   }
 
-  const remove = (d) => { if (window.confirm(`Delete ${d.name}?`)) setDocs(prev => prev.filter(x => x.id !== d.id)) }
+  const remove = async (d) => {
+    const ok = await confirm({
+      title: 'Delete Document',
+      description: `Are you sure you want to delete "${d.name}"? This action cannot be undone.`,
+      variant: 'destructive',
+      confirmText: 'Delete Document',
+    })
+    if (!ok) return
+    setDocs(prev => prev.filter(x => x.id !== d.id))
+    toast.success('Document Deleted', { description: `"${d.name}" was removed.` })
+  }
 
   return (
     <DashboardLayout title="Documents & E-Signatures">

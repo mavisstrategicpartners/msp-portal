@@ -592,6 +592,291 @@ export type Database = {
         }
         Relationships: []
       }
+      client_health_overrides: {
+        Row: {
+          client_id: string
+          health: string
+          id: string
+          next_action: string | null
+          next_action_due: string | null
+          reason: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_id: string
+          health?: string
+          id?: string
+          next_action?: string | null
+          next_action_due?: string | null
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          health?: string
+          id?: string
+          next_action?: string | null
+          next_action_due?: string | null
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ops_tasks: {
+        Row: {
+          assigned_date: string
+          block_reason: string | null
+          client_or_team: string
+          completion_date: string | null
+          created_at: string
+          deadline: string
+          description: string | null
+          id: string
+          owner_id: string | null
+          owner_name: string
+          priority: string
+          progress: number
+          reviewer: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_date?: string
+          block_reason?: string | null
+          client_or_team?: string
+          completion_date?: string | null
+          created_at?: string
+          deadline: string
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          owner_name?: string
+          priority?: string
+          progress?: number
+          reviewer?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_date?: string
+          block_reason?: string | null
+          client_or_team?: string
+          completion_date?: string | null
+          created_at?: string
+          deadline?: string
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          owner_name?: string
+          priority?: string
+          progress?: number
+          reviewer?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ops_escalations: {
+        Row: {
+          actions_taken: string | null
+          client_or_team: string
+          created_at: string
+          date_raised: string
+          escalation_level: string
+          id: string
+          impact: string
+          issue_type: string
+          owner: string
+          priority: string
+          raised_by: string
+          status: string
+          target_resolution_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actions_taken?: string | null
+          client_or_team?: string
+          created_at?: string
+          date_raised?: string
+          escalation_level?: string
+          id?: string
+          impact?: string
+          issue_type?: string
+          owner?: string
+          priority?: string
+          raised_by?: string
+          status?: string
+          target_resolution_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actions_taken?: string | null
+          client_or_team?: string
+          created_at?: string
+          date_raised?: string
+          escalation_level?: string
+          id?: string
+          impact?: string
+          issue_type?: string
+          owner?: string
+          priority?: string
+          raised_by?: string
+          status?: string
+          target_resolution_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ops_leads: {
+        Row: {
+          assigned_salesperson: string
+          business_name: string
+          contact_person: string | null
+          created_at: string
+          estimated_value: number
+          follow_up_date: string | null
+          id: string
+          lead_quality: string
+          lead_source: string
+          need: string | null
+          notes: string | null
+          proposal_status: string
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_salesperson?: string
+          business_name: string
+          contact_person?: string | null
+          created_at?: string
+          estimated_value?: number
+          follow_up_date?: string | null
+          id?: string
+          lead_quality?: string
+          lead_source?: string
+          need?: string | null
+          notes?: string | null
+          proposal_status?: string
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_salesperson?: string
+          business_name?: string
+          contact_person?: string | null
+          created_at?: string
+          estimated_value?: number
+          follow_up_date?: string | null
+          id?: string
+          lead_quality?: string
+          lead_source?: string
+          need?: string | null
+          notes?: string | null
+          proposal_status?: string
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ops_onboarding: {
+        Row: {
+          account_manager: string
+          blocker: string | null
+          client_id: string | null
+          client_name: string
+          completed_stages: string[]
+          created_at: string
+          current_stage: string
+          due_date: string | null
+          id: string
+          progress: number
+          stage_owner: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_manager?: string
+          blocker?: string | null
+          client_id?: string | null
+          client_name: string
+          completed_stages?: string[]
+          created_at?: string
+          current_stage?: string
+          due_date?: string | null
+          id?: string
+          progress?: number
+          stage_owner?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_manager?: string
+          blocker?: string | null
+          client_id?: string | null
+          client_name?: string
+          completed_stages?: string[]
+          created_at?: string
+          current_stage?: string
+          due_date?: string | null
+          id?: string
+          progress?: number
+          stage_owner?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ops_approvals: {
+        Row: {
+          approver: string
+          client_or_project: string | null
+          comments: string | null
+          completion_deadline: string | null
+          created_at: string
+          id: string
+          requester: string
+          status: string
+          submission_date: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          approver?: string
+          client_or_project?: string | null
+          comments?: string | null
+          completion_deadline?: string | null
+          created_at?: string
+          id?: string
+          requester?: string
+          status?: string
+          submission_date?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          approver?: string
+          client_or_project?: string | null
+          comments?: string | null
+          completion_deadline?: string | null
+          created_at?: string
+          id?: string
+          requester?: string
+          status?: string
+          submission_date?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

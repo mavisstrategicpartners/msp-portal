@@ -40,6 +40,22 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith("/api/attendance")) {
+        const { handleAttendanceApi } = await import("./lib/attendance-server");
+        return await handleAttendanceApi(request);
+      }
+
+      if (url.pathname.startsWith("/api/staff")) {
+        const { handleStaffApi } = await import("./lib/staff-server");
+        return await handleStaffApi(request);
+      }
+
+      if (url.pathname.startsWith("/api/operations")) {
+        const { handleOperationsApi } = await import("./lib/operations-server");
+        return await handleOperationsApi(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

@@ -5,7 +5,7 @@ import {
   AlertCircle, ArrowRight, BarChart3, BookOpen, Bot, Briefcase, Building2, CalendarDays,
   CheckCircle2, ChevronRight, ClipboardCheck, ClipboardList, Clock, Compass, Edit3, ExternalLink,
   FileSignature, Gauge, ListTree, Lock, Mail, Map as MapIcon, MessageCircle, Phone, Plus, Search, Send,
-  ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench,
+  ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench, Eye, EyeOff, KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -13,6 +13,11 @@ import { RotateCcw, PowerOff, FileBarChart2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { useProfile } from "@/lib/use-profile";
+import {
+  useStaffNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/lib/staff-tasks.service";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ContentEditor } from "@/components/ContentEditor";
 
 type Icon = ComponentType<{ className?: string }>;
 type Sop = { id: string; slug: string; department: string; title: string; reports_to: string | null; oversees: string | null; primary_tools: string | null; role_purpose: string | null; core_responsibilities: string | null; daily_weekly_monthly: string | null; key_sops: string | null; kpis: string | null; };
@@ -129,9 +135,17 @@ function useTable<T>(key: string, table: string, order = "sort_order") {
   return useQuery({
     queryKey: [key],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from(table).select("*").order(order, { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as T[];
+      try {
+        const { data, error } = await (supabase as any).from(table).select("*").order(order, { ascending: true });
+        if (error) {
+          console.warn(`Error querying table ${table}:`, error);
+          return [] as T[];
+        }
+        return (data ?? []) as T[];
+      } catch (err) {
+        console.warn(`Query exception for table ${table}:`, err);
+        return [] as T[];
+      }
     },
     staleTime: 60_000,
   });
@@ -633,8 +647,8 @@ export function DepartmentsPage() {
                   <div className="mt-2 flex flex-wrap gap-2">
                     {members.map((m) => (
                       <div key={m.id} className="flex items-center gap-2 rounded-full border border-border bg-secondary/40 py-1 pl-1 pr-3">
-                        <Avatar className="h-6 w-6"><AvatarFallback className="bg-primary/15 text-[10px] text-primary">{(m.full_name || m.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                        <span className="text-xs">{m.full_name || m.email.split("@")[0]}</span>
+                        <Avatar className="h-6 w-6"><AvatarFallback className="bg-primary/15 text-[10px] text-primary">{dept === "CEO" ? "EX" : (m.full_name || m.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                        <span className="text-xs">{dept === "CEO" ? "Executive team" : m.full_name || m.email.split("@")[0]}</span>
                       </div>
                     ))}
                   </div>
@@ -654,13 +668,20 @@ export function ProfilePage() {
   const queryClient = useQueryClient();
   const { data } = useProfile();
   const profile = data?.profile;
-  const [form, setForm] = useState({ full_name: "", phone: "" });
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "" });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [prefs, setPrefs] = useState({ digest: true, logChat: true });
   const [declaration, setDeclaration] = useState<any>(null);
 
   useEffect(() => {
-    if (profile) setForm({ full_name: profile.full_name || "", phone: profile.phone || "" });
+    if (profile) setForm({ full_name: profile.full_name || "", phone: profile.phone || "", email: profile.email || "" });
   }, [profile?.id]);
 
   useEffect(() => {
@@ -672,19 +693,69 @@ export function ProfilePage() {
 
   const saveProfile = useMutation({
     mutationFn: async () => {
-      const { error } = await (supabase as any).from("profiles").update({ full_name: form.full_name, phone: form.phone || null }).eq("id", profile!.id);
+      const cleanEmail = form.email.trim().toLowerCase();
+      const profileUpdate: any = { full_name: form.full_name, phone: form.phone || null };
+
+      // If email changed, update it in both profiles table and Supabase auth
+      const emailChanged = cleanEmail && cleanEmail !== profile!.email.toLowerCase();
+      if (emailChanged) {
+        profileUpdate.email = cleanEmail;
+        const { error: authError } = await supabase.auth.updateUser({ email: cleanEmail });
+        if (authError) throw new Error("Failed to update auth email: " + authError.message);
+      }
+
+      const { error } = await (supabase as any).from("profiles").update(profileUpdate).eq("id", profile!.id);
       if (error) throw error;
+
+      return emailChanged;
     },
-    onSuccess: () => { toast.success("Profile updated"); queryClient.invalidateQueries({ queryKey: ["profile"] }); },
+    onSuccess: (emailChanged) => {
+      if (emailChanged) {
+        toast.success("Profile updated — check your new email", {
+          description: "A confirmation link has been sent to your new email address. Please confirm it to complete the change.",
+        });
+      } else {
+        toast.success("Profile updated");
+      }
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
   const changePassword = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (!passwordForm.currentPassword) {
+        throw new Error("Please enter your current/temporary password.");
+      }
+      if (passwordForm.newPassword.length < 8) {
+        throw new Error("New password must be at least 8 characters long.");
+      }
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        throw new Error("New password and confirm password do not match.");
+      }
+      if (passwordForm.currentPassword === passwordForm.newPassword) {
+        throw new Error("New password must be different from your current temporary password.");
+      }
+
+      // Verify current password first
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: profile!.email,
+        password: passwordForm.currentPassword,
+      });
+      if (verifyError) {
+        throw new Error("Current password is incorrect.");
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
+      if (updateError) throw updateError;
     },
-    onSuccess: () => { toast.success("Password updated"); setPassword(""); },
+    onSuccess: () => {
+      toast.success("Password updated successfully!", {
+        description: "Your corporate account password has been updated.",
+      });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -709,6 +780,7 @@ export function ProfilePage() {
           <h3 className="font-semibold">Your details</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div><Label>Full name</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Work Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@company.co.za" /></div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+27…" /></div>
             <div><Label>Department</Label><Input value={profile.department || "Not set"} disabled /><p className="mt-1 text-xs text-muted-foreground">Changed by an admin.</p></div>
             <div><Label>Job title</Label><Input value={profile.job_title || "Not set"} disabled /></div>
@@ -717,11 +789,106 @@ export function ProfilePage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-semibold">Password</h3>
-          <div className="mt-3 flex gap-2">
-            <Input type="password" placeholder="New password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Button disabled={password.length < 8 || changePassword.isPending} onClick={() => changePassword.mutate()}>Update</Button>
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-primary" />
+            <div>
+              <h3 className="font-semibold">Change Password</h3>
+              <p className="text-xs text-muted-foreground">
+                Enter your current password, then set your new password.
+              </p>
+            </div>
           </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              changePassword.mutate();
+            }}
+            className="mt-4 space-y-3.5"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="current-pw">Current Password *</Label>
+              <div className="relative">
+                <Input
+                  id="current-pw"
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="••••••••••••"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-pw">New Password *</Label>
+                <div className="relative">
+                  <Input
+                    id="new-pw"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Min. 8 characters"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-pw">Confirm New Password *</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-pw"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repeat new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={
+                !passwordForm.currentPassword ||
+                passwordForm.newPassword.length < 8 ||
+                passwordForm.confirmPassword.length < 8 ||
+                changePassword.isPending
+              }
+              className="mt-1"
+            >
+              {changePassword.isPending ? "Updating password…" : "Update Password"}
+            </Button>
+          </form>
         </Card>
 
         <Card className="p-5">
@@ -854,8 +1021,10 @@ type TeamRow = ProfileRow & { is_admin?: boolean };
 
 export function TeamPage() {
   const queryClient = useQueryClient();
+  const { data: profileData, isLoading: profileLoading } = useProfile();
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<TeamRow | null>(null);
+  const isAdmin = profileData?.isAdmin ?? false;
 
   const { data = [] } = useQuery({
     queryKey: ["team"],
@@ -872,7 +1041,15 @@ export function TeamPage() {
   return (
     <div className="space-y-4">
       {pageTitle(Users, "Admin", "Team Management", "One table, one click. Add, edit, promote or deactivate — no wizards.")}
-      <div className="flex justify-end"><Button onClick={() => setAddOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add user</Button></div>
+      {profileLoading ? null : isAdmin ? (
+        <div className="flex justify-end"><Button onClick={() => setAddOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add user</Button></div>
+      ) : (
+        <Alert className="border-primary/20 bg-primary/5">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>Admins only</AlertTitle>
+          <AlertDescription>Only administrators can add or manage portal users.</AlertDescription>
+        </Alert>
+      )}
       <Card className="p-0">
         <Table>
           <TableHeader>
@@ -887,18 +1064,18 @@ export function TeamPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row) => <TeamRowActions key={row.id} row={row} onEdit={() => setEditing(row)} />)}
+            {data.map((row) => <TeamRowActions key={row.id} row={row} onEdit={() => setEditing(row)} canManage={isAdmin} />)}
           </TableBody>
         </Table>
       </Card>
 
-      <AddUserDrawer open={addOpen} onOpenChange={setAddOpen} onCreated={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />
+      {isAdmin && <AddUserDrawer open={addOpen} onOpenChange={setAddOpen} onCreated={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />}
       <EditUserDrawer row={editing} onClose={() => setEditing(null)} onSaved={() => queryClient.invalidateQueries({ queryKey: ["team"] })} />
     </div>
   );
 }
 
-function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
+function TeamRowActions({ row, onEdit, canManage }: { row: TeamRow; onEdit: () => void; canManage: boolean }) {
   const queryClient = useQueryClient();
   const toggleAdmin = useMutation({
     mutationFn: () => setAdminRole({ data: { userId: row.id, makeAdmin: !row.is_admin } }),
@@ -927,7 +1104,7 @@ function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
       <TableCell><Badge variant={row.is_active ? "default" : "outline"} className={row.is_active ? "" : "text-muted-foreground"}>{row.is_active ? "Active" : "Inactive"}</Badge></TableCell>
       <TableCell className="text-xs text-muted-foreground">{row.last_login_at ? new Date(row.last_login_at).toLocaleDateString() : "—"}</TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
+        {canManage && <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={onEdit}><Edit3 className="h-3.5 w-3.5" /></Button>
           <Popover>
             <PopoverTrigger asChild>
@@ -951,14 +1128,14 @@ function TeamRowActions({ row, onEdit }: { row: TeamRow; onEdit: () => void }) {
               </Button>
             </PopoverContent>
           </Popover>
-        </div>
+        </div>}
       </TableCell>
     </TableRow>
   );
 }
 
 function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ email: "", fullName: "", department: "Sales Team", jobTitle: "" });
+  const [form, setForm] = useState({ email: "", fullName: "", department: "Sales Team", jobTitle: "", accessLevel: "staff" });
   const [password, setPassword] = useState("");
   const create = useMutation({
     mutationFn: () => createTeamMember({ data: { ...form, password: password || generateTempPassword(), role: "user" } }),
@@ -966,7 +1143,7 @@ function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpe
       toast.success("Invite sent — user provisioned");
       onCreated();
       onOpenChange(false);
-      setForm({ email: "", fullName: "", department: "Sales Team", jobTitle: "" });
+      setForm({ email: "", fullName: "", department: "Sales Team", jobTitle: "", accessLevel: "staff" });
       setPassword("");
     },
     onError: (e) => toast.error((e as Error).message),
@@ -982,6 +1159,17 @@ function AddUserDrawer({ open, onOpenChange, onCreated }: { open: boolean; onOpe
             <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div><Label>Access level</Label>
+            <Select value={form.accessLevel} onValueChange={(v) => setForm({ ...form, accessLevel: v, ...(v === "hr" ? { department: "Human Resources" } : {}) })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div><Label>Job title</Label><Input value={form.jobTitle} onChange={(e) => setForm({ ...form, jobTitle: e.target.value })} /></div>
@@ -1033,14 +1221,33 @@ function EditUserDrawer({ row, onClose, onSaved }: { row: TeamRow | null; onClos
 
 // ============ AUDIT ============
 export function AuditPage() {
+  const { data: profileData, isLoading: profileLoading } = useProfile();
+  const isSuperOrAdmin = (profileData?.isAdmin || profileData?.isRootAdmin) && !profileData?.isFinance;
+
   const { data = [] } = useQuery({
     queryKey: ["audit-logs"],
+    enabled: !!isSuperOrAdmin,
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("audit_logs").select("*").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       return (data ?? []) as AuditLog[];
     },
   });
+
+  if (!profileLoading && !isSuperOrAdmin) {
+    return (
+      <div className="p-8 text-center max-w-lg mx-auto space-y-4">
+        <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+          <Lock className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
+        <p className="text-sm text-muted-foreground">
+          Audit Logs are restricted to the Chief Executive Officer and System Administrator. The Finance & Administration role is not authorized to view system audit events.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {pageTitle(ShieldCheck, "Admin", "Audit Logs", "System events and admin actions recorded for accountability.")}
@@ -1089,32 +1296,9 @@ export function KpisPage() {
 
 // ============ CONTENT EDITOR ============
 export function ContentEditorPage() {
-  const [table, setTable] = useState("services");
-  return (
-    <div className="space-y-6">
-      {pageTitle(Edit3, "Admin", "Content Editor", "Review portal content tables — quick verify before publishing SOP or pricing changes.")}
-      <Card className="p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div><h2 className="font-semibold">Content status</h2><p className="text-sm text-muted-foreground">Every content table used in the portal.</p></div>
-          <Select value={table} onValueChange={setTable}><SelectTrigger className="w-full md:w-56"><SelectValue /></SelectTrigger><SelectContent>{CONTENT_TABLES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>
-        </div>
-        <ContentPreview table={table} />
-      </Card>
-    </div>
-  );
+  return <ContentEditor />;
 }
 
-function ContentPreview({ table }: { table: string }) {
-  const { data = [] } = useQuery({
-    queryKey: ["content-preview", table],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).from(table).select("*").limit(8);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  return <pre className="mt-4 max-h-96 overflow-auto rounded-md border border-border bg-secondary/30 p-4 text-xs text-muted-foreground">{JSON.stringify(data, null, 2)}</pre>;
-}
 
 // ============ MSP AI ASSISTANT ============
 export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -1165,32 +1349,42 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/80 p-0 shadow-2xl">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <DialogTitle className="flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Msp Assistant</DialogTitle>
-              <DialogDescription>AI-powered help for MSP internal workflows.</DialogDescription>
-            </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={reset} title="Reset conversation"><RotateCcw className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="sm" onClick={endChat} title="End chat & save"><PowerOff className="h-4 w-4" /></Button>
+          <div className="border-b border-border bg-secondary/30 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"><Sparkles className="h-5 w-5" /></div>
+                <div>
+                  <DialogTitle className="flex items-center gap-2 text-base">Msp Assistant <Badge variant="outline" className="gap-1 border-success/30 text-[10px] font-medium text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" /> Online</Badge></DialogTitle>
+                  <DialogDescription className="mt-0.5 text-xs">Your internal guide to MSP workflows, tools, services and SOPs.</DialogDescription>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={reset} title="Reset conversation" className="h-8 w-8"><RotateCcw className="h-4 w-4" /></Button>
+              </div>
             </div>
           </div>
         </DialogHeader>
-        <div className="max-h-80 space-y-3 overflow-y-auto rounded-md border border-border bg-secondary/20 p-3">
+        <div className="max-h-[min(46vh,420px)] min-h-64 space-y-4 overflow-y-auto bg-background/60 px-5 py-5 sm:px-6">
           {messages.map((message, index) => (
-            <div key={index} className={cn("max-w-[85%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm", message.from === "you" ? "ml-auto bg-primary text-primary-foreground" : "bg-background text-foreground")}>{message.text}</div>
+            <div key={index} className={cn("flex items-end gap-2.5", message.from === "you" && "justify-end")}>
+              {message.from === "msp" && <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div>}
+              <div className={cn("max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm", message.from === "you" ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card text-foreground")}>{message.text}</div>
+            </div>
           ))}
-          {pending && <div className="max-w-[85%] rounded-md bg-background px-3 py-2 text-sm text-muted-foreground">Msp is thinking…</div>}
+          {pending && <div className="flex items-end gap-2.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div><div className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" /></span></div></div>}
         </div>
-        <div>
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Quick starters</p>
-          <div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div>
-        </div>
-        <div className="flex gap-2">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Ask Msp…" disabled={pending} />
-          <Button onClick={() => send()} disabled={pending}><Send className="h-4 w-4" /></Button>
+        <div className="space-y-3 border-t border-border bg-secondary/20 px-5 py-4 sm:px-6">
+          {messages.length === 1 && <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Suggested prompts</p><div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" className="h-8 rounded-full bg-background text-xs" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div></div>}
+          <form className="flex items-center gap-2 rounded-xl border border-input bg-background p-1.5 shadow-sm" onSubmit={(event) => { event.preventDefault(); send(); }}>
+            <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ask Msp anything about the portal…" disabled={pending} className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0" />
+            <Button type="submit" size="icon" disabled={pending || !input.trim()} className="h-9 w-9 shrink-0 rounded-lg"><Send className="h-4 w-4" /></Button>
+          </form>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] text-muted-foreground">Msp uses approved MSP knowledge and may need confirmation for sensitive decisions.</p>
+            <Button type="button" variant="ghost" size="sm" onClick={endChat} className="shrink-0 text-xs text-muted-foreground hover:text-destructive"><PowerOff className="mr-1.5 h-3.5 w-3.5" /> End chat &amp; save</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -1198,12 +1392,68 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { data: notifData } = useStaffNotifications();
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
+  const notifications = notifData?.notifications || [];
+  const unreadCount = notifData?.unreadCount || 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Notifications</DialogTitle><DialogDescription>Portal alerts and reminders.</DialogDescription></DialogHeader>
-        <div className="space-y-3">
-          {["Monthly reports are due by the 7th.", "New users must be added by an admin only.", "Use Msp for SOP and pricing questions."].map((item) => <div key={item} className="flex gap-3 rounded-md border border-border p-3 text-sm"><Clock className="mt-0.5 h-4 w-4 text-primary" />{item}</div>)}
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between pr-4">
+            <div>
+              <DialogTitle className="text-base font-bold">Staff Notifications</DialogTitle>
+              <DialogDescription className="text-xs">
+                Assignments, deadline alerts, dependency responses & reviews.
+              </DialogDescription>
+            </div>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllReadMutation.mutate()}
+                className="text-[11px] h-7 text-primary font-semibold"
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          {notifications.length === 0 ? (
+            <div className="text-center py-8 text-xs text-muted-foreground">
+              No notifications at this time.
+            </div>
+          ) : (
+            notifications.map((n) => (
+              <div
+                key={n.id}
+                className={`p-3 rounded-lg border text-xs transition space-y-1 ${
+                  !n.read ? "bg-primary/5 border-primary/30" : "bg-card border-border opacity-80"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                    {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {n.title}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-muted-foreground">{n.message}</p>
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => markReadMutation.mutate({ id: n.id, read: !n.read })}
+                    className="text-[10px] text-primary hover:underline font-semibold"
+                  >
+                    {n.read ? "Mark unread" : "Mark as read"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -1226,16 +1476,20 @@ export function HelpPanel({ open, onOpenChange }: { open: boolean; onOpenChange:
 }
 
 export function PortalSearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const items = [
+  const { data: profileData } = useProfile();
+  const isSuperOrAdmin = (profileData?.isAdmin || profileData?.isRootAdmin) && !profileData?.isFinance;
+
+  const items: readonly (readonly [string, string, ComponentType<{ className?: string }>])[] = [
     ["Dashboard", "/home", Compass], ["Who We Are", "/who-we-are", Compass], ["Services", "/services", Briefcase],
     ["Pricing", "/pricing", Tag], ["Glossary", "/glossary", ListTree], ["SOP Library", "/sops", BookOpen],
     ["Roadmap", "/roadmap", MapIcon], ["Tools", "/tools", Wrench], ["Departments", "/departments", Building2],
     ["My Profile", "/me/profile", User], ["Leave Requests", "/me/leave", CalendarDays], ["HR Documents", "/me/declaration", FileSignature],
-    ["Team Management", "/admin/team", Users], ["Audit Logs", "/admin/audit", ShieldCheck],
+    ["Team Management", "/admin/team", Users],
+    ...(isSuperOrAdmin ? [["Audit Logs", "/admin/audit", ShieldCheck] as const] : []),
     ["Sales Playbook", "/admin/sales-playbook", ClipboardList], ["KPI Dashboards", "/admin/kpis", BarChart3],
     ["Content Editor", "/admin/content", Edit3],
     ["Monthly Reports", "/reports", FileBarChart2],
-  ] as const;
+  ];
   const [query, setQuery] = useState("");
   const filtered = items.filter(([label]) => label.toLowerCase().includes(query.toLowerCase()));
   return (

@@ -1,8 +1,11 @@
 import { useState, Fragment } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTimesheets, seedProjects, ATTENDANCE_STATUSES } from '../../data/mockData.js'
-import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { uid } from '../../lib/useLocalStorage.js'
+import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
+import { useConfirm } from '@/components/ui/modal-context'
 
 const totalHours = (r) => (r.projects || []).reduce((s, p) => s + Number(p.hours || 0), 0)
 const emptyEntry = () => ({
@@ -14,20 +17,39 @@ const emptyEntry = () => ({
 const statusBadge = (s) => s === 'Present' ? 'badge-success' : s === 'Clocked In' ? 'badge-info' : s === 'Clocked Out' ? 'badge-purple' : s === 'On Leave' ? 'badge-warning' : 'badge-danger'
 
 export default function Timesheets() {
-  const [list, setList] = useLocalStorage('host.hr.timesheets', seedTimesheets)
-  const [projects] = useLocalStorage('host.projects', seedProjects)
+  const [list, setList] = useSupabaseTable('hr_timesheets', seedTimesheets)
+  const [projects] = useSupabaseTable('host_projects', seedProjects)
   const [expanded, setExpanded] = useState({})
   const [form, setForm] = useState(null)
+  const confirm = useConfirm()
 
   const openAdd = () => setForm(emptyEntry())
   const openEdit = (r) => setForm({ ...r, projects: (r.projects || []).map(p => ({ manager_comment: '', ...p })) })
-  const remove = (r) => { if (window.confirm('Delete timesheet?')) setList(prev => prev.filter(x => x.id !== r.id)) }
+  const remove = async (r) => {
+    const ok = await confirm({
+      title: 'Delete Timesheet',
+      description: `Are you sure you want to delete the timesheet for "${r.employee}" on ${r.date}?`,
+      variant: 'destructive',
+      confirmText: 'Delete Timesheet',
+    })
+    if (!ok) return
+    setList(prev => prev.filter(x => x.id !== r.id))
+    toast.success('Timesheet Deleted', { description: `Timesheet for ${r.employee} was removed.` })
+  }
   const submit = (e) => {
     e.preventDefault()
-    if (!form.employee.trim()) return alert('Employee is required')
+    if (!form.employee.trim()) {
+      toast.warning('Employee Required', { description: 'Please enter employee name.' })
+      return
+    }
     const clean = { ...form, projects: form.projects.filter(p => p.name.trim()).map(p => ({ name: p.name, hours: Number(p.hours) || 0, manager_comment: p.manager_comment || '' })) }
-    if (form.id) setList(prev => prev.map(x => x.id === form.id ? clean : x))
-    else setList(prev => [{ ...clean, id: uid('TS') }, ...prev])
+    if (form.id) {
+      setList(prev => prev.map(x => x.id === form.id ? clean : x))
+      toast.success('Timesheet Updated', { description: `Timesheet for ${clean.employee} was updated.` })
+    } else {
+      setList(prev => [{ ...clean, id: uid('TS') }, ...prev])
+      toast.success('Timesheet Created', { description: `Timesheet logged for ${clean.employee}.` })
+    }
     setForm(null)
   }
   const setStatus = (r, status) => setList(prev => prev.map(x => x.id === r.id ? { ...x, status } : x))
@@ -41,6 +63,19 @@ export default function Timesheets() {
     ...ATTENDANCE_STATUSES.map(s => ({ label: s, value: list.filter(r => r.status === s).length })),
   ]
 
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+
+  const filteredList = list.filter(r => {
+    const matchSearch =
+      r.employee.toLowerCase().includes(search.toLowerCase()) ||
+      (r.notes || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.projects || []).some(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    if (!matchSearch) return false
+    if (statusFilter !== 'All' && r.status !== statusFilter) return false
+    return true
+  })
+
   return (
     <DashboardLayout title="Timesheet Management">
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
@@ -52,8 +87,22 @@ export default function Timesheets() {
         ))}
       </div>
 
-      <div className="card" style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <button className="btn btn-primary" onClick={openAdd}>+ Add Timesheet</button>
+      <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by employee name or project…"
+          style={{ flex: 1, minWidth: 240, padding: '9px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }}
+        />
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          style={{ padding: '9px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }}
+        >
+          <option value="All">All Statuses</option>
+          {ATTENDANCE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button className="btn btn-primary" onClick={openAdd} style={{ marginLeft: 'auto' }}>+ Add Timesheet</button>
       </div>
 
       <div className="card">
@@ -65,7 +114,7 @@ export default function Timesheets() {
               </tr>
             </thead>
             <tbody>
-              {list.map(r => {
+              {filteredList.map(r => {
                 const isOpen = !!expanded[r.id]
                 const ps = r.projects || []
                 return (

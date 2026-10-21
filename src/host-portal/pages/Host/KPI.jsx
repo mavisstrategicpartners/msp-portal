@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedKPIs, seedLearners } from '../../data/mockData.js'
 import { useLocalStorage, uid } from '../../lib/useLocalStorage.js'
+import { useConfirm } from '@/components/ui/modal-context'
 
 const empty = { learner_id: '', learner_name: '', goal: '', kpi: '', quarter: 'Q3 2026', progress: 0, status: 'On Track', development_plan: '' }
 
@@ -10,16 +12,35 @@ export default function KPI() {
   const [kpis, setKpis] = useLocalStorage('host.kpis', seedKPIs)
   const [learners] = useLocalStorage('host.learners', seedLearners)
   const [form, setForm] = useState(null)
+  const confirm = useConfirm()
 
   const openAdd = () => setForm({ ...empty })
   const openEdit = (k) => setForm({ ...k })
-  const remove = (k) => { if (window.confirm('Delete goal?')) setKpis(prev => prev.filter(x => x.id !== k.id)) }
+  const remove = async (k) => {
+    const ok = await confirm({
+      title: 'Delete Goal',
+      description: `Are you sure you want to delete the goal "${k.goal}"?`,
+      variant: 'destructive',
+      confirmText: 'Delete Goal',
+    })
+    if (!ok) return
+    setKpis(prev => prev.filter(x => x.id !== k.id))
+    toast.success('Goal Deleted', { description: `Goal for ${k.learner_name} was removed.` })
+  }
   const submit = () => {
-    if (!form.learner_id || !form.goal) return alert('Learner and goal required')
+    if (!form.learner_id || !form.goal) {
+      toast.warning('Goal Details Required', { description: 'Please select a learner and specify the goal.' })
+      return
+    }
     const l = learners.find(x => x.id === form.learner_id)
     const payload = { ...form, learner_name: l?.full_name || form.learner_name, progress: Number(form.progress) }
-    if (form.id) setKpis(prev => prev.map(x => x.id === form.id ? payload : x))
-    else setKpis(prev => [{ id: uid('K'), ...payload }, ...prev])
+    if (form.id) {
+      setKpis(prev => prev.map(x => x.id === form.id ? payload : x))
+      toast.success('Goal Updated', { description: `Goal for ${payload.learner_name} updated.` })
+    } else {
+      setKpis(prev => [{ id: uid('K'), ...payload }, ...prev])
+      toast.success('Goal Assigned', { description: `Goal assigned to ${payload.learner_name}.` })
+    }
     setForm(null)
   }
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -84,7 +105,7 @@ export default function KPI() {
             <button className="btn btn-primary" onClick={submit}>Save</button>
           </>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Learner</label>
+            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Intern</label>
               <select style={field} value={form.learner_id} onChange={set('learner_id')}>
                 <option value="">— pick —</option>
                 {learners.map(l => <option key={l.id} value={l.id}>{l.full_name}</option>)}
