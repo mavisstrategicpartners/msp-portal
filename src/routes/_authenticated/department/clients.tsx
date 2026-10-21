@@ -79,80 +79,91 @@ export function DepartmentClientsPage() {
         </span>
       </div>
 
-      {/* ── Client Cards Grid ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {clients.map((client) => (
-          <Card key={client.id} className="border-border bg-card shadow-xs hover:border-primary/40 transition flex flex-col justify-between">
-            <CardHeader className="pb-3 border-b border-border">
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-base font-bold text-foreground">{client.name}</CardTitle>
-                  <CardDescription className="text-xs font-medium text-muted-foreground mt-0.5">
-                    {client.industry}
-                  </CardDescription>
+      {/* ── Client Cards Grid / Empty State ───────────────────────────────── */}
+      {clients.length === 0 ? (
+        <Card className="border-border p-12 text-center shadow-xs">
+          <Building2 className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-foreground mb-1">No Client Delivery Scopes Configured</h3>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            No official client delivery details have been assigned yet.
+            Once genuine clients are onboarded and assigned, authorized deliverable scopes will appear here automatically.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {clients.map((client) => (
+            <Card key={client.id} className="border-border bg-card shadow-xs hover:border-primary/40 transition flex flex-col justify-between">
+              <CardHeader className="pb-3 border-b border-border">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base font-bold text-foreground">{client.name}</CardTitle>
+                    <CardDescription className="text-xs font-medium text-muted-foreground mt-0.5">
+                      {client.industry}
+                    </CardDescription>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-semibold rounded-full px-2.5 py-0.5 bg-purple-50 text-purple-900 border-purple-200 shadow-none"
+                  >
+                    {client.accountStatus}
+                  </Badge>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="text-[10px] font-semibold rounded-full px-2.5 py-0.5 bg-purple-50 text-purple-900 border-purple-200 shadow-none"
-                >
-                  {client.accountStatus}
-                </Badge>
-              </div>
-            </CardHeader>
+              </CardHeader>
 
-            <CardContent className="p-4 space-y-4 text-xs">
-              <div className="p-2.5 rounded-lg border border-border bg-muted/20">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-0.5">
-                  Package & Retainer Scope
-                </span>
-                <div className="font-bold text-foreground text-xs">{client.package}</div>
-                <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">{client.scopeSummary}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 rounded-lg border border-border bg-muted/30">
-                  <span className="text-[10px] text-muted-foreground uppercase font-medium">Active Deliverables</span>
-                  <div className="text-base font-bold text-foreground mt-0.5">{client.activeDeliverablesCount} Items</div>
+              <CardContent className="p-4 space-y-4 text-xs">
+                <div className="p-2.5 rounded-lg border border-border bg-muted/20">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-0.5">
+                    Package & Retainer Scope
+                  </span>
+                  <div className="font-bold text-foreground text-xs">{client.package}</div>
+                  <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">{client.scopeSummary}</p>
                 </div>
-                <div className="p-2 rounded-lg border border-border bg-muted/30">
-                  <span className="text-[10px] text-muted-foreground uppercase font-medium">Open Delivery Issues</span>
-                  <div className={`text-base font-bold mt-0.5 ${client.openIssuesCount > 0 ? "text-rose-600" : "text-emerald-600"}`}>
-                    {client.openIssuesCount} {client.openIssuesCount === 1 ? "Blocker" : "Blockers"}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 rounded-lg border border-border bg-muted/30">
+                    <span className="text-[10px] text-muted-foreground uppercase font-medium">Active Deliverables</span>
+                    <div className="text-base font-bold text-foreground mt-0.5">{client.activeDeliverablesCount} Items</div>
+                  </div>
+                  <div className="p-2 rounded-lg border border-border bg-muted/30">
+                    <span className="text-[10px] text-muted-foreground uppercase font-medium">Open Delivery Issues</span>
+                    <div className={`text-base font-bold mt-0.5 ${client.openIssuesCount > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                      {client.openIssuesCount} {client.openIssuesCount === 1 ? "Blocker" : "Blockers"}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">
-                  Key Acceptance Criteria
-                </span>
-                <ul className="space-y-1 text-[11px] text-muted-foreground">
-                  {client.acceptanceCriteria.slice(0, 2).map((ac, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
-                      <span className="text-primary font-bold">&bull;</span>
-                      <span>{ac}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">
+                    Key Acceptance Criteria
+                  </span>
+                  <ul className="space-y-1 text-[11px] text-muted-foreground">
+                    {client.acceptanceCriteria.slice(0, 2).map((ac, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="text-primary font-bold">&bull;</span>
+                        <span>{ac}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-              <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground font-medium">
-                <span>Account Manager: <strong className="text-foreground">{client.accountManager}</strong></span>
-              </div>
+                <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                  <span>Account Manager: <strong className="text-foreground">{client.accountManager}</strong></span>
+                </div>
 
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full text-xs font-semibold border-border bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer mt-1"
-                onClick={() => setActiveClient(client)}
-              >
-                View Full Authorized Scope & Criteria
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full text-xs font-semibold border-border bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer mt-1"
+                  onClick={() => setActiveClient(client)}
+                >
+                  View Full Authorized Scope & Criteria
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* ── MODAL: Client Detail Scope & Checklist ─────────────────────────── */}
       {activeClient && (

@@ -134,49 +134,7 @@ const INITIAL_APPROVALS: DepartmentApprovalItem[] = [];
 
 const INITIAL_TARGETS: DepartmentTarget[] = [];
 
-const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [
-  {
-    id: "22222222-2222-2222-2222-222222222222",
-    name: "Makurung Process Solutions (Pty) Ltd",
-    industry: "Mining Engineering / EPC Solutions",
-    accountStatus: "Active Retainer",
-    package: "SEO + Website Build & Paid Ads",
-    accountManager: "Operations & Relationship Manager",
-    scopeSummary: "B2B LinkedIn & Meta advertising for mining plant optimisation, tailings retreatment, and industrial EPC contracts across South Africa and SADC.",
-    activeDeliverablesCount: 0,
-    openIssuesCount: 0,
-    acceptanceCriteria: [
-      "Target verified mining procurement managers and technical directors in SA",
-      "Lead generation forms must route to Operations CRM with WhatsApp notifications",
-    ],
-    deadlines: [],
-    communicationNotes: [],
-    requiredEvidenceChecklist: [
-      "Ad account setup with billing threshold verified",
-      "Pixel & CAPI server events firing with 0 dropped events",
-    ],
-  },
-  {
-    id: "11111111-1111-1111-1111-111111111111",
-    name: "Imigidi Authentic African Events",
-    industry: "Events & Equipment Hire",
-    accountStatus: "Active Retainer",
-    package: "Social Media + Ads Retainer",
-    accountManager: "Operations & Relationship Manager",
-    scopeSummary: "Equipment hire B2B Google Search ads & Luxury African experiences social lead generation.",
-    activeDeliverablesCount: 0,
-    openIssuesCount: 0,
-    acceptanceCriteria: [
-      "Google Search ads targeting B2B corporate planners & luxury private functions",
-      "CAPI setup with Enhanced Conversions enabled",
-    ],
-    deadlines: [],
-    communicationNotes: [],
-    requiredEvidenceChecklist: [
-      "Google Ads Conversion Tracking code verified in Tag Assistant",
-    ],
-  },
-];
+const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [];
 
 // ── Public Service API ───────────────────────────────────────────────────────
 
