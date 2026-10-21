@@ -82,32 +82,8 @@ export const seedAvailableLearners = [
   { id: 'AL-6', full_name: 'Zanele Cele', program: 'Software Development NQF5', provider: 'CoTech Academy', years_experience: 0, availability: 'Immediate', location: 'Durban', skills: ['HTML','CSS','JavaScript'], bio: 'Junior full-stack learner ready to be placed in a supportive engineering team.', disability: 'Hearing impairment', match_score: 78, industry: 'Technology', match_reasons: ['Software Dev NQF5', 'Inclusive: hearing accommodation supported'] },
 ]
 
-export const seedAttendance = (() => {
-  const recs = []
-  const today = new Date()
-  seedLearners.forEach((l, li) => {
-    for (let d = 0; d < 10; d++) {
-      const dt = new Date(today); dt.setDate(today.getDate() - d)
-      const r = ((li * 7 + d * 13) % 100) / 100
-      recs.push({
-        id: `${l.id}-${d}`,
-        learner_id: l.id,
-        learner_name: l.full_name,
-        sponsor: l.sponsor,
-        host: HOST_COMPANY,
-        mentor: l.mentor,
-        mentor_phone: l.mentor_phone,
-        contact: l.phone,
-        date: dt.toISOString().slice(0, 10),
-        status: r > 0.9 ? 'Absent' : r > 0.85 ? 'On Leave' : r > 0.75 ? 'Clocked Out' : r > 0.4 ? 'Present' : 'Clocked In',
-        leave_flags: { SL: r > 0.9 && r < 0.92, PH: false, AL: r > 0.85 && r < 0.9, CL: false },
-        check_in: r > 0.8 ? '09:15' : '08:02',
-        check_out: '17:01',
-      })
-    }
-  })
-  return recs
-})()
+// Live attendance starts clean for go-live
+export const seedAttendance = []
 
 export const seedPerformance = seedLearners.slice(0, 12).map((l, i) => ({
   id: `R-${i + 1}`,
@@ -203,39 +179,16 @@ export const seedLeaveBalances = seedEmployees.map(e => ({
   Annual: 15, Sick: 8, 'Family Responsibility': 3, Study: 5, Compassionate: 2,
 }))
 
-export const seedLeave = [
-  { id: 'ff369013-9b10-458f-9c30-64ec604af1e1', employee: 'Siphelele Malotana', type: 'Family Responsibility', from: '2026-10-02', to: '2026-10-06', days: 3, status: 'Pending', reason: 'Family responsibility' },
-]
+export const seedLeave = []
 
-export const seedLearnerLeaveRequests = [
-  { id: 'LLV-1', learner_id: 'L-1001', learner_name: 'Sipho Dlamini', program: 'Software Development NQF5', type: 'Sick', from: '2026-07-02', to: '2026-07-03', days: 2, status: 'Pending', reason: 'Flu with fever, unable to attend site — see attached medical certificate.', submitted_at: '2026-07-01', document_name: 'Medical-Certificate-Sipho.pdf', document_url: null, document_type: 'application/pdf', doc_verification: { status: 'Verified', score: 86, reasons: ['Filename, size, and metadata all consistent'] } },
-  { id: 'LLV-2', learner_id: 'L-1005', learner_name: 'Karabo Mthembu', program: 'Cybersecurity NQF5', type: 'Family Responsibility', from: '2026-07-06', to: '2026-07-08', days: 3, status: 'Pending', reason: 'Passing of my grandfather — attending funeral in Limpopo. Death certificate attached.', submitted_at: '2026-07-04', document_name: 'Death-Certificate-Family.pdf', document_url: null, document_type: 'application/pdf', doc_verification: { status: 'Needs Review', score: 62, reasons: ['Filename suggests screenshot rather than original scan'] } },
-  { id: 'LLV-3', learner_id: 'L-1004', learner_name: 'Bongani Nkosi', program: 'Cloud Engineering NQF6', type: 'Study', from: '2026-07-10', to: '2026-07-10', days: 1, status: 'Approved', reason: 'AWS Solutions Architect exam — supporting registration attached.', submitted_at: '2026-06-28', document_name: 'AWS-Exam-Registration.pdf', document_url: null, document_type: 'application/pdf', decided_by: 'Thandi Mokoena', decided_at: '2026-06-29', doc_verification: { status: 'Verified', score: 94, reasons: ['Trusted external source'] } },
-]
+export const seedLearnerLeaveRequests = []
 
 export const ATTENDANCE_STATUSES = ['Present', 'Clocked In', 'On Break', 'Clocked Out', 'On Leave', 'Absent']
 
-export const seedTimesheets = [
-  { id: 'TS-1', employee: 'Thandi Mokoena', date: '2026-06-30', clock_in: '08:00', clock_out: '17:00',
-    projects: [ { name: 'HR Ops', hours: 4, manager_comment: 'Great progress on the recruitment pipeline.' }, { name: 'Recruitment Drive', hours: 4, manager_comment: 'Shortlisted 3 promising candidates.' } ],
-    status: 'Present', notes: '' },
-  { id: 'TS-2', employee: 'Sipho Dlamini', date: '2026-06-30', clock_in: '08:15', clock_out: '17:30',
-    projects: [ { name: 'Cloud Migration', hours: 3, manager_comment: 'Blocked on IAM policy review.' }, { name: 'Customer Portal Rebuild', hours: 3.25, manager_comment: 'Auth screens delivered.' }, { name: 'Internal Tooling', hours: 2, manager_comment: '' } ],
-    status: 'Clocked Out', notes: 'Split across three project streams.' },
-  { id: 'TS-3', employee: 'Naledi Nkosi', date: '2026-06-30', clock_in: '09:00', clock_out: '',
-    projects: [ { name: 'UX Research', hours: 4, manager_comment: 'User interviews completed.' }, { name: 'Design System', hours: 3, manager_comment: 'Colour tokens finalised.' } ],
-    status: 'Clocked In', notes: '' },
-  { id: 'TS-4', employee: 'Sipho Dlamini', date: '2026-06-27', clock_in: '08:00', clock_out: '17:00',
-    projects: [ { name: 'Cloud Migration', hours: 2, manager_comment: '' }, { name: 'Customer Portal Rebuild', hours: 2, manager_comment: '' }, { name: 'Security Hardening Sprint', hours: 2, manager_comment: 'Ubuntu patches complete.' }, { name: 'Internal Tooling', hours: 1, manager_comment: '' }, { name: 'Data Warehouse Migration', hours: 1, manager_comment: '' } ],
-    status: 'Present', notes: 'Very fragmented day — 5 projects.' },
-  { id: 'TS-5', employee: 'Karabo Mthembu', date: '2026-06-30', clock_in: '', clock_out: '',
-    projects: [], status: 'On Leave', notes: 'Approved family responsibility leave.' },
-]
+export const seedTimesheets = []
 
-export const seedRelations = [
-  { id: 'ER-1', employee: 'Bongani Zulu', type: 'Grievance', severity: 'Medium', date: '2026-06-20', status: 'Open', description: 'Concern about shift schedule fairness.' },
-  { id: 'ER-2', employee: 'Karabo Sithole', type: 'Warning', severity: 'Low', date: '2026-06-15', status: 'Closed', description: 'Late arrival — verbal warning issued.' },
-]
+export const seedRelations = []
+
 
 // Recruitment — restyled like SA Youth / PNet
 export const VACANCY_TYPES = ['Full-time', 'Contract', 'Part-time', 'Intern', 'Leanership', 'Temporary']
@@ -314,19 +267,10 @@ export const seedAnnouncements = [
 ]
 
 // HR letters
-export const seedLetters = [
-  { id: 'HL-1', employee: 'Sipho Dlamini', type: 'Employment Verification', generated: '2026-06-01' },
-  { id: 'HL-2', employee: 'Naledi Nkosi', type: 'Promotion Letter', generated: '2026-05-15' },
-  { id: 'HL-3', employee: 'Karabo Mthembu', type: 'Contract Renewal', generated: '2026-06-25' },
-]
+export const seedLetters = []
 
 // Audit logs
-export const seedAudit = [
-  { id: 'AU-1', at: '2026-07-01 09:14', actor: 'Thandi Mokoena', action: 'Approved leave request', target: 'LLV-3 (Bongani Nkosi)' },
-  { id: 'AU-2', at: '2026-06-30 17:02', actor: 'Sipho Dlamini', action: 'Clocked out', target: 'Timesheet TS-2' },
-  { id: 'AU-3', at: '2026-06-30 08:15', actor: 'Karabo Mthembu', action: 'Uploaded document', target: 'Medical-Certificate.pdf' },
-  { id: 'AU-4', at: '2026-06-29 11:00', actor: 'Thandi Mokoena', action: 'Signed contract', target: 'Host Agreement — Cohort 2026' },
-]
+export const seedAudit = []
 
 // Chart series
 export const attendanceTrend = [
@@ -344,101 +288,9 @@ export const hostActivityByMonth = [
 ]
 
 // HR Employee Documents & Folder Access Settings (Strictly Accessible to Human Resources Only)
-export const seedFolderSettings = [
-  { employee_id: 'E-1', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-  { employee_id: 'E-2', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-  { employee_id: 'E-3', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-  { employee_id: 'E-4', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-  { employee_id: 'E-5', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 7, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-  { employee_id: 'E-6', access_level: 'HR Only', restricted: true, allow_employee_view: false, allow_manager_view: false, popia_consent: true, retention_years: 5, notes: 'Confidential HR personnel record. Accessible to Human Resources only.' },
-]
+export const seedFolderSettings = []
 
-export const seedHrDocuments = [
-  {
-    id: 'DOC-101', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
-    name: 'Employment_Agreement_Thandi_Mokoena_Executive.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 482100, access: 'HR Only',
-    uploaded: '2026-01-10', uploaded_by: 'Board of Directors', verified: true,
-    notes: 'Signed executive contract of employment with confidentiality schedule.'
-  },
-  {
-    id: 'DOC-102', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
-    name: 'RSA_Smart_ID_Thandi_Mokoena_Certified.pdf', category: 'Identification',
-    type: 'application/pdf', size: 310400, access: 'HR Only',
-    uploaded: '2026-01-11', uploaded_by: 'Thandi Mokoena', verified: true,
-    notes: 'Certified copy of South African Smart ID Card (Commissioner of Oaths).'
-  },
-  {
-    id: 'DOC-103', employee_id: 'E-1', employee_name: 'Thandi Mokoena',
-    name: 'SARS_Tax_Directive_IRP5_2025.pdf', category: 'Tax & Banking',
-    type: 'application/pdf', size: 195200, access: 'HR Only',
-    uploaded: '2026-02-14', uploaded_by: 'Payroll Department', verified: true,
-    notes: 'SARS tax registration notice & confirmed IRP5 certificate.'
-  },
-  {
-    id: 'DOC-104', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
-    name: 'Permanent_Employment_Contract_Sipho_Dlamini.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 520000, access: 'HR Only',
-    uploaded: '2026-01-15', uploaded_by: 'Thandi Mokoena', verified: true,
-    notes: 'Senior Cloud Engineer offer letter and signed contract.'
-  },
-  {
-    id: 'DOC-105', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
-    name: 'AWS_Solutions_Architect_Professional_Certificate.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 760000, access: 'HR Only',
-    uploaded: '2026-03-01', uploaded_by: 'Sipho Dlamini', verified: true,
-    notes: 'AWS Certified Solutions Architect (SAP-C02) verified badge and PDF.'
-  },
-  {
-    id: 'DOC-106', employee_id: 'E-2', employee_name: 'Sipho Dlamini',
-    name: 'Nedbank_Account_Confirmation_Letter.pdf', category: 'Tax & Banking',
-    type: 'application/pdf', size: 145000, access: 'HR Only',
-    uploaded: '2026-01-16', uploaded_by: 'Sipho Dlamini', verified: true,
-    notes: 'Official bank stamped account confirmation letter for salary direct deposit.'
-  },
-  {
-    id: 'DOC-107', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
-    name: 'Fixed_Term_Contract_Data_Analyst.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 410000, access: 'HR Only',
-    uploaded: '2026-01-20', uploaded_by: 'Thandi Mokoena', verified: true,
-    notes: '12-month fixed-term contract with sales commission addendum.'
-  },
-  {
-    id: 'DOC-108', employee_id: 'E-3', employee_name: 'Lerato Khumalo',
-    name: 'BSc_Mathematical_Statistics_Degree_Wits.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 890000, access: 'HR Only',
-    uploaded: '2026-01-22', uploaded_by: 'Lerato Khumalo', verified: true,
-    notes: 'Degree transcript and certificate from University of the Witwatersrand.'
-  },
-  {
-    id: 'DOC-109', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
-    name: 'Employment_Contract_Product_Designer.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 440000, access: 'HR Only',
-    uploaded: '2026-02-01', uploaded_by: 'Thandi Mokoena', verified: true,
-    notes: 'Lead Product Designer full-time contract and IP agreement.'
-  },
-  {
-    id: 'DOC-110', employee_id: 'E-4', employee_name: 'Naledi Nkosi',
-    name: 'Design_Portfolio_and_Case_Studies_2026.pdf', category: 'Qualifications',
-    type: 'application/pdf', size: 1250000, access: 'HR Only',
-    uploaded: '2026-02-05', uploaded_by: 'Naledi Nkosi', verified: true,
-    notes: 'Comprehensive design system and product UX portfolio.'
-  },
-  {
-    id: 'DOC-111', employee_id: 'E-5', employee_name: 'Bongani Zulu',
-    name: 'Security_Clearance_and_Non_Disclosure_Agreement.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 610000, access: 'HR Only',
-    uploaded: '2026-01-18', uploaded_by: 'Legal Department', verified: true,
-    notes: 'Strict NDA and background vetting clearance certificate.'
-  },
-  {
-    id: 'DOC-112', employee_id: 'E-6', employee_name: 'Karabo Mthembu',
-    name: 'Temporary_Appointment_Letter_People_Ops.pdf', category: 'Contracts',
-    type: 'application/pdf', size: 320000, access: 'HR Only',
-    uploaded: '2026-02-10', uploaded_by: 'Thandi Mokoena', verified: true,
-    notes: 'People Ops coordinator temporary contract and scope of work.'
-  }
-]
+export const seedHrDocuments = []
 
 // HR Payroll records (live data starts clean)
 export const seedPayrollRecords = []

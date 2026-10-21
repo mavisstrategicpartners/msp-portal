@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -20,13 +20,12 @@ export function useSupabaseTable(tableName, initialSeed = []) {
         const { data: rows, error } = await supabase.from(tableName).select('*');
         if (cancelled) return;
         if (error) {
-          // Table may not exist yet - keep seed data
+          // Table may not exist yet in database
           console.warn('[useSupabaseTable] ' + tableName + ': ' + error.message);
-        } else if (rows && rows.length > 0) {
-          // Only replace seed if the table actually has rows
+        } else if (rows) {
+          // Genuine production data: reflects exact database state (empty when 0 records)
           setData(rows);
         }
-        // If rows === [] we intentionally keep the seed so the UI is not blank
       } catch (err) {
         if (!cancelled) console.warn('[useSupabaseTable] ' + tableName + ':', err);
       } finally {
