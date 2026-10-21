@@ -93,13 +93,16 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "hr";
   }
 
-  // 6. System Administrator
+  // 6. System Administrator (Root Admin)
   if (
     roles.some((r) => r.role === "admin") ||
+    tier === "root_admin" ||
     title.includes("superadmin") ||
+    title.includes("root") ||
     title.includes("system admin") ||
     title.includes("it admin") ||
-    email.startsWith("superadmin@")
+    email.startsWith("superadmin@") ||
+    email.startsWith("admin@")
   ) {
     return "admin";
   }
@@ -271,12 +274,22 @@ export function useProfile() {
         profile.role_tier = "root_admin";
       }
 
-      const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
-        profile?.role_tier || (systemRole === "ceo" || systemRole === "admin" ? "root_admin" : systemRole.includes("manager") ? "manager" : "staff");
+      if (systemRole === "admin" && profile) {
+        profile.role_tier = "root_admin";
+        if (!profile.job_title || profile.job_title === "Staff Member") {
+          profile.job_title = "Root Administrator";
+        }
+      }
 
-      const isAdmin = systemRole === "admin" || systemRole === "ceo";
+      const resolvedTier: "root_admin" | "manager" | "staff" | "intern" =
+        profile?.role_tier === "root_admin" || systemRole === "ceo" || systemRole === "admin"
+          ? "root_admin"
+          : profile?.role_tier || (systemRole.includes("manager") ? "manager" : "staff");
+
+      const isAdmin = systemRole === "admin" || systemRole === "ceo" || resolvedTier === "root_admin";
       const isHR = systemRole === "hr";
       const isManagerOrAbove =
+        resolvedTier === "root_admin" ||
         resolvedTier === "manager" ||
         systemRole === "department_manager" ||
         systemRole === "general_manager" ||

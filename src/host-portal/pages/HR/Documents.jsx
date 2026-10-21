@@ -1083,9 +1083,16 @@ function CreateEmployeeFolderModal({ existingStaff, profiles, onClose, onCreate 
   const [accessLevel, setAccessLevel] = useState('HR Only')
   const [retention, setRetention] = useState('5')
 
-  // Filter profiles that are not yet in existingStaff
+  // Filter profiles that are not yet in existingStaff (exclude root admins)
   const availableProfiles = useMemo(() => {
     return profiles.filter(p => {
+      const isRootAdmin =
+        p.role_tier === 'root_admin' ||
+        p.email === 'admin@mavisstrategicpartners.co.za' ||
+        p.email === 'superadmin@mavisstrategicpartners.co.za' ||
+        (p.full_name && p.full_name.toLowerCase().includes('superadmin'))
+      if (isRootAdmin) return false
+
       const name = p.full_name || p.email
       return name && !existingStaff.some(s => s.id === p.id || s.full_name.toLowerCase() === name.toLowerCase())
     })

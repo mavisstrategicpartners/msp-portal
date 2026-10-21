@@ -90,10 +90,13 @@ export function useRealExecutiveData(): RealExecutiveData {
       const rawProfiles = (profilesRes.data || []) as RealProfile[];
       setAllProfiles(rawProfiles);
 
-      // Filter to actual active business employees (HR manager & developer Siphelele)
-      // Excludes pure system superadmin service account from operational team headcount
+      // Filter to actual active business employees (excludes system root admins)
       const actualStaff = rawProfiles.filter(
-        (p) => p.email !== "superadmin@mavisstrategicpartners.co.za" && p.is_active
+        (p) =>
+          p.role_tier !== "root_admin" &&
+          p.email !== "superadmin@mavisstrategicpartners.co.za" &&
+          p.email !== "admin@mavisstrategicpartners.co.za" &&
+          p.is_active
       );
       setEmployees(actualStaff);
 

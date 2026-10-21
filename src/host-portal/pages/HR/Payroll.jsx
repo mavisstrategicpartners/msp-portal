@@ -117,6 +117,15 @@ export default function Payroll() {
     })
 
     profiles.forEach(p => {
+      // Exclude system root administrators from operational staff payroll roster
+      const isRootAdmin =
+        p.role_tier === 'root_admin' ||
+        p.email === 'admin@mavisstrategicpartners.co.za' ||
+        p.email === 'superadmin@mavisstrategicpartners.co.za' ||
+        (p.full_name && p.full_name.toLowerCase().includes('superadmin')) ||
+        (p.job_title && p.job_title.toLowerCase().includes('root admin'))
+      if (isRootAdmin) return
+
       const name = p.full_name || p.email
       if (name && !map.has(p.id) && ![...map.values()].some(s => s.full_name.toLowerCase() === name.toLowerCase())) {
         map.set(p.id, {

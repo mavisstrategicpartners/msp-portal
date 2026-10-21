@@ -91,7 +91,8 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
       user.email?.includes("operations") ||
       user.email?.includes("ceo") ||
       user.email?.includes("general.manager") ||
-      user.email === "superadmin@mavisstrategicpartners.co.za";
+      user.email === "superadmin@mavisstrategicpartners.co.za" ||
+      user.email === "admin@mavisstrategicpartners.co.za";
 
     return {
       userId: user.id,
