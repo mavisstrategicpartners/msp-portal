@@ -11,6 +11,7 @@ import {
 import { useProfile } from "@/lib/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 
 export const Route = createFileRoute("/_authenticated/gm/")({
   head: () => ({ meta: [{ title: "GM Command Centre — Company Execution Dashboard" }] }),
@@ -140,6 +141,9 @@ function GmDashboardPage() {
           Company execution overview — real-time visibility into plans, revenue, capacity, pending approvals, cross-department blockers and escalations.
         </p>
       </div>
+
+      {/* ── Clock In / Attendance ──────────────────────────────────────── */}
+      <StaffAttendanceWidget />
 
       {/* ── Top KPI Cards ──────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
