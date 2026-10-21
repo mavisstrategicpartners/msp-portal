@@ -18,7 +18,8 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
-
+import { supabase } from "@/integrations/supabase/client";
+import { recordAttendance } from "@/lib/attendance-client";
 interface DepartmentScore {
   department: string;
   targetDeliverables: number;
@@ -38,10 +39,24 @@ const DEPARTMENTS_DATA: DepartmentScore[] = [
 ];
 
 export function GeneralManagerDashboard() {
+  // Quick Clock‑In handler for General Manager
+  const handleGMClockIn = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await recordAttendance(user.id, {
+      state: "Clocked In",
+      clockInTime: Date.now(),
+      breakStartTime: null,
+      totalBreakMs: 0,
+    }, "0h 0m");
+    toast.success("Clocked In (GM)", { description: "Your session started." });
+  };
+
   return (
     <div className="space-y-6">
   {/* Clock‑in widget for General Manager */}
   <StaffAttendanceWidget className="mb-4" />
+<Button onClick={handleGMClockIn} className="mb-4" variant="primary">Clock In</Button>
       {/* ─── Top Execution & Capacity Summary ──────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
