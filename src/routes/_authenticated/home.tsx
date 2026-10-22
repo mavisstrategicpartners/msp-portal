@@ -55,7 +55,7 @@ function Home() {
     if (systemRole === "general_manager") {
       router.navigate({ to: "/gm" as any, replace: true });
     } else if (systemRole === "hr") {
-      router.navigate({ to: "/host/hr" as any, replace: true });
+      router.navigate({ to: "/hr" as any, replace: true });
     } else if (systemRole === "department_manager") {
       router.navigate({ to: "/department" as any, replace: true });
     } else if (systemRole === "sales") {

@@ -172,7 +172,7 @@ export function getDefaultDashboardRoute(role: MspSystemRole): string {
     case "finance_admin":
       return "/finance";
     case "hr":
-      return "/host/hr";
+      return "/hr";
     case "admin":
       return "/admin/users";
     case "sales":

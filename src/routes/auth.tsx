@@ -279,7 +279,7 @@ function AuthPage() {
       : isDeptManager
       ? "/department"
       : isHR
-      ? "/host/hr"
+      ? "/hr"
       : "/home";
     await navigate({ to: destination as any });
   }
@@ -433,7 +433,7 @@ function AuthPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, HR Lead", { description: "Signed into HR & Workforce Portal." });
-        await navigate({ to: "/host/hr" as any });
+        await navigate({ to: "/hr" as any });
         return;
       }
 
@@ -477,7 +477,7 @@ function AuthPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome, HR Lead", { description: "Signed into HR & Workforce Portal." });
-        await navigate({ to: "/host/hr" as any });
+        await navigate({ to: "/hr" as any });
         return;
       }
       toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });

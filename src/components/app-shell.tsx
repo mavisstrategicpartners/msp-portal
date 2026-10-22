@@ -82,19 +82,15 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
-    { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
+    { to: "/hr", label: "HR Dashboard", icon: LayoutDashboard },
     { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
-    { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
-    { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },
-    { to: "/host/hr/documents", label: "Employee Documents", icon: Folder },
-    { to: "/host/hr/relations", label: "Employee Relations", icon: Users },
-    { to: "/host/hr/recruitment", label: "Employee Recruitment", icon: Users },
-    { to: "/host/hr/performance", label: "HR Performance", icon: BarChart3 },
-    { to: "/host/hr/talent", label: "Talent Management", icon: Crown },
-    { to: "/host/hr/training", label: "Training & Development", icon: BookOpen },
-    { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
-    { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
+    { to: "/hr/leave", label: "Leave Management", icon: CalendarDays },
+    { to: "/hr/timesheets", label: "Timesheets", icon: ClipboardList },
+    { to: "/hr/payroll", label: "Payroll Platform", icon: Calculator },
+    { to: "/hr/documents", label: "Employee Documents", icon: Folder },
+    { to: "/hr/relations", label: "Employee Relations", icon: Users },
+    { to: "/hr/recruitment", label: "Employee Recruitment", icon: Users },
+    { to: "/hr/performance", label: "HR Performance", icon: BarChart3 },
   ]},
   // CEO Workspace — strictly for CEO
   { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
@@ -359,7 +355,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                 {items.map((item) => {
                   // Resolve the actual navigation target — Home links go to role-specific dashboard
                   const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
-                  const isExactRoot = toPath === "/ceo" || toPath === "/admin";
+                  const isExactRoot = toPath === "/ceo" || toPath === "/admin" || toPath === "/hr";
                   const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
                   return (
                     <li key={item.to}>
