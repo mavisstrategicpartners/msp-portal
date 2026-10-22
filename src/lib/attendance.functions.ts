@@ -91,7 +91,7 @@ export const getStaffAttendance = createServerFn({ method: "GET" })
         department: p.department || "General",
         status: live?.state || "Clocked Out",
         time: live?.clock_in_time
-          ? new Date(live.clock_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          ? new Date(live.clock_in_time).toLocaleTimeString("en-ZA", { timeZone: "Africa/Johannesburg", hour: "2-digit", minute: "2-digit" })
           : "-",
         hours: live?.hours_worked || "0h 0m",
         avatar: p.avatar_url,

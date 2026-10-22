@@ -77,12 +77,14 @@ export interface FinancialApprovalItem {
 }
 
 export interface BudgetRecord {
+  id: string;
   dept: string;
   budget: number;
   actual: number;
 }
 
 export interface FinanceAuditLog {
+  id: string;
   time: string;
   actor: string;
   action: string;
@@ -91,18 +93,71 @@ export interface FinanceAuditLog {
 
 const DEFAULT_INVOICES: ClientInvoice[] = [];
 
-const DEFAULT_EXPENSES: ExpenseItem[] = [];
+const DEFAULT_EXPENSES: ExpenseItem[] = [
+  {
+    id: "exp-seed-1",
+    vendor: "Google Cloud & Workspace",
+    category: "Software & SaaS",
+    amountZar: 14850,
+    date: "2026-10-05",
+    status: "Paid",
+    approvedBy: "Finance & Administration Manager",
+  },
+  {
+    id: "exp-seed-2",
+    vendor: "Meta Business Ads Infrastructure",
+    category: "Media & Tools",
+    amountZar: 28500,
+    date: "2026-10-12",
+    status: "Paid",
+    approvedBy: "Finance & Administration Manager",
+  },
+];
 
-const DEFAULT_APPROVALS: FinancialApprovalItem[] = [];
+const DEFAULT_APPROVALS: FinancialApprovalItem[] = [
+  {
+    id: "app-seed-1",
+    title: "High-Performance Workstation Upgrade",
+    department: "Operations",
+    requestedBy: "Technical Lead",
+    amountZar: 32000,
+    category: "Equipment",
+    status: "Pending",
+    date: "2026-10-18",
+    notes: "Upgraded rendering hardware required for 4K video client deliverable batch.",
+  },
+];
+
+const DEFAULT_BUDGETS: BudgetRecord[] = [
+  { id: "b-ops", dept: "Operations & Delivery", budget: 120000, actual: 84500 },
+  { id: "b-mkt", dept: "Media & Client Performance", budget: 250000, actual: 198000 },
+  { id: "b-tech", dept: "Software & Technology", budget: 65000, actual: 42300 },
+  { id: "b-sales", dept: "Sales & Client Acquisition", budget: 80000, actual: 61000 },
+  { id: "b-admin", dept: "Executive & Administration", budget: 50000, actual: 38200 },
+];
+
+const DEFAULT_AUDIT_LOGS: FinanceAuditLog[] = [
+  {
+    id: "audit-init-1",
+    time: "2026-10-01 08:30",
+    actor: "System / Finance Engine",
+    action: "Fiscal Control Initialized",
+    detail: "October 2026 fiscal cycle opened with gate controls active",
+  },
+];
 
 export function FinanceAdminDashboard() {
-  // HOOK CALLED INSIDE THE REACT COMPONENT BODY (Fixed!)
+  // HOOKS PERSISTENT VIA SUPABASE WITH AUTOMATIC LOCALSTORAGE FALLBACK
   const [invoicesRaw, setInvoices, loading] = useSupabaseTable("finance_invoices", DEFAULT_INVOICES);
   const invoices: ClientInvoice[] = (invoicesRaw as ClientInvoice[]) || DEFAULT_INVOICES;
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(DEFAULT_EXPENSES);
-  const [approvals, setApprovals] = useState<FinancialApprovalItem[]>(DEFAULT_APPROVALS);
-  const [budgets, setBudgets] = useState<BudgetRecord[]>([]);
-  const [auditLogs, setAuditLogs] = useState<FinanceAuditLog[]>([]);
+  const [expensesRaw, setExpenses] = useSupabaseTable("finance_expenses", DEFAULT_EXPENSES);
+  const expenses: ExpenseItem[] = (expensesRaw as ExpenseItem[]) || DEFAULT_EXPENSES;
+  const [approvalsRaw, setApprovals] = useSupabaseTable("finance_approvals", DEFAULT_APPROVALS);
+  const approvals: FinancialApprovalItem[] = (approvalsRaw as FinancialApprovalItem[]) || DEFAULT_APPROVALS;
+  const [budgetsRaw, setBudgets] = useSupabaseTable("finance_budgets", DEFAULT_BUDGETS);
+  const budgets: BudgetRecord[] = (budgetsRaw as BudgetRecord[]) || DEFAULT_BUDGETS;
+  const [auditLogsRaw, setAuditLogs] = useSupabaseTable("finance_audit_trail", DEFAULT_AUDIT_LOGS);
+  const auditLogs: FinanceAuditLog[] = (auditLogsRaw as FinanceAuditLog[]) || DEFAULT_AUDIT_LOGS;
 
   // Active Tab & Filters
   const [activeTab, setActiveTab] = useState("overview");
@@ -179,6 +234,7 @@ export function FinanceAdminDashboard() {
     if (targetInv) {
       setAuditLogs((prev) => [
         {
+          id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           time: today,
           actor: "Finance & Administration Manager",
           action: "Payment Gate Clearance",
@@ -216,6 +272,7 @@ export function FinanceAdminDashboard() {
     setInvoices((prev) => [newInv, ...prev]);
     setAuditLogs((prev) => [
       {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         time: today,
         actor: "Finance & Administration Manager",
         action: "Invoice Issued",
@@ -255,6 +312,7 @@ export function FinanceAdminDashboard() {
     setExpenses((prev) => [newExp, ...prev]);
     setAuditLogs((prev) => [
       {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         time: today,
         actor: "Finance & Administration Manager",
         action: "Operating Expense Disbursed",
@@ -282,6 +340,7 @@ export function FinanceAdminDashboard() {
 
     setAuditLogs((prev) => [
       {
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         time: today,
         actor: "Finance & Administration Manager",
         action: `Expenditure ${status}`,
@@ -948,7 +1007,7 @@ export function FinanceAdminDashboard() {
               ) : (
                 <div className="space-y-2.5 text-xs">
                   {auditLogs.map((log, idx) => (
-                    <div key={idx} className="p-3 rounded-lg border border-border bg-card space-y-1">
+                    <div key={log.id || idx} className="p-3 rounded-lg border border-border bg-card space-y-1">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-bold text-foreground">{log.action}</span>
                         <span className="text-muted-foreground font-mono">{log.time}</span>

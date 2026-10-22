@@ -9,6 +9,7 @@ import {
   getTodayAttendance,
   recordAttendance,
   formatElapsed,
+  formatJohannesburgTime,
 } from "@/lib/attendance-client";
 
 const DEFAULT_RECORD: AttendanceRecord = {
@@ -199,10 +200,7 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {record.clockInTime
-              ? `Started at ${new Date(record.clockInTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`
+              ? `Started at ${formatJohannesburgTime(record.clockInTime)}`
               : "Not clocked in today"}
           </p>
         </div>

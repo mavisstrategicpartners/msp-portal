@@ -201,7 +201,16 @@ export function useOperationsData() {
 
       let clockInTime: string | undefined = undefined;
       if (live?.clock_in_time) {
-        clockInTime = new Date(live.clock_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        try {
+          clockInTime = new Intl.DateTimeFormat("en-ZA", {
+            timeZone: "Africa/Johannesburg",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }).format(new Date(live.clock_in_time));
+        } catch {
+          clockInTime = new Date(live.clock_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
       }
 
       // Compute task stats for this real employee
