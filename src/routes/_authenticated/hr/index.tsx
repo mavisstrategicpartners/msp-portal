@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { HRPageWrapper } from "@/components/HRPageWrapper";
-import HRDashboard from "@/host-portal/pages/HR/HRDashboard.jsx";
+import { HRStaffDashboard } from "@/components/dashboards/HRStaffDashboard";
 
 export const Route = createFileRoute("/_authenticated/hr/")({
   ssr: false,
@@ -9,6 +8,25 @@ export const Route = createFileRoute("/_authenticated/hr/")({
     meta: [{ title: "HR Dashboard — MSP Portal" }],
   }),
   beforeLoad: async () => {
+    // 1. Check local session storage if available
+    if (typeof window !== "undefined") {
+      const authUserStr = localStorage.getItem("msp.authenticatedUser");
+      if (authUserStr) {
+        try {
+          const user = JSON.parse(authUserStr);
+          const dept = (user?.department || "").toLowerCase();
+          const title = (user?.job_title || "").toLowerCase();
+          const isHR =
+            dept.includes("human resources") ||
+            dept.includes("hr") ||
+            title.includes("hr") ||
+            user?.role_tier === "root_admin";
+          if (isHR) return;
+        } catch {}
+      }
+    }
+
+    // 2. Check Supabase auth
     try {
       const { data } = await supabase.auth.getUser();
       if (!data?.user) throw redirect({ to: "/auth" });
@@ -16,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/hr/")({
       const [{ data: profile }, { data: roles }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("department, role_tier")
+          .select("department, role_tier, job_title")
           .eq("id", data.user.id)
           .maybeSingle(),
         supabase
@@ -29,8 +47,11 @@ export const Route = createFileRoute("/_authenticated/hr/")({
         roles?.some((r: any) => r.role === "admin") ||
         profile?.role_tier === "root_admin";
       const deptLower = (profile?.department || "").toLowerCase();
+      const titleLower = (profile?.job_title || "").toLowerCase();
       const isHR =
-        deptLower.includes("human resources") || deptLower.includes("hr");
+        deptLower.includes("human resources") ||
+        deptLower.includes("hr") ||
+        titleLower.includes("hr");
 
       if (isHR || isAdmin) return;
     } catch (e: any) {
@@ -39,13 +60,5 @@ export const Route = createFileRoute("/_authenticated/hr/")({
 
     throw redirect({ to: "/home" });
   },
-  component: HRDashboardPage,
+  component: HRStaffDashboard,
 });
-
-function HRDashboardPage() {
-  return (
-    <HRPageWrapper path="/host/hr">
-      <HRDashboard />
-    </HRPageWrapper>
-  );
-}

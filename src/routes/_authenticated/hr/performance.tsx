@@ -9,6 +9,23 @@ export const Route = createFileRoute("/_authenticated/hr/performance")({
     meta: [{ title: "HR Performance — HR Workspace" }],
   }),
   beforeLoad: async () => {
+    if (typeof window !== "undefined") {
+      const authUserStr = localStorage.getItem("msp.authenticatedUser");
+      if (authUserStr) {
+        try {
+          const user = JSON.parse(authUserStr);
+          const dept = (user?.department || "").toLowerCase();
+          const title = (user?.job_title || "").toLowerCase();
+          const isHR =
+            dept.includes("human resources") ||
+            dept.includes("hr") ||
+            title.includes("hr") ||
+            user?.role_tier === "root_admin";
+          if (isHR) return;
+        } catch {}
+      }
+    }
+
     try {
       const { data } = await supabase.auth.getUser();
       if (!data?.user) throw redirect({ to: "/auth" });

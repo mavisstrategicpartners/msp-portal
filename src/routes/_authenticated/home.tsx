@@ -6,6 +6,7 @@ import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, 
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { StaffAttendanceBoard } from "@/components/StaffAttendanceBoard";
 import { StaffWorkspaceDashboard } from "@/components/dashboards/StaffWorkspaceDashboard";
+import { HRStaffDashboard } from "@/components/dashboards/HRStaffDashboard";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — MSP Portal" }] }),
@@ -68,6 +69,10 @@ function Home() {
       router.navigate({ to: "/ceo" as any, replace: true });
     }
   }, [systemRole, router]);
+
+  if (systemRole === "hr") {
+    return <HRStaffDashboard />;
+  }
 
   if (isAdmin) {
     return (

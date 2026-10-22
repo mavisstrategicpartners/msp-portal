@@ -422,7 +422,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "27dcc3a8-4721-4646-87cb-770fe721ee5a",
+              id: "16346cad-9c97-4f96-8c18-b43d13368788",
               email: targetEmail,
               full_name: "MSP Human Resources",
               job_title: "HR Manager",
@@ -466,7 +466,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "27dcc3a8-4721-4646-87cb-770fe721ee5a",
+              id: "16346cad-9c97-4f96-8c18-b43d13368788",
               email: targetEmail,
               full_name: "MSP Human Resources",
               job_title: "HR Manager",

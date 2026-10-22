@@ -9,7 +9,7 @@ import { CeoDashboard } from "./CeoDashboard";
 import { StaffWorkspaceDashboard } from "./StaffWorkspaceDashboard";
 import { SalesDashboard } from "./SalesDashboard";
 import { ClientSuccessDashboard } from "./ClientSuccessDashboard";
-import { HrDashboard } from "./HrDashboard";
+import { HRStaffDashboard } from "./HRStaffDashboard";
 import { useProfile, MspSystemRole } from "@/lib/use-profile";
 
 const ROLE_AUTHORITY_MAP: Record<MspSystemRole, { title: string; authority: string }> = {
@@ -84,7 +84,7 @@ export function RoleDashboardContainer() {
       {systemRole === "client_success" && <ClientSuccessDashboard />}
       {systemRole === "staff" && <StaffWorkspaceDashboard />}
       {systemRole === "admin" && <GeneralManagerDashboard />}
-      {systemRole === "hr" && <HrDashboard />}
+      {systemRole === "hr" && <HRStaffDashboard />}
     </div>
   );
 }
