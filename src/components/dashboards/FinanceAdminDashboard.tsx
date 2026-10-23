@@ -93,58 +93,13 @@ export interface FinanceAuditLog {
 
 const DEFAULT_INVOICES: ClientInvoice[] = [];
 
-const DEFAULT_EXPENSES: ExpenseItem[] = [
-  {
-    id: "exp-seed-1",
-    vendor: "Google Cloud & Workspace",
-    category: "Software & SaaS",
-    amountZar: 14850,
-    date: "2026-10-05",
-    status: "Paid",
-    approvedBy: "Finance & Administration Manager",
-  },
-  {
-    id: "exp-seed-2",
-    vendor: "Meta Business Ads Infrastructure",
-    category: "Media & Tools",
-    amountZar: 28500,
-    date: "2026-10-12",
-    status: "Paid",
-    approvedBy: "Finance & Administration Manager",
-  },
-];
+const DEFAULT_EXPENSES: ExpenseItem[] = [];
 
-const DEFAULT_APPROVALS: FinancialApprovalItem[] = [
-  {
-    id: "app-seed-1",
-    title: "High-Performance Workstation Upgrade",
-    department: "Operations",
-    requestedBy: "Technical Lead",
-    amountZar: 32000,
-    category: "Equipment",
-    status: "Pending",
-    date: "2026-10-18",
-    notes: "Upgraded rendering hardware required for 4K video client deliverable batch.",
-  },
-];
+const DEFAULT_APPROVALS: FinancialApprovalItem[] = [];
 
-const DEFAULT_BUDGETS: BudgetRecord[] = [
-  { id: "b-ops", dept: "Operations & Delivery", budget: 120000, actual: 84500 },
-  { id: "b-mkt", dept: "Media & Client Performance", budget: 250000, actual: 198000 },
-  { id: "b-tech", dept: "Software & Technology", budget: 65000, actual: 42300 },
-  { id: "b-sales", dept: "Sales & Client Acquisition", budget: 80000, actual: 61000 },
-  { id: "b-admin", dept: "Executive & Administration", budget: 50000, actual: 38200 },
-];
+const DEFAULT_BUDGETS: BudgetRecord[] = [];
 
-const DEFAULT_AUDIT_LOGS: FinanceAuditLog[] = [
-  {
-    id: "audit-init-1",
-    time: "2026-10-01 08:30",
-    actor: "System / Finance Engine",
-    action: "Fiscal Control Initialized",
-    detail: "October 2026 fiscal cycle opened with gate controls active",
-  },
-];
+const DEFAULT_AUDIT_LOGS: FinanceAuditLog[] = [];
 
 export function FinanceAdminDashboard() {
   // HOOKS PERSISTENT VIA SUPABASE WITH AUTOMATIC LOCALSTORAGE FALLBACK

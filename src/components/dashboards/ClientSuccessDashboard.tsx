@@ -45,61 +45,7 @@ interface ClientSuccessAccount {
   recoveryPlan?: string;
 }
 
-const INITIAL_CLIENT_SUCCESS_ACCOUNTS: ClientSuccessAccount[] = [
-  {
-    id: "cs-1",
-    name: "Client Alpha",
-    accountManager: "Sarah Jenkins",
-    health: "Red",
-    satisfactionScore: 4,
-    npsStatus: "Detractor",
-    monthlyCheckInStatus: "Scheduled",
-    checkInDate: "2026-10-14",
-    lastFeedback: "Unhappy with delays on campaign launch. Demanded manager intervention.",
-    package: "Growth Engine (Paid Ads + CRM)",
-    renewalRisk: true,
-    recoveryPlan: "Hold executive alignment call with CEO; deliver completed live ads by Oct 15.",
-  },
-  {
-    id: "cs-2",
-    name: "Apex Solar SA",
-    accountManager: "Sarah Jenkins",
-    health: "Amber",
-    satisfactionScore: 7,
-    npsStatus: "Passive",
-    monthlyCheckInStatus: "Completed",
-    checkInDate: "2026-10-08",
-    lastFeedback: "Satisfied with initial setup, waiting on WhatsApp qualification bot.",
-    package: "Full Scale (Ads + Web + AI Automation)",
-    renewalRisk: false,
-  },
-  {
-    id: "cs-3",
-    name: "Vanguard Mining Supplies",
-    accountManager: "David Cole",
-    health: "Green",
-    satisfactionScore: 9,
-    npsStatus: "Promoter",
-    monthlyCheckInStatus: "Completed",
-    checkInDate: "2026-10-05",
-    lastFeedback: "Website wireframes look fantastic. Very responsive team.",
-    package: "Custom Web & Lead Generation",
-    renewalRisk: false,
-  },
-  {
-    id: "cs-4",
-    name: "Kasi Green Energy",
-    accountManager: "David Cole",
-    health: "Green",
-    satisfactionScore: 8,
-    npsStatus: "Promoter",
-    monthlyCheckInStatus: "Scheduled",
-    checkInDate: "2026-10-16",
-    lastFeedback: "Campaign kickoff was smooth and professional.",
-    package: "Solar Performance Funnel",
-    renewalRisk: false,
-  },
-];
+const INITIAL_CLIENT_SUCCESS_ACCOUNTS: ClientSuccessAccount[] = [];
 
 export function ClientSuccessDashboard() {
   const [accounts, setAccounts] = useState<ClientSuccessAccount[]>(INITIAL_CLIENT_SUCCESS_ACCOUNTS);
@@ -148,9 +94,10 @@ export function ClientSuccessDashboard() {
 
   const healthyCount = accounts.filter((a) => a.health === "Green").length;
   const atRiskCount = accounts.filter((a) => a.health === "Red" || a.health === "Amber").length;
-  const avgSatisfaction = (
-    accounts.reduce((acc, a) => acc + a.satisfactionScore, 0) / accounts.length
-  ).toFixed(1);
+  const avgSatisfaction =
+    accounts.length > 0
+      ? (accounts.reduce((acc, a) => acc + a.satisfactionScore, 0) / accounts.length).toFixed(1)
+      : "0.0";
 
   return (
     <div className="space-y-6">
@@ -217,7 +164,12 @@ export function ClientSuccessDashboard() {
         </div>
 
         <div className="space-y-3">
-          {accounts.map((acc) => (
+          {accounts.length === 0 ? (
+            <div className="py-12 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+              No client accounts currently registered in Client Success portfolio.
+            </div>
+          ) : (
+            accounts.map((acc) => (
             <div
               key={acc.id}
               className="p-4 rounded-xl border border-border bg-card space-y-3 transition hover:border-primary/30"

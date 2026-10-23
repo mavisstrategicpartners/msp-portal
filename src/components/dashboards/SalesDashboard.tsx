@@ -75,155 +75,9 @@ export interface SalesActivityItem {
   performedBy: string;
 }
 
-const DEFAULT_LEADS: LeadItem[] = [
-  {
-    id: "lead-1",
-    businessName: "Retail SA Superstores",
-    contactPerson: "Dumisani Khumalo",
-    email: "dumisani@retailsa.co.za",
-    phone: "+27 82 555 1204",
-    source: "Inbound Meta Ads",
-    stage: "Proposal Sent",
-    leadQuality: "Hot",
-    estimatedValue: 48000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-18",
-    proposalStatus: "Sent",
-    packageInterest: "Performance Ads + GHL WhatsApp CRM",
-    notes: "Requires Meta performance ads and automated WhatsApp customer booking funnel.",
-    lastActivityDate: "2026-10-15",
-    handoverCompleted: false,
-  },
-  {
-    id: "lead-2",
-    businessName: "Pretoria Precision Engineering",
-    contactPerson: "Johan van der Merwe",
-    email: "johan@pretorianeng.co.za",
-    phone: "+27 12 345 6789",
-    source: "Website Referral",
-    stage: "Discovery",
-    leadQuality: "Warm",
-    estimatedValue: 35000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-17",
-    proposalStatus: "Draft",
-    packageInterest: "SEO & High-Converting Website Build",
-    notes: "Discovery audit completed. Discussed redesign and Google Ads industrial B2B lead gen.",
-    lastActivityDate: "2026-10-14",
-    handoverCompleted: false,
-  },
-  {
-    id: "lead-3",
-    businessName: "Zambezi Logistics Group",
-    contactPerson: "Farai Moyo",
-    email: "farai@zambezilogistics.co.za",
-    phone: "+27 83 992 4110",
-    source: "Cold Outreach",
-    stage: "Won",
-    leadQuality: "Hot",
-    estimatedValue: 60000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-12",
-    proposalStatus: "Accepted",
-    packageInterest: "Full Digital Growth Retainer",
-    notes: "Contract accepted and signed! Ready for Operations 2-day client onboarding handoff.",
-    lastActivityDate: "2026-10-13",
-    handoverCompleted: true,
-  },
-  {
-    id: "lead-4",
-    businessName: "Cape Coastal Hospitality",
-    contactPerson: "Anika Patel",
-    email: "anika@capecoastal.co.za",
-    phone: "+27 21 884 9200",
-    source: "Inbound Meta Ads",
-    stage: "Contacted",
-    leadQuality: "Warm",
-    estimatedValue: 28000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-19",
-    proposalStatus: "Draft",
-    packageInterest: "Meta Performance Ads + Creative Pack",
-    notes: "Inbound inquiry from Instagram campaign. Demo consultation booked for Thursday.",
-    lastActivityDate: "2026-10-15",
-    handoverCompleted: false,
-  },
-  {
-    id: "lead-5",
-    businessName: "Sandton Financial Wealth",
-    contactPerson: "Bradley Smith",
-    email: "bradley@sandtonwealth.co.za",
-    phone: "+27 11 882 0019",
-    source: "LinkedIn",
-    stage: "New",
-    leadQuality: "Hot",
-    estimatedValue: 55000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-16",
-    proposalStatus: "Draft",
-    packageInterest: "GHL CRM Automation + Executive Brand",
-    notes: "Inbound VIP prospect. Needs lead nurture workflows and LinkedIn thought leadership.",
-    lastActivityDate: "2026-10-16",
-    handoverCompleted: false,
-  },
-  {
-    id: "lead-6",
-    businessName: "KZN Agro Tech Solutions",
-    contactPerson: "Sipho Ndlovu",
-    email: "sipho@kznagrotech.co.za",
-    phone: "+27 31 771 8821",
-    source: "Google Ads",
-    stage: "Lost",
-    leadQuality: "Cold",
-    estimatedValue: 20000,
-    assignedSalesperson: "Sales Executive",
-    followUpDate: "2026-10-05",
-    proposalStatus: "Declined",
-    packageInterest: "Basic Social Media Retainer",
-    notes: "Client decided to handle marketing in-house for the remainder of Q4.",
-    lastActivityDate: "2026-10-06",
-    handoverCompleted: false,
-  },
-];
+const DEFAULT_LEADS: LeadItem[] = [];
 
-const DEFAULT_ACTIVITIES: SalesActivityItem[] = [
-  {
-    id: "act-1",
-    leadId: "lead-1",
-    businessName: "Retail SA Superstores",
-    type: "Proposal Sent",
-    notes: "Emailed full commercial proposal (ZAR 48,000/mo) covering 60-day ROAS target and ad spend separation.",
-    activityDate: "2026-10-15",
-    performedBy: "Sales Executive",
-  },
-  {
-    id: "act-2",
-    leadId: "lead-2",
-    businessName: "Pretoria Precision Engineering",
-    type: "Meeting",
-    notes: "Completed 45-min Zoom discovery session. Audited their existing website speed and Google ranking.",
-    activityDate: "2026-10-14",
-    performedBy: "Sales Executive",
-  },
-  {
-    id: "act-3",
-    leadId: "lead-3",
-    businessName: "Zambezi Logistics Group",
-    type: "Meeting",
-    notes: "Final contract sign-off meeting. Verified payment terms and agreed on 2-day onboarding launch date.",
-    activityDate: "2026-10-13",
-    performedBy: "Sales Executive",
-  },
-  {
-    id: "act-4",
-    leadId: "lead-5",
-    businessName: "Sandton Financial Wealth",
-    type: "Call",
-    notes: "Initial qualification call. Client confirmed monthly marketing budget is ready and verified.",
-    activityDate: "2026-10-16",
-    performedBy: "Sales Executive",
-  },
-];
+const DEFAULT_ACTIVITIES: SalesActivityItem[] = [];
 
 const MONTHLY_SALES_TARGET = 300000; // ZAR 300k target
 
@@ -308,6 +162,22 @@ export function SalesDashboard() {
       return matchSearch && matchStage && matchQuality;
     });
   }, [leads, searchQuery, stageFilter, qualityFilter]);
+
+  const revenueByPackage = useMemo(() => {
+    const pkgMap = new Map<string, number>();
+    for (const lead of leads) {
+      const pkg = lead.packageInterest || "General Services";
+      pkgMap.set(pkg, (pkgMap.get(pkg) || 0) + (Number(lead.estimatedValue) || 0));
+    }
+    const colors = ["bg-purple-500", "bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-rose-500"];
+    const maxVal = Math.max(1, ...Array.from(pkgMap.values()));
+    return Array.from(pkgMap.entries()).map(([name, value], i) => ({
+      name,
+      value,
+      pct: Math.min(100, Math.round((value / maxVal) * 100)),
+      color: colors[i % colors.length],
+    }));
+  }, [leads]);
 
   // Handlers
   const handleCreateLead = (e: React.FormEvent) => {
@@ -667,35 +537,41 @@ export function SalesDashboard() {
                 </div>
 
                 <div className="divide-y divide-border text-xs">
-                  {leads
-                    .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
-                    .slice(0, 4)
-                    .map((lead) => {
-                      const isOverdue = lead.followUpDate < todayStr;
-                      return (
-                        <div key={lead.id} className="py-2.5 flex items-center justify-between gap-3">
-                          <div>
-                            <p className="font-bold text-foreground">{lead.businessName}</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {lead.contactPerson} &bull; {lead.packageInterest}
-                            </p>
+                  {leads.filter((l) => l.stage !== "Won" && l.stage !== "Lost").length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground">
+                      No scheduled follow-ups due.
+                    </div>
+                  ) : (
+                    leads
+                      .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
+                      .slice(0, 4)
+                      .map((lead) => {
+                        const isOverdue = lead.followUpDate < todayStr;
+                        return (
+                          <div key={lead.id} className="py-2.5 flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-bold text-foreground">{lead.businessName}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {lead.contactPerson} &bull; {lead.packageInterest}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`font-mono text-[11px] ${isOverdue ? "text-rose-500 font-bold" : "text-muted-foreground"}`}>
+                                {lead.followUpDate}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[11px]"
+                                onClick={() => handleOpenLogActivity(lead)}
+                              >
+                                Log Call
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`font-mono text-[11px] ${isOverdue ? "text-rose-500 font-bold" : "text-muted-foreground"}`}>
-                              {lead.followUpDate}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-[11px]"
-                              onClick={() => handleOpenLogActivity(lead)}
-                            >
-                              Log Call
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  )}
                 </div>
               </Card>
             </div>
@@ -709,16 +585,22 @@ export function SalesDashboard() {
                 </div>
 
                 <div className="space-y-3.5 flex-1">
-                  {activities.slice(0, 5).map((act) => (
-                    <div key={act.id} className="text-xs border-l-2 border-primary/50 pl-3 py-1 space-y-1">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-foreground">{act.businessName}</span>
-                        <span className="text-muted-foreground font-mono">{act.activityDate}</span>
-                      </div>
-                      <Badge variant="secondary" className="text-[9px] py-0 px-1.5">{act.type}</Badge>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{act.notes}</p>
+                  {activities.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-muted-foreground">
+                      No sales activities logged yet.
                     </div>
-                  ))}
+                  ) : (
+                    activities.slice(0, 5).map((act) => (
+                      <div key={act.id} className="text-xs border-l-2 border-primary/50 pl-3 py-1 space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-foreground">{act.businessName}</span>
+                          <span className="text-muted-foreground font-mono">{act.activityDate}</span>
+                        </div>
+                        <Badge variant="secondary" className="text-[9px] py-0 px-1.5">{act.type}</Badge>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{act.notes}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 <Button
@@ -801,7 +683,14 @@ export function SalesDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredLeads.map((lead) => {
+                  {filteredLeads.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs text-muted-foreground">
+                        No sales opportunities found. Click &quot;Add Lead&quot; to register a prospect.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredLeads.map((lead) => {
                     const isOverdue = lead.followUpDate < todayStr && lead.stage !== "Won" && lead.stage !== "Lost";
                     return (
                       <tr key={lead.id} className="hover:bg-muted/30 transition">
@@ -874,7 +763,7 @@ export function SalesDashboard() {
                         </td>
                       </tr>
                     );
-                  })}
+                  }))}
                 </tbody>
               </table>
             </div>
@@ -1008,50 +897,62 @@ export function SalesDashboard() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Scheduled Follow-up Calls</h4>
-                {leads
-                  .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
-                  .map((lead) => {
-                    const isOverdue = lead.followUpDate < todayStr;
-                    return (
-                      <div
-                        key={lead.id}
-                        className={`p-3.5 rounded-lg border flex items-center justify-between gap-3 ${
-                          isOverdue ? "border-rose-500/40 bg-rose-500/5" : "border-border bg-card"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-foreground">{lead.businessName}</span>
-                            {isOverdue && (
-                              <Badge variant="destructive" className="text-[9px] py-0 px-1.5">OVERDUE</Badge>
-                            )}
+                {leads.filter((l) => l.stage !== "Won" && l.stage !== "Lost").length === 0 ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                    No pending follow-ups scheduled.
+                  </div>
+                ) : (
+                  leads
+                    .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
+                    .map((lead) => {
+                      const isOverdue = lead.followUpDate < todayStr;
+                      return (
+                        <div
+                          key={lead.id}
+                          className={`p-3.5 rounded-lg border flex items-center justify-between gap-3 ${
+                            isOverdue ? "border-rose-500/40 bg-rose-500/5" : "border-border bg-card"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-foreground">{lead.businessName}</span>
+                              {isOverdue && (
+                                <Badge variant="destructive" className="text-[9px] py-0 px-1.5">OVERDUE</Badge>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {lead.contactPerson} &bull; {lead.phone || lead.email}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-1">Due: {lead.followUpDate}</p>
                           </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {lead.contactPerson} &bull; {lead.phone || lead.email}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground font-mono mt-1">Due: {lead.followUpDate}</p>
+                          <Button size="sm" className="h-7 text-xs bg-primary text-white" onClick={() => handleOpenLogActivity(lead)}>
+                            <PhoneCall className="h-3 w-3 mr-1" /> Log Touchpoint
+                          </Button>
                         </div>
-                        <Button size="sm" className="h-7 text-xs bg-primary text-white" onClick={() => handleOpenLogActivity(lead)}>
-                          <PhoneCall className="h-3 w-3 mr-1" /> Log Touchpoint
-                        </Button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                )}
               </div>
 
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Logged Activity History</h4>
                 <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
-                  {activities.map((act) => (
-                    <div key={act.id} className="p-3 rounded-lg border border-border bg-card text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-foreground">{act.businessName}</span>
-                        <span className="text-muted-foreground text-[10px] font-mono">{act.activityDate}</span>
-                      </div>
-                      <Badge variant="outline" className="text-[9px]">{act.type}</Badge>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{act.notes}</p>
+                  {activities.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                      No activities logged yet.
                     </div>
-                  ))}
+                  ) : (
+                    activities.map((act) => (
+                      <div key={act.id} className="p-3 rounded-lg border border-border bg-card text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-foreground">{act.businessName}</span>
+                          <span className="text-muted-foreground text-[10px] font-mono">{act.activityDate}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[9px]">{act.type}</Badge>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{act.notes}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -1110,23 +1011,23 @@ export function SalesDashboard() {
               <p className="text-xs text-muted-foreground">Pipeline composition by core MSP agency offerings</p>
 
               <div className="space-y-3 pt-2 text-xs">
-                {[
-                  { name: "Full Digital Growth Retainer", value: 60000, color: "bg-purple-500" },
-                  { name: "Performance Ads + GHL WhatsApp CRM", value: 48000, color: "bg-emerald-500" },
-                  { name: "GHL CRM Automation + Executive Brand", value: 55000, color: "bg-blue-500" },
-                  { name: "SEO & High-Converting Website Build", value: 35000, color: "bg-amber-500" },
-                  { name: "Meta Performance Ads + Creative Pack", value: 28000, color: "bg-rose-500" },
-                ].map((pkg) => (
-                  <div key={pkg.name} className="space-y-1">
-                    <div className="flex justify-between text-[11px]">
-                      <span className="font-semibold text-foreground">{pkg.name}</span>
-                      <span className="font-mono text-muted-foreground">{formatZAR(pkg.value)}</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                      <div className={`${pkg.color} h-1.5 rounded-full`} style={{ width: `${(pkg.value / 60000) * 100}%` }} />
-                    </div>
+                {revenueByPackage.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground">
+                    No package revenue recorded yet.
                   </div>
-                ))}
+                ) : (
+                  revenueByPackage.map((pkg) => (
+                    <div key={pkg.name} className="space-y-1">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="font-semibold text-foreground">{pkg.name}</span>
+                        <span className="font-mono text-muted-foreground">{formatZAR(pkg.value)}</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                        <div className={`${pkg.color} h-1.5 rounded-full`} style={{ width: `${pkg.pct}%` }} />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           </div>

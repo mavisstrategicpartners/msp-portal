@@ -1,6 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+function isSyntheticItem(item) {
+  if (!item) return false;
+  const id = String(item.id || '');
+  const name = String(item.businessName || item.vendor || item.name || item.title || '');
+  return (
+    id.startsWith('lead-') ||
+    id.startsWith('act-') ||
+    id.startsWith('exp-seed-') ||
+    id.startsWith('app-seed-') ||
+    id.startsWith('b-ops') ||
+    id.startsWith('b-mkt') ||
+    id.startsWith('b-tech') ||
+    id.startsWith('b-sales') ||
+    id.startsWith('b-admin') ||
+    id.startsWith('audit-init-') ||
+    id.startsWith('cs-') ||
+    name === 'Retail SA Superstores' ||
+    name === 'Pretoria Precision Engineering' ||
+    name === 'Zambezi Logistics Group' ||
+    name === 'Cape Coastal Hospitality' ||
+    name === 'Sandton Financial Wealth' ||
+    name === 'KZN Agro Tech Solutions' ||
+    name === 'Google Cloud & Workspace' ||
+    name === 'Meta Business Ads Infrastructure' ||
+    name === 'High-Performance Workstation Upgrade' ||
+    name === 'Client Alpha' ||
+    name === 'Apex Solar SA' ||
+    name === 'Vanguard Mining Supplies' ||
+    name === 'Kasi Green Energy'
+  );
+}
+
 /**
  * Reads a Supabase table and exposes the rows together with a setter that
  * syncs changes back to the database in the background, with local storage fallback
@@ -16,15 +48,22 @@ export function useSupabaseTable(tableName, initialSeed = []) {
         const cached = localStorage.getItem(storageKey);
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+          if (Array.isArray(parsed)) {
+            const cleaned = parsed.filter((x) => !isSyntheticItem(x));
+            if (cleaned.length !== parsed.length) {
+              localStorage.setItem(storageKey, JSON.stringify(cleaned));
+            }
+            if (cleaned.length > 0) {
+              return cleaned;
+            }
           }
         }
       } catch (err) {
         console.warn(`[useSupabaseTable] Failed to read localStorage for ${tableName}:`, err);
       }
     }
-    return initialSeed;
+    const cleanSeed = (initialSeed || []).filter((x) => !isSyntheticItem(x));
+    return cleanSeed;
   });
 
   const [loading, setLoading] = useState(true);
@@ -42,11 +81,12 @@ export function useSupabaseTable(tableName, initialSeed = []) {
           // Table may not exist yet in database — retain current cached/seed state
           console.warn('[useSupabaseTable] ' + tableName + ': ' + error.message);
         } else if (rows && rows.length > 0) {
-          // Genuine remote database records
-          setData(rows);
+          // Genuine remote database records (purged of synthetic demo items)
+          const genuineRows = rows.filter((x) => !isSyntheticItem(x));
+          setData(genuineRows);
           if (typeof window !== 'undefined') {
             try {
-              localStorage.setItem(storageKey, JSON.stringify(rows));
+              localStorage.setItem(storageKey, JSON.stringify(genuineRows));
             } catch (e) {}
           }
         } else if (rows && rows.length === 0) {
