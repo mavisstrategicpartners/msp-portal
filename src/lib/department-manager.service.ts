@@ -13,11 +13,22 @@ export interface DepartmentTeamMember {
   status: "Available" | "Optimal" | "Near Capacity" | "Overloaded";
 }
 
+export type TaskType =
+  | "Client Work"
+  | "Internal Operations"
+  | "Administration"
+  | "Technical / IT"
+  | "Meetings & Planning"
+  | "Research & Development"
+  | "Training & Professional Development"
+  | "Other";
+
 export interface DepartmentTask {
   id: string;
   title: string;
-  clientId: string;
+  clientId?: string | null;
   clientName: string;
+  taskType?: TaskType;
   assignedToId?: string;
   assignedToName: string;
   assignedToRole: string;
@@ -292,11 +303,17 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
   const tasks = getStored<DepartmentTask[]>(KEY_TASKS, INITIAL_TASKS);
   const targetMember = teamMembers.find((m) => m.id === taskData.assignedToId);
 
+  // Determine whether this is a client-linked or internal task
+  const isInternalTask = !taskData.clientId || taskData.clientId === "none";
+  const resolvedClientId = isInternalTask ? null : taskData.clientId;
+  const resolvedClientName = isInternalTask ? "Internal Task" : (taskData.clientName || "Internal Task");
+
   const newTask: DepartmentTask = {
     id: `mb-task-${Date.now()}`,
     title: taskData.title || "Untitled Deliverable",
-    clientId: taskData.clientId || "11111111-1111-1111-1111-111111111111",
-    clientName: taskData.clientName || "General Client",
+    clientId: resolvedClientId,
+    clientName: resolvedClientName,
+    taskType: taskData.taskType || (isInternalTask ? "Internal Operations" : "Client Work"),
     assignedToId: targetMember?.id,
     assignedToName: targetMember?.name || "Unassigned",
     assignedToRole: targetMember?.role || "Unallocated",
@@ -320,7 +337,11 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
       const staffTaskPayload = {
         id: crypto.randomUUID(),
         title: newTask.title,
-        description: newTask.evidenceRequired ? `Deliverable: ${newTask.evidenceRequired}` : `Deliverable for ${newTask.clientName}`,
+        description: newTask.evidenceRequired
+          ? `Deliverable: ${newTask.evidenceRequired}`
+          : isInternalTask
+          ? `Internal task — ${newTask.taskType || "General"}`
+          : `Deliverable for ${newTask.clientName}`,
         assignedToId: targetMember.id,
         assignedToName: targetMember.name,
         assignedToEmail: targetMember.email,
@@ -344,6 +365,10 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
         details: { task: staffTaskPayload },
       });
 
+      const notifMessage = isInternalTask
+        ? `${managerName} assigned internal task "${newTask.title}" to you (${newTask.taskType || "Internal"}).`
+        : `${managerName} assigned deliverable "${newTask.title}" to you for client ${newTask.clientName}.`;
+
       await supabase.from("audit_logs").insert({
         action: "staff_notif_upsert",
         target_id: crypto.randomUUID(),
@@ -352,7 +377,7 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
             id: crypto.randomUUID(),
             userId: targetMember.id,
             title: "New Task Assignment",
-            message: `${managerName} assigned deliverable "${newTask.title}" to you for client ${newTask.clientName}.`,
+            message: notifMessage,
             type: "task_assigned",
             relatedTaskId: staffTaskPayload.id,
             read: false,

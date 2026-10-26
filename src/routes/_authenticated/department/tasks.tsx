@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckSquare, Search, Filter, RefreshCw, Building2, Calendar,
   Clock, AlertTriangle, AlertCircle, Users, ArrowRight, UserCheck, ShieldCheck,
-  Edit, List, LayoutGrid, CalendarDays, ExternalLink, Plus
+  Edit, List, LayoutGrid, CalendarDays, ExternalLink, Plus, Briefcase
 } from "lucide-react";
 import {
   fetchDepartmentData,
@@ -18,6 +18,7 @@ import {
   mutateTaskDeadline,
   DepartmentTask,
   DepartmentTeamMember,
+  TaskType,
 } from "@/lib/department-manager.service";
 import { useProfile } from "@/lib/use-profile";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ export function DepartmentTasksPage() {
   // Create & Assign Task Modal
   const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
+  const [createTaskType, setCreateTaskType] = useState<TaskType>("Client Work");
   const [createClientId, setCreateClientId] = useState("");
   const [createAssigneeId, setCreateAssigneeId] = useState("");
   const [createDueDate, setCreateDueDate] = useState("");
@@ -100,17 +102,23 @@ export function DepartmentTasksPage() {
   }, []);
 
   const filteredTasks = tasks.filter((t) => {
+    const clientDisplay = t.clientId ? t.clientName : "Internal Task";
     const matchesSearch =
       t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      t.assignedToName.toLowerCase().includes(search.toLowerCase());
+      clientDisplay.toLowerCase().includes(search.toLowerCase()) ||
+      t.assignedToName.toLowerCase().includes(search.toLowerCase()) ||
+      (t.taskType || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || t.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
-    const matchesClient = clientFilter === "all" || t.clientName === clientFilter;
+    const matchesClient =
+      clientFilter === "all" ||
+      (clientFilter === "__internal__" ? !t.clientId : t.clientName === clientFilter);
     return matchesSearch && matchesStatus && matchesPriority && matchesClient;
   });
 
-  const uniqueClients = Array.from(new Set(tasks.map((t) => t.clientName)));
+  const uniqueClients = Array.from(new Set(
+    tasks.filter((t) => t.clientId).map((t) => t.clientName)
+  ));
 
   // Handlers
   async function handleConfirmReassign() {
@@ -139,14 +147,21 @@ export function DepartmentTasksPage() {
       toast.error("Please enter a deliverable title.");
       return;
     }
-    const clientObj = availableClients.find((c) => c.id === createClientId) || availableClients[0];
+    const isClientWork = createTaskType === "Client Work";
+    // For client work, a client must be selected
+    if (isClientWork && !createClientId) {
+      toast.error("Please select a client for this Client Work task.");
+      return;
+    }
+    const clientObj = isClientWork ? availableClients.find((c) => c.id === createClientId) : null;
     setIsCreatingTask(true);
     try {
       const updated = await mutateCreateDepartmentTask(
         {
           title: createTitle.trim(),
-          clientId: clientObj?.id,
-          clientName: clientObj?.name || "Client Deliverable",
+          taskType: createTaskType,
+          clientId: clientObj?.id || null,
+          clientName: clientObj?.name || undefined,
           assignedToId: createAssigneeId || undefined,
           dueDate: createDueDate || new Date().toISOString().split("T")[0],
           priority: createPriority,
@@ -162,6 +177,8 @@ export function DepartmentTasksPage() {
       });
       setCreateTaskModalOpen(false);
       setCreateTitle("");
+      setCreateTaskType("Client Work");
+      setCreateClientId("");
       setCreateAssigneeId("");
       setCreateDueDate("");
       setCreateEvidenceReq("");
@@ -258,7 +275,8 @@ export function DepartmentTasksPage() {
           <Button
             size="sm"
             onClick={() => {
-              if (availableClients.length > 0) setCreateClientId(availableClients[0].id);
+              setCreateTaskType("Client Work");
+              setCreateClientId("");
               setCreateTaskModalOpen(true);
             }}
             className="h-9 px-3 bg-primary hover:bg-primary/90 text-white font-semibold text-xs shadow-xs gap-1.5 cursor-pointer"
@@ -324,7 +342,8 @@ export function DepartmentTasksPage() {
               <SelectValue placeholder="Client: All" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="__internal__">Internal Tasks Only</SelectItem>
               {uniqueClients.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
@@ -342,7 +361,7 @@ export function DepartmentTasksPage() {
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold uppercase text-[10px]">
                   <tr>
                     <th className="py-3 px-4">Task & Deliverable</th>
-                    <th className="py-3 px-3">Client Commitment</th>
+                    <th className="py-3 px-3">Client / Task Type</th>
                     <th className="py-3 px-3">Assignee</th>
                     <th className="py-3 px-3">Priority</th>
                     <th className="py-3 px-3">Status</th>
@@ -390,9 +409,20 @@ export function DepartmentTasksPage() {
                         </td>
 
                         <td className="py-3 px-3">
-                          <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
-                            {task.clientName}
-                          </Badge>
+                          {task.clientId ? (
+                            <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
+                              {task.clientName}
+                            </Badge>
+                          ) : (
+                            <div className="space-y-0.5">
+                              <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-700 shadow-none font-medium">
+                                Internal Task
+                              </Badge>
+                              {task.taskType && (
+                                <div className="text-[10px] text-muted-foreground font-medium">{task.taskType}</div>
+                              )}
+                            </div>
+                          )}
                         </td>
 
                         <td className="py-3 px-3">
@@ -564,9 +594,20 @@ export function DepartmentTasksPage() {
                   {colTasks.map((t) => (
                     <Card key={t.id} className="p-3 border-border bg-card shadow-xs hover:border-primary/40 transition space-y-2">
                       <div className="flex items-start justify-between gap-1">
-                        <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium truncate max-w-[130px]">
-                          {t.clientName}
-                        </Badge>
+                        {t.clientId ? (
+                          <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium truncate max-w-[130px]">
+                            {t.clientName}
+                          </Badge>
+                        ) : (
+                          <div className="space-y-0.5">
+                            <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700 shadow-none font-medium">
+                              Internal Task
+                            </Badge>
+                            {t.taskType && (
+                              <div className="text-[9px] text-muted-foreground font-medium">{t.taskType}</div>
+                            )}
+                          </div>
+                        )}
                         <Badge
                           variant="outline"
                           className={`text-[9px] rounded-full px-1.5 py-0.2 font-semibold shadow-none ${
@@ -651,7 +692,11 @@ export function DepartmentTasksPage() {
                     memberTasks.map((t) => (
                       <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
                         <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-semibold text-primary">{t.clientName}</span>
+                          {t.clientId ? (
+                            <span className="font-semibold text-primary">{t.clientName}</span>
+                          ) : (
+                            <span className="font-medium text-slate-500 dark:text-slate-400">{t.taskType || "Internal Task"}</span>
+                          )}
                           <span className="text-muted-foreground">{t.dueDate}</span>
                         </div>
                         <div className="text-xs font-bold text-foreground">{t.title}</div>
@@ -753,20 +798,41 @@ export function DepartmentTasksPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Client</Label>
-              <Select value={createClientId} onValueChange={setCreateClientId}>
+              <Label className="text-xs font-semibold">Task Type</Label>
+              <Select value={createTaskType} onValueChange={(v: any) => { setCreateTaskType(v); if (v !== "Client Work") setCreateClientId(""); }}>
                 <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                  <SelectValue placeholder="Select client..." />
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {availableClients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                <SelectContent>
+                  <SelectItem value="Client Work">Client Work</SelectItem>
+                  <SelectItem value="Internal Operations">Internal Operations</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="Technical / IT">Technical / IT</SelectItem>
+                  <SelectItem value="Meetings & Planning">Meetings & Planning</SelectItem>
+                  <SelectItem value="Research & Development">Research & Development</SelectItem>
+                  <SelectItem value="Training & Professional Development">Training & Professional Development</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {createTaskType === "Client Work" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Client <span className="text-muted-foreground font-normal">(required for Client Work)</span></Label>
+                <Select value={createClientId} onValueChange={setCreateClientId}>
+                  <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                    <SelectValue placeholder="Select a client (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {availableClients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Assignee (All System Employees & Specialists)</Label>
