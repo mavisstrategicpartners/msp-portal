@@ -45,6 +45,7 @@ export interface DepartmentTask {
   workingHoursLate: number;
   evidenceRequired: string;
   evidenceSubmitted?: string;
+  attachments?: { name: string; url: string; size: number; mimeType: string }[];
   qaReviewer?: string;
   qaDecisionNotes?: string;
   approvedDeadlineChangesCount: number;
@@ -104,6 +105,66 @@ const STORAGE_KEY_PREFIX = "msp.department.media_buying.";
 const KEY_TASKS = STORAGE_KEY_PREFIX + "tasks";
 const KEY_APPROVALS = STORAGE_KEY_PREFIX + "approvals";
 const KEY_TARGETS = STORAGE_KEY_PREFIX + "targets";
+
+// ── File Attachment Upload ───────────────────────────────────────────────────
+
+const ALLOWED_ATTACHMENT_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "text/plain",
+  "text/csv",
+  "application/zip",
+];
+
+const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25 MB
+
+export async function uploadTaskAttachment(
+  file: File,
+  taskId: string
+): Promise<{ name: string; url: string; size: number; mimeType: string }> {
+  if (!ALLOWED_ATTACHMENT_TYPES.includes(file.type)) {
+    throw new Error(
+      `File format not permitted (${file.type || "unknown"}). Allowed: PDF, Word, Excel, PNG, JPG, WEBP, CSV, ZIP.`
+    );
+  }
+  if (file.size > MAX_ATTACHMENT_SIZE) {
+    throw new Error("File exceeds 25 MB maximum upload limit.");
+  }
+
+  const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `task-attachments/${taskId}/${Date.now()}_${cleanName}`;
+
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from("evidence")
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (uploadError) {
+      // Fall back to a local object URL (works for images in-session)
+      return { name: file.name, url: URL.createObjectURL(file), size: file.size, mimeType: file.type };
+    }
+
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from("evidence")
+      .createSignedUrl(path, 60 * 60 * 24 * 30); // 30-day link
+
+    if (!signErr && signedData?.signedUrl) {
+      return { name: file.name, url: signedData.signedUrl, size: file.size, mimeType: file.type };
+    }
+
+    const { data: publicData } = supabase.storage.from("evidence").getPublicUrl(path);
+    return { name: file.name, url: publicData.publicUrl, size: file.size, mimeType: file.type };
+  } catch {
+    return { name: file.name, url: URL.createObjectURL(file), size: file.size, mimeType: file.type };
+  }
+}
 
 function getStored<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -324,6 +385,7 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
     estimatedHours: taskData.estimatedHours || 8,
     workingHoursLate: 0,
     evidenceRequired: taskData.evidenceRequired || "Verification report",
+    attachments: taskData.attachments || [],
     approvedDeadlineChangesCount: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

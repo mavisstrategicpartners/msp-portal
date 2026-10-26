@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  CheckSquare, Search, Filter, RefreshCw, Building2, Calendar,
-  Clock, AlertTriangle, AlertCircle, Users, ArrowRight, UserCheck, ShieldCheck,
-  Edit, List, LayoutGrid, CalendarDays, ExternalLink, Plus, Briefcase
+  CheckSquare, Search, RefreshCw,
+  Clock, AlertTriangle, AlertCircle, Users, UserCheck,
+  Edit, List, LayoutGrid, Plus, Paperclip, X, FileText, ImageIcon, File as FileIcon
 } from "lucide-react";
 import {
   fetchDepartmentData,
@@ -16,6 +16,7 @@ import {
   mutateCreateDepartmentTask,
   mutateTaskPriority,
   mutateTaskDeadline,
+  uploadTaskAttachment,
   DepartmentTask,
   DepartmentTeamMember,
   TaskType,
@@ -66,6 +67,27 @@ export function DepartmentTasksPage() {
   const [createPriority, setCreatePriority] = useState<DepartmentTask["priority"]>("High");
   const [createEvidenceReq, setCreateEvidenceReq] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  // Attachments
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [uploadingAttachments, setUploadingAttachments] = useState(false);
+
+  function handleFileSelect(files: FileList | null) {
+    if (!files) return;
+    const added = Array.from(files).filter((f) => {
+      if (f.size > 25 * 1024 * 1024) { toast.error(`"${f.name}" exceeds 25 MB limit.`); return false; }
+      return true;
+    });
+    setAttachmentFiles((prev) => {
+      const names = new Set(prev.map((f) => f.name));
+      return [...prev, ...added.filter((f) => !names.has(f.name))];
+    });
+  }
+
+  function handleRemoveAttachment(index: number) {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+  }
 
   // Deadline Change Modal
   const [deadlineModalOpen, setDeadlineModalOpen] = useState(false);
@@ -148,7 +170,6 @@ export function DepartmentTasksPage() {
       return;
     }
     const isClientWork = createTaskType === "Client Work";
-    // For client work, a client must be selected
     if (isClientWork && !createClientId) {
       toast.error("Please select a client for this Client Work task.");
       return;
@@ -156,6 +177,23 @@ export function DepartmentTasksPage() {
     const clientObj = isClientWork ? availableClients.find((c) => c.id === createClientId) : null;
     setIsCreatingTask(true);
     try {
+      const tempId = `mb-task-${Date.now()}`;
+
+      // Upload any attached files
+      let uploadedAttachments: { name: string; url: string; size: number; mimeType: string }[] = [];
+      if (attachmentFiles.length > 0) {
+        setUploadingAttachments(true);
+        const results = await Promise.allSettled(
+          attachmentFiles.map((file) => uploadTaskAttachment(file, tempId))
+        );
+        uploadedAttachments = results
+          .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
+          .map((r) => r.value);
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) toast.warning(`${failed} file(s) could not be uploaded and were skipped.`);
+        setUploadingAttachments(false);
+      }
+
       const updated = await mutateCreateDepartmentTask(
         {
           title: createTitle.trim(),
@@ -166,6 +204,7 @@ export function DepartmentTasksPage() {
           dueDate: createDueDate || new Date().toISOString().split("T")[0],
           priority: createPriority,
           evidenceRequired: createEvidenceReq || "Verified deliverables & completion report",
+          attachments: uploadedAttachments,
         },
         managerName
       );
@@ -182,10 +221,12 @@ export function DepartmentTasksPage() {
       setCreateAssigneeId("");
       setCreateDueDate("");
       setCreateEvidenceReq("");
+      setAttachmentFiles([]);
     } catch (err: any) {
       toast.error("Failed to create task", { description: err?.message });
     } finally {
       setIsCreatingTask(false);
+      setUploadingAttachments(false);
     }
   }
 
@@ -887,14 +928,87 @@ export function DepartmentTasksPage() {
                 className="text-xs bg-background border-border text-foreground min-h-[70px]"
               />
             </div>
+
+            {/* ── Attachment Upload Zone ──────────────────────────────── */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <Paperclip className="h-3.5 w-3.5" />
+                Attachments <span className="text-muted-foreground font-normal">(optional — documents or images)</span>
+              </Label>
+
+              <div
+                className={`relative rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+                  isDraggingOver
+                    ? "border-primary bg-primary/5 dark:bg-primary/10"
+                    : "border-border hover:border-muted-foreground/50 bg-muted/30"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+                onDragLeave={() => setIsDraggingOver(false)}
+                onDrop={(e) => { e.preventDefault(); setIsDraggingOver(false); handleFileSelect(e.dataTransfer.files); }}
+                onClick={() => document.getElementById("task-attachment-input")?.click()}
+              >
+                <input
+                  id="task-attachment-input"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.csv,.zip,.txt"
+                  className="hidden"
+                  onChange={(e) => { handleFileSelect(e.target.files); e.target.value = ""; }}
+                />
+                <div className="flex flex-col items-center justify-center py-4 gap-1">
+                  <div className="rounded-full bg-muted p-2">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-medium">
+                    {isDraggingOver ? "Drop files here" : "Drag & drop files, or click to browse"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    PDF, Word, Excel, PNG, JPG, CSV, ZIP — max 25 MB each
+                  </p>
+                </div>
+              </div>
+
+              {/* Attached file chips */}
+              {attachmentFiles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {attachmentFiles.map((file, idx) => {
+                    const isImage = file.type.startsWith("image/");
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    const sizeKB = (file.size / 1024).toFixed(0);
+                    const sizeLabel = file.size >= 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+                    return (
+                      <div
+                        key={`${file.name}-${idx}`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-[11px] font-medium text-foreground max-w-[220px] group"
+                      >
+                        {isImage ? (
+                          <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        )}
+                        <span className="truncate">{file.name}</span>
+                        <span className="text-muted-foreground text-[10px] shrink-0">({sizeLabel})</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveAttachment(idx); }}
+                          className="ml-auto shrink-0 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setCreateTaskModalOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateTask} disabled={isCreatingTask} className="bg-primary text-white font-semibold">
-              {isCreatingTask ? "Creating..." : "Create & Assign Task"}
+            <Button size="sm" onClick={handleCreateTask} disabled={isCreatingTask || uploadingAttachments} className="bg-primary text-white font-semibold">
+              {uploadingAttachments ? "Uploading files..." : isCreatingTask ? "Creating..." : "Create & Assign Task"}
             </Button>
           </DialogFooter>
         </DialogContent>
