@@ -74,9 +74,6 @@ import {
   useSubmitEvidence,
   useReviewEvidence,
   useStaffScorecard,
-  useStaffNotifications,
-  useMarkNotificationRead,
-  useMarkAllNotificationsRead,
   uploadEvidenceFile,
 } from "@/lib/staff-tasks.service";
 import {
@@ -97,7 +94,7 @@ export function StaffWorkspaceDashboard() {
   const isManagerOrAbove = profileData?.isManagerOrAbove || false;
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "tasks" | "deadlines" | "dependencies" | "evidence" | "scorecard" | "notifications"
+    "overview" | "tasks" | "deadlines" | "dependencies" | "evidence" | "scorecard"
   >("overview");
 
   // Queries
@@ -105,25 +102,17 @@ export function StaffWorkspaceDashboard() {
   const { data: dependencies = [], isLoading: depsLoading, refetch: refetchDeps } = useStaffDependencies();
   const { data: evidenceList = [], isLoading: evidenceLoading, refetch: refetchEvidence } = useStaffEvidence();
   const { data: scorecard, isLoading: scorecardLoading, refetch: refetchScorecard } = useStaffScorecard();
-  const { data: notifData, refetch: refetchNotifs } = useStaffNotifications();
-
-  const notifications = notifData?.notifications || [];
-  const unreadNotifCount = notifData?.unreadCount || 0;
-
   // Mutations
   const updateTaskMutation = useUpdateStaffTask();
   const createDependencyMutation = useCreateDependencyRequest();
   const updateDependencyMutation = useUpdateDependencyRequest();
   const submitEvidenceMutation = useSubmitEvidence();
   const reviewEvidenceMutation = useReviewEvidence();
-  const markNotifReadMutation = useMarkNotificationRead();
-  const markAllNotifsReadMutation = useMarkAllNotificationsRead();
 
   // Listen for real-time task updates dispatched across the portal
   useEffect(() => {
     const handleTasksUpdated = () => {
       refetchTasks();
-      refetchNotifs();
       refetchScorecard();
       refetchDeps();
     };
@@ -131,7 +120,7 @@ export function StaffWorkspaceDashboard() {
     return () => {
       window.removeEventListener("msp:tasks_updated", handleTasksUpdated);
     };
-  }, [refetchTasks, refetchNotifs, refetchScorecard, refetchDeps]);
+  }, [refetchTasks, refetchScorecard, refetchDeps]);
 
   // Task Filters
   const [taskSearch, setTaskSearch] = useState("");
@@ -467,21 +456,6 @@ export function StaffWorkspaceDashboard() {
         <div className="flex flex-wrap items-center gap-3">
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => setActiveTab("notifications")}
-            className="h-9 relative text-xs font-semibold gap-1.5 border-border"
-          >
-            <Bell className="h-4 w-4" />
-            Notifications
-            {unreadNotifCount > 0 && (
-              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                {unreadNotifCount}
-              </span>
-            )}
-          </Button>
-
-          <Button
-            size="sm"
             onClick={() => handleOpenEvidenceModal()}
             className="h-9 bg-primary text-xs font-semibold text-primary-foreground gap-1.5 hover:bg-primary/90 shadow-xs"
           >
@@ -525,14 +499,6 @@ export function StaffWorkspaceDashboard() {
             </TabsTrigger>
             <TabsTrigger value="scorecard" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
               <Award className="h-3.5 w-3.5" /> Personal Scorecard
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
-              <Bell className="h-3.5 w-3.5" /> Notifications
-              {unreadNotifCount > 0 && (
-                <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
-                  {unreadNotifCount}
-                </span>
-              )}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1512,101 +1478,6 @@ export function StaffWorkspaceDashboard() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* ══════════════════════════════════════════════════════════════════════
-            TAB 7: NOTIFICATIONS
-        ══════════════════════════════════════════════════════════════════════ */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card className="p-6 border-border shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-primary" /> Notifications & Operational Alerts
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Task updates, deadline reminders, dependency responses, and QA decisions.
-                </p>
-              </div>
-
-              {unreadNotifCount > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => markAllNotifsReadMutation.mutate()}
-                  className="h-8 text-xs font-semibold"
-                >
-                  Mark All Read
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {notifications.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground text-xs">
-                  No notifications recorded.
-                </div>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`p-3.5 rounded-xl border transition flex items-start justify-between gap-3 ${
-                      !n.read
-                        ? "bg-primary/[0.04] border-primary/30"
-                        : "bg-card border-border opacity-85"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                          !n.read ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <Bell className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-foreground">{n.title}</h4>
-                          {!n.read && (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                        <span className="text-[10px] text-muted-foreground/80 mt-1 block">
-                          {new Date(n.createdAt).toLocaleDateString()} SAST
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {n.relatedTaskId && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            const found = tasks.find((t) => t.id === n.relatedTaskId);
-                            if (found) handleOpenTask(found);
-                          }}
-                          className="h-7 text-xs text-primary font-semibold"
-                        >
-                          Jump to Task
-                        </Button>
-                      )}
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markNotifReadMutation.mutate({ id: n.id, read: !n.read })}
-                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {n.read ? "Mark Unread" : "Mark Read"}
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
             </div>
           </Card>
         </TabsContent>
