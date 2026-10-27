@@ -559,6 +559,27 @@ export async function mutateQADecision(
   return { updatedTasks, updatedApprovals };
 }
 
+// ── Delete / Remove Deliverable Task ─────────────────────────────────────────
+
+export async function mutateDeleteDepartmentTask(taskId: string): Promise<boolean> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`/api/staff/tasks/${taskId}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to remove deliverable from database.");
+  }
+
+  const existingTasks = getStored<DepartmentTask[]>(KEY_TASKS, []);
+  const updatedTasks = existingTasks.filter((t) => t.id !== taskId);
+  setStored(KEY_TASKS, updatedTasks);
+
+  return true;
+}
+
 // ── Blocker Resolution & Escalation ─────────────────────────────────────────
 
 export async function mutateResolveBlocker(taskId: string, resolutionNotes: string, managerName: string) {

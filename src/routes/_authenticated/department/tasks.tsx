@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckSquare, Search, RefreshCw,
   Clock, AlertTriangle, AlertCircle, Users, UserCheck,
-  Edit, List, LayoutGrid, Plus, Paperclip, X, FileText, ImageIcon, File as FileIcon
+  Edit, List, LayoutGrid, Plus, Paperclip, X, FileText, ImageIcon, File as FileIcon, Trash2
 } from "lucide-react";
 import {
   fetchDepartmentData,
@@ -17,6 +17,7 @@ import {
   mutateCreateDepartmentTask,
   mutateTaskPriority,
   mutateTaskDeadline,
+  mutateDeleteDepartmentTask,
   uploadTaskAttachment,
   DepartmentTask,
   DepartmentTeamMember,
@@ -58,6 +59,35 @@ export function DepartmentTasksPage() {
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
   const [targetMemberId, setTargetMemberId] = useState("");
   const [isSavingAssign, setIsSavingAssign] = useState(false);
+
+  // Delete / Remove Deliverable Modal
+  const [taskToDelete, setTaskToDelete] = useState<DepartmentTask | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+    setIsDeletingTask(true);
+    try {
+      await mutateDeleteDepartmentTask(taskToDelete.id);
+      setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      window.dispatchEvent(new CustomEvent("msp:tasks_updated"));
+      toast.success("Deliverable removed successfully", {
+        description: `Task "${taskToDelete.title}" has been removed and unassigned.`,
+      });
+      setDeleteModalOpen(false);
+      setTaskToDelete(null);
+    } catch (err: any) {
+      toast.error("Failed to remove deliverable", {
+        description: err.message || "An error occurred while deleting the task.",
+      });
+    } finally {
+      setIsDeletingTask(false);
+    }
+  };
 
   // Create & Assign Task Modal
   const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
@@ -606,6 +636,19 @@ export function DepartmentTasksPage() {
                             >
                               <Edit className="h-3 w-3 text-muted-foreground" />
                             </Button>
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs border-rose-200 dark:border-rose-900/50 bg-background hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-semibold shadow-xs px-2 cursor-pointer"
+                              title="Remove Deliverable"
+                              onClick={() => {
+                                setTaskToDelete(task);
+                                setDeleteModalOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -707,6 +750,18 @@ export function DepartmentTasksPage() {
                         >
                           Reassign
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+                          title="Remove Task"
+                          onClick={() => {
+                            setTaskToDelete(t);
+                            setDeleteModalOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </Card>
                   ))}
@@ -767,18 +822,32 @@ export function DepartmentTasksPage() {
                           <Badge variant="outline" className="text-[9px] rounded-full px-1.5 py-0.2">
                             {t.status}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
-                            onClick={() => {
-                              setSelectedTask(t);
-                              setTargetMemberId(t.assignedToId || "");
-                              setReassignModalOpen(true);
-                            }}
-                          >
-                            Reassign
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
+                              onClick={() => {
+                                setSelectedTask(t);
+                                setTargetMemberId(t.assignedToId || "");
+                                setReassignModalOpen(true);
+                              }}
+                            >
+                              Reassign
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 w-5 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                              title="Remove Task"
+                              onClick={() => {
+                                setTaskToDelete(t);
+                                setDeleteModalOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -1112,6 +1181,69 @@ export function DepartmentTasksPage() {
             </Button>
             <Button size="sm" onClick={handleConfirmPriority} disabled={isSavingPriority} className="bg-primary text-white">
               {isSavingPriority ? "Updating..." : "Save Priority"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL: Delete / Remove Deliverable ─────────────────────────────── */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="max-w-md bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <Trash2 className="h-5 w-5" /> Remove Deliverable Task
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              This will permanently remove the task and unassign it from the employee's dashboard.
+            </DialogDescription>
+          </DialogHeader>
+
+          {taskToDelete && (
+            <div className="space-y-3 py-2 text-xs">
+              <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-1.5">
+                <div className="font-bold text-foreground text-sm">{taskToDelete.title}</div>
+                <div className="text-muted-foreground">
+                  Assigned to: <strong className="text-foreground">{taskToDelete.assignedToName}</strong>
+                </div>
+                {taskToDelete.clientName && (
+                  <div className="text-muted-foreground">
+                    Client: <strong className="text-foreground">{taskToDelete.clientName}</strong>
+                  </div>
+                )}
+                <div className="text-muted-foreground">
+                  Due date: <strong className="text-foreground">{taskToDelete.dueDate}</strong>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" />
+                <div>
+                  <strong>Attention:</strong> If this task was assigned by mistake or in error, confirming removal will erase it from the assigned employee's active queue immediately.
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setTaskToDelete(null);
+              }}
+              disabled={isDeletingTask}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeletingTask}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+            >
+              {isDeletingTask ? "Removing..." : "Remove Task"}
             </Button>
           </DialogFooter>
         </DialogContent>

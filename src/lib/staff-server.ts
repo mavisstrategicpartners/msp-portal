@@ -147,6 +147,9 @@ async function initLedgerFromSupabase(force = false) {
 
         if (log.action === "staff_task_upsert" && d.task) {
           tasksStore.set(d.task.id, d.task);
+        } else if (log.action === "staff_task_delete") {
+          const targetId = d.taskId || log.target_id || d.target_ref_id;
+          if (targetId) tasksStore.delete(targetId);
         } else if (log.action === "staff_dep_upsert" && d.dependency) {
           dependenciesStore.set(d.dependency.id, d.dependency);
         } else if (log.action === "staff_evidence_upsert" && d.evidence) {
@@ -642,6 +645,44 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       }
 
       return new Response(JSON.stringify({ ok: true, task }), { status: 200, headers: HEADERS });
+    }
+
+    // DELETE /api/staff/tasks/:id -> remove task (authorized managers or assigner)
+    if (method === "DELETE" && pathname.startsWith("/api/staff/tasks/")) {
+      const taskId = pathname.replace("/api/staff/tasks/", "").trim();
+      const task = tasksStore.get(taskId);
+      if (!task) {
+        return new Response(JSON.stringify({ error: "Task not found." }), { status: 404, headers: HEADERS });
+      }
+
+      if (!auth.isManagerOrAbove && task.assignedById !== auth.userId) {
+        return new Response(JSON.stringify({ error: "Only managers or task creators can remove deliverables." }), {
+          status: 403,
+          headers: HEADERS,
+        });
+      }
+
+      tasksStore.delete(taskId);
+      await logLedgerEntry("staff_task_delete", taskId, {
+        taskId,
+        deletedBy: auth.fullName,
+        deletedById: auth.userId,
+        deletedAt: new Date().toISOString(),
+        taskTitle: task.title,
+        assigneeId: task.assignedToId,
+      });
+
+      // Clean up linked notifications for this task
+      for (const [notifId, notif] of notificationsStore.entries()) {
+        if (notif.relatedTaskId === taskId) {
+          notificationsStore.delete(notifId);
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, message: "Deliverable removed successfully." }), {
+        status: 200,
+        headers: HEADERS,
+      });
     }
 
     // ══════════════════════════════════════════════════════════════════════════

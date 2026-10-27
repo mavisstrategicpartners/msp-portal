@@ -510,7 +510,7 @@ export function StaffWorkspaceDashboard() {
               <CheckSquare className="h-3.5 w-3.5" /> Assigned Tasks ({tasks.length})
             </TabsTrigger>
             <TabsTrigger value="deadlines" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
-              <Clock className="h-3.5 w-3.5" /> Deadlines & Tracking
+              <Clock className="h-3.5 w-3.5" /> Deadlines
               {deadlineCategories.overdue.length > 0 && (
                 <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
                   {deadlineCategories.overdue.length}
@@ -834,11 +834,9 @@ export function StaffWorkspaceDashboard() {
                 <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
               </Card>
             ) : (
-              filteredTasks.map((task) => {
-                const isTimerRunning = activeTimerTaskId === task.id;
-                return (
-                  <Card
-                    key={task.id}
+              filteredTasks.map((task) => (
+                <Card
+                  key={task.id}
                     className="p-5 border-border bg-card space-y-4 hover:border-primary/40 transition shadow-xs"
                   >
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
@@ -931,28 +929,8 @@ export function StaffWorkspaceDashboard() {
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50 text-xs">
                       <div className="flex items-center gap-2">
                         <Button
-                          type="button"
-                          variant={isTimerRunning ? "destructive" : "outline"}
                           size="sm"
-                          onClick={() => toggleTimer(task.id)}
-                          className="h-8 text-xs font-semibold gap-1.5"
-                        >
-                          {isTimerRunning ? (
-                            <>
-                              <Square className="h-3 w-3 fill-current" /> Stop (
-                              {Math.floor(timerSeconds / 60)}:
-                              {String(timerSeconds % 60).padStart(2, "0")})
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-3 w-3 fill-current" /> Time Tracker
-                            </>
-                          )}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => handleOpenTask(task)}
                           className="h-8 text-xs font-semibold"
                         >
@@ -996,9 +974,8 @@ export function StaffWorkspaceDashboard() {
                       </div>
                     </div>
                   </Card>
-                );
-              })
-            )}
+                ))
+              )}
           </div>
         </TabsContent>
 
