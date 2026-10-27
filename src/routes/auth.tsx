@@ -245,7 +245,7 @@ function AuthPage() {
     const isFinance =
       deptLower.includes("finance") ||
       deptLower.includes("accounting") ||
-      deptLower.includes("admin department") ||
+      (deptLower.includes("admin department") && (titleLower.includes("finance") || profile?.role_tier === "manager")) ||
       titleLower.includes("finance") ||
       titleLower.includes("accountant") ||
       titleLower.includes("billing");

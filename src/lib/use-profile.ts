@@ -75,7 +75,7 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     roles.some((r) => r.role === "finance_administration" || r.role === "finance_admin" || r.role === "finance") ||
     dept.includes("finance") ||
     dept.includes("accounting") ||
-    dept.includes("admin department") ||
+    (dept.includes("admin department") && (title.includes("finance") || email.includes("finance") || tier === "manager")) ||
     title.includes("finance") ||
     title.includes("accountant") ||
     title.includes("billing")

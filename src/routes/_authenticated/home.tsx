@@ -105,6 +105,11 @@ function Home() {
           </p>
         </Card>
 
+        {/* ─── Personal Staff Workspace & Deliverables ──────────────────────── */}
+        <section className="pt-2">
+          <StaffWorkspaceDashboard />
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
