@@ -15,7 +15,7 @@ const HEADERS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-MSP-User-Id",
 };
 
 // ── Authentication & Permission Verification ─────────────────────────────────
@@ -37,23 +37,65 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
     token = authHeader.substring(7).trim();
   }
 
-  if (!token) {
-    // If no Bearer token provided, check for demo/authenticated user header (fallback for dev environments)
-    const fallbackUserHeader = request.headers.get("X-MSP-User-Id");
-    if (fallbackUserHeader) {
-      const { data: profile } = await (supabaseAdmin as any)
-        .from("profiles")
-        .select("*")
-        .eq("id", fallbackUserHeader)
-        .maybeSingle();
+  const fallbackUserHeader = request.headers.get("X-MSP-User-Id");
+
+  if (token) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (!error && data?.user) {
+        const user = data.user;
+        const { data: profile } = await (supabaseAdmin as any)
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const isMgr =
+          profile?.role_tier === "manager" ||
+          profile?.role_tier === "root_admin" ||
+          (profile?.job_title || "").toLowerCase().includes("manager") ||
+          (profile?.job_title || "").toLowerCase().includes("lead") ||
+          (profile?.job_title || "").toLowerCase().includes("director") ||
+          (profile?.department || "").toLowerCase().includes("executive") ||
+          (profile?.department || "").toLowerCase().includes("operations") ||
+          (profile?.email || "").toLowerCase().includes("manager") ||
+          (user.email || "").toLowerCase().includes("manager") ||
+          user.email === "ceo@mavisstrategicpartners.co.za";
+
+        return {
+          userId: user.id,
+          email: user.email || "",
+          fullName: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Staff Member",
+          jobTitle: profile?.job_title || "Specialist",
+          department: profile?.department || "General",
+          roleTier: profile?.role_tier || "staff",
+          isManagerOrAbove: isMgr,
+        };
+      }
+    } catch (err) {
+      console.warn("Token verification failed, checking fallback:", err);
+    }
+  }
+
+  // Check fallback header (X-MSP-User-Id)
+  if (fallbackUserHeader) {
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fallbackUserHeader);
+      const query = (supabaseAdmin as any).from("profiles").select("*");
+      const { data: profile } = isUuid
+        ? await query.eq("id", fallbackUserHeader).maybeSingle()
+        : await query.or(`id.eq.${fallbackUserHeader},email.eq.${fallbackUserHeader}`).maybeSingle();
 
       if (profile) {
         const isMgr =
           profile.role_tier === "manager" ||
           profile.role_tier === "root_admin" ||
           (profile.job_title || "").toLowerCase().includes("manager") ||
+          (profile.job_title || "").toLowerCase().includes("lead") ||
+          (profile.job_title || "").toLowerCase().includes("director") ||
           (profile.department || "").toLowerCase().includes("executive") ||
           (profile.department || "").toLowerCase().includes("operations") ||
+          (profile.email || "").toLowerCase().includes("manager") ||
           profile.email === "ceo@mavisstrategicpartners.co.za";
 
         return {
@@ -66,42 +108,12 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
           isManagerOrAbove: isMgr,
         };
       }
+    } catch (err) {
+      console.warn("Fallback user verification error:", err);
     }
-    return null;
   }
 
-  try {
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data?.user) return null;
-
-    const user = data.user;
-    const { data: profile } = await (supabaseAdmin as any)
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const isMgr =
-      profile?.role_tier === "manager" ||
-      profile?.role_tier === "root_admin" ||
-      (profile?.job_title || "").toLowerCase().includes("manager") ||
-      (profile?.department || "").toLowerCase().includes("executive") ||
-      (profile?.department || "").toLowerCase().includes("operations") ||
-      user.email === "ceo@mavisstrategicpartners.co.za";
-
-    return {
-      userId: user.id,
-      email: user.email || "",
-      fullName: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Staff Member",
-      jobTitle: profile?.job_title || "Specialist",
-      department: profile?.department || "General",
-      roleTier: profile?.role_tier || "staff",
-      isManagerOrAbove: isMgr,
-    };
-  } catch (err) {
-    console.error("Auth verification failed:", err);
-    return null;
-  }
+  return null;
 }
 
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────
@@ -175,13 +187,14 @@ async function createNotification(
   title: string,
   message: string,
   type: StaffNotification["type"],
-  related?: { taskId?: string; dependencyId?: string; evidenceId?: string }
+  related?: { taskId?: string; dependencyId?: string; evidenceId?: string },
+  userEmail?: string
 ) {
   // Prevent duplicate notifications within 1 hour for identical event
   const oneHourAgo = Date.now() - 3600000;
   for (const n of notificationsStore.values()) {
     if (
-      n.userId === userId &&
+      (n.userId === userId || (userEmail && n.userEmail && n.userEmail.toLowerCase() === userEmail.toLowerCase())) &&
       n.type === type &&
       n.message === message &&
       new Date(n.createdAt).getTime() > oneHourAgo
@@ -193,6 +206,7 @@ async function createNotification(
   const notification: StaffNotification = {
     id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     userId,
+    userEmail,
     title,
     message,
     type,
@@ -238,31 +252,47 @@ export async function handleStaffApi(request: Request): Promise<Response> {
 
     // GET /api/staff/tasks
     if (method === "GET" && pathname === "/api/staff/tasks") {
+      await initLedgerFromSupabase(true);
       const allTasks = Array.from(tasksStore.values());
       const showAll = url.searchParams.get("all") === "true" && auth.isManagerOrAbove;
 
       // Filter tasks assigned to current user, unless authorized manager requests all
       const userTasks = showAll
         ? allTasks
-        : allTasks.filter(
-            (t) =>
-              t.assignedToId === auth.userId ||
-              t.assignedToEmail?.toLowerCase() === auth.email.toLowerCase() ||
-              t.assignedToName.toLowerCase() === auth.fullName.toLowerCase()
-          );
+        : allTasks.filter((t) => {
+            const matchesId = Boolean(
+              t.assignedToId &&
+              auth.userId &&
+              (t.assignedToId === auth.userId || t.assignedToId.toLowerCase() === auth.userId.toLowerCase())
+            );
+            const matchesEmail = Boolean(
+              t.assignedToEmail &&
+              auth.email &&
+              t.assignedToEmail.toLowerCase() === auth.email.toLowerCase()
+            );
+            const matchesName = Boolean(
+              t.assignedToName &&
+              auth.fullName &&
+              t.assignedToName.toLowerCase() === auth.fullName.toLowerCase() &&
+              auth.fullName.toLowerCase() !== "staff member"
+            );
+            return matchesId || matchesEmail || matchesName;
+          });
+
+      userTasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       // Check and update any newly overdue tasks
       const now = new Date();
       for (const t of userTasks) {
         if (t.dueDate && new Date(t.dueDate) < now && t.status !== "Completed" && t.status !== "Blocked") {
-          // If task became overdue, dispatch a notification if not already sent
           if (t.status !== "Changes Requested" && t.status !== "Submitted for Review") {
             createNotification(
               t.assignedToId,
               "Task Overdue Alert",
               `Task "${t.title}" is overdue (due: ${t.dueDate}). Please update status or report a blocker.`,
               "task_overdue",
-              { taskId: t.id }
+              { taskId: t.id },
+              t.assignedToEmail
             );
           }
         }
@@ -273,6 +303,13 @@ export async function handleStaffApi(request: Request): Promise<Response> {
 
     // POST /api/staff/tasks -> create new task (authorized assigners)
     if (method === "POST" && pathname === "/api/staff/tasks") {
+      if (!auth.isManagerOrAbove) {
+        return new Response(JSON.stringify({ error: "Only managers and administrators can assign deliverables." }), {
+          status: 403,
+          headers: HEADERS,
+        });
+      }
+
       const body = await request.json();
       const {
         title,
@@ -280,45 +317,100 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         assignedToId,
         assignedToName,
         assignedToEmail,
+        assignedToRole,
         department,
         clientId,
         clientName,
         projectName,
-        priority = "Medium",
+        priority = "High",
         dueDate = null,
         instructions = "",
         evidenceRequirement = "",
+        evidenceRequired = "",
+        taskType = "Client Work",
+        attachments = [],
+        status,
       } = body;
 
       if (!title?.trim()) {
         return new Response(JSON.stringify({ error: "Task title is required." }), { status: 400, headers: HEADERS });
       }
 
+      // If assignedToId is provided, look up employee in profiles to ensure exact ID, name, email & role
+      let finalAssigneeId = assignedToId;
+      let finalAssigneeName = assignedToName || "Unassigned";
+      let finalAssigneeEmail = assignedToEmail || "";
+      let finalAssigneeRole = assignedToRole || "Specialist";
+
+      if (assignedToId) {
+        const { data: assigneeProfile } = await (supabaseAdmin as any)
+          .from("profiles")
+          .select("id, full_name, email, job_title, department")
+          .eq("id", assignedToId)
+          .maybeSingle();
+
+        if (assigneeProfile) {
+          finalAssigneeId = assigneeProfile.id;
+          finalAssigneeName = assigneeProfile.full_name || finalAssigneeName || assigneeProfile.email;
+          finalAssigneeEmail = assigneeProfile.email || finalAssigneeEmail;
+          finalAssigneeRole = assigneeProfile.job_title || finalAssigneeRole;
+        }
+      }
+
+      const taskId = crypto.randomUUID();
+      const resolvedStatus = status || (finalAssigneeId ? "In Progress" : "Not Started");
+      const resolvedDesc = description?.trim() || evidenceRequired || instructions || `Deliverable: ${title.trim()}`;
+
       const newTask: StaffTask = {
-        id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        id: taskId,
         title: title.trim(),
-        description: description?.trim() || "",
-        assignedToId: assignedToId || auth.userId,
-        assignedToName: assignedToName || auth.fullName,
-        assignedToEmail: assignedToEmail || auth.email,
+        description: resolvedDesc,
+        assignedToId: finalAssigneeId || "",
+        assignedToName: finalAssigneeName,
+        assignedToEmail: finalAssigneeEmail,
         assignedById: auth.userId,
         assignedByName: auth.fullName,
-        assignedByRole: auth.jobTitle,
-        assignedByDepartment: auth.department,
-        department: department || auth.department,
+        assignedByRole: auth.jobTitle || "Department Manager",
+        assignedByDepartment: auth.department || "Operations",
+        department: department || auth.department || "Media Buying",
         clientId: clientId || undefined,
         clientName: clientName || undefined,
         projectName: projectName || undefined,
         priority: priority as TaskPriority,
-        status: "Not Started",
-        progress: 0,
+        status: resolvedStatus as TaskStatus,
+        progress: resolvedStatus === "In Progress" ? 10 : 0,
         assignmentDate: new Date().toISOString(),
         dueDate: dueDate || null,
-        instructions: instructions?.trim(),
-        attachments: [],
+        instructions:
+          typeof instructions === "string"
+            ? instructions.trim()
+            : typeof evidenceRequired === "string"
+            ? evidenceRequired.trim()
+            : undefined,
+        attachments: (attachments || []).map((a: any) => ({
+          name: a.name,
+          url: a.url,
+          size: a.size || 0,
+          type: a.type || a.mimeType || "application/octet-stream",
+        })),
         supportingLinks: [],
         progressNotes: [],
-        evidenceRequirement: evidenceRequirement?.trim(),
+        evidenceRequirement:
+          typeof evidenceRequirement === "string"
+            ? evidenceRequirement.trim()
+            : typeof evidenceRequired === "string"
+            ? evidenceRequired.trim()
+            : "Verification report",
+        taskType: taskType,
+        evidenceRequired:
+          typeof evidenceRequired === "string"
+            ? evidenceRequired.trim()
+            : typeof evidenceRequirement === "string"
+            ? evidenceRequirement.trim()
+            : "Verification report",
+        approvedDeadlineChangesCount: 0,
+        estimatedHours: body.estimatedHours || 8,
+        workingHoursLate: 0,
         lastUpdatedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -326,14 +418,15 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       tasksStore.set(newTask.id, newTask);
       await logLedgerEntry("staff_task_upsert", newTask.id, { task: newTask });
 
-      // Notify assignee if someone else assigned the task
-      if (newTask.assignedToId !== auth.userId) {
+      // Notify assignee if assigned to someone
+      if (finalAssigneeId && finalAssigneeId !== auth.userId) {
         await createNotification(
-          newTask.assignedToId,
+          finalAssigneeId,
           "New Task Assigned",
-          `${auth.fullName} (${auth.jobTitle}) assigned you task "${newTask.title}".`,
+          `${auth.fullName} (${auth.jobTitle || "Department Manager"}) assigned deliverable "${newTask.title}" to you${newTask.clientName && newTask.clientName !== "Internal Task" ? ` for client ${newTask.clientName}` : ""}.`,
           "task_assigned",
-          { taskId: newTask.id }
+          { taskId: newTask.id },
+          finalAssigneeEmail
         );
       }
 
@@ -343,16 +436,20 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     // PATCH /api/staff/tasks/:id -> update task
     if (method === "PATCH" && pathname.startsWith("/api/staff/tasks/")) {
       const taskId = pathname.replace("/api/staff/tasks/", "");
-      const task = tasksStore.get(taskId);
+      let task = tasksStore.get(taskId);
+      if (!task) {
+        await initLedgerFromSupabase(true);
+        task = tasksStore.get(taskId);
+      }
       if (!task) {
         return new Response(JSON.stringify({ error: "Task not found." }), { status: 404, headers: HEADERS });
       }
 
       // Check permissions: assigned staff or authorized manager
       const isOwner =
-        task.assignedToId === auth.userId ||
-        task.assignedToEmail?.toLowerCase() === auth.email.toLowerCase() ||
-        task.assignedToName.toLowerCase() === auth.fullName.toLowerCase();
+        (task.assignedToId && auth.userId && (task.assignedToId === auth.userId || task.assignedToId.toLowerCase() === auth.userId.toLowerCase())) ||
+        (task.assignedToEmail && auth.email && task.assignedToEmail.toLowerCase() === auth.email.toLowerCase()) ||
+        (task.assignedToName && auth.fullName && task.assignedToName.toLowerCase() === auth.fullName.toLowerCase() && auth.fullName.toLowerCase() !== "staff member");
 
       if (!isOwner && !auth.isManagerOrAbove) {
         return new Response(JSON.stringify({ error: "You are not authorized to update this task." }), {
@@ -371,20 +468,34 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         blockReason,
         instructions,
         evidenceRequirement,
+        evidenceRequired,
+        assignedToId,
+        assignedToName,
+        assignedToEmail,
+        assignedToRole,
+        taskType,
+        clientId,
+        clientName,
+        attachments,
+        qaReviewer,
+        qaDecisionNotes,
       } = body;
 
       let changed = false;
       const previousDueDate = task.dueDate;
-      const previousStatus = task.status;
 
-      // Staff permissions
+      // Staff and Manager permissions: status
       if (status && status !== task.status) {
-        task.status = status as TaskStatus;
+        let normalizedStatus: TaskStatus = status as TaskStatus;
+        if (status === "Accepted Complete") normalizedStatus = "Completed";
+        else if (status === "Rework Required") normalizedStatus = "Changes Requested";
+
+        task.status = normalizedStatus;
         changed = true;
-        if (status === "Completed") {
+        if (normalizedStatus === "Completed") {
           task.completionDate = new Date().toISOString();
           task.progress = 100;
-        } else if (status === "In Progress" && task.progress === 0) {
+        } else if (normalizedStatus === "In Progress" && task.progress === 0) {
           task.progress = 25;
         }
       }
@@ -413,20 +524,62 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         changed = true;
       }
 
-      // Manager / Assigner permitted changes
+      // Manager-permitted changes: Reassignment, Deadline, Priority, QA
       if (auth.isManagerOrAbove || task.assignedById === auth.userId) {
+        // Reassignment
+        if (assignedToId && assignedToId !== task.assignedToId) {
+          let newName = assignedToName || task.assignedToName;
+          let newEmail = assignedToEmail || task.assignedToEmail || "";
+          let newRole = assignedToRole || task.assignedToRole || "Specialist";
+
+          const { data: assigneeProfile } = await (supabaseAdmin as any)
+            .from("profiles")
+            .select("id, full_name, email, job_title")
+            .eq("id", assignedToId)
+            .maybeSingle();
+
+          if (assigneeProfile) {
+            newName = assigneeProfile.full_name || newName;
+            newEmail = assigneeProfile.email || newEmail;
+            newRole = assigneeProfile.job_title || newRole;
+          }
+
+          task.assignedToId = assignedToId;
+          task.assignedToName = newName;
+          task.assignedToEmail = newEmail;
+          task.assignedToRole = newRole;
+          if (task.status === "Not Started") {
+            task.status = "In Progress";
+          }
+          changed = true;
+
+          // Notify the new assignee
+          if (assignedToId !== auth.userId) {
+            await createNotification(
+              assignedToId,
+              "Deliverable Assigned to You",
+              `${auth.fullName} (${auth.jobTitle || "Department Manager"}) reassigned deliverable "${task.title}" to you${task.clientName && task.clientName !== "Internal Task" ? ` for client ${task.clientName}` : ""}.`,
+              "task_assigned",
+              { taskId: task.id },
+              newEmail
+            );
+          }
+        }
+
         if (dueDate !== undefined && dueDate !== previousDueDate) {
           task.dueDate = dueDate || null;
+          task.approvedDeadlineChangesCount = (task.approvedDeadlineChangesCount || 0) + 1;
           changed = true;
 
           // Notify assignee of deadline change
-          if (task.assignedToId !== auth.userId) {
+          if (task.assignedToId && task.assignedToId !== auth.userId) {
             await createNotification(
               task.assignedToId,
               "Task Deadline Updated",
               `The deadline for "${task.title}" was updated to ${dueDate ? new Date(dueDate).toLocaleDateString() : "No due date set"}.`,
               "due_date_changed",
-              { taskId: task.id }
+              { taskId: task.id },
+              task.assignedToEmail
             );
           }
         }
@@ -441,8 +594,39 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           changed = true;
         }
 
-        if (evidenceRequirement !== undefined) {
-          task.evidenceRequirement = evidenceRequirement;
+        if (evidenceRequirement !== undefined || evidenceRequired !== undefined) {
+          task.evidenceRequirement = evidenceRequirement || evidenceRequired;
+          task.evidenceRequired = evidenceRequired || evidenceRequirement;
+          changed = true;
+        }
+
+        if (taskType !== undefined) {
+          task.taskType = taskType;
+          changed = true;
+        }
+
+        if (clientId !== undefined) {
+          task.clientId = clientId || undefined;
+          changed = true;
+        }
+
+        if (clientName !== undefined) {
+          task.clientName = clientName || undefined;
+          changed = true;
+        }
+
+        if (attachments !== undefined) {
+          task.attachments = attachments;
+          changed = true;
+        }
+
+        if (qaReviewer !== undefined) {
+          task.qaReviewer = qaReviewer;
+          changed = true;
+        }
+
+        if (qaDecisionNotes !== undefined) {
+          task.qaDecisionNotes = qaDecisionNotes;
           changed = true;
         }
       }
@@ -922,8 +1106,13 @@ export async function handleStaffApi(request: Request): Promise<Response> {
 
     // GET /api/staff/notifications
     if (method === "GET" && pathname === "/api/staff/notifications") {
+      await initLedgerFromSupabase(true);
       const all = Array.from(notificationsStore.values());
-      const userNotifs = all.filter((n) => n.userId === auth.userId);
+      const userNotifs = all.filter(
+        (n) =>
+          Boolean(n.userId && auth.userId && (n.userId === auth.userId || n.userId.toLowerCase() === auth.userId.toLowerCase())) ||
+          Boolean(n.userEmail && auth.email && n.userEmail.toLowerCase() === auth.email.toLowerCase())
+      );
       userNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       const unreadCount = userNotifs.filter((n) => !n.read).length;

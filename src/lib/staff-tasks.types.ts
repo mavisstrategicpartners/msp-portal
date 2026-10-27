@@ -36,6 +36,7 @@ export interface StaffTask {
   assignedToId: string;
   assignedToName: string;
   assignedToEmail?: string;
+  assignedToRole?: string;
   assignedById: string;
   assignedByName: string;
   assignedByRole: string;
@@ -58,6 +59,14 @@ export interface StaffTask {
   linkedDependencyId?: string;
   blockReason?: string;
   evidenceRequirement?: string;
+  taskType?: string;
+  evidenceRequired?: string;
+  evidenceSubmitted?: string;
+  qaReviewer?: string;
+  qaDecisionNotes?: string;
+  approvedDeadlineChangesCount?: number;
+  estimatedHours?: number;
+  workingHoursLate?: number;
   lastUpdatedAt: string;
   createdAt: string;
 }
@@ -148,6 +157,7 @@ export type NotificationType =
 export interface StaffNotification {
   id: string;
   userId: string;
+  userEmail?: string;
   title: string;
   message: string;
   type: NotificationType;

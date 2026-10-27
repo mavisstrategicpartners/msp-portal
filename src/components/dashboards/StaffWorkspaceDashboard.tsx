@@ -119,6 +119,20 @@ export function StaffWorkspaceDashboard() {
   const markNotifReadMutation = useMarkNotificationRead();
   const markAllNotifsReadMutation = useMarkAllNotificationsRead();
 
+  // Listen for real-time task updates dispatched across the portal
+  useEffect(() => {
+    const handleTasksUpdated = () => {
+      refetchTasks();
+      refetchNotifs();
+      refetchScorecard();
+      refetchDeps();
+    };
+    window.addEventListener("msp:tasks_updated", handleTasksUpdated);
+    return () => {
+      window.removeEventListener("msp:tasks_updated", handleTasksUpdated);
+    };
+  }, [refetchTasks, refetchNotifs, refetchScorecard, refetchDeps]);
+
   // Task Filters
   const [taskSearch, setTaskSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");

@@ -245,7 +245,8 @@ export function ClientSuccessDashboard() {
                 </div>
               )}
             </div>
-          ))}
+          ))
+          )}
         </div>
       </Card>
 

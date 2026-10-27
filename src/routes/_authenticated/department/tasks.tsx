@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/department/tasks")({
 export function DepartmentTasksPage() {
   const navigate = useNavigate();
   const { data: profileData } = useProfile();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<DepartmentTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<DepartmentTeamMember[]>([]);
@@ -152,6 +154,12 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateAssignTask(selectedTask.id, targetMemberId, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Task assigned successfully.", {
         description: `Assigned to ${teamMembers.find((m) => m.id === targetMemberId)?.name}`,
       });
@@ -209,6 +217,12 @@ export function DepartmentTasksPage() {
         managerName
       );
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Task created and assigned successfully.", {
         description: createAssigneeId
           ? `Assigned to ${teamMembers.find((m) => m.id === createAssigneeId)?.name}`
@@ -243,6 +257,10 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateTaskDeadline(selectedTask.id, newDeadline, deadlineReason, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Deadline updated successfully.");
       setDeadlineModalOpen(false);
       setSelectedTask(null);
@@ -260,6 +278,10 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateTaskPriority(selectedTask.id, newPriority, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Priority updated successfully.");
       setPriorityModalOpen(false);
       setSelectedTask(null);

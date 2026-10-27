@@ -354,7 +354,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "ceo-mavis-muchena",
+              id: "885c2602-61ec-4f88-ab86-2085c4966c16",
               email: "ceo@mavisstrategicpartners.co.za",
               full_name: "Mavis Muchena",
               job_title: "Chief Executive Officer",
@@ -374,7 +374,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "dept-mgr-media-buying",
+              id: "b62bef7c-f156-4c87-9874-3880810ac363",
               email: targetEmail,
               full_name: "Department Manager (Media Buying)",
               job_title: "Media Buying Lead & Department Manager",
@@ -394,7 +394,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "573f840a-dc3b-4917-98ac-dfb8a1374f04",
+              id: "74638aac-99d4-4830-b712-b2c36a119016",
               email: targetEmail,
               full_name: "Finance & Administration Manager",
               job_title: "Finance & Administration Manager",
@@ -414,7 +414,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "a78ef82d-9088-475a-b6b5-f6b50e99668e",
+              id: "fcdf5f32-f637-44fd-911c-39a6d4e90478",
               email: targetEmail,
               full_name: "Sales Executive",
               job_title: "Sales & Business Development Lead",
@@ -459,7 +459,7 @@ function AuthPage() {
           localStorage.setItem(
             "msp.authenticatedUser",
             JSON.stringify({
-              id: "ceo-mavis-muchena",
+              id: "885c2602-61ec-4f88-ab86-2085c4966c16",
               email: "ceo@mavisstrategicpartners.co.za",
               full_name: "Mavis Muchena",
               job_title: "Chief Executive Officer",
