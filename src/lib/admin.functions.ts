@@ -46,7 +46,7 @@ const createTeamMemberSchema = z.object({
 
 export const createTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => createTeamMemberSchema.parse(data))
+  .validator((data) => createTeamMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
     const db = context.supabase as any;
     await ensureAdmin(context);
@@ -147,7 +147,7 @@ const updateTeamMemberSchema = z.object({
 
 export const updateTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => updateTeamMemberSchema.parse(data))
+  .validator((data) => updateTeamMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
     const actor = await ensureAdmin(context);
     if (data.roleTier === "root_admin" && actor.roleTier !== "root_admin") {
@@ -201,7 +201,7 @@ const setRoleSchema = z.object({
 
 export const setAdminRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => setRoleSchema.parse(data))
+  .validator((data) => setRoleSchema.parse(data))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -225,7 +225,7 @@ const deleteTeamMemberSchema = z.object({
 
 export const deleteTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => deleteTeamMemberSchema.parse(data))
+  .validator((data) => deleteTeamMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context);
     if (data.userId === context.userId) {

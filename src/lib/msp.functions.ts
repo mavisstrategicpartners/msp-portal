@@ -46,7 +46,7 @@ function localAnswer(question: string) {
 export const askMsp = createServerFn({ method: "POST" })
   // Signed-in staff only (stops anonymous use of the paid AI gateway).
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         messages: z

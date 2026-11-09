@@ -38,7 +38,7 @@ async function safely<T>(label: string, fn: () => Promise<T>): Promise<T | typeo
 
 /** Step 1 (and Resend): email a new 6-digit code. */
 export const requestPasswordResetCode = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => emailOnly.parse(d))
+  .validator((d: unknown) => emailOnly.parse(d))
   .handler(async ({ data }) => {
     const { requestResetCode } = await import("@/lib/password-reset.core");
     const { getResetDeps } = await import("@/lib/password-reset.server");
@@ -47,7 +47,7 @@ export const requestPasswordResetCode = createServerFn({ method: "POST" })
 
 /** Step 2: check the code; returns a one-time reset token on success. */
 export const verifyPasswordResetCode = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ email: z.string().max(254), code: z.string().max(12) }).parse(d),
   )
   .handler(async ({ data }) => {
@@ -58,7 +58,7 @@ export const verifyPasswordResetCode = createServerFn({ method: "POST" })
 
 /** Step 3: set the new password with the reset token from step 2. */
 export const completePasswordReset = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         email: z.string().max(254),

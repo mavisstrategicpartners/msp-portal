@@ -5,7 +5,7 @@ import { computeAccess } from "@/lib/roles";
 
 export const logAttendance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
+  .validator((data) =>
     z
       .object({
         state: z.enum(["Clocked In", "On Break", "Clocked Out"]),
