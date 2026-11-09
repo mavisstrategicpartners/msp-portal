@@ -45,6 +45,14 @@ const ROLE_AUTHORITY_MAP: Record<MspSystemRole, { title: string; authority: stri
     title: "Sales & Business Development",
     authority: "Lead pipeline, consultation follow-ups, proposal submissions and verified closed-won opportunities.",
   },
+  sales_manager: {
+    title: "Sales Manager Command",
+    authority: "Team revenue performance, consultant quota assignment, GHL calendar integration and lead deduplication.",
+  },
+  sales_consultant: {
+    title: "Sales Consultant Workspace",
+    authority: "Personal deal pipeline, assigned monthly target quota, scheduled appointments, and daily follow-up queue.",
+  },
   client_success: {
     title: "Client Success & Relationship",
     authority: "Account health tracking, monthly client check-ins, customer satisfaction scores and retention recovery.",
@@ -80,7 +88,9 @@ export function RoleDashboardContainer() {
       {systemRole === "operations" && <OperationsDashboard />}
       {systemRole === "department_manager" && <DepartmentManagerDashboard />}
       {systemRole === "finance_admin" && <FinanceAdminDashboard />}
-      {systemRole === "sales" && <SalesDashboard />}
+      {(systemRole === "sales" || systemRole === "sales_manager" || systemRole === "sales_consultant") && (
+        <SalesDashboard />
+      )}
       {systemRole === "client_success" && <ClientSuccessDashboard />}
       {systemRole === "staff" && <StaffWorkspaceDashboard />}
       {systemRole === "admin" && <GeneralManagerDashboard />}

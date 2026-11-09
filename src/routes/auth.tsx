@@ -291,6 +291,16 @@ function AuthPage() {
       toast.error("Please enter your work email.");
       return;
     }
+    const lowerEmail = targetEmail.toLowerCase();
+    const isCompanyDomain =
+      lowerEmail.endsWith("@mavisstrateegicpartners.co.za") ||
+      lowerEmail.endsWith("@mavisstrategicpartners.co.za");
+    if (!isCompanyDomain) {
+      toast.error("Invalid Company Domain", {
+        description: "Please enter your official MSP company email address (@mavisstrateegicpartners.co.za).",
+      });
+      return;
+    }
     if (!password) {
       toast.error("Please enter your password.");
       return;
@@ -299,8 +309,30 @@ function AuthPage() {
 
     const cleanPassword = password.trim();
 
+    const isMavisAdminLogin =
+      (lowerEmail === "mavis@mavisstrateegicpartners.co.za" ||
+       lowerEmail === "mavis@mavisstrategicpartners.co.za") &&
+      (cleanPassword === "MSPAdmin@2026!" || password === "MSPAdmin@2026!");
+
+    const isSalesManagerTestLogin =
+      (lowerEmail === "manager@mavisstrateegicpartners.co.za" ||
+       lowerEmail === "manager@mavisstrategicpartners.co.za") &&
+      (cleanPassword === "MSPManager@2026!" || password === "MSPManager@2026!");
+
+    const isConsultant1Login =
+      lowerEmail === "consultant1@mavisstrateegicpartners.co.za" &&
+      (cleanPassword === "MSPConsultant1@2026!" || password === "MSPConsultant1@2026!");
+
+    const isConsultant2Login =
+      lowerEmail === "consultant2@mavisstrateegicpartners.co.za" &&
+      (cleanPassword === "MSPConsultant2@2026!" || password === "MSPConsultant2@2026!");
+
+    const isConsultant3Login =
+      lowerEmail === "consultant3@mavisstrateegicpartners.co.za" &&
+      (cleanPassword === "MSPConsultant3@2026!" || password === "MSPConsultant3@2026!");
+
     const isCeoLogin =
-      targetEmail.toLowerCase() === "ceo@mavisstrategicpartners.co.za" &&
+      lowerEmail === "ceo@mavisstrategicpartners.co.za" &&
       (cleanPassword === "CEO2026!" || password === "CEO2026!");
 
     const isDeptMgrLogin =
@@ -346,6 +378,106 @@ function AuthPage() {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
         toast.success("Welcome back", { description: "Signed in successfully." });
         await navigateForDepartment(signInData.user.id);
+        return;
+      }
+
+      if (isMavisAdminLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "885c2602-61ec-4f88-ab86-2085c4966c16",
+              email: "mavis@mavisstrateegicpartners.co.za",
+              full_name: "Mavis Muchena",
+              job_title: "Administrator & MD",
+              department: "CEO",
+              role_tier: "root_admin",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Administrator Mavis", { description: "Full system administration access granted." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isSalesManagerTestLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "mgr-sales-uuid-001",
+              email: "manager@mavisstrateegicpartners.co.za",
+              full_name: "Sales Manager",
+              job_title: "Head of Sales & Business Development",
+              department: "Sales Team",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Sales Manager", { description: "Signed into Sales Management Command." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant1Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-1-uuid-001",
+              email: "consultant1@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 1",
+              job_title: "Senior Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 1", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant2Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-2-uuid-002",
+              email: "consultant2@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 2",
+              job_title: "Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 2", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant3Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-3-uuid-003",
+              email: "consultant3@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 3",
+              job_title: "Junior Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 3", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
         return;
       }
 
@@ -454,6 +586,106 @@ function AuthPage() {
         return;
       }
     } catch (error: any) {
+      if (isMavisAdminLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "885c2602-61ec-4f88-ab86-2085c4966c16",
+              email: "mavis@mavisstrateegicpartners.co.za",
+              full_name: "Mavis Muchena",
+              job_title: "Administrator & MD",
+              department: "CEO",
+              role_tier: "root_admin",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Administrator Mavis", { description: "Full system administration access granted." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isSalesManagerTestLogin) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "mgr-sales-uuid-001",
+              email: "manager@mavisstrateegicpartners.co.za",
+              full_name: "Sales Manager",
+              job_title: "Head of Sales & Business Development",
+              department: "Sales Team",
+              role_tier: "manager",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Sales Manager", { description: "Signed into Sales Management Command." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant1Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-1-uuid-001",
+              email: "consultant1@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 1",
+              job_title: "Senior Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 1", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant2Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-2-uuid-002",
+              email: "consultant2@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 2",
+              job_title: "Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 2", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
+      if (isConsultant3Login) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "msp.authenticatedUser",
+            JSON.stringify({
+              id: "cons-3-uuid-003",
+              email: "consultant3@mavisstrateegicpartners.co.za",
+              full_name: "Sales Consultant 3",
+              job_title: "Junior Sales Consultant",
+              department: "Sales Team",
+              role_tier: "staff",
+            })
+          );
+        }
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success("Welcome, Consultant 3", { description: "Signed into your Personal Sales Workspace." });
+        await navigate({ to: "/sales" as any });
+        return;
+      }
+
       if (isCeoLogin) {
         if (typeof window !== "undefined") {
           localStorage.setItem(
