@@ -50,8 +50,12 @@ export function DepartmentDashboardPage() {
   }
 
   useEffect(() => {
+    if (profileData && !profileData.isManagerOrAbove && !profileData.isAdmin && !profileData.isDepartmentManager) {
+      navigate({ to: "/departments" as any, replace: true });
+      return;
+    }
     loadData();
-  }, []);
+  }, [profileData]);
 
   // Filtered metrics
   const activeTasks = tasks.filter((t) => t.status !== "Accepted Complete");

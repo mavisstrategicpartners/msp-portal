@@ -74,9 +74,6 @@ import {
   useSubmitEvidence,
   useReviewEvidence,
   useStaffScorecard,
-  useStaffNotifications,
-  useMarkNotificationRead,
-  useMarkAllNotificationsRead,
   uploadEvidenceFile,
 } from "@/lib/staff-tasks.service";
 import {
@@ -97,7 +94,7 @@ export function StaffWorkspaceDashboard() {
   const isManagerOrAbove = profileData?.isManagerOrAbove || false;
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "tasks" | "deadlines" | "dependencies" | "evidence" | "scorecard" | "notifications"
+    "overview" | "tasks" | "deadlines" | "dependencies" | "evidence" | "scorecard"
   >("overview");
 
   // Queries
@@ -105,19 +102,25 @@ export function StaffWorkspaceDashboard() {
   const { data: dependencies = [], isLoading: depsLoading, refetch: refetchDeps } = useStaffDependencies();
   const { data: evidenceList = [], isLoading: evidenceLoading, refetch: refetchEvidence } = useStaffEvidence();
   const { data: scorecard, isLoading: scorecardLoading, refetch: refetchScorecard } = useStaffScorecard();
-  const { data: notifData, refetch: refetchNotifs } = useStaffNotifications();
-
-  const notifications = notifData?.notifications || [];
-  const unreadNotifCount = notifData?.unreadCount || 0;
-
   // Mutations
   const updateTaskMutation = useUpdateStaffTask();
   const createDependencyMutation = useCreateDependencyRequest();
   const updateDependencyMutation = useUpdateDependencyRequest();
   const submitEvidenceMutation = useSubmitEvidence();
   const reviewEvidenceMutation = useReviewEvidence();
-  const markNotifReadMutation = useMarkNotificationRead();
-  const markAllNotifsReadMutation = useMarkAllNotificationsRead();
+
+  // Listen for real-time task updates dispatched across the portal
+  useEffect(() => {
+    const handleTasksUpdated = () => {
+      refetchTasks();
+      refetchScorecard();
+      refetchDeps();
+    };
+    window.addEventListener("msp:tasks_updated", handleTasksUpdated);
+    return () => {
+      window.removeEventListener("msp:tasks_updated", handleTasksUpdated);
+    };
+  }, [refetchTasks, refetchScorecard, refetchDeps]);
 
   // Task Filters
   const [taskSearch, setTaskSearch] = useState("");
@@ -453,21 +456,6 @@ export function StaffWorkspaceDashboard() {
         <div className="flex flex-wrap items-center gap-3">
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => setActiveTab("notifications")}
-            className="h-9 relative text-xs font-semibold gap-1.5 border-border"
-          >
-            <Bell className="h-4 w-4" />
-            Notifications
-            {unreadNotifCount > 0 && (
-              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                {unreadNotifCount}
-              </span>
-            )}
-          </Button>
-
-          <Button
-            size="sm"
             onClick={() => handleOpenEvidenceModal()}
             className="h-9 bg-primary text-xs font-semibold text-primary-foreground gap-1.5 hover:bg-primary/90 shadow-xs"
           >
@@ -496,7 +484,7 @@ export function StaffWorkspaceDashboard() {
               <CheckSquare className="h-3.5 w-3.5" /> Assigned Tasks ({tasks.length})
             </TabsTrigger>
             <TabsTrigger value="deadlines" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
-              <Clock className="h-3.5 w-3.5" /> Deadlines & Tracking
+              <Clock className="h-3.5 w-3.5" /> Deadlines
               {deadlineCategories.overdue.length > 0 && (
                 <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
                   {deadlineCategories.overdue.length}
@@ -511,14 +499,6 @@ export function StaffWorkspaceDashboard() {
             </TabsTrigger>
             <TabsTrigger value="scorecard" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
               <Award className="h-3.5 w-3.5" /> Personal Scorecard
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
-              <Bell className="h-3.5 w-3.5" /> Notifications
-              {unreadNotifCount > 0 && (
-                <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
-                  {unreadNotifCount}
-                </span>
-              )}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -820,11 +800,9 @@ export function StaffWorkspaceDashboard() {
                 <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
               </Card>
             ) : (
-              filteredTasks.map((task) => {
-                const isTimerRunning = activeTimerTaskId === task.id;
-                return (
-                  <Card
-                    key={task.id}
+              filteredTasks.map((task) => (
+                <Card
+                  key={task.id}
                     className="p-5 border-border bg-card space-y-4 hover:border-primary/40 transition shadow-xs"
                   >
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
@@ -917,28 +895,8 @@ export function StaffWorkspaceDashboard() {
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50 text-xs">
                       <div className="flex items-center gap-2">
                         <Button
-                          type="button"
-                          variant={isTimerRunning ? "destructive" : "outline"}
                           size="sm"
-                          onClick={() => toggleTimer(task.id)}
-                          className="h-8 text-xs font-semibold gap-1.5"
-                        >
-                          {isTimerRunning ? (
-                            <>
-                              <Square className="h-3 w-3 fill-current" /> Stop (
-                              {Math.floor(timerSeconds / 60)}:
-                              {String(timerSeconds % 60).padStart(2, "0")})
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-3 w-3 fill-current" /> Time Tracker
-                            </>
-                          )}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => handleOpenTask(task)}
                           className="h-8 text-xs font-semibold"
                         >
@@ -982,9 +940,8 @@ export function StaffWorkspaceDashboard() {
                       </div>
                     </div>
                   </Card>
-                );
-              })
-            )}
+                ))
+              )}
           </div>
         </TabsContent>
 
@@ -1498,116 +1455,29 @@ export function StaffWorkspaceDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {(scorecard?.trends ?? []).map((tr, i) => (
-                    <tr key={i} className="hover:bg-muted/30">
-                      <td className="py-3 px-4 font-bold text-foreground">{tr.period}</td>
-                      <td className="py-3 px-3">{tr.assigned}</td>
-                      <td className="py-3 px-3 font-semibold text-emerald-600">{tr.completed}</td>
-                      <td className="py-3 px-3 font-semibold text-primary">{tr.onTime}</td>
-                      <td className="py-3 px-4 text-right">
-                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
-                          Meets Standard
-                        </Badge>
+                  {(scorecard?.trends ?? []).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground text-xs">
+                        No historical performance evaluation periods recorded yet. Verified metrics will appear here as deliverables are assigned and completed.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    (scorecard?.trends ?? []).map((tr, i) => (
+                      <tr key={i} className="hover:bg-muted/30">
+                        <td className="py-3 px-4 font-bold text-foreground">{tr.period}</td>
+                        <td className="py-3 px-3">{tr.assigned}</td>
+                        <td className="py-3 px-3 font-semibold text-emerald-600">{tr.completed}</td>
+                        <td className="py-3 px-3 font-semibold text-primary">{tr.onTime}</td>
+                        <td className="py-3 px-4 text-right">
+                          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
+                            Meets Standard
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* ══════════════════════════════════════════════════════════════════════
-            TAB 7: NOTIFICATIONS
-        ══════════════════════════════════════════════════════════════════════ */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card className="p-6 border-border shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-primary" /> Notifications & Operational Alerts
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Task updates, deadline reminders, dependency responses, and QA decisions.
-                </p>
-              </div>
-
-              {unreadNotifCount > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => markAllNotifsReadMutation.mutate()}
-                  className="h-8 text-xs font-semibold"
-                >
-                  Mark All Read
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {notifications.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground text-xs">
-                  No notifications recorded.
-                </div>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`p-3.5 rounded-xl border transition flex items-start justify-between gap-3 ${
-                      !n.read
-                        ? "bg-primary/[0.04] border-primary/30"
-                        : "bg-card border-border opacity-85"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                          !n.read ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <Bell className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-foreground">{n.title}</h4>
-                          {!n.read && (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                        <span className="text-[10px] text-muted-foreground/80 mt-1 block">
-                          {new Date(n.createdAt).toLocaleDateString()} SAST
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {n.relatedTaskId && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            const found = tasks.find((t) => t.id === n.relatedTaskId);
-                            if (found) handleOpenTask(found);
-                          }}
-                          className="h-7 text-xs text-primary font-semibold"
-                        >
-                          Jump to Task
-                        </Button>
-                      )}
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markNotifReadMutation.mutate({ id: n.id, read: !n.read })}
-                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {n.read ? "Mark Unread" : "Mark Read"}
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
             </div>
           </Card>
         </TabsContent>
@@ -1760,7 +1630,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: CREATE DEPENDENCY REQUEST ──────────────────────────────── */}
       <Dialog open={depModalOpen} onOpenChange={setDepModalOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground">
+        <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-rose-600 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5" /> Request Task Dependency
@@ -1770,11 +1640,11 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmitDependency} className="space-y-4 py-2 text-xs">
-            <div className="space-y-1.5">
+          <form onSubmit={handleSubmitDependency} className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Linked Blocked Task *</Label>
               <Select value={depTaskId} onValueChange={setDepTaskId}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue placeholder="Choose task..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -1787,10 +1657,10 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Target Department *</Label>
               <Select value={depDepartment} onValueChange={setDepDepartment}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1803,33 +1673,33 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Description of Roadblock *</Label>
               <Textarea
                 placeholder="Explain what is currently blocked..."
                 value={depBlockerDesc}
                 onChange={(e) => setDepBlockerDesc(e.target.value)}
                 required
-                className="text-xs min-h-[70px]"
+                className="text-xs min-h-[70px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Specific Needed Resource / Action *</Label>
               <Textarea
                 placeholder="e.g. CAPI delegate link from client, Google Tag Manager access..."
                 value={depNeededResource}
                 onChange={(e) => setDepNeededResource(e.target.value)}
                 required
-                className="text-xs min-h-[70px]"
+                className="text-xs min-h-[70px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-3 w-full min-w-0">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold">Urgency Level</Label>
                 <Select value={depUrgency} onValueChange={(v: any) => setDepUrgency(v)}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1841,18 +1711,18 @@ export function StaffWorkspaceDashboard() {
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold">Requested By Date</Label>
                 <Input
                   type="date"
                   value={depDueDate}
                   onChange={(e) => setDepDueDate(e.target.value)}
-                  className="h-9 text-xs"
+                  className="h-9 text-xs w-full min-w-0"
                 />
               </div>
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 w-full">
               <Button type="button" variant="outline" size="sm" onClick={() => setDepModalOpen(false)}>
                 Cancel
               </Button>
@@ -1866,7 +1736,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: SUBMIT EVIDENCE ────────────────────────────────────────── */}
       <Dialog open={evidenceModalOpen} onOpenChange={setEvidenceModalOpen}>
-        <DialogContent className="max-w-lg bg-card border-border text-foreground">
+        <DialogContent className="max-w-lg w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <FileUp className="h-5 w-5 text-primary" /> Submit Deliverable Evidence
@@ -1876,11 +1746,11 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmitEvidence} className="space-y-4 py-2 text-xs">
-            <div className="space-y-1.5">
+          <form onSubmit={handleSubmitEvidence} className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Select Task *</Label>
               <Select value={evidenceTaskId} onValueChange={setEvidenceTaskId}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue placeholder="Choose task..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -1894,37 +1764,37 @@ export function StaffWorkspaceDashboard() {
             </div>
 
             {/* Asset URL */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Deliverable Asset URL / Repository Link</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full min-w-0">
                 <Input
-                  placeholder="Link Title (e.g. Campaign Dashboard)"
+                  placeholder="Link Title (e.g. Dashboard)"
                   value={evidenceLinkTitle}
                   onChange={(e) => setEvidenceLinkTitle(e.target.value)}
-                  className="col-span-1 h-9 text-xs"
+                  className="sm:col-span-1 h-9 text-xs min-w-0 w-full"
                 />
                 <Input
                   placeholder="https://..."
                   value={evidenceLinkUrl}
                   onChange={(e) => setEvidenceLinkUrl(e.target.value)}
-                  className="col-span-2 h-9 text-xs"
+                  className="sm:col-span-2 h-9 text-xs min-w-0 w-full"
                 />
               </div>
             </div>
 
             {/* File Upload to Supabase Storage */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Upload Document or Screenshot (PDF, DOCX, PNG, ZIP &lt; 25MB)</Label>
               <Input
                 type="file"
                 onChange={handleFileUpload}
                 disabled={isUploadingFile}
-                className="h-9 text-xs file:text-xs file:font-semibold"
+                className="h-9 text-xs file:text-xs file:font-semibold w-full min-w-0"
               />
               {isUploadingFile && <p className="text-[11px] text-primary animate-pulse">Uploading file to secure storage...</p>}
 
               {evidenceFiles.length > 0 && (
-                <div className="space-y-1 pt-1">
+                <div className="space-y-1 pt-1 w-full min-w-0">
                   {evidenceFiles.map((f, i) => (
                     <div key={i} className="flex items-center justify-between text-[11px] bg-secondary/50 p-2 rounded">
                       <span className="font-semibold truncate max-w-xs">{f.name}</span>
@@ -1936,18 +1806,18 @@ export function StaffWorkspaceDashboard() {
             </div>
 
             {/* Written Explanation */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Written Explanation & Completion Note *</Label>
               <Textarea
                 placeholder="Explain what was implemented, how it meets acceptance criteria, test credentials..."
                 value={evidenceExplanation}
                 onChange={(e) => setEvidenceExplanation(e.target.value)}
                 required
-                className="text-xs min-h-[85px]"
+                className="text-xs min-h-[85px] w-full min-w-0 resize-y"
               />
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 w-full">
               <Button type="button" variant="outline" size="sm" onClick={() => setEvidenceModalOpen(false)}>
                 Cancel
               </Button>
@@ -1961,7 +1831,7 @@ export function StaffWorkspaceDashboard() {
 
       {/* ─── MODAL: MANAGER REVIEW EVIDENCE ─────────────────────────────────── */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground">
+        <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-base font-bold">QA Deliverable Inspection</DialogTitle>
             <DialogDescription className="text-xs">
@@ -1969,16 +1839,16 @@ export function StaffWorkspaceDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2 text-xs">
-            <div className="rounded-lg bg-secondary/30 p-3 space-y-1">
+          <div className="space-y-4 py-2 text-xs w-full min-w-0 max-w-full">
+            <div className="rounded-lg bg-secondary/30 p-3 space-y-1 w-full min-w-0">
               <span className="font-semibold text-foreground">Staff Note:</span>
-              <p className="text-muted-foreground">{selectedEvidence?.writtenExplanation}</p>
+              <p className="text-muted-foreground break-words">{selectedEvidence?.writtenExplanation}</p>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">QA Decision</Label>
               <Select value={reviewDecision} onValueChange={(v: any) => setReviewDecision(v)}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1988,18 +1858,18 @@ export function StaffWorkspaceDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
               <Label className="text-xs font-semibold">Feedback / Correction Notes</Label>
               <Textarea
                 placeholder="Details of approval or specific adjustments needed..."
                 value={reviewerFeedback}
                 onChange={(e) => setReviewerFeedback(e.target.value)}
-                className="text-xs min-h-[80px]"
+                className="text-xs min-h-[80px] w-full min-w-0 resize-y"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="w-full">
             <Button variant="outline" size="sm" onClick={() => setReviewModalOpen(false)}>
               Cancel
             </Button>

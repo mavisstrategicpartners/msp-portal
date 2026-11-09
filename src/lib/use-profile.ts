@@ -24,6 +24,8 @@ export type MspSystemRole =
   | "hr"
   | "admin"
   | "sales"
+  | "sales_manager"
+  | "sales_consultant"
   | "client_success";
 
 export function resolveSystemRole(profile: Profile | null, userEmail?: string, roles: any[] = []): MspSystemRole {
@@ -75,7 +77,7 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     roles.some((r) => r.role === "finance_administration" || r.role === "finance_admin" || r.role === "finance") ||
     dept.includes("finance") ||
     dept.includes("accounting") ||
-    dept.includes("admin department") ||
+    (dept.includes("admin department") && (title.includes("finance") || email.includes("finance") || tier === "manager")) ||
     title.includes("finance") ||
     title.includes("accountant") ||
     title.includes("billing")
@@ -107,17 +109,27 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "admin";
   }
 
-  // 7. Sales (including assigned role)
+  // 7. Sales (including manager & consultant roles)
   if (
     email.startsWith("sales@") ||
+    email.startsWith("manager@") ||
     email.includes("sales") ||
+    email.includes("consultant") ||
     roles.some((r) => r.role === "sales") ||
     dept.includes("sales") ||
     dept.includes("business development") ||
     title.includes("sales") ||
     title.includes("business development")
   ) {
-    return "sales";
+    if (
+      email.startsWith("manager@") ||
+      title.includes("manager") ||
+      title.includes("head") ||
+      tier === "manager"
+    ) {
+      return "sales_manager";
+    }
+    return "sales_consultant";
   }
 
   // 8. Client Success
@@ -129,14 +141,27 @@ export function resolveSystemRole(profile: Profile | null, userEmail?: string, r
     return "client_success";
   }
 
-  // 9. Department Manager (Media Buying / Authorized department)
+  // 9. Specialist roles that contain "manager" in the title but are staff-level
+  //    (e.g. SEO Manager, Social Media Manager, Content Manager)
+  const specialistManagerTitles = [
+    "seo manager",
+    "social media manager",
+    "content manager",
+    "community manager",
+    "campaign manager",
+  ];
+  const isSpecialistTitle = specialistManagerTitles.some((s) => title === s || title.startsWith(s));
+  if (isSpecialistTitle && tier !== "manager") {
+    return "staff";
+  }
+
+  // 10. Department Manager (Media Buying / Authorized department)
   if (
     email.startsWith("department.manager@") ||
     roles.some((r) => r.role === "DEPARTMENT_MANAGER" || r.role === "department_manager") ||
     title.includes("department manager") ||
     title.includes("lead") ||
     tier === "manager" ||
-    title.includes("manager") ||
     title.includes("head of")
   ) {
     return "department_manager";
@@ -159,10 +184,12 @@ export function getDefaultDashboardRoute(role: MspSystemRole): string {
     case "finance_admin":
       return "/finance";
     case "hr":
-      return "/host/hr";
+      return "/hr";
     case "admin":
       return "/admin/users";
     case "sales":
+    case "sales_manager":
+    case "sales_consultant":
       return "/sales";
     case "client_success":
       return "/client-success";
@@ -212,7 +239,9 @@ export function useProfile() {
                 isGM: fallbackRole === "general_manager",
                 isOperations: fallbackRole === "operations",
                 isFinance: fallbackRole === "finance_admin",
-                isSales: fallbackRole === "sales",
+                isSales: fallbackRole === "sales" || fallbackRole === "sales_manager" || fallbackRole === "sales_consultant",
+                isSalesManager: fallbackRole === "sales_manager" || parsed.role_tier === "manager",
+                isSalesConsultant: fallbackRole === "sales_consultant" && parsed.role_tier !== "manager",
                 isDepartmentManager: fallbackRole === "department_manager",
                 roleTier: (parsed.role_tier as any) || "root_admin",
                 isRootAdmin: fallbackRole === "ceo",
@@ -306,7 +335,9 @@ export function useProfile() {
         isGM: systemRole === "general_manager",
         isOperations: systemRole === "operations",
         isFinance: systemRole === "finance_admin",
-        isSales: systemRole === "sales",
+        isSales: systemRole === "sales" || systemRole === "sales_manager" || systemRole === "sales_consultant",
+        isSalesManager: systemRole === "sales_manager" || (resolvedTier === "manager" && (systemRole === "sales" || profile?.department === "Sales Team")),
+        isSalesConsultant: systemRole === "sales_consultant" || (resolvedTier !== "manager" && !isAdmin && (systemRole === "sales" || profile?.department === "Sales Team")),
         isDepartmentManager: systemRole === "department_manager",
         departmentName:
           (user?.user_metadata?.department as string) ||

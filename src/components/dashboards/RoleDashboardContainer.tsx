@@ -9,7 +9,7 @@ import { CeoDashboard } from "./CeoDashboard";
 import { StaffWorkspaceDashboard } from "./StaffWorkspaceDashboard";
 import { SalesDashboard } from "./SalesDashboard";
 import { ClientSuccessDashboard } from "./ClientSuccessDashboard";
-import { HrDashboard } from "./HrDashboard";
+import { HRStaffDashboard } from "./HRStaffDashboard";
 import { useProfile, MspSystemRole } from "@/lib/use-profile";
 
 const ROLE_AUTHORITY_MAP: Record<MspSystemRole, { title: string; authority: string }> = {
@@ -44,6 +44,14 @@ const ROLE_AUTHORITY_MAP: Record<MspSystemRole, { title: string; authority: stri
   sales: {
     title: "Sales & Business Development",
     authority: "Lead pipeline, consultation follow-ups, proposal submissions and verified closed-won opportunities.",
+  },
+  sales_manager: {
+    title: "Sales Manager Command",
+    authority: "Team revenue performance, consultant quota assignment, GHL calendar integration and lead deduplication.",
+  },
+  sales_consultant: {
+    title: "Sales Consultant Workspace",
+    authority: "Personal deal pipeline, assigned monthly target quota, scheduled appointments, and daily follow-up queue.",
   },
   client_success: {
     title: "Client Success & Relationship",
@@ -80,11 +88,13 @@ export function RoleDashboardContainer() {
       {systemRole === "operations" && <OperationsDashboard />}
       {systemRole === "department_manager" && <DepartmentManagerDashboard />}
       {systemRole === "finance_admin" && <FinanceAdminDashboard />}
-      {systemRole === "sales" && <SalesDashboard />}
+      {(systemRole === "sales" || systemRole === "sales_manager" || systemRole === "sales_consultant") && (
+        <SalesDashboard />
+      )}
       {systemRole === "client_success" && <ClientSuccessDashboard />}
       {systemRole === "staff" && <StaffWorkspaceDashboard />}
       {systemRole === "admin" && <GeneralManagerDashboard />}
-      {systemRole === "hr" && <HrDashboard />}
+      {systemRole === "hr" && <HRStaffDashboard />}
     </div>
   );
 }

@@ -1,5 +1,33 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+/**
+ * Returns today's start-of-day date object (00:00:00.000) specifically in Africa/Johannesburg (UTC+2)
+ */
+function getJohannesburgStartOfDay(): Date {
+  const now = new Date();
+  const jhbDateStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return new Date(`${jhbDateStr}T00:00:00.000+02:00`);
+}
+
+function formatJhbTime(dateOrMs: Date | number | null | undefined): string {
+  if (!dateOrMs) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(new Date(dateOrMs));
+  } catch {
+    return "—";
+  }
+}
+
 export async function handleAttendanceApi(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname;
@@ -28,6 +56,7 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
         clockInTime,
         breakStartTime,
         totalBreakMs,
+        clockOutTime,
         hoursWorked,
       } = body;
 
@@ -38,13 +67,31 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
         });
       }
 
+      const now = Date.now();
+      // Ensure clock_in_time is never in the future (client system clock desync protection)
+      let sanitizedClockIn = clockInTime || null;
+      if (sanitizedClockIn && sanitizedClockIn > now + 60000) {
+        sanitizedClockIn = now;
+      }
+      if (state === "Clocked In" && !sanitizedClockIn) {
+        sanitizedClockIn = now;
+      }
+
+      let sanitizedBreakStart = breakStartTime || null;
+      if (sanitizedBreakStart && sanitizedBreakStart > now + 60000) {
+        sanitizedBreakStart = now;
+      }
+
+      const resolvedClockOut = state === "Clocked Out" ? (clockOutTime || now) : null;
+
       // Persist in audit_logs with service_role key (bypasses RLS)
       const actionKey = `attendance_${state.toLowerCase().replace(/\s+/g, "_")}`;
       const logDetails = {
         state,
-        clock_in_time: clockInTime || null,
-        break_start_time: breakStartTime || null,
+        clock_in_time: sanitizedClockIn,
+        break_start_time: sanitizedBreakStart,
         total_break_ms: totalBreakMs || 0,
+        clock_out_time: resolvedClockOut,
         hours_worked: hoursWorked || "0h 0m",
         updated_at: new Date().toISOString(),
       };
@@ -132,9 +179,8 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       const breakStartTime = details?.break_start_time || null;
       const totalBreakMs = details?.total_break_ms || 0;
 
-      // Check if this log was from today
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
+      // Check if this log was from today in Africa/Johannesburg timezone
+      const startOfDay = getJohannesburgStartOfDay();
       const logDate = new Date(logs[0].created_at);
       const isToday = logDate.getTime() >= startOfDay.getTime();
 
@@ -181,9 +227,8 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
         });
       }
 
-      // Query today's attendance logs
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
+      // Query today's attendance logs in Africa/Johannesburg (UTC+2)
+      const startOfDay = getJohannesburgStartOfDay();
 
       const { data: logs, error: lErr } = await (supabaseAdmin as any)
         .from("audit_logs")
@@ -205,69 +250,86 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
         }
       });
 
-      // For any user who didn't clock in TODAY, check if they had an unclosed "Clocked In" or "On Break" session
-      // (ensuring: "even if they signout from the system without clocking out thier time should contiue calculating")
-      const missingUserIds = (profiles || [])
-        .map((p: any) => p.id)
-        .filter((id: string) => !statusMap.has(id));
-
-      if (missingUserIds.length > 0) {
-        const { data: pastLogs } = await (supabaseAdmin as any)
-          .from("audit_logs")
-          .select("actor_id, details, created_at")
-          .in("actor_id", missingUserIds)
-          .like("action", "attendance_%")
-          .order("created_at", { ascending: false });
-
-        (pastLogs || []).forEach((log: any) => {
-          if (log.actor_id && !statusMap.has(log.actor_id)) {
-            if (
-              log.details?.state === "Clocked In" ||
-              log.details?.state === "On Break"
-            ) {
-              statusMap.set(log.actor_id, {
-                ...log.details,
-                created_at: log.created_at,
-              });
-            }
-          }
-        });
-      }
-
       const now = Date.now();
       const staff = (profiles || []).map((p: any) => {
         const live = statusMap.get(p.id);
         const state: "Clocked In" | "On Break" | "Clocked Out" =
           live?.state || "Clocked Out";
-        const clockInTime = live?.clock_in_time || null;
-        const breakStartTime = live?.break_start_time || null;
+        let clockInTime = live?.clock_in_time || null;
+        let breakStartTime = live?.break_start_time || null;
         const totalBreakMs = live?.total_break_ms || 0;
+        const clockOutTime = live?.clock_out_time || null;
+
+        // Sanitize future timestamp anomaly (e.g. client system clock desync)
+        if (clockInTime && clockInTime > now) {
+          const createdAtMs = live?.created_at ? new Date(live.created_at).getTime() : now;
+          clockInTime = Math.min(now, createdAtMs);
+        }
+        if (breakStartTime && breakStartTime > now) {
+          breakStartTime = now;
+        }
 
         let timeStr = "—";
         let hoursWorkedStr = "0h 0m";
         let elapsedMinutes = 0;
+        let breakDurationStr = "—";
+        let liveBreakMs = 0;
+
+        // Compute total break ms including any ongoing break
+        let computedBreakMs = totalBreakMs;
+        if (state === "On Break" && breakStartTime) {
+          computedBreakMs += Math.max(0, now - breakStartTime);
+          liveBreakMs = Math.max(0, now - breakStartTime);
+        }
 
         if (clockInTime && state !== "Clocked Out") {
-          timeStr = new Date(clockInTime).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+          // Format in Africa/Johannesburg timezone
+          timeStr = formatJhbTime(clockInTime);
 
-          let elapsedMs = now - clockInTime - totalBreakMs;
-          if (state === "On Break" && breakStartTime) {
-            elapsedMs -= now - breakStartTime;
-          }
-          elapsedMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
+          // Net worked time = elapsed - all breaks (completed + ongoing)
+          const elapsedMs = Math.max(0, now - clockInTime - computedBreakMs);
+          elapsedMinutes = Math.floor(elapsedMs / 60000);
           const h = Math.floor(elapsedMinutes / 60);
           const m = elapsedMinutes % 60;
           hoursWorkedStr = `${h}h ${m}m`;
-        } else if (state === "Clocked Out" && live?.hours_worked) {
-          hoursWorkedStr = live.hours_worked;
+
+          // Format break duration
+          if (computedBreakMs > 0) {
+            const bMins = Math.max(0, Math.floor(computedBreakMs / 60000));
+            const bH = Math.floor(bMins / 60);
+            const bM = bMins % 60;
+            breakDurationStr = bH > 0 ? `${bH}h ${bM}m` : `${bM}m`;
+          } else {
+            breakDurationStr = "0m";
+          }
+        } else if (state === "Clocked Out") {
           if (clockInTime) {
-            timeStr = new Date(clockInTime).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+            timeStr = formatJhbTime(clockInTime);
+
+            // If we have actual clock-out timestamp, calculate precisely: clockOut - clockIn - totalBreaks
+            if (clockOutTime && clockOutTime > clockInTime) {
+              const elapsedMs = Math.max(0, clockOutTime - clockInTime - totalBreakMs);
+              elapsedMinutes = Math.floor(elapsedMs / 60000);
+              const h = Math.floor(elapsedMinutes / 60);
+              const m = elapsedMinutes % 60;
+              hoursWorkedStr = `${h}h ${m}m`;
+            } else if (live?.hours_worked && live.hours_worked !== "0h 0m") {
+              hoursWorkedStr = live.hours_worked;
+              const match = live.hours_worked.match(/(\d+)h\s*(\d+)m/);
+              if (match) {
+                elapsedMinutes = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+              }
+            }
+          } else {
+            hoursWorkedStr = "0h 0m";
+          }
+
+          // Show completed break duration for clocked-out employees
+          if (totalBreakMs > 0) {
+            const bMins = Math.max(0, Math.floor(totalBreakMs / 60000));
+            const bH = Math.floor(bMins / 60);
+            const bM = bMins % 60;
+            breakDurationStr = bH > 0 ? `${bH}h ${bM}m` : `${bM}m`;
           }
         }
 
@@ -286,9 +348,12 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
           clockInTime,
           breakStartTime,
           totalBreakMs,
+          clockOutTime,
           time: timeStr,
           hours: hoursWorkedStr,
           elapsedMinutes,
+          breakDuration: breakDurationStr,
+          liveBreakMs,
           currentProject: "MSP Operations",
         };
       });
@@ -396,7 +461,12 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
 
       // Build day records for each staff member
       const now = new Date();
-      const todayDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const todayDateStr = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Johannesburg",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(now);
 
       let totalOverallHoursMins = 0;
       let totalLeaveCount = 0;
@@ -446,31 +516,40 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
             const lastClockOut = [...dayLogs].reverse().find((l: any) => l.action === "attendance_clocked_out");
             const latestLog = dayLogs[dayLogs.length - 1];
 
+            // Format times in Africa/Johannesburg timezone
             const clockInTimeStr = firstClockIn.details?.clock_in_time
-              ? new Date(firstClockIn.details.clock_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-              : new Date(firstClockIn.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              ? formatJhbTime(firstClockIn.details.clock_in_time)
+              : formatJhbTime(new Date(firstClockIn.created_at).getTime());
 
-            let clockOutTimeStr = "17:00";
+            let clockOutTimeStr = "—";
             if (lastClockOut) {
-              clockOutTimeStr = new Date(lastClockOut.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            } else if (dayDate === todayDateStr && latestLog.details?.state === "Clocked In") {
+              clockOutTimeStr = lastClockOut.details?.clock_out_time
+                ? formatJhbTime(lastClockOut.details.clock_out_time)
+                : formatJhbTime(new Date(lastClockOut.created_at).getTime());
+            } else if (dayDate === todayDateStr && latestLog.details?.state !== "Clocked Out") {
               clockOutTimeStr = "In Progress";
             }
 
-            // Estimate / calculate hours worked
+            // Calculate net hours worked: elapsed time minus break duration
             let dayMins = 0;
-            if (latestLog.details?.hours_worked) {
+            const clockInMs = firstClockIn.details?.clock_in_time || new Date(firstClockIn.created_at).getTime();
+            const totalBreakMsForDay = latestLog.details?.total_break_ms || 0;
+
+            if (lastClockOut) {
+              // Clocked out: use actual clock-out timestamp or created_at
+              const clockOutMs = lastClockOut.details?.clock_out_time || new Date(lastClockOut.created_at).getTime();
+              const netMs = Math.max(0, clockOutMs - clockInMs - totalBreakMsForDay);
+              dayMins = Math.floor(netMs / 60000);
+            } else if (dayDate === todayDateStr) {
+              // Still working today: use current time
+              const netMs = Math.max(0, Date.now() - clockInMs - totalBreakMsForDay);
+              dayMins = Math.floor(netMs / 60000);
+            } else if (latestLog.details?.hours_worked) {
+              // Past day with no clock-out record: use stored hours as fallback
               const match = latestLog.details.hours_worked.match(/(\d+)h\s*(\d+)m/);
               if (match) {
                 dayMins = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-              } else {
-                dayMins = 8 * 60;
               }
-            } else if (firstClockIn.details?.clock_in_time) {
-              const diffMs = (lastClockOut ? new Date(lastClockOut.created_at).getTime() : Date.now()) - firstClockIn.details.clock_in_time;
-              dayMins = Math.max(0, Math.floor(diffMs / 60000));
-            } else {
-              dayMins = 8 * 60;
             }
 
             userTotalMinutes += dayMins;

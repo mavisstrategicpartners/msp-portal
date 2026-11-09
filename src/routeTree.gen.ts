@@ -56,7 +56,15 @@ import { Route as AuthenticatedGmExecutionRouteImport } from './routes/_authenti
 import { Route as AuthenticatedGmRevenueRouteImport } from './routes/_authenticated/gm/revenue'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host/index'
 import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
+import { Route as AuthenticatedHrIndexRouteImport } from './routes/_authenticated/hr/index'
 import { Route as AuthenticatedHrAttendanceRouteImport } from './routes/_authenticated/hr/attendance'
+import { Route as AuthenticatedHrDocumentsRouteImport } from './routes/_authenticated/hr/documents'
+import { Route as AuthenticatedHrLeaveRouteImport } from './routes/_authenticated/hr/leave'
+import { Route as AuthenticatedHrPayrollRouteImport } from './routes/_authenticated/hr/payroll'
+import { Route as AuthenticatedHrPerformanceRouteImport } from './routes/_authenticated/hr/performance'
+import { Route as AuthenticatedHrRecruitmentRouteImport } from './routes/_authenticated/hr/recruitment'
+import { Route as AuthenticatedHrRelationsRouteImport } from './routes/_authenticated/hr/relations'
+import { Route as AuthenticatedHrTimesheetsRouteImport } from './routes/_authenticated/hr/timesheets'
 import { Route as AuthenticatedMeDeclarationRouteImport } from './routes/_authenticated/me/declaration'
 import { Route as AuthenticatedMeLeaveRouteImport } from './routes/_authenticated/me/leave'
 import { Route as AuthenticatedMeProfileRouteImport } from './routes/_authenticated/me/profile'
@@ -323,10 +331,55 @@ const AuthenticatedHostSplatRoute = AuthenticatedHostSplatRouteImport.update({
   path: '/host/$',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHrIndexRoute = AuthenticatedHrIndexRouteImport.update({
+  id: '/hr/',
+  path: '/hr/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHrAttendanceRoute =
   AuthenticatedHrAttendanceRouteImport.update({
     id: '/hr/attendance',
     path: '/hr/attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrDocumentsRoute =
+  AuthenticatedHrDocumentsRouteImport.update({
+    id: '/hr/documents',
+    path: '/hr/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrLeaveRoute = AuthenticatedHrLeaveRouteImport.update({
+  id: '/hr/leave',
+  path: '/hr/leave',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHrPayrollRoute = AuthenticatedHrPayrollRouteImport.update({
+  id: '/hr/payroll',
+  path: '/hr/payroll',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHrPerformanceRoute =
+  AuthenticatedHrPerformanceRouteImport.update({
+    id: '/hr/performance',
+    path: '/hr/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrRecruitmentRoute =
+  AuthenticatedHrRecruitmentRouteImport.update({
+    id: '/hr/recruitment',
+    path: '/hr/recruitment',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrRelationsRoute =
+  AuthenticatedHrRelationsRouteImport.update({
+    id: '/hr/relations',
+    path: '/hr/relations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrTimesheetsRoute =
+  AuthenticatedHrTimesheetsRouteImport.update({
+    id: '/hr/timesheets',
+    path: '/hr/timesheets',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMeDeclarationRoute =
@@ -450,6 +503,13 @@ export interface FileRoutesByFullPath {
   '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/hr/documents': typeof AuthenticatedHrDocumentsRoute
+  '/hr/leave': typeof AuthenticatedHrLeaveRoute
+  '/hr/payroll': typeof AuthenticatedHrPayrollRoute
+  '/hr/performance': typeof AuthenticatedHrPerformanceRoute
+  '/hr/recruitment': typeof AuthenticatedHrRecruitmentRoute
+  '/hr/relations': typeof AuthenticatedHrRelationsRoute
+  '/hr/timesheets': typeof AuthenticatedHrTimesheetsRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
@@ -466,6 +526,7 @@ export interface FileRoutesByFullPath {
   '/department/': typeof AuthenticatedDepartmentIndexRoute
   '/gm/': typeof AuthenticatedGmIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
+  '/hr/': typeof AuthenticatedHrIndexRoute
   '/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -512,6 +573,13 @@ export interface FileRoutesByTo {
   '/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/hr/documents': typeof AuthenticatedHrDocumentsRoute
+  '/hr/leave': typeof AuthenticatedHrLeaveRoute
+  '/hr/payroll': typeof AuthenticatedHrPayrollRoute
+  '/hr/performance': typeof AuthenticatedHrPerformanceRoute
+  '/hr/recruitment': typeof AuthenticatedHrRecruitmentRoute
+  '/hr/relations': typeof AuthenticatedHrRelationsRoute
+  '/hr/timesheets': typeof AuthenticatedHrTimesheetsRoute
   '/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/me/leave': typeof AuthenticatedMeLeaveRoute
   '/me/profile': typeof AuthenticatedMeProfileRoute
@@ -528,6 +596,7 @@ export interface FileRoutesByTo {
   '/department': typeof AuthenticatedDepartmentIndexRoute
   '/gm': typeof AuthenticatedGmIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
+  '/hr': typeof AuthenticatedHrIndexRoute
   '/operations': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRoutesById {
@@ -576,6 +645,13 @@ export interface FileRoutesById {
   '/_authenticated/gm/revenue': typeof AuthenticatedGmRevenueRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
   '/_authenticated/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/_authenticated/hr/documents': typeof AuthenticatedHrDocumentsRoute
+  '/_authenticated/hr/leave': typeof AuthenticatedHrLeaveRoute
+  '/_authenticated/hr/payroll': typeof AuthenticatedHrPayrollRoute
+  '/_authenticated/hr/performance': typeof AuthenticatedHrPerformanceRoute
+  '/_authenticated/hr/recruitment': typeof AuthenticatedHrRecruitmentRoute
+  '/_authenticated/hr/relations': typeof AuthenticatedHrRelationsRoute
+  '/_authenticated/hr/timesheets': typeof AuthenticatedHrTimesheetsRoute
   '/_authenticated/me/declaration': typeof AuthenticatedMeDeclarationRoute
   '/_authenticated/me/leave': typeof AuthenticatedMeLeaveRoute
   '/_authenticated/me/profile': typeof AuthenticatedMeProfileRoute
@@ -592,6 +668,7 @@ export interface FileRoutesById {
   '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
   '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
+  '/_authenticated/hr/': typeof AuthenticatedHrIndexRoute
   '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
 }
 export interface FileRouteTypes {
@@ -640,6 +717,13 @@ export interface FileRouteTypes {
     | '/gm/revenue'
     | '/host/$'
     | '/hr/attendance'
+    | '/hr/documents'
+    | '/hr/leave'
+    | '/hr/payroll'
+    | '/hr/performance'
+    | '/hr/recruitment'
+    | '/hr/relations'
+    | '/hr/timesheets'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
@@ -656,6 +740,7 @@ export interface FileRouteTypes {
     | '/department/'
     | '/gm/'
     | '/host/'
+    | '/hr/'
     | '/operations/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -702,6 +787,13 @@ export interface FileRouteTypes {
     | '/gm/revenue'
     | '/host/$'
     | '/hr/attendance'
+    | '/hr/documents'
+    | '/hr/leave'
+    | '/hr/payroll'
+    | '/hr/performance'
+    | '/hr/recruitment'
+    | '/hr/relations'
+    | '/hr/timesheets'
     | '/me/declaration'
     | '/me/leave'
     | '/me/profile'
@@ -718,6 +810,7 @@ export interface FileRouteTypes {
     | '/department'
     | '/gm'
     | '/host'
+    | '/hr'
     | '/operations'
   id:
     | '__root__'
@@ -765,6 +858,13 @@ export interface FileRouteTypes {
     | '/_authenticated/gm/revenue'
     | '/_authenticated/host/$'
     | '/_authenticated/hr/attendance'
+    | '/_authenticated/hr/documents'
+    | '/_authenticated/hr/leave'
+    | '/_authenticated/hr/payroll'
+    | '/_authenticated/hr/performance'
+    | '/_authenticated/hr/recruitment'
+    | '/_authenticated/hr/relations'
+    | '/_authenticated/hr/timesheets'
     | '/_authenticated/me/declaration'
     | '/_authenticated/me/leave'
     | '/_authenticated/me/profile'
@@ -781,6 +881,7 @@ export interface FileRouteTypes {
     | '/_authenticated/department/'
     | '/_authenticated/gm/'
     | '/_authenticated/host/'
+    | '/_authenticated/hr/'
     | '/_authenticated/operations/'
   fileRoutesById: FileRoutesById
 }
@@ -1121,11 +1222,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSplatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hr/': {
+      id: '/_authenticated/hr/'
+      path: '/hr'
+      fullPath: '/hr/'
+      preLoaderRoute: typeof AuthenticatedHrIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/hr/attendance': {
       id: '/_authenticated/hr/attendance'
       path: '/hr/attendance'
       fullPath: '/hr/attendance'
       preLoaderRoute: typeof AuthenticatedHrAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/documents': {
+      id: '/_authenticated/hr/documents'
+      path: '/hr/documents'
+      fullPath: '/hr/documents'
+      preLoaderRoute: typeof AuthenticatedHrDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/leave': {
+      id: '/_authenticated/hr/leave'
+      path: '/hr/leave'
+      fullPath: '/hr/leave'
+      preLoaderRoute: typeof AuthenticatedHrLeaveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/payroll': {
+      id: '/_authenticated/hr/payroll'
+      path: '/hr/payroll'
+      fullPath: '/hr/payroll'
+      preLoaderRoute: typeof AuthenticatedHrPayrollRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/performance': {
+      id: '/_authenticated/hr/performance'
+      path: '/hr/performance'
+      fullPath: '/hr/performance'
+      preLoaderRoute: typeof AuthenticatedHrPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/recruitment': {
+      id: '/_authenticated/hr/recruitment'
+      path: '/hr/recruitment'
+      fullPath: '/hr/recruitment'
+      preLoaderRoute: typeof AuthenticatedHrRecruitmentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/relations': {
+      id: '/_authenticated/hr/relations'
+      path: '/hr/relations'
+      fullPath: '/hr/relations'
+      preLoaderRoute: typeof AuthenticatedHrRelationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/timesheets': {
+      id: '/_authenticated/hr/timesheets'
+      path: '/hr/timesheets'
+      fullPath: '/hr/timesheets'
+      preLoaderRoute: typeof AuthenticatedHrTimesheetsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/me/declaration': {
@@ -1264,6 +1421,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGmRevenueRoute: typeof AuthenticatedGmRevenueRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
   AuthenticatedHrAttendanceRoute: typeof AuthenticatedHrAttendanceRoute
+  AuthenticatedHrDocumentsRoute: typeof AuthenticatedHrDocumentsRoute
+  AuthenticatedHrLeaveRoute: typeof AuthenticatedHrLeaveRoute
+  AuthenticatedHrPayrollRoute: typeof AuthenticatedHrPayrollRoute
+  AuthenticatedHrPerformanceRoute: typeof AuthenticatedHrPerformanceRoute
+  AuthenticatedHrRecruitmentRoute: typeof AuthenticatedHrRecruitmentRoute
+  AuthenticatedHrRelationsRoute: typeof AuthenticatedHrRelationsRoute
+  AuthenticatedHrTimesheetsRoute: typeof AuthenticatedHrTimesheetsRoute
   AuthenticatedMeDeclarationRoute: typeof AuthenticatedMeDeclarationRoute
   AuthenticatedMeLeaveRoute: typeof AuthenticatedMeLeaveRoute
   AuthenticatedMeProfileRoute: typeof AuthenticatedMeProfileRoute
@@ -1280,6 +1444,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
   AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
+  AuthenticatedHrIndexRoute: typeof AuthenticatedHrIndexRoute
   AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
 }
 
@@ -1326,6 +1491,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGmRevenueRoute: AuthenticatedGmRevenueRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
   AuthenticatedHrAttendanceRoute: AuthenticatedHrAttendanceRoute,
+  AuthenticatedHrDocumentsRoute: AuthenticatedHrDocumentsRoute,
+  AuthenticatedHrLeaveRoute: AuthenticatedHrLeaveRoute,
+  AuthenticatedHrPayrollRoute: AuthenticatedHrPayrollRoute,
+  AuthenticatedHrPerformanceRoute: AuthenticatedHrPerformanceRoute,
+  AuthenticatedHrRecruitmentRoute: AuthenticatedHrRecruitmentRoute,
+  AuthenticatedHrRelationsRoute: AuthenticatedHrRelationsRoute,
+  AuthenticatedHrTimesheetsRoute: AuthenticatedHrTimesheetsRoute,
   AuthenticatedMeDeclarationRoute: AuthenticatedMeDeclarationRoute,
   AuthenticatedMeLeaveRoute: AuthenticatedMeLeaveRoute,
   AuthenticatedMeProfileRoute: AuthenticatedMeProfileRoute,
@@ -1346,6 +1518,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
   AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
+  AuthenticatedHrIndexRoute: AuthenticatedHrIndexRoute,
   AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
 }
 

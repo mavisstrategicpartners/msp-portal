@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  CheckSquare, Search, Filter, RefreshCw, Building2, Calendar,
-  Clock, AlertTriangle, AlertCircle, Users, ArrowRight, UserCheck, ShieldCheck,
-  Edit, List, LayoutGrid, CalendarDays, ExternalLink, Plus
+  CheckSquare, Search, RefreshCw,
+  Clock, AlertTriangle, AlertCircle, Users, UserCheck,
+  Edit, List, LayoutGrid, Plus, Paperclip, X, FileText, ImageIcon, File as FileIcon, Trash2
 } from "lucide-react";
 import {
   fetchDepartmentData,
@@ -16,8 +17,11 @@ import {
   mutateCreateDepartmentTask,
   mutateTaskPriority,
   mutateTaskDeadline,
+  mutateDeleteDepartmentTask,
+  uploadTaskAttachment,
   DepartmentTask,
   DepartmentTeamMember,
+  TaskType,
 } from "@/lib/department-manager.service";
 import { useProfile } from "@/lib/use-profile";
 import { toast } from "sonner";
@@ -37,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/department/tasks")({
 export function DepartmentTasksPage() {
   const navigate = useNavigate();
   const { data: profileData } = useProfile();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<DepartmentTask[]>([]);
   const [teamMembers, setTeamMembers] = useState<DepartmentTeamMember[]>([]);
@@ -55,15 +60,66 @@ export function DepartmentTasksPage() {
   const [targetMemberId, setTargetMemberId] = useState("");
   const [isSavingAssign, setIsSavingAssign] = useState(false);
 
+  // Delete / Remove Deliverable Modal
+  const [taskToDelete, setTaskToDelete] = useState<DepartmentTask | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+    setIsDeletingTask(true);
+    try {
+      await mutateDeleteDepartmentTask(taskToDelete.id);
+      setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      window.dispatchEvent(new CustomEvent("msp:tasks_updated"));
+      toast.success("Deliverable removed successfully", {
+        description: `Task "${taskToDelete.title}" has been removed and unassigned.`,
+      });
+      setDeleteModalOpen(false);
+      setTaskToDelete(null);
+    } catch (err: any) {
+      toast.error("Failed to remove deliverable", {
+        description: err.message || "An error occurred while deleting the task.",
+      });
+    } finally {
+      setIsDeletingTask(false);
+    }
+  };
+
   // Create & Assign Task Modal
   const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
+  const [createTaskType, setCreateTaskType] = useState<TaskType>("Client Work");
   const [createClientId, setCreateClientId] = useState("");
   const [createAssigneeId, setCreateAssigneeId] = useState("");
   const [createDueDate, setCreateDueDate] = useState("");
   const [createPriority, setCreatePriority] = useState<DepartmentTask["priority"]>("High");
   const [createEvidenceReq, setCreateEvidenceReq] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  // Attachments
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [uploadingAttachments, setUploadingAttachments] = useState(false);
+
+  function handleFileSelect(files: FileList | null) {
+    if (!files) return;
+    const added = Array.from(files).filter((f) => {
+      if (f.size > 25 * 1024 * 1024) { toast.error(`"${f.name}" exceeds 25 MB limit.`); return false; }
+      return true;
+    });
+    setAttachmentFiles((prev) => {
+      const names = new Set(prev.map((f) => f.name));
+      return [...prev, ...added.filter((f) => !names.has(f.name))];
+    });
+  }
+
+  function handleRemoveAttachment(index: number) {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+  }
 
   // Deadline Change Modal
   const [deadlineModalOpen, setDeadlineModalOpen] = useState(false);
@@ -100,17 +156,23 @@ export function DepartmentTasksPage() {
   }, []);
 
   const filteredTasks = tasks.filter((t) => {
+    const clientDisplay = t.clientId ? t.clientName : "Internal Task";
     const matchesSearch =
       t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      t.assignedToName.toLowerCase().includes(search.toLowerCase());
+      clientDisplay.toLowerCase().includes(search.toLowerCase()) ||
+      t.assignedToName.toLowerCase().includes(search.toLowerCase()) ||
+      (t.taskType || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || t.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
-    const matchesClient = clientFilter === "all" || t.clientName === clientFilter;
+    const matchesClient =
+      clientFilter === "all" ||
+      (clientFilter === "__internal__" ? !t.clientId : t.clientName === clientFilter);
     return matchesSearch && matchesStatus && matchesPriority && matchesClient;
   });
 
-  const uniqueClients = Array.from(new Set(tasks.map((t) => t.clientName)));
+  const uniqueClients = Array.from(new Set(
+    tasks.filter((t) => t.clientId).map((t) => t.clientName)
+  ));
 
   // Handlers
   async function handleConfirmReassign() {
@@ -122,6 +184,12 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateAssignTask(selectedTask.id, targetMemberId, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Task assigned successfully.", {
         description: `Assigned to ${teamMembers.find((m) => m.id === targetMemberId)?.name}`,
       });
@@ -139,22 +207,52 @@ export function DepartmentTasksPage() {
       toast.error("Please enter a deliverable title.");
       return;
     }
-    const clientObj = availableClients.find((c) => c.id === createClientId) || availableClients[0];
+    const isClientWork = createTaskType === "Client Work";
+    if (isClientWork && !createClientId) {
+      toast.error("Please select a client for this Client Work task.");
+      return;
+    }
+    const clientObj = isClientWork ? availableClients.find((c) => c.id === createClientId) : null;
     setIsCreatingTask(true);
     try {
+      const tempId = `mb-task-${Date.now()}`;
+
+      // Upload any attached files
+      let uploadedAttachments: { name: string; url: string; size: number; mimeType: string }[] = [];
+      if (attachmentFiles.length > 0) {
+        setUploadingAttachments(true);
+        const results = await Promise.allSettled(
+          attachmentFiles.map((file) => uploadTaskAttachment(file, tempId))
+        );
+        uploadedAttachments = results
+          .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
+          .map((r) => r.value);
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) toast.warning(`${failed} file(s) could not be uploaded and were skipped.`);
+        setUploadingAttachments(false);
+      }
+
       const updated = await mutateCreateDepartmentTask(
         {
           title: createTitle.trim(),
-          clientId: clientObj?.id,
-          clientName: clientObj?.name || "Client Deliverable",
+          taskType: createTaskType,
+          clientId: clientObj?.id || null,
+          clientName: clientObj?.name || undefined,
           assignedToId: createAssigneeId || undefined,
           dueDate: createDueDate || new Date().toISOString().split("T")[0],
           priority: createPriority,
           evidenceRequired: createEvidenceReq || "Verified deliverables & completion report",
+          attachments: uploadedAttachments,
         },
         managerName
       );
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["staff", "scorecard"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Task created and assigned successfully.", {
         description: createAssigneeId
           ? `Assigned to ${teamMembers.find((m) => m.id === createAssigneeId)?.name}`
@@ -162,13 +260,17 @@ export function DepartmentTasksPage() {
       });
       setCreateTaskModalOpen(false);
       setCreateTitle("");
+      setCreateTaskType("Client Work");
+      setCreateClientId("");
       setCreateAssigneeId("");
       setCreateDueDate("");
       setCreateEvidenceReq("");
+      setAttachmentFiles([]);
     } catch (err: any) {
       toast.error("Failed to create task", { description: err?.message });
     } finally {
       setIsCreatingTask(false);
+      setUploadingAttachments(false);
     }
   }
 
@@ -185,6 +287,10 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateTaskDeadline(selectedTask.id, newDeadline, deadlineReason, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Deadline updated successfully.");
       setDeadlineModalOpen(false);
       setSelectedTask(null);
@@ -202,6 +308,10 @@ export function DepartmentTasksPage() {
     try {
       const updated = await mutateTaskPriority(selectedTask.id, newPriority, managerName);
       setTasks(updated);
+      queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("msp:tasks_updated"));
+      }
       toast.success("Priority updated successfully.");
       setPriorityModalOpen(false);
       setSelectedTask(null);
@@ -258,7 +368,8 @@ export function DepartmentTasksPage() {
           <Button
             size="sm"
             onClick={() => {
-              if (availableClients.length > 0) setCreateClientId(availableClients[0].id);
+              setCreateTaskType("Client Work");
+              setCreateClientId("");
               setCreateTaskModalOpen(true);
             }}
             className="h-9 px-3 bg-primary hover:bg-primary/90 text-white font-semibold text-xs shadow-xs gap-1.5 cursor-pointer"
@@ -324,7 +435,8 @@ export function DepartmentTasksPage() {
               <SelectValue placeholder="Client: All" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="__internal__">Internal Tasks Only</SelectItem>
               {uniqueClients.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
@@ -342,7 +454,7 @@ export function DepartmentTasksPage() {
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold uppercase text-[10px]">
                   <tr>
                     <th className="py-3 px-4">Task & Deliverable</th>
-                    <th className="py-3 px-3">Client Commitment</th>
+                    <th className="py-3 px-3">Client / Task Type</th>
                     <th className="py-3 px-3">Assignee</th>
                     <th className="py-3 px-3">Priority</th>
                     <th className="py-3 px-3">Status</th>
@@ -390,9 +502,20 @@ export function DepartmentTasksPage() {
                         </td>
 
                         <td className="py-3 px-3">
-                          <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
-                            {task.clientName}
-                          </Badge>
+                          {task.clientId ? (
+                            <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
+                              {task.clientName}
+                            </Badge>
+                          ) : (
+                            <div className="space-y-0.5">
+                              <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-700 shadow-none font-medium">
+                                Internal Task
+                              </Badge>
+                              {task.taskType && (
+                                <div className="text-[10px] text-muted-foreground font-medium">{task.taskType}</div>
+                              )}
+                            </div>
+                          )}
                         </td>
 
                         <td className="py-3 px-3">
@@ -513,6 +636,19 @@ export function DepartmentTasksPage() {
                             >
                               <Edit className="h-3 w-3 text-muted-foreground" />
                             </Button>
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs border-rose-200 dark:border-rose-900/50 bg-background hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-semibold shadow-xs px-2 cursor-pointer"
+                              title="Remove Deliverable"
+                              onClick={() => {
+                                setTaskToDelete(task);
+                                setDeleteModalOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -564,9 +700,20 @@ export function DepartmentTasksPage() {
                   {colTasks.map((t) => (
                     <Card key={t.id} className="p-3 border-border bg-card shadow-xs hover:border-primary/40 transition space-y-2">
                       <div className="flex items-start justify-between gap-1">
-                        <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium truncate max-w-[130px]">
-                          {t.clientName}
-                        </Badge>
+                        {t.clientId ? (
+                          <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-purple-50 text-purple-900 border-purple-200 shadow-none font-medium truncate max-w-[130px]">
+                            {t.clientName}
+                          </Badge>
+                        ) : (
+                          <div className="space-y-0.5">
+                            <Badge variant="outline" className="text-[10px] rounded-full px-2 py-0.2 bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700 shadow-none font-medium">
+                              Internal Task
+                            </Badge>
+                            {t.taskType && (
+                              <div className="text-[9px] text-muted-foreground font-medium">{t.taskType}</div>
+                            )}
+                          </div>
+                        )}
                         <Badge
                           variant="outline"
                           className={`text-[9px] rounded-full px-1.5 py-0.2 font-semibold shadow-none ${
@@ -602,6 +749,18 @@ export function DepartmentTasksPage() {
                           }}
                         >
                           Reassign
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+                          title="Remove Task"
+                          onClick={() => {
+                            setTaskToDelete(t);
+                            setDeleteModalOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </Card>
@@ -651,7 +810,11 @@ export function DepartmentTasksPage() {
                     memberTasks.map((t) => (
                       <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
                         <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-semibold text-primary">{t.clientName}</span>
+                          {t.clientId ? (
+                            <span className="font-semibold text-primary">{t.clientName}</span>
+                          ) : (
+                            <span className="font-medium text-slate-500 dark:text-slate-400">{t.taskType || "Internal Task"}</span>
+                          )}
                           <span className="text-muted-foreground">{t.dueDate}</span>
                         </div>
                         <div className="text-xs font-bold text-foreground">{t.title}</div>
@@ -659,18 +822,32 @@ export function DepartmentTasksPage() {
                           <Badge variant="outline" className="text-[9px] rounded-full px-1.5 py-0.2">
                             {t.status}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
-                            onClick={() => {
-                              setSelectedTask(t);
-                              setTargetMemberId(t.assignedToId || "");
-                              setReassignModalOpen(true);
-                            }}
-                          >
-                            Reassign
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 text-[10px] text-foreground hover:bg-muted px-1.5 font-semibold"
+                              onClick={() => {
+                                setSelectedTask(t);
+                                setTargetMemberId(t.assignedToId || "");
+                                setReassignModalOpen(true);
+                              }}
+                            >
+                              Reassign
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 w-5 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                              title="Remove Task"
+                              onClick={() => {
+                                setTaskToDelete(t);
+                                setDeleteModalOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -753,20 +930,41 @@ export function DepartmentTasksPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Client</Label>
-              <Select value={createClientId} onValueChange={setCreateClientId}>
+              <Label className="text-xs font-semibold">Task Type</Label>
+              <Select value={createTaskType} onValueChange={(v: any) => { setCreateTaskType(v); if (v !== "Client Work") setCreateClientId(""); }}>
                 <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                  <SelectValue placeholder="Select client..." />
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {availableClients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                <SelectContent>
+                  <SelectItem value="Client Work">Client Work</SelectItem>
+                  <SelectItem value="Internal Operations">Internal Operations</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="Technical / IT">Technical / IT</SelectItem>
+                  <SelectItem value="Meetings & Planning">Meetings & Planning</SelectItem>
+                  <SelectItem value="Research & Development">Research & Development</SelectItem>
+                  <SelectItem value="Training & Professional Development">Training & Professional Development</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {createTaskType === "Client Work" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Client <span className="text-muted-foreground font-normal">(required for Client Work)</span></Label>
+                <Select value={createClientId} onValueChange={setCreateClientId}>
+                  <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                    <SelectValue placeholder="Select a client (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {availableClients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Assignee (All System Employees & Specialists)</Label>
@@ -821,14 +1019,87 @@ export function DepartmentTasksPage() {
                 className="text-xs bg-background border-border text-foreground min-h-[70px]"
               />
             </div>
+
+            {/* ── Attachment Upload Zone ──────────────────────────────── */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <Paperclip className="h-3.5 w-3.5" />
+                Attachments <span className="text-muted-foreground font-normal">(optional — documents or images)</span>
+              </Label>
+
+              <div
+                className={`relative rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+                  isDraggingOver
+                    ? "border-primary bg-primary/5 dark:bg-primary/10"
+                    : "border-border hover:border-muted-foreground/50 bg-muted/30"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+                onDragLeave={() => setIsDraggingOver(false)}
+                onDrop={(e) => { e.preventDefault(); setIsDraggingOver(false); handleFileSelect(e.dataTransfer.files); }}
+                onClick={() => document.getElementById("task-attachment-input")?.click()}
+              >
+                <input
+                  id="task-attachment-input"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.csv,.zip,.txt"
+                  className="hidden"
+                  onChange={(e) => { handleFileSelect(e.target.files); e.target.value = ""; }}
+                />
+                <div className="flex flex-col items-center justify-center py-4 gap-1">
+                  <div className="rounded-full bg-muted p-2">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-medium">
+                    {isDraggingOver ? "Drop files here" : "Drag & drop files, or click to browse"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    PDF, Word, Excel, PNG, JPG, CSV, ZIP — max 25 MB each
+                  </p>
+                </div>
+              </div>
+
+              {/* Attached file chips */}
+              {attachmentFiles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {attachmentFiles.map((file, idx) => {
+                    const isImage = file.type.startsWith("image/");
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    const sizeKB = (file.size / 1024).toFixed(0);
+                    const sizeLabel = file.size >= 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+                    return (
+                      <div
+                        key={`${file.name}-${idx}`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-[11px] font-medium text-foreground max-w-[220px] group"
+                      >
+                        {isImage ? (
+                          <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        )}
+                        <span className="truncate">{file.name}</span>
+                        <span className="text-muted-foreground text-[10px] shrink-0">({sizeLabel})</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveAttachment(idx); }}
+                          className="ml-auto shrink-0 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setCreateTaskModalOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateTask} disabled={isCreatingTask} className="bg-primary text-white font-semibold">
-              {isCreatingTask ? "Creating..." : "Create & Assign Task"}
+            <Button size="sm" onClick={handleCreateTask} disabled={isCreatingTask || uploadingAttachments} className="bg-primary text-white font-semibold">
+              {uploadingAttachments ? "Uploading files..." : isCreatingTask ? "Creating..." : "Create & Assign Task"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -910,6 +1181,69 @@ export function DepartmentTasksPage() {
             </Button>
             <Button size="sm" onClick={handleConfirmPriority} disabled={isSavingPriority} className="bg-primary text-white">
               {isSavingPriority ? "Updating..." : "Save Priority"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── MODAL: Delete / Remove Deliverable ─────────────────────────────── */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="max-w-md bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <Trash2 className="h-5 w-5" /> Remove Deliverable Task
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              This will permanently remove the task and unassign it from the employee's dashboard.
+            </DialogDescription>
+          </DialogHeader>
+
+          {taskToDelete && (
+            <div className="space-y-3 py-2 text-xs">
+              <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-1.5">
+                <div className="font-bold text-foreground text-sm">{taskToDelete.title}</div>
+                <div className="text-muted-foreground">
+                  Assigned to: <strong className="text-foreground">{taskToDelete.assignedToName}</strong>
+                </div>
+                {taskToDelete.clientName && (
+                  <div className="text-muted-foreground">
+                    Client: <strong className="text-foreground">{taskToDelete.clientName}</strong>
+                  </div>
+                )}
+                <div className="text-muted-foreground">
+                  Due date: <strong className="text-foreground">{taskToDelete.dueDate}</strong>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" />
+                <div>
+                  <strong>Attention:</strong> If this task was assigned by mistake or in error, confirming removal will erase it from the assigned employee's active queue immediately.
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setTaskToDelete(null);
+              }}
+              disabled={isDeletingTask}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeletingTask}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+            >
+              {isDeletingTask ? "Removing..." : "Remove Task"}
             </Button>
           </DialogFooter>
         </DialogContent>

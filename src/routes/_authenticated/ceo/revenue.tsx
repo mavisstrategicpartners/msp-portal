@@ -69,136 +69,11 @@ interface InvoiceRecord {
   notes: string;
 }
 
-const INVOICE_DATA: InvoiceRecord[] = [
-  {
-    id: "inv-1",
-    client: "Client Alpha",
-    service: "Paid Ads (Meta Performance)",
-    invoiceNo: "INV-2026-089",
-    amount: 60000,
-    issueDate: "2026-09-01",
-    dueDate: "2026-09-30",
-    agingDays: 13,
-    status: "overdue",
-    accountManager: "Sarah Jenkins",
-    paymentMethod: "EFT / Bank Transfer",
-    notes: "Ad spend funded but service retainer invoice pending CFO approval at client.",
-  },
-  {
-    id: "inv-2",
-    client: "Apex Solar SA",
-    service: "CRM & AI Automation",
-    invoiceNo: "INV-2026-092",
-    amount: 120000,
-    issueDate: "2026-10-01",
-    dueDate: "2026-10-05",
-    agingDays: 0,
-    status: "paid",
-    accountManager: "Sarah Jenkins",
-    paymentMethod: "Debit Order",
-    notes: "Full upfront onboarding & monthly subscription verified.",
-  },
-  {
-    id: "inv-3",
-    client: "TechNova",
-    service: "Operations Handover & SEO",
-    invoiceNo: "INV-2026-095",
-    amount: 140000,
-    issueDate: "2026-10-02",
-    dueDate: "2026-10-08",
-    agingDays: 0,
-    status: "paid",
-    accountManager: "Sarah Jenkins",
-    paymentMethod: "EFT / Bank Transfer",
-    notes: "Deposit received upon contract execution.",
-  },
-  {
-    id: "inv-4",
-    client: "Nexus Retail",
-    service: "Growth Strategy & Paid Media",
-    invoiceNo: "INV-2026-096",
-    amount: 38000,
-    issueDate: "2026-10-05",
-    dueDate: "2026-10-15",
-    agingDays: 0,
-    status: "due_soon",
-    accountManager: "David Cole",
-    paymentMethod: "Monthly Retainer",
-    notes: "Routine monthly cycle, awaiting scheduled auto-pay.",
-  },
-  {
-    id: "inv-5",
-    client: "BrightPath Education",
-    service: "Web Platform Development",
-    invoiceNo: "INV-2026-091",
-    amount: 85000,
-    issueDate: "2026-09-25",
-    dueDate: "2026-10-02",
-    agingDays: 11,
-    status: "overdue",
-    accountManager: "David Cole",
-    paymentMethod: "Milestone Billing",
-    notes: "Wireframe sign-off revision pause delayed release of 2nd milestone tranche.",
-  },
-  {
-    id: "inv-6",
-    client: "Vanguard Logistics",
-    service: "GHL AI Receptionist",
-    invoiceNo: "INV-2026-097",
-    amount: 45000,
-    issueDate: "2026-10-04",
-    dueDate: "2026-10-18",
-    agingDays: 0,
-    status: "due_soon",
-    accountManager: "Sarah Jenkins",
-    paymentMethod: "Credit Card",
-    notes: "Recurring monthly automation fee.",
-  },
-  {
-    id: "inv-7",
-    client: "Silverline Properties",
-    service: "Lead Gen & Paid Search",
-    invoiceNo: "INV-2026-088",
-    amount: 52000,
-    issueDate: "2026-09-28",
-    dueDate: "2026-10-03",
-    agingDays: 0,
-    status: "paid",
-    accountManager: "David Cole",
-    paymentMethod: "EFT / Bank Transfer",
-    notes: "Cleared and allocated to Q4 media budget.",
-  },
-  {
-    id: "inv-8",
-    client: "Zenith Health SA",
-    service: "Content & Community Management",
-    invoiceNo: "INV-2026-090",
-    amount: 32000,
-    issueDate: "2026-09-30",
-    dueDate: "2026-10-04",
-    agingDays: 0,
-    status: "paid",
-    accountManager: "Sarah Jenkins",
-    paymentMethod: "Debit Order",
-    notes: "Monthly retainer on auto-reconciliation.",
-  },
-];
+const INVOICE_DATA: InvoiceRecord[] = [];
 
-const REVENUE_TREND_DATA = [
-  { month: "May 2026", Collected: 410, Invoiced: 450 },
-  { month: "Jun 2026", Collected: 440, Invoiced: 480 },
-  { month: "Jul 2026", Collected: 465, Invoiced: 500 },
-  { month: "Aug 2026", Collected: 480, Invoiced: 530 },
-  { month: "Sep 2026", Collected: 495, Invoiced: 560 },
-  { month: "Oct 2026", Collected: 520, Invoiced: 650 },
-];
+const REVENUE_TREND_DATA: { month: string; Collected: number; Invoiced: number }[] = [];
 
-const AGING_BREAKDOWN = [
-  { range: "Current (<15d)", amount: 460 },
-  { range: "15–30 Days", amount: 80 },
-  { range: "31–60 Days", amount: 50 },
-  { range: "60+ Days", amount: 10 },
-];
+const AGING_BREAKDOWN: { range: string; amount: number }[] = [];
 
 function RevenueHealthPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -220,6 +95,7 @@ function RevenueHealthPage() {
   const totalCollected = INVOICE_DATA.filter((i) => i.status === "paid").reduce((sum, i) => sum + i.amount, 0);
   const totalOverdue = INVOICE_DATA.filter((i) => i.status === "overdue").reduce((sum, i) => sum + i.amount, 0);
   const totalDueSoon = INVOICE_DATA.filter((i) => i.status === "due_soon").reduce((sum, i) => sum + i.amount, 0);
+  const totalBooked = totalCollected + totalOverdue + totalDueSoon;
 
   return (
     <div className="space-y-6 pb-12">
@@ -278,20 +154,18 @@ function RevenueHealthPage() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Cash Collected</span>
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
-              On Track
+              {totalCollected > 0 ? "Active" : "Standby"}
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">R520,000</span>
-            <span className="text-xs text-muted-foreground">/ R650k target</span>
+            <span className="text-2xl font-bold text-foreground">{formatZAR(totalCollected)}</span>
+            <span className="text-xs text-muted-foreground">verified</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> +12.4% MoM
-            </span>
-            <span className="text-muted-foreground">80.0% Paced</span>
+            <span className="text-muted-foreground">0 invoices cleared</span>
+            <span className="text-muted-foreground">0% collection</span>
           </div>
-          <Progress value={80} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
@@ -302,56 +176,53 @@ function RevenueHealthPage() {
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">R650,000</span>
+            <span className="text-2xl font-bold text-foreground">{formatZAR(totalBooked)}</span>
             <span className="text-xs text-muted-foreground">Total Invoiced</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> 100% of Target
-            </span>
-            <span className="text-muted-foreground">R480k Retainers</span>
+            <span className="text-muted-foreground">{INVOICE_DATA.length} active invoices</span>
+            <span className="text-muted-foreground">Service Retainers</span>
           </div>
-          <Progress value={100} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Overdue Debt</span>
-            <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px]">
-              Critical Risk
+            <Badge variant="outline" className={`${totalOverdue > 0 ? "bg-rose-500/10 text-rose-600 border-rose-500/30" : "bg-muted text-muted-foreground"} text-[10px]`}>
+              {totalOverdue > 0 ? "Critical Risk" : "Zero Risk"}
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">R60,000</span>
-            <span className="text-xs text-muted-foreground">2 Accounts</span>
+            <span className={`text-2xl font-bold ${totalOverdue > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
+              {formatZAR(totalOverdue)}
+            </span>
+            <span className="text-xs text-muted-foreground">{INVOICE_DATA.filter((i) => i.status === "overdue").length} Accounts</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-3 w-3" /> 9.2% of Total
+            <span className="text-muted-foreground">
+              {totalOverdue > 0 ? "Payment follow-up required" : "All accounts in good standing"}
             </span>
-            <span className="text-muted-foreground">Client Alpha (13d)</span>
           </div>
-          <Progress value={20} className="mt-2.5 h-1.5 bg-muted [&>div]:bg-rose-500" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted [&>div]:bg-rose-500" />
         </Card>
 
         <Card className="p-4.5 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Gross Operating Margin</span>
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
-              Healthy
+              Benchmark: 65%
             </Badge>
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">68.2%</span>
+            <span className="text-2xl font-bold text-foreground">0.0%</span>
             <span className="text-xs text-muted-foreground">Target: 65%</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="h-3 w-3" /> +3.2% vs Benchmark
-            </span>
+            <span className="text-muted-foreground">Calculated on real ledger</span>
             <span className="text-muted-foreground">Media spend excl.</span>
           </div>
-          <Progress value={68.2} className="mt-2.5 h-1.5 bg-muted" />
+          <Progress value={0} className="mt-2.5 h-1.5 bg-muted" />
         </Card>
       </div>
 
@@ -361,34 +232,40 @@ function RevenueHealthPage() {
         <Card className="border-border p-5 lg:col-span-2 shadow-xs">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div>
-              <h3 className="text-sm font-bold text-foreground">6-Month Cash Inflow vs Billed Target (R '000)</h3>
+              <h3 className="text-sm font-bold text-foreground">6-Month Cash Inflow vs Billed Target (R &apos;000)</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Historical trajectory showing collection realization pace.</p>
             </div>
-            <Badge variant="outline" className="text-xs">May – Oct 2026</Badge>
+            <Badge variant="outline" className="text-xs">Active Reporting Period</Badge>
           </div>
 
           <div className="mt-4 h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={REVENUE_TREND_DATA} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b1d4d" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#3b1d4d" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorInvoiced" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <RechartsTooltip />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                <Area type="monotone" dataKey="Invoiced" stroke="#10b981" fillOpacity={1} fill="url(#colorInvoiced)" />
-                <Area type="monotone" dataKey="Collected" stroke="#3b1d4d" fillOpacity={1} fill="url(#colorCollected)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {REVENUE_TREND_DATA.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                No financial data available for this reporting period.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={REVENUE_TREND_DATA} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b1d4d" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#3b1d4d" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorInvoiced" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <RechartsTooltip />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                  <Area type="monotone" dataKey="Invoiced" stroke="#10b981" fillOpacity={1} fill="url(#colorInvoiced)" />
+                  <Area type="monotone" dataKey="Collected" stroke="#3b1d4d" fillOpacity={1} fill="url(#colorCollected)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -397,31 +274,39 @@ function RevenueHealthPage() {
           <div>
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-sm font-bold text-foreground">Accounts Receivable Aging</h3>
-              <Badge variant="outline" className="text-xs">Total R600k</Badge>
+              <Badge variant="outline" className="text-xs">{formatZAR(totalOverdue)}</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-2 mb-4">
               Distribution of billed invoices by age bracket.
             </p>
 
             <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={AGING_BREAKDOWN} layout="vertical" margin={{ top: 10, right: 20, left: 25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10 }} />
-                  <YAxis dataKey="range" type="category" tick={{ fontSize: 10 }} />
-                  <RechartsTooltip />
-                  <Bar dataKey="amount" fill="#3b1d4d" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {AGING_BREAKDOWN.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                  No financial data available for this reporting period.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={AGING_BREAKDOWN} layout="vertical" margin={{ top: 10, right: 20, left: 25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 10 }} />
+                    <YAxis dataKey="range" type="category" tick={{ fontSize: 10 }} />
+                    <RechartsTooltip />
+                    <Bar dataKey="amount" fill="#3b1d4d" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
-          <div className="mt-3 rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs space-y-1">
-            <span className="font-semibold text-rose-600 dark:text-rose-400">Aging Risk Alert:</span>
-            <p className="text-foreground text-[11px] leading-relaxed">
-              Client Alpha (R60k) has passed 13 days past due. Automatic reminders active; requires Ops Manager sign-off.
-            </p>
-          </div>
+          {totalOverdue > 0 && (
+            <div className="mt-3 rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs space-y-1">
+              <span className="font-semibold text-rose-600 dark:text-rose-400">Aging Risk Alert:</span>
+              <p className="text-foreground text-[11px] leading-relaxed">
+                {formatZAR(totalOverdue)} in overdue receivables requiring follow-up.
+              </p>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -504,63 +389,71 @@ function RevenueHealthPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredInvoices.map((inv) => (
-                <tr
-                  key={inv.id}
-                  onClick={() => setSelectedInvoice(inv)}
-                  className="hover:bg-muted/30 cursor-pointer transition-colors"
-                >
-                  <td className="p-3.5">
-                    <strong className="text-sm text-foreground block">{inv.client}</strong>
-                    <span className="text-muted-foreground text-[11px]">{inv.service}</span>
-                  </td>
-                  <td className="p-3.5 font-mono text-muted-foreground font-semibold">
-                    {inv.invoiceNo}
-                  </td>
-                  <td className="p-3.5 text-right font-mono font-bold text-sm text-foreground">
-                    {formatZAR(inv.amount)}
-                  </td>
-                  <td className="p-3.5 text-muted-foreground">{inv.issueDate}</td>
-                  <td className={`p-3.5 font-medium ${inv.status === "overdue" ? "text-rose-600 dark:text-rose-400 font-bold" : "text-muted-foreground"}`}>
-                    {inv.dueDate}
-                    {inv.status === "overdue" && (
-                      <span className="block text-[10px] text-rose-500 font-normal">
-                        ({inv.agingDays} days late)
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3.5 text-foreground">{inv.accountManager}</td>
-                  <td className="p-3.5">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-bold ${
-                        inv.status === "paid"
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                          : inv.status === "due_soon"
-                          ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
-                          : "bg-rose-500/10 text-rose-600 border-rose-500/30"
-                      }`}
-                    >
-                      {inv.status === "paid" && <CheckCircle2 className="mr-1 h-3 w-3 inline" />}
-                      {inv.status === "overdue" && <AlertTriangle className="mr-1 h-3 w-3 inline" />}
-                      {inv.status.replace("_", " ").toUpperCase()}
-                    </Badge>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedInvoice(inv);
-                      }}
-                    >
-                      Inspect <ChevronRight className="h-3 w-3" />
-                    </Button>
+              {filteredInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-10 text-center text-muted-foreground text-xs">
+                    No invoices available.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredInvoices.map((inv) => (
+                  <tr
+                    key={inv.id}
+                    onClick={() => setSelectedInvoice(inv)}
+                    className="hover:bg-muted/30 cursor-pointer transition-colors"
+                  >
+                    <td className="p-3.5">
+                      <strong className="text-sm text-foreground block">{inv.client}</strong>
+                      <span className="text-muted-foreground text-[11px]">{inv.service}</span>
+                    </td>
+                    <td className="p-3.5 font-mono text-muted-foreground font-semibold">
+                      {inv.invoiceNo}
+                    </td>
+                    <td className="p-3.5 text-right font-mono font-bold text-sm text-foreground">
+                      {formatZAR(inv.amount)}
+                    </td>
+                    <td className="p-3.5 text-muted-foreground">{inv.issueDate}</td>
+                    <td className={`p-3.5 font-medium ${inv.status === "overdue" ? "text-rose-600 dark:text-rose-400 font-bold" : "text-muted-foreground"}`}>
+                      {inv.dueDate}
+                      {inv.status === "overdue" && (
+                        <span className="block text-[10px] text-rose-500 font-normal">
+                          ({inv.agingDays} days late)
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3.5 text-foreground">{inv.accountManager}</td>
+                    <td className="p-3.5">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-bold ${
+                          inv.status === "paid"
+                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                            : inv.status === "due_soon"
+                            ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                            : "bg-rose-500/10 text-rose-600 border-rose-500/30"
+                        }`}
+                      >
+                        {inv.status === "paid" && <CheckCircle2 className="mr-1 h-3 w-3 inline" />}
+                        {inv.status === "overdue" && <AlertTriangle className="mr-1 h-3 w-3 inline" />}
+                        {inv.status.replace("_", " ").toUpperCase()}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedInvoice(inv);
+                        }}
+                      >
+                        Inspect <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

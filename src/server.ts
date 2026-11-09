@@ -56,6 +56,11 @@ export default {
         return await handleOperationsApi(request);
       }
 
+      if (url.pathname.startsWith("/api/sales")) {
+        const { handleSalesApi } = await import("./lib/sales-server");
+        return await handleSalesApi(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

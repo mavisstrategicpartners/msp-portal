@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,8 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
-
+import { supabase } from "@/integrations/supabase/client";
+import { recordAttendance } from "@/lib/attendance-client";
 interface DepartmentScore {
   department: string;
   targetDeliverables: number;
@@ -37,8 +39,24 @@ const DEPARTMENTS_DATA: DepartmentScore[] = [
 ];
 
 export function GeneralManagerDashboard() {
+  // Quick Clock‑In handler for General Manager
+  const handleGMClockIn = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await recordAttendance(user.id, {
+      state: "Clocked In",
+      clockInTime: Date.now(),
+      breakStartTime: null,
+      totalBreakMs: 0,
+    }, "0h 0m");
+    toast.success("Clocked In (GM)", { description: "Your session started." });
+  };
+
   return (
     <div className="space-y-6">
+  {/* Clock‑in widget for General Manager */}
+  <StaffAttendanceWidget className="mb-4" />
+<Button onClick={handleGMClockIn} className="mb-4" variant="primary">Clock In</Button>
       {/* ─── Top Execution & Capacity Summary ──────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
@@ -66,9 +84,9 @@ export function GeneralManagerDashboard() {
             <span>Revenue Target vs Actual</span>
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(520000, { compact: true })} / {formatZAR(600000, { compact: true })}</p>
-          <Progress value={86.6} className="mt-2 h-1.5" />
-          <p className="text-[11px] text-muted-foreground mt-1.5">86.6% of monthly revenue goal collected</p>
+          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(0, { compact: true })} / {formatZAR(0, { compact: true })}</p>
+          <Progress value={0} className="mt-2 h-1.5" />
+          <p className="text-[11px] text-muted-foreground mt-1.5">No revenue records recorded yet</p>
         </Card>
 
         <Card className="p-4 border-border">

@@ -61,15 +61,15 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
     { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
   ]},
-  { group: "Learn MSP", portals: ["staff", "admin", "operations", "sales", "finance"], items: [
+  { group: "Learn MSP", items: [
     { to: "/who-we-are", label: "Who We Are", icon: Compass },
     { to: "/services", label: "Our Services", icon: Briefcase },
     { to: "/pricing", label: "Pricing & Packages", icon: Tag },
     { to: "/glossary", label: "Glossary", icon: ListTree },
   ]},
-  { group: "How We Work", portals: ["staff", "admin", "operations"], items: [
+  { group: "How We Work", items: [
     { to: "/sops", label: "SOP Library", icon: BookOpen },
-    { to: "/departments", label: "Departments", icon: Building2 },
+    { to: "/departments", label: "Department", icon: Building2 },
     { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
     { to: "/tools", label: "Tools & Systems", icon: Wrench },
   ]},
@@ -82,19 +82,15 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
   ]},
   { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
-    { to: "/host/hr", label: "HR Dashboard", icon: LayoutDashboard },
+    { to: "/hr", label: "HR Dashboard", icon: LayoutDashboard },
     { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/host/hr/leave", label: "Leave Management", icon: CalendarDays },
-    { to: "/host/hr/timesheets", label: "Timesheets", icon: ClipboardList },
-    { to: "/host/hr/payroll", label: "Payroll Platform", icon: Calculator },
-    { to: "/host/hr/documents", label: "Employee Documents", icon: Folder },
-    { to: "/host/hr/relations", label: "Employee Relations", icon: Users },
-    { to: "/host/hr/recruitment", label: "Employee Recruitment", icon: Users },
-    { to: "/host/hr/performance", label: "HR Performance", icon: BarChart3 },
-    { to: "/host/hr/talent", label: "Talent Management", icon: Crown },
-    { to: "/host/hr/training", label: "Training & Development", icon: BookOpen },
-    { to: "/host/hr/admin", label: "HR Administration", icon: Settings },
-    { to: "/host/hr/integrations", label: "Integrations", icon: Wrench },
+    { to: "/hr/leave", label: "Leave Management", icon: CalendarDays },
+    { to: "/hr/timesheets", label: "Timesheets", icon: ClipboardList },
+    { to: "/hr/payroll", label: "Payroll Platform", icon: Calculator },
+    { to: "/hr/documents", label: "Employee Documents", icon: Folder },
+    { to: "/hr/relations", label: "Employee Relations", icon: Users },
+    { to: "/hr/recruitment", label: "Employee Recruitment", icon: Users },
+    { to: "/hr/performance", label: "HR Performance", icon: BarChart3 },
   ]},
   // CEO Workspace — strictly for CEO
   { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
@@ -128,7 +124,7 @@ const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?:
   ]},
   // Department Manager Workspace (Media Buying / Authorized Department)
   { group: "Department Command", portals: ["department"], items: [
-    { to: "/department", label: "Department Dashboard", icon: LayoutDashboard },
+    { to: "/department", label: "Workspace Overview", icon: LayoutDashboard },
     { to: "/department/tasks", label: "My Department Tasks", icon: CheckSquare },
     { to: "/department/performance", label: "Targets & Performance", icon: Target },
     { to: "/department/workload", label: "Team Workload", icon: Users },
@@ -220,13 +216,17 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
   const isCeoPath = pathname.startsWith('/ceo');
   const isGmPath = pathname.startsWith('/gm');
   const isOperationsPath = pathname.startsWith('/operations');
-  const isDepartmentPath = pathname.startsWith('/department');
+  const isDepartmentsDirectory = pathname === '/departments' || pathname.startsWith('/departments');
+  const isDepartmentPath = (pathname === '/department' || pathname.startsWith('/department/')) && !isDepartmentsDirectory;
   const isSalesPath = pathname.startsWith('/sales');
   const isFinancePath = pathname.startsWith('/finance');
 
   // Determine current portal based on path or permission
   let currentPortal: PortalKey = "staff";
-  if (isCeoPath) {
+  if (isDepartmentsDirectory) {
+    // When viewing company departments directory, maintain user's standard portal view
+    currentPortal = isRootAdmin ? "ceo" : data?.isGM ? "gm" : isAdmin ? "admin" : "staff";
+  } else if (isCeoPath) {
     currentPortal = "ceo";
   } else if (isGmPath) {
     currentPortal = "gm";
@@ -248,7 +248,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "gm";
   } else if (data?.isOperations) {
     currentPortal = "operations";
-  } else if (data?.isDepartmentManager) {
+  } else if (data?.isDepartmentManager && isDepartmentPath) {
     currentPortal = "department";
   } else if (data?.isHR) {
     currentPortal = "hr";
@@ -258,8 +258,6 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
     currentPortal = "sales";
   } else if (isAdmin) {
     currentPortal = "admin";
-  } else if (isManagerOrAbove) {
-    currentPortal = "department";
   }
 
   // Use TanStack Router for ALL sidebar navigation to maintain proper browser history
@@ -357,7 +355,7 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
                 {items.map((item) => {
                   // Resolve the actual navigation target — Home links go to role-specific dashboard
                   const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
-                  const isExactRoot = toPath === "/ceo" || toPath === "/admin";
+                  const isExactRoot = toPath === "/ceo" || toPath === "/admin" || toPath === "/hr";
                   const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
                   return (
                     <li key={item.to}>

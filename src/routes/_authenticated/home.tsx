@@ -6,6 +6,7 @@ import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, 
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { StaffAttendanceBoard } from "@/components/StaffAttendanceBoard";
 import { StaffWorkspaceDashboard } from "@/components/dashboards/StaffWorkspaceDashboard";
+import { HRStaffDashboard } from "@/components/dashboards/HRStaffDashboard";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — MSP Portal" }] }),
@@ -55,7 +56,7 @@ function Home() {
     if (systemRole === "general_manager") {
       router.navigate({ to: "/gm" as any, replace: true });
     } else if (systemRole === "hr") {
-      router.navigate({ to: "/host/hr" as any, replace: true });
+      router.navigate({ to: "/hr" as any, replace: true });
     } else if (systemRole === "department_manager") {
       router.navigate({ to: "/department" as any, replace: true });
     } else if (systemRole === "sales") {
@@ -68,6 +69,10 @@ function Home() {
       router.navigate({ to: "/ceo" as any, replace: true });
     }
   }, [systemRole, router]);
+
+  if (systemRole === "hr") {
+    return <HRStaffDashboard />;
+  }
 
   if (isAdmin) {
     return (
@@ -99,6 +104,11 @@ function Home() {
             Use Live Staff Presence to see who is clocked in right now across all departments in real time.
           </p>
         </Card>
+
+        {/* ─── Personal Staff Workspace & Deliverables ──────────────────────── */}
+        <section className="pt-2">
+          <StaffWorkspaceDashboard />
+        </section>
 
         <section>
           <div className="flex items-center justify-between mb-3">

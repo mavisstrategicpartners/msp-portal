@@ -39,12 +39,16 @@ export default function DashboardLayout({ children, title }) {
   const portalBadge = 'HR Portal'
 
   const handleNav = (item) => {
-    if (item.external) {
-      window.location.href = item.path
-      return
+    if (item.altPath) {
+      window.location.href = item.altPath;
+      return;
     }
-    navigate(item.path)
-  }
+    if (item.external) {
+      window.location.href = item.path;
+      return;
+    }
+    navigate(item.path);
+  };
 
   return (
     <div className="w-full space-y-6 pb-12">

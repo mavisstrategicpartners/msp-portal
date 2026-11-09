@@ -32,6 +32,8 @@ import {
   getAttendanceBoard,
   getAttendanceRegister,
   formatElapsed,
+  computeNetWorkedMs,
+  computeTotalBreakMs,
   StaffPresenceMember,
 } from "@/lib/attendance-client";
 import {
@@ -136,17 +138,33 @@ export function AdminAttendanceCommandCenter() {
     };
   }, [loadAttendance, loadRegister, registerWeekStart, activeTab]);
 
-  // Recalculate live worked time every second for active clocked-in members
+  // Recalculate live worked time and break duration every second for active staff
   const staffList = useMemo(() => {
     return rawStaff.map((s) => {
-      let liveHours = s.hours || "0h 0m";
-      if (s.status === "Clocked In" && s.clockInTime) {
-        const elapsedMs = now - s.clockInTime - (s.totalBreakMs || 0);
-        liveHours = formatElapsed(elapsedMs);
+      if ((s.status === "Clocked In" || s.status === "On Break") && s.clockInTime) {
+        const netMs = computeNetWorkedMs(
+          s.clockInTime,
+          s.status,
+          s.totalBreakMs || 0,
+          s.breakStartTime,
+          now
+        );
+        const breakMs = computeTotalBreakMs(
+          s.totalBreakMs || 0,
+          s.status,
+          s.breakStartTime,
+          now
+        );
+        return {
+          ...s,
+          hours: formatElapsed(netMs),
+          breakDuration: breakMs > 0 ? formatElapsed(breakMs) : "0m",
+        };
       }
       return {
         ...s,
-        hours: liveHours,
+        hours: s.hours || "0h 0m",
+        breakDuration: s.breakDuration || "—",
       };
     });
   }, [rawStaff, now]);
@@ -224,7 +242,7 @@ export function AdminAttendanceCommandCenter() {
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [
-        ["Name", "Department", "Role", "Tier", "Status", "Clock In", "Hours Worked"],
+        ["Name", "Department", "Role", "Tier", "Status", "Clock In", "Break Duration", "Hours Worked"],
         ...staffList.map((s) => [
           s.name,
           s.department,
@@ -232,6 +250,7 @@ export function AdminAttendanceCommandCenter() {
           s.tier,
           s.status,
           s.time,
+          s.breakDuration || "—",
           s.hours,
         ]),
       ]
@@ -532,20 +551,21 @@ export function AdminAttendanceCommandCenter() {
                     <th className="py-3 px-4 font-semibold">Contract Tier</th>
                     <th className="py-3 px-4 font-semibold">Live Presence</th>
                     <th className="py-3 px-4 font-semibold">Clocked In At</th>
-                    <th className="py-3 px-4 font-semibold text-right">Hours Logged</th>
+                    <th className="py-3 px-4 font-semibold text-center">Break Duration</th>
+                    <th className="py-3 px-4 font-semibold text-right">Net Hours</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {loadingLive && staffList.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-12 text-center text-muted-foreground">
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
                         Loading real-time workforce presence…
                       </td>
                     </tr>
                   ) : filteredStaff.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-12 text-center text-muted-foreground">
                         No team members match your selected filters.
                       </td>
                     </tr>
@@ -617,6 +637,21 @@ export function AdminAttendanceCommandCenter() {
 
                         <td className="py-3 px-4 font-mono text-muted-foreground">
                           {staff.time}
+                        </td>
+
+                        <td className="py-3 px-4 text-center font-mono">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ${
+                              staff.status === "On Break"
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 font-bold"
+                                : staff.breakDuration && staff.breakDuration !== "—" && staff.breakDuration !== "0m"
+                                ? "bg-muted text-foreground"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            <Coffee className="h-3 w-3" />
+                            {staff.breakDuration || "—"}
+                          </span>
                         </td>
 
                         <td className="py-3 px-4 text-right">
