@@ -61,7 +61,7 @@ async function runTests() {
   const consultantReq = new Request("http://localhost/api/sales/leads", {
     method: "GET",
     headers: {
-      "X-MSP-User-Id": "cons-1-uuid-001",
+      "X-MSP-User-Id": "6de3785e-8bb4-4f22-8acb-b13d6092988c",
       "X-MSP-User-Email": "consultant1@mavisstrateegicpartners.co.za",
       "X-MSP-User-Role": "staff",
     },
@@ -71,12 +71,9 @@ async function runTests() {
   const consultantData = await consultantRes.json();
   const c1Leads = consultantData.leads || [];
 
-  console.log("C1 leads count:", c1Leads.length);
-  c1Leads.forEach(l => console.log(` - Lead: ${l.businessName} | ConsultantId: ${l.assignedConsultantId} | Email: ${l.assignedConsultantEmail}`));
-
   const allAssignedToC1 = c1Leads.length > 0 && c1Leads.every(
     (l) =>
-      l.assignedConsultantId === "cons-1-uuid-001" ||
+      l.assignedConsultantId === "6de3785e-8bb4-4f22-8acb-b13d6092988c" ||
       l.assignedConsultantEmail?.toLowerCase() === "consultant1@mavisstrateegicpartners.co.za" ||
       l.assignedSalesperson?.includes("Consultant 1")
   );
