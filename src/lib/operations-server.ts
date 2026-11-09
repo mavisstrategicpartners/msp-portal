@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { authenticateApiRequest } from "@/lib/api-auth.server";
 import {
   ClientRecord,
   ClientType,
@@ -13,7 +14,7 @@ const HEADERS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-MSP-User-Id",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 // ── Authentication & Permission Verification ─────────────────────────────────
@@ -30,83 +31,22 @@ interface AuthContext {
 }
 
 async function verifyAuth(request: Request): Promise<AuthContext | null> {
-  const authHeader = request.headers.get("Authorization") || "";
-  let token = "";
-  if (authHeader.startsWith("Bearer ")) {
-    token = authHeader.substring(7).trim();
-  }
-
-  if (!token) {
-    const fallbackUserHeader = request.headers.get("X-MSP-User-Id");
-    if (fallbackUserHeader) {
-      const { data: profile } = await (supabaseAdmin as any)
-        .from("profiles")
-        .select("*")
-        .eq("id", fallbackUserHeader)
-        .maybeSingle();
-
-      if (profile) {
-        const isMgr =
-          profile.role_tier === "manager" ||
-          profile.role_tier === "root_admin" ||
-          (profile.job_title || "").toLowerCase().includes("manager") ||
-          (profile.department || "").toLowerCase().includes("operations") ||
-          (profile.department || "").toLowerCase().includes("executive") ||
-          profile.email?.includes("operations") ||
-          profile.email?.includes("ceo") ||
-          profile.email?.includes("general.manager");
-
-        return {
-          userId: profile.id,
-          email: profile.email || "",
-          fullName: profile.full_name || profile.email || "MSP Staff",
-          jobTitle: profile.job_title || "Specialist",
-          department: profile.department || "Operations",
-          roleTier: profile.role_tier || "staff",
-          isManagerOrAbove: isMgr,
-          canManageClients: isMgr,
-        };
-      }
-    }
-    return null;
-  }
-
-  try {
-    const { data: authData, error: authErr } = await supabaseAdmin.auth.getUser(token);
-    if (authErr || !authData?.user) return null;
-
-    const user = authData.user;
-    const { data: profile } = await (supabaseAdmin as any)
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const isMgr =
-      profile?.role_tier === "manager" ||
-      profile?.role_tier === "root_admin" ||
-      (profile?.job_title || "").toLowerCase().includes("manager") ||
-      (profile?.department || "").toLowerCase().includes("operations") ||
-      (profile?.department || "").toLowerCase().includes("executive") ||
-      user.email?.includes("operations") ||
-      user.email?.includes("ceo") ||
-      user.email?.includes("general.manager") ||
-      user.email === "superadmin@mavisstrategicpartners.co.za" ||
-      user.email === "admin@mavisstrategicpartners.co.za";
-
-    return {
-      userId: user.id,
-      email: user.email || "",
-      fullName: profile?.full_name || user.email || "MSP Staff",
-      jobTitle: profile?.job_title || "Operations Lead",
-      department: profile?.department || "Operations",
-      roleTier: profile?.role_tier || "staff",
-      isManagerOrAbove: isMgr,
-      canManageClients: isMgr,
-    };
-  } catch {
-    return null;
-  }
+  // Identity comes only from a verified Supabase token (see api-auth.server.ts).
+  const user = await authenticateApiRequest(request);
+  if (!user) return null;
+  const a = user.access;
+  // Client records are managed by Operations, the GM and administrators only.
+  const canManageClients = a.isAdmin || a.isOperations || a.isGM;
+  return {
+    userId: user.userId,
+    email: user.email,
+    fullName: user.fullName,
+    jobTitle: user.jobTitle,
+    department: user.department,
+    roleTier: user.roleTier,
+    isManagerOrAbove: a.isManagerOrAbove,
+    canManageClients,
+  };
 }
 
 function calculateBusinessDays(startDateStr: string, endDateStr?: string): number {
@@ -625,6 +565,9 @@ export async function handleOperationsApi(request: Request): Promise<Response> {
       if (!auth) {
         return new Response(JSON.stringify({ error: "Unauthorized." }), { status: 401, headers: HEADERS });
       }
+      if (!auth.canManageClients) {
+        return new Response(JSON.stringify({ error: "Forbidden: client records are managed by Operations." }), { status: 403, headers: HEADERS });
+      }
 
       const parts = pathname.split("/");
       const clientId = parts[4];
@@ -679,6 +622,9 @@ export async function handleOperationsApi(request: Request): Promise<Response> {
     if (method === "POST" && pathname.includes("/communications")) {
       if (!auth) {
         return new Response(JSON.stringify({ error: "Unauthorized." }), { status: 401, headers: HEADERS });
+      }
+      if (!auth.canManageClients) {
+        return new Response(JSON.stringify({ error: "Forbidden: client records are managed by Operations." }), { status: 403, headers: HEADERS });
       }
 
       const parts = pathname.split("/");

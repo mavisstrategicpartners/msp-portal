@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
 import {
   LeadItem,
   DuplicateCheckResult,
@@ -9,33 +10,6 @@ import {
   GHLAppointment,
 } from "./sales.types";
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  try {
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-  } catch {}
-
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("msp.authenticatedUser");
-    if (stored) {
-      try {
-        const u = JSON.parse(stored);
-        if (u.id) headers["X-MSP-User-Id"] = u.id;
-        if (u.email) headers["X-MSP-User-Email"] = u.email;
-        if (u.role_tier) headers["X-MSP-User-Role"] = u.role_tier;
-      } catch {}
-    }
-  }
-
-  return headers;
-}
 
 // ── 1. Leads Hooks ───────────────────────────────────────────────────────────
 

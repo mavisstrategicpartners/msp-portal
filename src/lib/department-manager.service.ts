@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
 
 export interface DepartmentTeamMember {
   id: string;
@@ -210,32 +211,6 @@ const CLIENT_DELIVERY_DETAILS: DepartmentClientDetail[] = [];
 
 // ── Public Service API & Auth Helpers ───────────────────────────────────────
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.access_token) {
-      headers["Authorization"] = `Bearer ${data.session.access_token}`;
-    }
-  } catch {}
-
-  if (typeof window !== "undefined") {
-    try {
-      const stored = localStorage.getItem("msp.authenticatedUser");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.id) {
-          headers["X-MSP-User-Id"] = parsed.id;
-        }
-      }
-    } catch {}
-  }
-
-  return headers;
-}
 
 export function staffTaskToDeptTask(st: any): DepartmentTask {
   let deptStatus: DepartmentTask["status"] = "In Progress";
