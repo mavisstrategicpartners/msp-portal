@@ -192,7 +192,8 @@ export function getDefaultDashboardRoute(role: MspSystemRole): string {
     case "sales_consultant":
       return "/sales";
     case "client_success":
-      return "/client-success";
+      // There is no /client-success page; Client Success staff use the staff dashboard.
+      return "/home";
     case "staff":
     default:
       return "/home";
