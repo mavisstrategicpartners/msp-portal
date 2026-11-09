@@ -40,6 +40,10 @@ function isSyntheticItem(item) {
  */
 export function useSupabaseTable(tableName, initialSeed = []) {
   const storageKey = `msp_table_${tableName}`;
+  // Built-in sample rows are display-only: they must never be written to the
+  // live database. Records the user actually entered are still synced.
+  const seedIdsRef = useRef(new Set((initialSeed || []).map((x) => String(x?.id ?? ''))));
+  const isSeedRow = (x) => seedIdsRef.current.has(String(x?.id ?? ''));
 
   // 1. Initial State: Load from localStorage if available, otherwise use initialSeed
   const [data, setData] = useState(() => {
@@ -92,8 +96,8 @@ export function useSupabaseTable(tableName, initialSeed = []) {
         } else if (rows && rows.length === 0) {
           // Remote table exists but is currently empty
           // If we have local records, try to populate the remote table
-          const currentLocal = dataRef.current;
-          if (currentLocal && currentLocal.length > 0) {
+          const currentLocal = (dataRef.current || []).filter((x) => !isSeedRow(x) && !isSyntheticItem(x));
+          if (currentLocal.length > 0) {
             supabase.from(tableName).insert(currentLocal).then(({ error: insertErr }) => {
               if (insertErr) console.warn('[useSupabaseTable] initial push to ' + tableName + ':', insertErr);
             });
@@ -130,7 +134,7 @@ export function useSupabaseTable(tableName, initialSeed = []) {
           const prevIds = new Set(prev.map(getItemId));
           const nextIds = new Set(next.map(getItemId));
 
-          const added   = next.filter((x) => !prevIds.has(getItemId(x)));
+          const added   = next.filter((x) => !prevIds.has(getItemId(x)) && !isSeedRow(x) && !isSyntheticItem(x));
           const removed = prev.filter((x) => !nextIds.has(getItemId(x)));
           const updated = next.filter((x) => {
             const id = getItemId(x);
