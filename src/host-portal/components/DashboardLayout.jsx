@@ -1,54 +1,8 @@
-import { useLocation, Link, useNavigate } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Clock,
-  CalendarDays,
-  ClipboardList,
-  Users,
-  Briefcase,
-  BarChart3,
-  Crown,
-  BookOpen,
-  Settings,
-  Wrench,
-  ChevronRight,
-} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 
-const hrNav = [
-  { name: 'HR Dashboard', path: '/host/hr', altPath: '/hr', icon: LayoutDashboard },
-  { name: 'Live Presence', path: '/hr/attendance', external: true, icon: Clock },
-  { name: 'Leave Management', path: '/host/hr/leave', altPath: '/hr/leave', icon: CalendarDays },
-  { name: 'Timesheets', path: '/host/hr/timesheets', altPath: '/hr/timesheets', icon: ClipboardList },
-  { name: 'Employee Relations', path: '/host/hr/relations', altPath: '/hr/relations', icon: Users },
-  { name: 'Recruitment', path: '/host/hr/recruitment', altPath: '/hr/recruitment', icon: Briefcase },
-  { name: 'HR Performance', path: '/host/hr/performance', altPath: '/hr/performance', icon: BarChart3 },
-  { name: 'Talent Management', path: '/host/hr/talent', altPath: '/hr/talent', icon: Crown },
-  { name: 'Training & Development', path: '/host/hr/training', altPath: '/hr/training', icon: BookOpen },
-  { name: 'HR Administration', path: '/host/hr/admin', altPath: '/hr/admin', icon: Settings },
-  { name: 'Integrations', path: '/host/hr/integrations', altPath: '/hr/integrations', icon: Wrench },
-]
-
-
-
+// Navigation for the HR pages lives in src/lib/navigation.ts (main MSP sidebar).
 export default function DashboardLayout({ children, title }) {
-  const location = useLocation()
-  const navigate = useNavigate()
-
-  const currentNav = hrNav
-  const portalLabel = 'Human Resources Suite'
   const portalBadge = 'HR Portal'
-
-  const handleNav = (item) => {
-    if (item.altPath) {
-      window.location.href = item.altPath;
-      return;
-    }
-    if (item.external) {
-      window.location.href = item.path;
-      return;
-    }
-    navigate(item.path);
-  };
 
   return (
     <div className="w-full space-y-6 pb-12">

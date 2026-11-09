@@ -2,13 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Home, Compass, BookOpen, Briefcase, Tag, ListTree, Wrench, Map, User, CalendarDays,
-  FileSignature, Users, ShieldCheck, ClipboardList, BarChart3, Settings, Search, Bell,
-  Sun, Moon, LogOut, Lock, HelpCircle, ChevronsLeft, ChevronsRight, MessageCircle, Building2,
-  Crown, FileBarChart2, KeyRound, Menu, Camera, UserRound,
-  LayoutDashboard, Clock, Activity, Calculator, Folder, TrendingUp, Banknote, CheckSquare,
-  Target, Layers, AlertTriangle, GitBranch,
+  User, Search, Bell, Sun, Moon, LogOut, HelpCircle, ChevronsLeft, ChevronsRight, ChevronDown,
+  MessageCircle, Crown, KeyRound, Menu, Camera, UserRound,
 } from "lucide-react";
+import { buildSidebar, canAccessPath, isItemActive, navContextFromProfile } from "@/lib/navigation";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,111 +27,6 @@ import {
   SettingsPanel,
 } from "@/components/portal-pages";
 
-type NavItem = { to: string; label: string; icon: typeof Home; rootOnly?: boolean; adminHide?: boolean };
-
-type PortalKey = "staff" | "admin" | "other" | "hr" | "ceo" | "gm" | "operations" | "department" | "sales" | "finance";
-
-const NAV: { group: string; managerOnly?: boolean; hrOnly?: boolean; adminOnly?: boolean; rootOnly?: boolean; portals?: PortalKey[]; items: NavItem[] }[] = [
-  { group: "Home", portals: ["staff", "admin"], items: [{ to: "/home", label: "Dashboard", icon: Home }] },
-  // Sales Workspace
-  { group: "Sales Command", portals: ["sales"], items: [
-    { to: "/sales", label: "Sales Dashboard", icon: TrendingUp },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
-    { to: "/services", label: "Our Services", icon: Briefcase },
-    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
-    { to: "/sops", label: "SOP Library", icon: BookOpen },
-    { to: "/glossary", label: "Sales Glossary", icon: ListTree },
-  ]},
-  // Finance & Administration Workspace
-  { group: "Finance & Admin", portals: ["finance"], items: [
-    { to: "/finance", label: "Finance Dashboard", icon: Banknote },
-    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
-    { to: "/services", label: "Agency Services", icon: Briefcase },
-    { to: "/sops", label: "Finance SOPs", icon: BookOpen },
-  ]},
-  { group: "Admin Dashboard", adminOnly: true, portals: ["admin"], items: [
-    { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/admin/users", label: "Manage Staff", icon: Users },
-    { to: "/admin/operations", label: "Operations Control", icon: Activity },
-    { to: "/admin/kpis", label: "KPI Dashboards", icon: BarChart3 },
-    { to: "/admin/content", label: "Content Editor", icon: Settings },
-    { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
-    { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
-  ]},
-  { group: "Learn MSP", items: [
-    { to: "/who-we-are", label: "Who We Are", icon: Compass },
-    { to: "/services", label: "Our Services", icon: Briefcase },
-    { to: "/pricing", label: "Pricing & Packages", icon: Tag },
-    { to: "/glossary", label: "Glossary", icon: ListTree },
-  ]},
-  { group: "How We Work", items: [
-    { to: "/sops", label: "SOP Library", icon: BookOpen },
-    { to: "/departments", label: "Department", icon: Building2 },
-    { to: "/roadmap", label: "Client Build Roadmap", icon: Map },
-    { to: "/tools", label: "Tools & Systems", icon: Wrench },
-  ]},
-  // My Workspace — staff only (no Leave/HR docs for admin)
-  { group: "My Workspace", portals: ["staff"], items: [
-    { to: "/me/leave", label: "Leave Requests", icon: CalendarDays, adminHide: true },
-    { to: "/me/declaration", label: "HR Documents", icon: FileSignature, adminHide: true },
-  ]},
-  { group: "Client Delivery", managerOnly: true, portals: ["staff"], items: [
-    { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
-  ]},
-  { group: "All In One — HR", hrOnly: true, portals: ["hr"], items: [
-    { to: "/hr", label: "HR Dashboard", icon: LayoutDashboard },
-    { to: "/hr/attendance", label: "Live Staff Presence", icon: Clock },
-    { to: "/hr/leave", label: "Leave Management", icon: CalendarDays },
-    { to: "/hr/timesheets", label: "Timesheets", icon: ClipboardList },
-    { to: "/hr/payroll", label: "Payroll Platform", icon: Calculator },
-    { to: "/hr/documents", label: "Employee Documents", icon: Folder },
-    { to: "/hr/relations", label: "Employee Relations", icon: Users },
-    { to: "/hr/recruitment", label: "Employee Recruitment", icon: Users },
-    { to: "/hr/performance", label: "HR Performance", icon: BarChart3 },
-  ]},
-  // CEO Workspace — strictly for CEO
-  { group: "Executive Health", rootOnly: true, portals: ["ceo"], items: [
-    { to: "/ceo", label: "Executive Dashboard", icon: Crown },
-    { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
-    { to: "/ceo/revenue", label: "Revenue Health", icon: Banknote },
-    { to: "/ceo/clients", label: "Client Health", icon: Building2 },
-    { to: "/ceo/delivery", label: "Delivery Health", icon: CheckSquare },
-    { to: "/ceo/team", label: "Team Health", icon: Users },
-  ]},
-  // GM Workspace — General Manager only
-  { group: "GM Command Centre", portals: ["gm"], items: [
-    { to: "/gm", label: "GM Dashboard", icon: LayoutDashboard },
-    { to: "/gm/execution", label: "Company Execution", icon: Target },
-    { to: "/gm/revenue", label: "Revenue Performance", icon: Banknote },
-    { to: "/gm/capacity", label: "Capacity & Workload", icon: Users },
-    { to: "/gm/approvals", label: "Manager Approvals", icon: CheckSquare },
-    { to: "/gm/dependencies", label: "Cross-Dept Dependencies", icon: GitBranch },
-    { to: "/gm/escalations", label: "Escalations", icon: AlertTriangle },
-  ]},
-  // Operations & Relationship Manager Workspace
-  { group: "Operations & Relationships", portals: ["operations"], items: [
-    { to: "/operations", label: "Operations Dashboard", icon: LayoutDashboard },
-    { to: "/operations/workflows", label: "Client Workflows", icon: Layers },
-    { to: "/operations/onboarding", label: "Client Onboarding", icon: ClipboardList },
-    { to: "/operations/deadlines", label: "Service Deadlines", icon: Clock },
-    { to: "/operations/communications", label: "Client Communications", icon: MessageCircle },
-    { to: "/operations/recovery", label: "Recovery Plans", icon: ShieldCheck },
-    { to: "/operations/verifications", label: "Verification Queue", icon: CheckSquare },
-    { to: "/operations/escalations", label: "Operational Escalations", icon: AlertTriangle },
-  ]},
-  // Department Manager Workspace (Media Buying / Authorized Department)
-  { group: "Department Command", portals: ["department"], items: [
-    { to: "/department", label: "Workspace Overview", icon: LayoutDashboard },
-    { to: "/department/tasks", label: "My Department Tasks", icon: CheckSquare },
-    { to: "/department/performance", label: "Targets & Performance", icon: Target },
-    { to: "/department/workload", label: "Team Workload", icon: Users },
-    { to: "/department/qa", label: "Quality Assurance", icon: ShieldCheck },
-    { to: "/department/blockers", label: "Blockers & Dependencies", icon: AlertTriangle },
-    { to: "/department/approvals", label: "Approvals", icon: CheckSquare },
-    { to: "/department/clients", label: "Client Delivery Details", icon: Building2 },
-  ]},
-];
-
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
@@ -151,10 +43,19 @@ function ShellInner({ children }: { children: ReactNode }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { data } = useProfile();
-  const isManagerOrAbove = data?.isManagerOrAbove ?? false;
-  const isRootAdmin = data?.isRootAdmin ?? false;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { data: profileData, isLoading: profileLoading } = useProfile();
+  const navCtx = navContextFromProfile(profileData);
+  // Workspace pages are only shown to roles allowed in src/lib/navigation.ts.
+  // Anyone else who opens one by URL is sent to their own dashboard.
+  const blocked = !!navCtx && !canAccessPath(pathname, navCtx);
+
+  useEffect(() => {
+    if (!blocked) return;
+    const target = profileData?.defaultDashboard ?? "/home";
+    navigate({ to: (canAccessPath(target, navCtx!) ? target : "/home") as any, replace: true });
+  }, [blocked, pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -177,10 +78,10 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      <Sidebar collapsed={collapsed} isManagerOrAbove={isManagerOrAbove} isRootAdmin={isRootAdmin} />
+      <Sidebar collapsed={collapsed} />
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[280px] p-0 md:hidden">
-          <Sidebar collapsed={false} isManagerOrAbove={isManagerOrAbove} isRootAdmin={isRootAdmin} mobile />
+          <Sidebar collapsed={false} mobile />
         </SheetContent>
       </Sheet>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -193,7 +94,9 @@ function ShellInner({ children }: { children: ReactNode }) {
           onOpenHelp={() => setHelpOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-8">
+          {profileLoading || blocked ? null : children}
+        </main>
       </div>
       <MspBubble onOpen={() => setMspOpen(true)} />
       <PortalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
@@ -205,103 +108,49 @@ function ShellInner({ children }: { children: ReactNode }) {
   );
 }
 
-function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: { collapsed: boolean; isManagerOrAbove: boolean; isRootAdmin: boolean; mobile?: boolean }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const navigate = useNavigate();
-  const { data } = useProfile();
-  const isAdmin = data?.isAdmin ?? false;
+const NAV_GROUPS_KEY = "msp.nav.groups";
 
-  const isHRPath = pathname.startsWith('/host/hr') || pathname.startsWith('/hr');
-  const isAdminPath = pathname.startsWith('/admin');
-  const isCeoPath = pathname.startsWith('/ceo');
-  const isGmPath = pathname.startsWith('/gm');
-  const isOperationsPath = pathname.startsWith('/operations');
-  const isDepartmentsDirectory = pathname === '/departments' || pathname.startsWith('/departments');
-  const isDepartmentPath = (pathname === '/department' || pathname.startsWith('/department/')) && !isDepartmentsDirectory;
-  const isSalesPath = pathname.startsWith('/sales');
-  const isFinancePath = pathname.startsWith('/finance');
-
-  // Determine current portal based on path or permission
-  let currentPortal: PortalKey = "staff";
-  if (isDepartmentsDirectory) {
-    // When viewing company departments directory, maintain user's standard portal view
-    currentPortal = isRootAdmin ? "ceo" : data?.isGM ? "gm" : isAdmin ? "admin" : "staff";
-  } else if (isCeoPath) {
-    currentPortal = "ceo";
-  } else if (isGmPath) {
-    currentPortal = "gm";
-  } else if (isOperationsPath) {
-    currentPortal = "operations";
-  } else if (isDepartmentPath) {
-    currentPortal = "department";
-  } else if (isSalesPath) {
-    currentPortal = "sales";
-  } else if (isFinancePath) {
-    currentPortal = "finance";
-  } else if (isHRPath) {
-    currentPortal = "hr";
-  } else if (isAdminPath) {
-    currentPortal = "admin";
-  } else if (isRootAdmin) {
-    currentPortal = "ceo";
-  } else if (data?.isGM) {
-    currentPortal = "gm";
-  } else if (data?.isOperations) {
-    currentPortal = "operations";
-  } else if (data?.isDepartmentManager && isDepartmentPath) {
-    currentPortal = "department";
-  } else if (data?.isHR) {
-    currentPortal = "hr";
-  } else if (data?.isFinance) {
-    currentPortal = "finance";
-  } else if (data?.isSales) {
-    currentPortal = "sales";
-  } else if (isAdmin) {
-    currentPortal = "admin";
+function readGroupState(): Record<string, boolean> {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(NAV_GROUPS_KEY) : null;
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
   }
+}
 
-  // Use TanStack Router for ALL sidebar navigation to maintain proper browser history
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
-    e.preventDefault();
-    navigate({ to } as any);
-  };
+function writeGroupState(state: Record<string, boolean>) {
+  try {
+    localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(state));
+  } catch {}
+}
 
-  const deptTitle = data?.departmentName ? `${data.departmentName} Workspace` : "Media Buying Workspace";
-  const workspaceTitle = currentPortal === "ceo"
-    ? "CEO Workspace"
-    : currentPortal === "gm"
-    ? "GM Workspace"
-    : currentPortal === "operations"
-    ? "Operations & Relationships"
-    : currentPortal === "department"
-    ? deptTitle
-    : currentPortal === "hr"
-    ? "HR Workspace"
-    : currentPortal === "sales"
-    ? "Sales Workspace"
-    : currentPortal === "finance"
-    ? "Finance & Administration"
-    : currentPortal === "admin"
-    ? "Admin Control"
-    : "Staff Portal";
+function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: boolean }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data } = useProfile();
+  const ctx = navContextFromProfile(data);
+  const nav = ctx ? buildSidebar(pathname, ctx) : null;
+  const [openState, setOpenState] = useState<Record<string, boolean>>({});
 
-  const workspaceSub = currentPortal === "ceo"
-    ? "Executive Command & Analytics"
-    : currentPortal === "gm"
-    ? "Company Execution & Operations"
-    : currentPortal === "operations"
-    ? "Client Delivery & Retention"
-    : currentPortal === "department"
-    ? "Team Execution & QA Approval"
-    : currentPortal === "hr"
-    ? "Human Resources Management"
-    : currentPortal === "sales"
-    ? "Pipeline & Revenue Generation"
-    : currentPortal === "finance"
-    ? "Financial Oversight & Control"
-    : currentPortal === "admin"
-    ? "MSP Admin Control Panel"
-    : "Internal operations portal";
+  useEffect(() => {
+    setOpenState(readGroupState());
+  }, []);
+
+  // When navigation lands on a page inside a closed group, open that group so
+  // the active item is visible. The user can still collapse it afterwards.
+  const activeGroupId = nav?.groups.find((g) => g.items.some((i) => isItemActive(i, pathname)))?.id;
+  useEffect(() => {
+    if (!activeGroupId) return;
+    setOpenState((prev) => (prev[activeGroupId] === false ? { ...prev, [activeGroupId]: true } : prev));
+  }, [activeGroupId, pathname]);
+
+  function toggleGroup(id: string, current: boolean) {
+    setOpenState((prev) => {
+      const next = { ...prev, [id]: !current };
+      writeGroupState(next);
+      return next;
+    });
+  }
 
   return (
     <aside className={cn(
@@ -310,80 +159,63 @@ function Sidebar({ collapsed, isManagerOrAbove, isRootAdmin, mobile = false }: {
       !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
     )}>
       <div className={cn("flex h-[76px] items-center border-b border-white/10 px-4", collapsed && "justify-center px-2")}>
-      {/* Wrap logo in a Link to the default dashboard based on role */}
-      <Link to={data?.defaultDashboard ?? "/home"} className="flex items-center gap-2.5">
-        <MspLogo showWord={!collapsed} />
-      </Link>
+        <Link to={(data?.defaultDashboard ?? "/home") as any} className="flex items-center gap-2.5">
+          <MspLogo showWord={!collapsed} />
+        </Link>
       </div>
-      {!collapsed && (
+      {!collapsed && nav && (
         <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] p-2.5">
-          <div className="flex items-center justify-between">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
-              {workspaceTitle}
-            </p>
-            {/* Role switcher UI removed - server-side routing enforced */}
-          </div>
-          <p className="mt-1 text-xs text-white/80">
-            {workspaceSub}
-          </p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">{nav.title}</p>
+          <p className="mt-1 text-xs text-white/80">{nav.subtitle}</p>
         </div>
       )}
-      <nav className="flex-1 overflow-y-auto px-2 py-4">
-        {NAV.map((section) => {
-          if (section.managerOnly && !isManagerOrAbove && !isAdmin) return null;
-          if (section.hrOnly && !(data?.isHR || isAdmin)) return null;
-          if (section.adminOnly && !isAdmin) return null;
-
-          // Filter by active workspace/portal
-          if (section.portals && !section.portals.includes(currentPortal)) return null;
-
-          const items = section.items.filter((it) => {
-            if (it.rootOnly && !isRootAdmin && !isAdmin) return false;
-            if (it.adminHide && currentPortal === "admin") return false;
-            return true;
-          });
-          if (items.length === 0) return null;
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2 py-4">
+        {nav?.groups.map((group, index) => {
+          const hasActive = group.id === activeGroupId;
+          const isOpen = collapsed || (openState[group.id] ?? (hasActive || (group.defaultOpen ?? true)));
+          const listId = `nav-group-${group.id}${mobile ? "-m" : ""}`;
           return (
-            <div key={section.group} className="mb-5">
-              {!collapsed && (
-                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/55">
-                  {section.group}
-                  {section.managerOnly && <Lock className="ml-1 inline h-2.5 w-2.5" />}
-                </p>
+            <div key={group.id} className={cn(collapsed ? "mb-2" : "mb-4")}>
+              {collapsed ? (
+                index > 0 && <div className="mx-2 mb-2 border-t border-white/10" aria-hidden />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id, isOpen)}
+                  aria-expanded={isOpen}
+                  aria-controls={listId}
+                  className="flex w-full items-center justify-between rounded px-3 pb-1.5 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-white/55 transition hover:text-white/80"
+                >
+                  {group.label}
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", !isOpen && "-rotate-90")} />
+                </button>
               )}
-              <ul className="space-y-0.5">
-                {items.map((item) => {
-                  // Resolve the actual navigation target — Home links go to role-specific dashboard
-                  const toPath = item.to === "/home" ? (data?.defaultDashboard ?? "/home") : item.to;
-                  const isExactRoot = toPath === "/ceo" || toPath === "/admin" || toPath === "/hr";
-                  const active = isExactRoot ? pathname === toPath : (pathname === toPath || pathname.startsWith(toPath + "/"));
-                  return (
-                    <li key={item.to}>
-                      <a
-                        href={toPath}
-                        onClick={(e) => handleNavClick(e, toPath)}
-                        className={cn(
-                          "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium transition",
-                          active
-                            ? "border-l-primary bg-white/12 text-white shadow-sm"
-                            : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
-                          collapsed && "justify-center px-2",
-                        )}
-                        title={collapsed ? item.label : undefined}
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-                      >
-                        <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                        {!collapsed && (
-                          <span className="flex flex-1 items-center gap-1.5 truncate">
-                            {item.label}
-                            {item.rootOnly && <Crown className="h-3 w-3 text-primary" />}
-                          </span>
-                        )}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+              {isOpen && (
+                <ul id={listId} className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = isItemActive(item, pathname);
+                    return (
+                      <li key={item.to}>
+                        <Link
+                          to={item.to as any}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium no-underline transition",
+                            active
+                              ? "border-l-primary bg-white/12 text-white shadow-sm"
+                              : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
+                            collapsed && "justify-center px-2",
+                          )}
+                          title={collapsed ? item.label : undefined}
+                        >
+                          <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+                          {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           );
         })}

@@ -13,6 +13,7 @@ import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { useProfile } from "@/lib/use-profile";
+import { canAccessPath, navContextFromProfile, searchableItems } from "@/lib/navigation";
 import {
   useStaffNotifications,
   useMarkNotificationRead,
@@ -1939,13 +1940,16 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
 }
 
 export function HelpPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { data: profileData } = useProfile();
+  const navCtx = navContextFromProfile(profileData);
+  const canManageStaff = !!navCtx && canAccessPath("/admin/users", navCtx);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader><DialogTitle>Help</DialogTitle><DialogDescription>Fast paths for common portal actions.</DialogDescription></DialogHeader>
         <div className="grid gap-3">
           <Link to="/sops" onClick={() => onOpenChange(false)} className="flex items-center justify-between rounded-md border border-border p-3 text-sm hover:border-primary/40"><span><BookOpen className="mr-2 inline h-4 w-4 text-primary" />Read SOPs</span><ChevronRight className="h-4 w-4" /></Link>
-          <Link to="/admin/team" onClick={() => onOpenChange(false)} className="flex items-center justify-between rounded-md border border-border p-3 text-sm hover:border-primary/40"><span><Users className="mr-2 inline h-4 w-4 text-primary" />Add team member</span><ChevronRight className="h-4 w-4" /></Link>
+          {canManageStaff && <Link to="/admin/users" onClick={() => onOpenChange(false)} className="flex items-center justify-between rounded-md border border-border p-3 text-sm hover:border-primary/40"><span><Users className="mr-2 inline h-4 w-4 text-primary" />Add team member</span><ChevronRight className="h-4 w-4" /></Link>}
           <button onClick={() => { onOpenChange(false); window.dispatchEvent(new Event("msp:open")); }} className="flex items-center justify-between rounded-md border border-border p-3 text-left text-sm hover:border-primary/40"><span><MessageCircle className="mr-2 inline h-4 w-4 text-primary" />Ask Msp</span><ChevronRight className="h-4 w-4" /></button>
         </div>
       </DialogContent>
@@ -1955,19 +1959,11 @@ export function HelpPanel({ open, onOpenChange }: { open: boolean; onOpenChange:
 
 export function PortalSearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { data: profileData } = useProfile();
-  const isSuperOrAdmin = (profileData?.isAdmin || profileData?.isRootAdmin) && !profileData?.isFinance;
-
-  const items: readonly (readonly [string, string, ComponentType<{ className?: string }>])[] = [
-    ["Dashboard", "/home", Compass], ["Who We Are", "/who-we-are", Compass], ["Services", "/services", Briefcase],
-    ["Pricing", "/pricing", Tag], ["Glossary", "/glossary", ListTree], ["SOP Library", "/sops", BookOpen],
-    ["Roadmap", "/roadmap", MapIcon], ["Tools", "/tools", Wrench], ["Departments", "/departments", Building2],
-    ["My Profile", "/me/profile", User], ["Leave Requests", "/me/leave", CalendarDays], ["HR Documents", "/me/declaration", FileSignature],
-    ["Team Management", "/admin/team", Users],
-    ...(isSuperOrAdmin ? [["Audit Logs", "/admin/audit", ShieldCheck] as const] : []),
-    ["Sales Playbook", "/admin/sales-playbook", ClipboardList], ["KPI Dashboards", "/admin/kpis", BarChart3],
-    ["Content Editor", "/admin/content", Edit3],
-    ["Monthly Reports", "/reports", FileBarChart2],
-  ];
+  // Same source of truth as the sidebar: only pages this user may open.
+  const navCtx = navContextFromProfile(profileData);
+  const items: readonly (readonly [string, string, ComponentType<{ className?: string }>])[] = navCtx
+    ? searchableItems(navCtx).map((item) => [item.label, item.to, item.icon] as const)
+    : [];
   const [query, setQuery] = useState("");
   const filtered = items.filter(([label]) => label.toLowerCase().includes(query.toLowerCase()));
   return (

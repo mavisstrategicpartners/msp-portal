@@ -59,7 +59,7 @@ function Home() {
       router.navigate({ to: "/hr" as any, replace: true });
     } else if (systemRole === "department_manager") {
       router.navigate({ to: "/department" as any, replace: true });
-    } else if (systemRole === "sales") {
+    } else if (systemRole === "sales" || systemRole === "sales_manager" || systemRole === "sales_consultant") {
       router.navigate({ to: "/sales" as any, replace: true });
     } else if (systemRole === "finance_admin") {
       router.navigate({ to: "/finance" as any, replace: true });

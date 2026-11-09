@@ -18,7 +18,6 @@ import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
@@ -76,8 +75,6 @@ import { Route as AuthenticatedOperationsOnboardingRouteImport } from './routes/
 import { Route as AuthenticatedOperationsRecoveryRouteImport } from './routes/_authenticated/operations/recovery'
 import { Route as AuthenticatedOperationsVerificationsRouteImport } from './routes/_authenticated/operations/verifications'
 import { Route as AuthenticatedOperationsWorkflowsRouteImport } from './routes/_authenticated/operations/workflows'
-import { Route as AuthenticatedPortalAdminRouteImport } from './routes/_authenticated/portal/admin'
-import { Route as AuthenticatedPortalOtherRouteImport } from './routes/_authenticated/portal/other'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -122,11 +119,6 @@ const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
@@ -446,18 +438,6 @@ const AuthenticatedOperationsWorkflowsRoute =
     path: '/operations/workflows',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPortalAdminRoute =
-  AuthenticatedPortalAdminRouteImport.update({
-    id: '/portal/admin',
-    path: '/portal/admin',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPortalOtherRoute =
-  AuthenticatedPortalOtherRouteImport.update({
-    id: '/portal/other',
-    path: '/portal/other',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -468,7 +448,6 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
@@ -520,8 +499,6 @@ export interface FileRoutesByFullPath {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
-  '/portal/admin': typeof AuthenticatedPortalAdminRoute
-  '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo/': typeof AuthenticatedCeoIndexRoute
   '/department/': typeof AuthenticatedDepartmentIndexRoute
   '/gm/': typeof AuthenticatedGmIndexRoute
@@ -538,7 +515,6 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/review': typeof AuthenticatedReviewRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
@@ -590,8 +566,6 @@ export interface FileRoutesByTo {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
-  '/portal/admin': typeof AuthenticatedPortalAdminRoute
-  '/portal/other': typeof AuthenticatedPortalOtherRoute
   '/ceo': typeof AuthenticatedCeoIndexRoute
   '/department': typeof AuthenticatedDepartmentIndexRoute
   '/gm': typeof AuthenticatedGmIndexRoute
@@ -610,7 +584,6 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/services': typeof AuthenticatedServicesRoute
@@ -662,8 +635,6 @@ export interface FileRoutesById {
   '/_authenticated/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/_authenticated/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/_authenticated/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
-  '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRoute
-  '/_authenticated/portal/other': typeof AuthenticatedPortalOtherRoute
   '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
   '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
   '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
@@ -682,7 +653,6 @@ export interface FileRouteTypes {
     | '/home'
     | '/pricing'
     | '/reports'
-    | '/review'
     | '/roadmap'
     | '/sales'
     | '/services'
@@ -734,8 +704,6 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
-    | '/portal/admin'
-    | '/portal/other'
     | '/ceo/'
     | '/department/'
     | '/gm/'
@@ -752,7 +720,6 @@ export interface FileRouteTypes {
     | '/home'
     | '/pricing'
     | '/reports'
-    | '/review'
     | '/roadmap'
     | '/sales'
     | '/services'
@@ -804,8 +771,6 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
-    | '/portal/admin'
-    | '/portal/other'
     | '/ceo'
     | '/department'
     | '/gm'
@@ -823,7 +788,6 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/pricing'
     | '/_authenticated/reports'
-    | '/_authenticated/review'
     | '/_authenticated/roadmap'
     | '/_authenticated/sales'
     | '/_authenticated/services'
@@ -875,8 +839,6 @@ export interface FileRouteTypes {
     | '/_authenticated/operations/recovery'
     | '/_authenticated/operations/verifications'
     | '/_authenticated/operations/workflows'
-    | '/_authenticated/portal/admin'
-    | '/_authenticated/portal/other'
     | '/_authenticated/ceo/'
     | '/_authenticated/department/'
     | '/_authenticated/gm/'
@@ -954,13 +916,6 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/review': {
-      id: '/_authenticated/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof AuthenticatedReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/roadmap': {
@@ -1362,20 +1317,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperationsWorkflowsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/portal/admin': {
-      id: '/_authenticated/portal/admin'
-      path: '/portal/admin'
-      fullPath: '/portal/admin'
-      preLoaderRoute: typeof AuthenticatedPortalAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/portal/other': {
-      id: '/_authenticated/portal/other'
-      path: '/portal/other'
-      fullPath: '/portal/other'
-      preLoaderRoute: typeof AuthenticatedPortalOtherRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
@@ -1386,7 +1327,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
@@ -1438,8 +1378,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperationsRecoveryRoute: typeof AuthenticatedOperationsRecoveryRoute
   AuthenticatedOperationsVerificationsRoute: typeof AuthenticatedOperationsVerificationsRoute
   AuthenticatedOperationsWorkflowsRoute: typeof AuthenticatedOperationsWorkflowsRoute
-  AuthenticatedPortalAdminRoute: typeof AuthenticatedPortalAdminRoute
-  AuthenticatedPortalOtherRoute: typeof AuthenticatedPortalOtherRoute
   AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
   AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
   AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
@@ -1455,7 +1393,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedServicesRoute: AuthenticatedServicesRoute,
@@ -1512,8 +1449,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperationsVerificationsRoute:
     AuthenticatedOperationsVerificationsRoute,
   AuthenticatedOperationsWorkflowsRoute: AuthenticatedOperationsWorkflowsRoute,
-  AuthenticatedPortalAdminRoute: AuthenticatedPortalAdminRoute,
-  AuthenticatedPortalOtherRoute: AuthenticatedPortalOtherRoute,
   AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
   AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
   AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
