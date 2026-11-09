@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
 
 export type AttendanceState = "Clocked In" | "On Break" | "Clocked Out";
 
@@ -142,7 +143,7 @@ export async function getTodayAttendance(userId: string): Promise<AttendanceReco
   };
 
   try {
-    const res = await fetch(`/api/attendance/status?userId=${encodeURIComponent(userId)}`);
+    const res = await fetch(`/api/attendance/status?userId=${encodeURIComponent(userId)}`, { headers: await getAuthHeaders() });
     if (res.ok) {
       const data = await res.json();
       if (data && data.state) {
@@ -225,7 +226,7 @@ export async function recordAttendance(
   try {
     const res = await fetch("/api/attendance", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getAuthHeaders(),
       body: JSON.stringify(payload),
     });
 
@@ -244,7 +245,7 @@ export async function recordAttendance(
 // 3. Fetch all staff members for the Live Attendance Board
 export async function getAttendanceBoard(): Promise<{ staff: StaffPresenceMember[]; timestamp: number }> {
   try {
-    const res = await fetch("/api/attendance/board");
+    const res = await fetch("/api/attendance/board", { headers: await getAuthHeaders() });
     if (res.ok) {
       const data = await res.json();
       return {
@@ -265,7 +266,7 @@ export async function getAttendanceRegister(weekStart?: string): Promise<any | n
     const url = weekStart
       ? `/api/attendance/register?weekStart=${encodeURIComponent(weekStart)}`
       : "/api/attendance/register";
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: await getAuthHeaders() });
     if (res.ok) {
       return await res.json();
     }

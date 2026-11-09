@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { computeAccess } from "@/lib/roles";
 
 function normalizeDepartment(dept?: string | null): string | null {
   if (!dept) return null;
@@ -48,14 +49,7 @@ export const createTeamMember = createServerFn({ method: "POST" })
   .inputValidator((data) => createTeamMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
     const db = context.supabase as any;
-    const { data: allowed, error: roleError } = await db.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-
-    if (roleError || !allowed) {
-      throw new Response("Only admins can add portal users", { status: 403 });
-    }
+    await ensureAdmin(context);
 
     if (data.accessLevel === "superadmin") {
       const { data: rootAdmin, error: rootError } = await db.rpc("is_root_admin", {
@@ -105,7 +99,8 @@ export const createTeamMember = createServerFn({ method: "POST" })
 
     const { error: roleInsertError } = await (supabaseAdmin as any)
       .from("user_roles")
-      .upsert({ user_id: user.id, role: data.accessLevel === "manager" || data.accessLevel === "superadmin" ? "admin" : data.role }, { onConflict: "user_id,role" });
+      // Only superadmins get the database "admin" role. Managers manage their team; they are not administrators.
+      .upsert({ user_id: user.id, role: data.accessLevel === "superadmin" ? "admin" : data.role }, { onConflict: "user_id,role" });
     if (roleInsertError) throw roleInsertError;
 
     await (supabaseAdmin as any).from("audit_logs").insert({
@@ -118,12 +113,25 @@ export const createTeamMember = createServerFn({ method: "POST" })
     return { id: user.id, email: data.email };
   });
 
+/**
+ * Administrator check for staff-management actions. Uses the shared role model
+ * (src/lib/roles.ts): only the CEO, root admins and explicitly granted admins.
+ * Managers are NOT administrators, even though older database rules gave every
+ * manager the "admin" role.
+ */
 async function ensureAdmin(context: any) {
-  const { data: allowed, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error || !allowed) throw new Response("Admins only", { status: 403 });
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const [{ data: profile }, { data: roles }, { data: authUser }] = await Promise.all([
+    db.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
+    db.from("user_roles").select("role").eq("user_id", context.userId),
+    supabaseAdmin.auth.admin.getUserById(context.userId),
+  ]);
+  const access = computeAccess(profile, authUser?.user?.email, roles ?? []);
+  if (!access.isAdmin || (profile && profile.is_active === false)) {
+    throw new Response("Admins only", { status: 403 });
+  }
+  return access;
 }
 
 const updateTeamMemberSchema = z.object({
@@ -141,7 +149,10 @@ export const updateTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => updateTeamMemberSchema.parse(data))
   .handler(async ({ data, context }) => {
-    await ensureAdmin(context);
+    const actor = await ensureAdmin(context);
+    if (data.roleTier === "root_admin" && actor.roleTier !== "root_admin") {
+      throw new Response("Only root administrators can grant root admin access", { status: 403 });
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: any = {};
     if (data.fullName !== undefined) patch.full_name = data.fullName;
@@ -166,7 +177,8 @@ export const updateTeamMember = createServerFn({ method: "POST" })
 
     if (data.roleTier !== undefined) {
       const db = supabaseAdmin as any;
-      if (data.roleTier === "manager" || data.roleTier === "root_admin") {
+      // Only root admins hold the database "admin" role; managers do not.
+      if (data.roleTier === "root_admin") {
         await db.from("user_roles").upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" });
       } else {
         await db.from("user_roles").delete().eq("user_id", data.userId).eq("role", "admin");

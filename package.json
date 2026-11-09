@@ -12,7 +12,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:roles": "node --experimental-strip-types scripts/check-roles.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.14",

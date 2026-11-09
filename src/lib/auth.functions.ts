@@ -199,7 +199,7 @@ export const sendPasswordResetOtp = createServerFn({ method: "POST" })
           return { success: false, method: "supabase" };
         }
 
-        console.log(`[Password Reset OTP] Generated recovery verification code for ${email}: ${otpCode}`);
+        console.log(`[Password Reset OTP] Generated recovery verification code for ${email}`);
 
         const emailHtml = `
               <!DOCTYPE html>

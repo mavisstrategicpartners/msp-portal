@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { authenticateApiRequest } from "@/lib/api-auth.server";
 import {
   Industry,
   MSP_INDUSTRIES,
@@ -15,7 +16,7 @@ const HEADERS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-MSP-User-Id, X-MSP-User-Email, X-MSP-User-Role",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 interface AuthenticatedUser {
@@ -473,91 +474,25 @@ async function initLedgerFromSupabase(force = false) {
 
 // Verify User Auth
 async function verifyAuth(request: Request): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("Authorization");
-  const fallbackUserId = request.headers.get("X-MSP-User-Id");
-  const fallbackEmail = request.headers.get("X-MSP-User-Email");
-  const fallbackRole = request.headers.get("X-MSP-User-Role");
-
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.replace("Bearer ", "").trim();
-    try {
-      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-      if (!userError && userData?.user) {
-        const user = userData.user;
-        const { data: profile } = await (supabaseAdmin as any)
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        const roleTier = profile?.role_tier || "staff";
-        const email = (user.email || "").toLowerCase();
-        const title = (profile?.job_title || "").toLowerCase();
-        const dept = (profile?.department || "").toLowerCase();
-
-        const isAdmin =
-          roleTier === "root_admin" ||
-          email === "mavis@mavisstrateegicpartners.co.za" ||
-          email === "admin@mavisstrategicpartners.co.za" ||
-          email === "admin@mavisstrateegicpartners.co.za" ||
-          email === "ceo@mavisstrategicpartners.co.za";
-
-        const isManager =
-          isAdmin ||
-          roleTier === "manager" ||
-          email === "manager@mavisstrateegicpartners.co.za" ||
-          email === "manager@mavisstrategicpartners.co.za" ||
-          title.includes("sales manager") ||
-          title.includes("head of sales");
-
-        return {
-          userId: user.id,
-          email: user.email || "",
-          fullName: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-          jobTitle: profile?.job_title || "Sales Consultant",
-          department: profile?.department || "Sales Team",
-          roleTier,
-          isAdmin,
-          isManager,
-        };
-      }
-    } catch (e) {
-      console.warn("[Sales Server] Auth verification token error:", e);
-    }
-  }
-
-  // Fallback headers for local dev testing
-  if (fallbackUserId || fallbackEmail) {
-    const email = (fallbackEmail || "").toLowerCase();
-    const role = (fallbackRole || "").toLowerCase();
-
-    const isAdmin =
-      role === "admin" ||
-      role === "root_admin" ||
-      email === "mavis@mavisstrateegicpartners.co.za" ||
-      email === "admin@mavisstrategicpartners.co.za" ||
-      email === "admin@mavisstrateegicpartners.co.za";
-
-    const isManager =
-      isAdmin ||
-      role === "manager" ||
-      role === "sales_manager" ||
-      email === "manager@mavisstrateegicpartners.co.za" ||
-      email === "manager@mavisstrategicpartners.co.za";
-
-    return {
-      userId: fallbackUserId || `user-${Date.now()}`,
-      email: fallbackEmail || "consultant@mavisstrateegicpartners.co.za",
-      fullName: fallbackEmail ? fallbackEmail.split("@")[0] : "Sales Specialist",
-      jobTitle: isManager ? "Sales Manager" : "Sales Consultant",
-      department: "Sales Team",
-      roleTier: isAdmin ? "root_admin" : isManager ? "manager" : "staff",
-      isAdmin,
-      isManager,
-    };
-  }
-
-  return null;
+  // Identity comes only from a verified Supabase token (see api-auth.server.ts).
+  // The old X-MSP-User-* header fallback let anyone claim any user or "admin".
+  const user = await authenticateApiRequest(request);
+  if (!user) return null;
+  const a = user.access;
+  // Only the Sales team, the GM and administrators may use the Sales API.
+  if (!(a.isSales || a.isGM || a.isAdmin)) return null;
+  return {
+    userId: user.userId,
+    email: user.email,
+    fullName: user.fullName,
+    jobTitle: user.jobTitle,
+    department: user.department,
+    roleTier: user.roleTier,
+    isAdmin: a.isAdmin,
+    // Sales Manager rights: the sales manager role, the GM and administrators.
+    // Other departments' managers are not sales managers.
+    isManager: a.isAdmin || a.isGM || a.isSalesManager,
+  };
 }
 
 // ── Main Request Handler ─────────────────────────────────────────────────────
@@ -1097,6 +1032,17 @@ export async function handleSalesApi(request: Request): Promise<Response> {
 
 // Ingestion for GoHighLevel Webhooks
 async function handleGhlWebhook(request: Request): Promise<Response> {
+  // When GHL_WEBHOOK_SECRET is configured, only GoHighLevel calls carrying it
+  // (header "x-webhook-secret" or ?secret=) are accepted. Set it in Vercel and
+  // in the GHL webhook settings; until it is set the endpoint stays open.
+  const expectedSecret = process.env.GHL_WEBHOOK_SECRET;
+  if (expectedSecret) {
+    const given =
+      request.headers.get("x-webhook-secret") || new URL(request.url).searchParams.get("secret");
+    if (given !== expectedSecret) {
+      return new Response(JSON.stringify({ error: "Invalid webhook secret." }), { status: 401, headers: HEADERS });
+    }
+  }
   try {
     const payload = await request.json().catch(() => ({}));
     console.log("[Sales Server] Received GHL Webhook payload:", payload?.type || "unknown");

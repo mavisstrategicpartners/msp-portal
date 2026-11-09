@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
 import {
   StaffTask,
   DependencyRequest,
@@ -13,33 +14,6 @@ import {
 } from "./staff-tasks.types";
 import { toast } from "sonner";
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.access_token) {
-      headers["Authorization"] = `Bearer ${data.session.access_token}`;
-    }
-  } catch {}
-
-  // Fallback to local stored user id if in dev/demo environment
-  if (typeof window !== "undefined") {
-    try {
-      const stored = localStorage.getItem("msp.authenticatedUser");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.id) {
-          headers["X-MSP-User-Id"] = parsed.id;
-        }
-      }
-    } catch {}
-  }
-
-  return headers;
-}
 
 // ── 1. Tasks Queries & Mutations ─────────────────────────────────────────────
 

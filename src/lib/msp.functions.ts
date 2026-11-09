@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
@@ -43,6 +44,8 @@ function localAnswer(question: string) {
 }
 
 export const askMsp = createServerFn({ method: "POST" })
+  // Signed-in staff only (stops anonymous use of the paid AI gateway).
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({

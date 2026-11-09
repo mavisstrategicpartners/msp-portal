@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { authenticateApiRequest, jsonError } from "@/lib/api-auth.server";
 
 /**
  * Returns today's start-of-day date object (00:00:00.000) specifically in Africa/Johannesburg (UTC+2)
@@ -43,6 +44,13 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
     return new Response(null, { status: 204, headers });
   }
 
+  // Every attendance call needs a signed-in user (verified Supabase token).
+  const auth = await authenticateApiRequest(request);
+  if (!auth) return jsonError(401, "Sign in required.", headers);
+  const a = auth.access;
+  // Company-wide presence and the weekly register: HR, the GM and administrators.
+  const canViewAllAttendance = a.isAdmin || a.isHR || a.isGM;
+
   try {
     // 1. POST /api/attendance -> save attendance event (clock-in, break, clock-out)
     if (
@@ -50,8 +58,9 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       (pathname === "/api/attendance" || pathname === "/api/attendance/log")
     ) {
       const body = await request.json();
+      // Staff clock themselves in/out only: the user is always the token's owner.
+      const userId = auth.userId;
       const {
-        userId,
         state,
         clockInTime,
         breakStartTime,
@@ -134,12 +143,9 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       request.method === "GET" &&
       pathname.startsWith("/api/attendance/status")
     ) {
-      const userId = url.searchParams.get("userId");
-      if (!userId) {
-        return new Response(JSON.stringify({ error: "Missing userId" }), {
-          status: 400,
-          headers,
-        });
+      const userId = url.searchParams.get("userId") || auth.userId;
+      if (userId !== auth.userId && !canViewAllAttendance) {
+        return jsonError(403, "You can only view your own attendance.", headers);
       }
 
       // Query latest attendance event for this user from audit_logs
@@ -211,6 +217,7 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       request.method === "GET" &&
       (pathname === "/api/attendance/board" || pathname === "/api/attendance")
     ) {
+      if (!canViewAllAttendance) return jsonError(403, "Not authorised to view company attendance.", headers);
       // Load all active company profiles
       const { data: profiles, error: pErr } = await (supabaseAdmin as any)
         .from("profiles")
@@ -369,6 +376,7 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       request.method === "GET" &&
       pathname.startsWith("/api/attendance/register")
     ) {
+      if (!canViewAllAttendance) return jsonError(403, "Not authorised to view the attendance register.", headers);
       // Calculate Monday of the requested or current week
       let monday: Date;
       const paramStart = url.searchParams.get("weekStart");

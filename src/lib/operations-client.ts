@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
 import {
   ClientRecord,
   CreateClientInput,
@@ -7,19 +8,6 @@ import {
   ClientCommunicationLog,
 } from "./operations.types";
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  if (session?.access_token) {
-    headers["Authorization"] = `Bearer ${session.access_token}`;
-  }
-  if (session?.user?.id) {
-    headers["X-MSP-User-Id"] = session.user.id;
-  }
-  return headers;
-}
 
 export async function fetchOperationsClients(): Promise<ClientRecord[]> {
   const headers = await getAuthHeaders();

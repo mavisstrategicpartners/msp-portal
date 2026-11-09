@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { authenticateApiRequest } from "@/lib/api-auth.server";
 import {
   StaffTask,
   DependencyRequest,
@@ -15,7 +16,7 @@ const HEADERS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-MSP-User-Id",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 // ── Authentication & Permission Verification ─────────────────────────────────
@@ -31,89 +32,19 @@ interface AuthContext {
 }
 
 async function verifyAuth(request: Request): Promise<AuthContext | null> {
-  const authHeader = request.headers.get("Authorization") || "";
-  let token = "";
-  if (authHeader.startsWith("Bearer ")) {
-    token = authHeader.substring(7).trim();
-  }
-
-  const fallbackUserHeader = request.headers.get("X-MSP-User-Id");
-
-  if (token) {
-    try {
-      const { data, error } = await supabaseAdmin.auth.getUser(token);
-      if (!error && data?.user) {
-        const user = data.user;
-        const { data: profile } = await (supabaseAdmin as any)
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        const isMgr =
-          profile?.role_tier === "manager" ||
-          profile?.role_tier === "root_admin" ||
-          (profile?.job_title || "").toLowerCase().includes("manager") ||
-          (profile?.job_title || "").toLowerCase().includes("lead") ||
-          (profile?.job_title || "").toLowerCase().includes("director") ||
-          (profile?.department || "").toLowerCase().includes("executive") ||
-          (profile?.department || "").toLowerCase().includes("operations") ||
-          (profile?.email || "").toLowerCase().includes("manager") ||
-          (user.email || "").toLowerCase().includes("manager") ||
-          user.email === "ceo@mavisstrategicpartners.co.za";
-
-        return {
-          userId: user.id,
-          email: user.email || "",
-          fullName: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Staff Member",
-          jobTitle: profile?.job_title || "Specialist",
-          department: profile?.department || "General",
-          roleTier: profile?.role_tier || "staff",
-          isManagerOrAbove: isMgr,
-        };
-      }
-    } catch (err) {
-      console.warn("Token verification failed, checking fallback:", err);
-    }
-  }
-
-  // Check fallback header (X-MSP-User-Id)
-  if (fallbackUserHeader) {
-    try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fallbackUserHeader);
-      const query = (supabaseAdmin as any).from("profiles").select("*");
-      const { data: profile } = isUuid
-        ? await query.eq("id", fallbackUserHeader).maybeSingle()
-        : await query.or(`id.eq.${fallbackUserHeader},email.eq.${fallbackUserHeader}`).maybeSingle();
-
-      if (profile) {
-        const isMgr =
-          profile.role_tier === "manager" ||
-          profile.role_tier === "root_admin" ||
-          (profile.job_title || "").toLowerCase().includes("manager") ||
-          (profile.job_title || "").toLowerCase().includes("lead") ||
-          (profile.job_title || "").toLowerCase().includes("director") ||
-          (profile.department || "").toLowerCase().includes("executive") ||
-          (profile.department || "").toLowerCase().includes("operations") ||
-          (profile.email || "").toLowerCase().includes("manager") ||
-          profile.email === "ceo@mavisstrategicpartners.co.za";
-
-        return {
-          userId: profile.id,
-          email: profile.email,
-          fullName: profile.full_name || profile.email.split("@")[0],
-          jobTitle: profile.job_title || "Staff Member",
-          department: profile.department || "General",
-          roleTier: profile.role_tier || "staff",
-          isManagerOrAbove: isMgr,
-        };
-      }
-    } catch (err) {
-      console.warn("Fallback user verification error:", err);
-    }
-  }
-
-  return null;
+  // Identity comes only from a verified Supabase token (see api-auth.server.ts).
+  const user = await authenticateApiRequest(request);
+  if (!user) return null;
+  return {
+    userId: user.userId,
+    email: user.email,
+    fullName: user.fullName,
+    jobTitle: user.jobTitle,
+    department: user.department,
+    roleTier: user.roleTier,
+    // Task management (assign / review work) — not administrator rights.
+    isManagerOrAbove: user.access.isManagerOrAbove,
+  };
 }
 
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────

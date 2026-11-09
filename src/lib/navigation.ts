@@ -212,8 +212,10 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     subtitle: "Team Execution & QA Approval",
     home: "/department",
     prefixes: ["/department"],
-    access: (ctx) => ctx.isManagerOrAbove || ctx.isAdmin || ctx.systemRole === "department_manager",
-    listFor: (ctx) =>
+    // Department managers run their own team; Operations and the GM oversee
+    // delivery across departments. Other managers (Sales, Finance, HR) are not
+    // given another department's workspace just because they manage people.
+    access: (ctx) =>
       ctx.isAdmin ||
       ["department_manager", "operations", "general_manager"].includes(ctx.systemRole),
     groups: [
@@ -505,10 +507,20 @@ export function homeWorkspace(ctx: NavContext): WorkspaceKey {
 }
 
 /** Whether the user may open a URL. Shared pages are always allowed here. */
+/**
+ * Shared pages (no workspace sidebar of their own) that are still restricted.
+ * The Sales Playbook appears in both the Sales and Admin sidebars.
+ */
+const RESTRICTED_SHARED_PAGES: { prefix: string; access: (ctx: NavContext) => boolean }[] = [
+  {
+    prefix: "/admin/sales-playbook",
+    access: (ctx) => ctx.isSales || ctx.isAdmin || ctx.systemRole === "general_manager",
+  },
+];
+
 export function canAccessPath(pathname: string, ctx: NavContext) {
-  // The embedded HR suite (/host/hr/*) has always also admitted managers
-  // (see routes/_authenticated/host/$.tsx); keep that behaviour.
-  if (pathMatches(pathname, "/host/hr") && (ctx.isManagerOrAbove || ctx.isAdmin)) return true;
+  const rule = RESTRICTED_SHARED_PAGES.find((r) => pathMatches(pathname, r.prefix));
+  if (rule) return rule.access(ctx);
   const ws = workspaceForPath(pathname);
   return ws ? WORKSPACES[ws].access(ctx) : true;
 }

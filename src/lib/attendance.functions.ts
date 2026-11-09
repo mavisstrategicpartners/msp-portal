@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { computeAccess } from "@/lib/roles";
 
 export const logAttendance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -50,8 +51,18 @@ export const logAttendance = createServerFn({ method: "POST" })
 
 export const getStaffAttendance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Company-wide presence is for HR, the GM and administrators only.
+    const db = supabaseAdmin as any;
+    const [{ data: me }, { data: myRoles }] = await Promise.all([
+      db.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
+      db.from("user_roles").select("role").eq("user_id", context.userId),
+    ]);
+    const access = computeAccess(me, me?.email, myRoles ?? []);
+    if (!(access.isAdmin || access.isHR || access.isGM)) {
+      throw new Response("Not authorised to view company attendance", { status: 403 });
+    }
 
     // Fetch all real company profiles from Supabase
     const { data: profiles, error: pErr } = await (supabaseAdmin as any)
