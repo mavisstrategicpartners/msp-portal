@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { authenticateApiRequest } from "@/lib/api-auth.server";
+import { computeAccess, type AccessFlags } from "@/lib/roles";
 import {
   StaffTask,
   DependencyRequest,
@@ -29,6 +30,7 @@ interface AuthContext {
   department: string;
   roleTier: string;
   isManagerOrAbove: boolean;
+  access: AccessFlags;
 }
 
 async function verifyAuth(request: Request): Promise<AuthContext | null> {
@@ -44,7 +46,156 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
     roleTier: user.roleTier,
     // Task management (assign / review work) — not administrator rights.
     isManagerOrAbove: user.access.isManagerOrAbove,
+    access: user.access,
   };
+}
+
+// ── Department scoping for task oversight and evidence review ────────────────
+// A manager reviews work for the department(s) they run. Their department comes
+// from their profile department plus any department named in their job title
+// (e.g. "Media Buying Lead & Department Manager" in the "Marketing Team").
+const DEPARTMENT_KEYWORDS = [
+  "media buying", "seo", "creative", "graphics", "websites & software", "web development", "software",
+  "crm & ai automation", "crm", "automation", "sales", "business development", "strategy", "onboarding",
+  "reporting", "client success", "finance", "human resources", "hr", "operations", "academy", "marketing",
+];
+
+const norm = (v?: string | null) => (v || "").trim().toLowerCase();
+
+function managedDepartments(auth: AuthContext): Set<string> {
+  // A job title that names a specific department (e.g. "SEO Manager", "Media
+  // Buying Lead") scopes the manager to that department only. Profile
+  // departments such as "Marketing Team" cover several specialist teams, so
+  // they are used only when the title names none.
+  const title = norm(auth.jobTitle);
+  const fromTitle = DEPARTMENT_KEYWORDS.filter((kw) => kw !== "marketing" && title.includes(kw));
+  const set = new Set<string>(fromTitle.length ? fromTitle : [norm(auth.department)].filter(Boolean));
+  if (set.has("hr")) set.add("human resources");
+  if (set.has("human resources")) set.add("hr");
+  if (set.has("crm")) set.add("crm & ai automation");
+  if (set.has("web development") || set.has("software")) set.add("websites & software");
+  return set;
+}
+
+function departmentMatches(managed: Set<string>, dept?: string | null) {
+  const d = norm(dept);
+  if (!d) return false;
+  if (managed.has(d)) return true;
+  for (const m of managed) if (m.length > 2 && (d.includes(m) || m.includes(d))) return true;
+  return false;
+}
+
+/** Company-wide oversight: CEO / administrators, the GM and Operations. */
+function overseesAllDepartments(auth: AuthContext) {
+  return auth.access.isAdmin || auth.access.isGM || auth.access.isOperations;
+}
+
+function isTaskAssignee(auth: AuthContext, task: StaffTask) {
+  return Boolean(
+    (task.assignedToId && auth.userId && task.assignedToId.toLowerCase() === auth.userId.toLowerCase()) ||
+      (task.assignedToEmail && auth.email && task.assignedToEmail.toLowerCase() === auth.email.toLowerCase()) ||
+      (task.assignedToName &&
+        auth.fullName &&
+        task.assignedToName.toLowerCase() === auth.fullName.toLowerCase() &&
+        auth.fullName.toLowerCase() !== "staff member"),
+  );
+}
+
+/** May this user oversee / review work on this task? */
+function canReviewTask(auth: AuthContext, task: StaffTask, submitterDepartment?: string | null) {
+  if (overseesAllDepartments(auth)) return true;
+  if (task.assignedById && task.assignedById === auth.userId) return true; // the manager who assigned it
+  if (!auth.isManagerOrAbove) return false;
+  const managed = managedDepartments(auth);
+  return departmentMatches(managed, task.department) || departmentMatches(managed, submitterDepartment);
+}
+
+const profileDeptCache = new Map<string, { dept: string | null; at: number }>();
+async function profileDepartment(userId?: string | null): Promise<string | null> {
+  if (!userId) return null;
+  const hit = profileDeptCache.get(userId);
+  if (hit && Date.now() - hit.at < 60_000) return hit.dept;
+  const { data } = await (supabaseAdmin as any).from("profiles").select("department").eq("id", userId).maybeSingle();
+  const dept = (data?.department as string) ?? null;
+  profileDeptCache.set(userId, { dept, at: Date.now() });
+  return dept;
+}
+
+// ── Evidence file storage (private "evidence" bucket) ─────────────────────────
+const EVIDENCE_BUCKET = "evidence";
+const MAX_EVIDENCE_BYTES = 25 * 1024 * 1024;
+const ALLOWED_EVIDENCE_TYPES = new Set([
+  "application/pdf",
+  "image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/csv", "text/plain",
+  "application/zip", "application/x-zip-compressed",
+  "video/mp4",
+]);
+
+async function evidenceFileExists(path: string) {
+  const dir = path.slice(0, path.lastIndexOf("/"));
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const { data, error } = await (supabaseAdmin as any).storage.from(EVIDENCE_BUCKET).list(dir, { search: name, limit: 5 });
+  return !error && Array.isArray(data) && data.some((o: any) => o.name === name);
+}
+
+/** Fresh, short-lived links for an authorised viewer. Old submissions saved a
+ *  browser-only "blob:" link (the file never reached the server) — flag those. */
+async function signEvidenceFiles(files: EvidenceSubmission["uploadedFiles"]) {
+  const out = [];
+  for (const f of files || []) {
+    if (f.path) {
+      const store = (supabaseAdmin as any).storage.from(EVIDENCE_BUCKET);
+      const [view, dl] = await Promise.all([
+        store.createSignedUrl(f.path, 60 * 30),
+        store.createSignedUrl(f.path, 60 * 30, { download: f.name }),
+      ]);
+      if (!view.error && view.data?.signedUrl) {
+        out.push({ ...f, url: view.data.signedUrl, downloadUrl: dl.data?.signedUrl || view.data.signedUrl, available: true });
+        continue;
+      }
+      out.push({ ...f, url: "", available: false, unavailableReason: "The file could not be found in storage." });
+    } else if (f.url && /^https?:\/\//.test(f.url) && !f.url.startsWith("blob:")) {
+      out.push({ ...f, downloadUrl: f.url, available: true });
+    } else {
+      out.push({
+        ...f,
+        url: "",
+        available: false,
+        unavailableReason:
+          "This file was never uploaded: it was attached before the evidence upload fix and only existed on the staff member's device. Request corrections so they can upload it again.",
+      });
+    }
+  }
+  return out;
+}
+
+/** Department managers for a department (to notify about new submissions). */
+async function departmentManagersFor(dept?: string | null): Promise<string[]> {
+  if (!norm(dept)) return [];
+  const db = supabaseAdmin as any;
+  const { data: managers } = await db
+    .from("profiles")
+    .select("*")
+    .in("role_tier", ["manager", "root_admin"])
+    .eq("is_active", true);
+  const ids = (managers || []).map((m: any) => m.id);
+  if (!ids.length) return [];
+  const { data: roles } = await db.from("user_roles").select("user_id, role").in("user_id", ids);
+  const out: string[] = [];
+  for (const m of managers || []) {
+    const a = computeAccess(m, m.email, (roles || []).filter((r: any) => r.user_id === m.id));
+    if (!a.isDepartmentManager) continue;
+    const pseudo = { department: m.department || "", jobTitle: m.job_title || "" } as AuthContext;
+    if (departmentMatches(managedDepartments(pseudo), dept)) out.push(m.id);
+  }
+  return out;
 }
 
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────
@@ -131,6 +282,9 @@ async function createNotification(
       (n.userId === userId || (userEmail && n.userEmail && n.userEmail.toLowerCase() === userEmail.toLowerCase())) &&
       n.type === type &&
       n.message === message &&
+      // Different submissions/tasks are different events, even with the same wording.
+      (n.relatedEvidenceId || null) === (related?.evidenceId || null) &&
+      (n.relatedTaskId || null) === (related?.taskId || null) &&
       new Date(n.createdAt).getTime() > oneHourAgo
     ) {
       return n;
@@ -190,9 +344,10 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       const allTasks = Array.from(tasksStore.values());
       const showAll = url.searchParams.get("all") === "true" && auth.isManagerOrAbove;
 
-      // Filter tasks assigned to current user, unless authorized manager requests all
+      // Managers see their own department's work (company-wide for CEO/admin, GM, Operations);
+      // everyone else sees the tasks assigned to them.
       const userTasks = showAll
-        ? allTasks
+        ? allTasks.filter((t) => canReviewTask(auth, t) || isTaskAssignee(auth, t))
         : allTasks.filter((t) => {
             const matchesId = Boolean(
               t.assignedToId &&
@@ -385,7 +540,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         (task.assignedToEmail && auth.email && task.assignedToEmail.toLowerCase() === auth.email.toLowerCase()) ||
         (task.assignedToName && auth.fullName && task.assignedToName.toLowerCase() === auth.fullName.toLowerCase() && auth.fullName.toLowerCase() !== "staff member");
 
-      if (!isOwner && !auth.isManagerOrAbove) {
+      const isReviewer = canReviewTask(auth, task, await profileDepartment(task.assignedToId));
+      if (!isOwner && !isReviewer) {
         return new Response(JSON.stringify({ error: "You are not authorized to update this task." }), {
           status: 403,
           headers: HEADERS,
@@ -424,6 +580,31 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         if (status === "Accepted Complete") normalizedStatus = "Completed";
         else if (status === "Rework Required") normalizedStatus = "Changes Requested";
 
+        // Sign-off (Completed / Changes Requested) is a review decision: only an
+        // authorised reviewer may make it, and never on their own work.
+        if (normalizedStatus === "Completed" || normalizedStatus === "Changes Requested") {
+          if (!isReviewer || (isOwner && !overseesAllDepartments(auth))) {
+            return new Response(
+              JSON.stringify({ error: "Only the reviewing manager can sign off or return this deliverable." }),
+              { status: 403, headers: HEADERS },
+            );
+          }
+          // Keep the latest pending evidence submission in step with the decision.
+          const pending = Array.from(evidenceStore.values())
+            .filter((e) => e.taskId === task.id && e.status === "Submitted for Review")
+            .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))[0];
+          if (pending) {
+            pending.status = normalizedStatus === "Completed" ? "Approved" : "Changes Requested";
+            pending.reviewedById = auth.userId;
+            pending.reviewedByName = auth.fullName;
+            pending.reviewerFeedback = qaDecisionNotes || note || pending.reviewerFeedback || "";
+            pending.reviewedAt = new Date().toISOString();
+            pending.updatedAt = pending.reviewedAt;
+            evidenceStore.set(pending.id, pending);
+            await logLedgerEntry("staff_evidence_upsert", pending.id, { evidence: pending });
+          }
+        }
+
         task.status = normalizedStatus;
         changed = true;
         if (normalizedStatus === "Completed") {
@@ -459,7 +640,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       }
 
       // Manager-permitted changes: Reassignment, Deadline, Priority, QA
-      if (auth.isManagerOrAbove || task.assignedById === auth.userId) {
+      if (isReviewer) {
         // Reassignment
         if (assignedToId && assignedToId !== task.assignedToId) {
           let newName = assignedToName || task.assignedToName;
@@ -801,31 +982,68 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     // ══════════════════════════════════════════════════════════════════════════
 
     // GET /api/staff/evidence
+    // GET /api/staff/evidence[?taskId=] -> submissions the caller may see
     if (method === "GET" && pathname === "/api/staff/evidence") {
       const taskId = url.searchParams.get("taskId");
-      const allEvidence = Array.from(evidenceStore.values());
+      let result = Array.from(evidenceStore.values());
+      if (taskId) result = result.filter((e) => e.taskId === taskId);
 
-      let result = allEvidence;
-      if (taskId) {
-        result = result.filter((e) => e.taskId === taskId);
-      } else if (!auth.isManagerOrAbove) {
-        result = result.filter((e) => e.submittingStaffId === auth.userId);
+      const visible: EvidenceSubmission[] = [];
+      for (const e of result) {
+        if (e.submittingStaffId === auth.userId) {
+          visible.push(e);
+          continue;
+        }
+        const task = tasksStore.get(e.taskId);
+        if (task && canReviewTask(auth, task, await profileDepartment(e.submittingStaffId))) visible.push(e);
       }
+      visible.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      return new Response(JSON.stringify({ evidence: visible }), { status: 200, headers: HEADERS });
+    }
 
-      result.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-      return new Response(JSON.stringify({ evidence: result }), { status: 200, headers: HEADERS });
+    // POST /api/staff/evidence/upload-url -> one-time upload slot in the private bucket
+    if (method === "POST" && pathname === "/api/staff/evidence/upload-url") {
+      const { taskId, fileName, mimeType, size } = await request.json();
+      const task = taskId ? tasksStore.get(taskId) : null;
+      if (!task) {
+        return new Response(JSON.stringify({ error: "Valid task ID required." }), { status: 400, headers: HEADERS });
+      }
+      if (!isTaskAssignee(auth, task) && !canReviewTask(auth, task)) {
+        return new Response(JSON.stringify({ error: "You can only upload evidence for your own tasks." }), {
+          status: 403,
+          headers: HEADERS,
+        });
+      }
+      if (!ALLOWED_EVIDENCE_TYPES.has(String(mimeType || "").toLowerCase())) {
+        return new Response(
+          JSON.stringify({ error: `File type not allowed (${mimeType || "unknown"}). Use PDF, images, Word, Excel, PowerPoint, CSV, TXT, ZIP or MP4.` }),
+          { status: 400, headers: HEADERS },
+        );
+      }
+      if (!(Number(size) > 0) || Number(size) > MAX_EVIDENCE_BYTES) {
+        return new Response(JSON.stringify({ error: "Files must be between 1 byte and 25 MB." }), { status: 400, headers: HEADERS });
+      }
+      const clean = String(fileName || "file").replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
+      const path = `tasks/${task.id}/${auth.userId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${clean}`;
+      const { data, error } = await (supabaseAdmin as any).storage.from(EVIDENCE_BUCKET).createSignedUploadUrl(path);
+      if (error || !data?.token) {
+        console.error("[evidence] could not create upload slot:", error?.message);
+        return new Response(JSON.stringify({ error: "File storage is unavailable. Please try again." }), {
+          status: 502,
+          headers: HEADERS,
+        });
+      }
+      return new Response(JSON.stringify({ path, token: data.token, signedUrl: data.signedUrl }), {
+        status: 200,
+        headers: HEADERS,
+      });
     }
 
     // POST /api/staff/evidence -> submit evidence
     if (method === "POST" && pathname === "/api/staff/evidence") {
       const body = await request.json();
-      const {
-        taskId,
-        deliverableLinks = [],
-        uploadedFiles = [],
-        writtenExplanation,
-        status = "Submitted for Review",
-      } = body;
+      const { taskId, deliverableLinks = [], uploadedFiles = [], writtenExplanation } = body;
+      const status: EvidenceReviewStatus = body.status === "Draft" ? "Draft" : "Submitted for Review";
 
       const task = taskId ? tasksStore.get(taskId) : null;
       if (!task) {
@@ -834,8 +1052,33 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           headers: HEADERS,
         });
       }
+      if (!isTaskAssignee(auth, task) && !canReviewTask(auth, task)) {
+        return new Response(JSON.stringify({ error: "You can only submit evidence for tasks assigned to you." }), {
+          status: 403,
+          headers: HEADERS,
+        });
+      }
 
-      if (!writtenExplanation?.trim() && deliverableLinks.length === 0 && uploadedFiles.length === 0) {
+      // Every file must be a real upload in this task's storage folder.
+      const files: EvidenceSubmission["uploadedFiles"] = [];
+      for (const f of uploadedFiles as any[]) {
+        const path = typeof f?.path === "string" ? f.path : "";
+        if (!path.startsWith(`tasks/${task.id}/`) || path.includes("..")) {
+          return new Response(
+            JSON.stringify({ error: `"${f?.name || "A file"}" was not uploaded. Please attach it again.` }),
+            { status: 400, headers: HEADERS },
+          );
+        }
+        if (!(await evidenceFileExists(path))) {
+          return new Response(
+            JSON.stringify({ error: `"${f?.name || "A file"}" did not finish uploading. Please attach it again.` }),
+            { status: 400, headers: HEADERS },
+          );
+        }
+        files.push({ name: String(f.name || "file"), path, url: "", size: Number(f.size) || 0, mimeType: String(f.mimeType || "") });
+      }
+
+      if (!writtenExplanation?.trim() && deliverableLinks.length === 0 && files.length === 0) {
         return new Response(
           JSON.stringify({ error: "Please provide deliverable links, uploaded files, or an explanation." }),
           { status: 400, headers: HEADERS }
@@ -854,9 +1097,9 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         submittingStaffName: auth.fullName,
         submissionNumber: nextSubmissionNum,
         deliverableLinks,
-        uploadedFiles,
+        uploadedFiles: files,
         writtenExplanation: writtenExplanation?.trim() || "",
-        status: status as EvidenceReviewStatus,
+        status,
         submittedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -865,19 +1108,23 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       evidenceStore.set(newEvidence.id, newEvidence);
       await logLedgerEntry("staff_evidence_upsert", newEvidence.id, { evidence: newEvidence });
 
-      // Update task status to "Submitted for Review" if submitted
       if (status === "Submitted for Review") {
         task.status = "Submitted for Review";
         task.lastUpdatedAt = new Date().toISOString();
         tasksStore.set(task.id, task);
         await logLedgerEntry("staff_task_upsert", task.id, { task });
 
-        // Notify assigner / manager that deliverable evidence is ready for inspection
-        if (task.assignedById && task.assignedById !== auth.userId) {
+        // Notify the assigning manager and the department's manager(s).
+        const recipients = new Set<string>();
+        if (task.assignedById) recipients.add(task.assignedById);
+        for (const id of await departmentManagersFor(task.department)) recipients.add(id);
+        recipients.delete(auth.userId);
+        const fileNote = files.length ? ` (${files.length} file${files.length === 1 ? "" : "s"} attached)` : "";
+        for (const managerId of recipients) {
           await createNotification(
-            task.assignedById,
+            managerId,
             "Deliverable Ready for Review",
-            `${auth.fullName} submitted evidence for "${task.title}".`,
+            `${auth.fullName} submitted evidence for "${task.title}"${fileNote}.`,
             "evidence_reviewed",
             { taskId: task.id, evidenceId: newEvidence.id }
           );
@@ -890,9 +1137,46 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       });
     }
 
-    // PATCH /api/staff/evidence/:id -> review decision (Approve / Changes Requested)
+    // GET /api/staff/evidence/:id -> full submission with viewable files
+    if (method === "GET" && /^\/api\/staff\/evidence\/[^/]+$/.test(pathname)) {
+      const evId = decodeURIComponent(pathname.replace("/api/staff/evidence/", ""));
+      let evidence = evidenceStore.get(evId);
+      if (!evidence) {
+        await initLedgerFromSupabase(true);
+        evidence = evidenceStore.get(evId);
+      }
+      if (!evidence) {
+        return new Response(JSON.stringify({ error: "Evidence submission not found." }), { status: 404, headers: HEADERS });
+      }
+      const task = tasksStore.get(evidence.taskId);
+      const staffDept = await profileDepartment(evidence.submittingStaffId);
+      const isSubmitter = evidence.submittingStaffId === auth.userId;
+      const canReview = Boolean(task && canReviewTask(auth, task, staffDept)) && !isSubmitter;
+      if (!isSubmitter && !canReview && !(task && isTaskAssignee(auth, task))) {
+        return new Response(JSON.stringify({ error: "You are not authorised to view this submission." }), {
+          status: 403,
+          headers: HEADERS,
+        });
+      }
+      const history = Array.from(evidenceStore.values())
+        .filter((e) => e.taskId === evidence!.taskId && e.id !== evidence!.id)
+        .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+        .map((e) => ({ ...e, uploadedFiles: e.uploadedFiles.map((f) => ({ ...f, url: "" })) }));
+      const detail = {
+        ...evidence,
+        uploadedFiles: await signEvidenceFiles(evidence.uploadedFiles),
+        submittingStaffDepartment: staffDept,
+        taskDepartment: task?.department ?? null,
+        taskStatus: task?.status ?? null,
+        canReview: canReview && evidence.status === "Submitted for Review",
+        history,
+      };
+      return new Response(JSON.stringify({ evidence: detail }), { status: 200, headers: HEADERS });
+    }
+
+    // PATCH /api/staff/evidence/:id -> review decision
     if (method === "PATCH" && pathname.startsWith("/api/staff/evidence/")) {
-      const evId = pathname.replace("/api/staff/evidence/", "");
+      const evId = decodeURIComponent(pathname.replace("/api/staff/evidence/", ""));
       const evidence = evidenceStore.get(evId);
       if (!evidence) {
         return new Response(JSON.stringify({ error: "Evidence submission not found." }), {
@@ -902,51 +1186,74 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       }
 
       const body = await request.json();
-      const { status, reviewerFeedback } = body;
+      const status = String(body.status || "") as EvidenceReviewStatus;
+      const reviewerFeedback = String(body.reviewerFeedback || "").trim();
+      const task = tasksStore.get(evidence.taskId);
 
-      // Authorised reviewer check
-      if (!auth.isManagerOrAbove && evidence.submittingStaffId === auth.userId && status === "Approved") {
-        return new Response(JSON.stringify({ error: "Staff cannot approve their own deliverables." }), {
+      if (!["Approved", "Changes Requested", "Rejected"].includes(status)) {
+        return new Response(JSON.stringify({ error: "Decision must be Approved, Changes Requested or Rejected." }), {
+          status: 400,
+          headers: HEADERS,
+        });
+      }
+      if (evidence.submittingStaffId === auth.userId) {
+        return new Response(JSON.stringify({ error: "You cannot review your own submission." }), { status: 403, headers: HEADERS });
+      }
+      if (!task || !canReviewTask(auth, task, await profileDepartment(evidence.submittingStaffId))) {
+        return new Response(JSON.stringify({ error: "You are not authorised to review this submission." }), {
           status: 403,
           headers: HEADERS,
         });
       }
+      if (evidence.status !== "Submitted for Review") {
+        return new Response(JSON.stringify({ error: `This submission was already reviewed (${evidence.status}).` }), {
+          status: 409,
+          headers: HEADERS,
+        });
+      }
+      if (status !== "Approved" && !reviewerFeedback) {
+        return new Response(JSON.stringify({ error: "Please explain what needs to change." }), { status: 400, headers: HEADERS });
+      }
 
-      evidence.status = status as EvidenceReviewStatus;
+      evidence.status = status;
       evidence.reviewedById = auth.userId;
       evidence.reviewedByName = auth.fullName;
-      evidence.reviewerFeedback = reviewerFeedback || "";
+      evidence.reviewerFeedback = reviewerFeedback;
       evidence.reviewedAt = new Date().toISOString();
-      evidence.updatedAt = new Date().toISOString();
-
+      evidence.updatedAt = evidence.reviewedAt;
       evidenceStore.set(evidence.id, evidence);
       await logLedgerEntry("staff_evidence_upsert", evidence.id, { evidence });
 
-      // Update linked task status accordingly
-      const task = tasksStore.get(evidence.taskId);
-      if (task) {
-        if (status === "Approved") {
-          task.status = "Completed";
-          task.progress = 100;
-          task.completionDate = new Date().toISOString();
-        } else if (status === "Changes Requested") {
-          task.status = "Changes Requested";
-        }
-        task.lastUpdatedAt = new Date().toISOString();
-        tasksStore.set(task.id, task);
-        await logLedgerEntry("staff_task_upsert", task.id, { task });
-
-        // Notify submitting staff member
-        await createNotification(
-          evidence.submittingStaffId,
-          status === "Approved" ? "Deliverable Approved" : "Changes Requested on Deliverable",
-          status === "Approved"
-            ? `Your evidence for "${task.title}" has been approved by ${auth.fullName}.`
-            : `${auth.fullName} requested changes on "${task.title}": ${reviewerFeedback || "Please see review feedback."}`,
-          "evidence_reviewed",
-          { taskId: task.id, evidenceId: evidence.id }
-        );
+      if (status === "Approved") {
+        task.status = "Completed";
+        task.progress = 100;
+        task.completionDate = new Date().toISOString();
+      } else {
+        task.status = "Changes Requested";
       }
+      task.qaReviewer = auth.fullName;
+      task.qaDecisionNotes = reviewerFeedback;
+      task.lastUpdatedAt = new Date().toISOString();
+      tasksStore.set(task.id, task);
+      await logLedgerEntry("staff_task_upsert", task.id, { task });
+
+      const titles: Record<string, string> = {
+        Approved: "Deliverable Approved",
+        "Changes Requested": "Corrections Requested on Deliverable",
+        Rejected: "Deliverable Rejected",
+      };
+      const messages: Record<string, string> = {
+        Approved: `${auth.fullName} approved your evidence for "${task.title}".${reviewerFeedback ? ` Comment: ${reviewerFeedback}` : ""}`,
+        "Changes Requested": `${auth.fullName} requested corrections on "${task.title}": ${reviewerFeedback}`,
+        Rejected: `${auth.fullName} rejected your submission for "${task.title}": ${reviewerFeedback}`,
+      };
+      await createNotification(
+        evidence.submittingStaffId,
+        titles[status],
+        messages[status],
+        "evidence_reviewed",
+        { taskId: task.id, evidenceId: evidence.id }
+      );
 
       return new Response(JSON.stringify({ ok: true, evidence, task }), { status: 200, headers: HEADERS });
     }

@@ -7,6 +7,7 @@ import {
   FileSignature, Gauge, ListTree, Lock, Mail, Map as MapIcon, MessageCircle, Phone, Plus, Search, Send,
   ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench, Eye, EyeOff, KeyRound,
   RotateCcw, PowerOff, FileBarChart2, Crown, Laptop, Code2, Megaphone, Share2, Sliders, UserCheck, Layers, GitBranch, ArrowUpRight, Check,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -14,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { useProfile } from "@/lib/use-profile";
 import { canAccessPath, navContextFromProfile, searchableItems } from "@/lib/navigation";
+import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
 import {
   useStaffNotifications,
   useMarkNotificationRead,
@@ -1876,8 +1878,11 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
   const markAllReadMutation = useMarkAllNotificationsRead();
   const notifications = notifData?.notifications || [];
   const unreadCount = notifData?.unreadCount || 0;
+  const [evidenceId, setEvidenceId] = useState<string | null>(null);
 
   return (
+    <>
+    <EvidenceReviewDialog evidenceId={evidenceId} open={!!evidenceId} onOpenChange={(o) => !o && setEvidenceId(null)} />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
@@ -1921,7 +1926,20 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
                   <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
                 </div>
                 <p className="text-muted-foreground">{n.message}</p>
-                <div className="flex justify-end pt-1">
+                <div className="flex items-center justify-end gap-3 pt-1">
+                  {n.relatedEvidenceId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!n.read) markReadMutation.mutate({ id: n.id, read: true });
+                        setEvidenceId(n.relatedEvidenceId!);
+                      }}
+                      className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground hover:bg-primary/90"
+                    >
+                      <FileText className="h-3 w-3" />
+                      {n.title === "Deliverable Ready for Review" ? "Open evidence" : "View submission"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => markReadMutation.mutate({ id: n.id, read: !n.read })}
@@ -1936,6 +1954,7 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
 

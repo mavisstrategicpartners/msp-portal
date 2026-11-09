@@ -76,6 +76,7 @@ import {
   useStaffScorecard,
   uploadEvidenceFile,
 } from "@/lib/staff-tasks.service";
+import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
 import {
   StaffTask,
   DependencyRequest,
@@ -84,6 +85,7 @@ import {
   TaskStatus,
   DependencyStatus,
   EvidenceReviewStatus,
+  EvidenceFile,
 } from "@/lib/staff-tasks.types";
 
 export function StaffWorkspaceDashboard() {
@@ -150,7 +152,8 @@ export function StaffWorkspaceDashboard() {
   const [evidenceLinkTitle, setEvidenceLinkTitle] = useState("");
   const [evidenceLinkUrl, setEvidenceLinkUrl] = useState("");
   const [evidenceExplanation, setEvidenceExplanation] = useState("");
-  const [evidenceFiles, setEvidenceFiles] = useState<{ name: string; url: string; size: number; mimeType: string }[]>([]);
+  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
+  const [viewEvidenceId, setViewEvidenceId] = useState<string | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isSubmittingEvidence, setIsSubmittingEvidence] = useState(false);
 
@@ -347,16 +350,20 @@ export function StaffWorkspaceDashboard() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !evidenceTaskId) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !evidenceTaskId) return;
 
     setIsUploadingFile(true);
     try {
-      const uploaded = await uploadEvidenceFile(file, evidenceTaskId);
-      setEvidenceFiles((prev) => [...prev, uploaded]);
-      toast.success(`Uploaded ${file.name} successfully.`);
-    } catch (err: any) {
-      toast.error("File upload failed", { description: err.message });
+      for (const file of files) {
+        try {
+          const uploaded = await uploadEvidenceFile(file, evidenceTaskId);
+          setEvidenceFiles((prev) => [...prev, uploaded]);
+          toast.success(`Uploaded ${file.name}`);
+        } catch (err: any) {
+          toast.error(`Could not upload ${file.name}`, { description: err.message });
+        }
+      }
     } finally {
       setIsUploadingFile(false);
       e.target.value = "";
@@ -434,6 +441,7 @@ export function StaffWorkspaceDashboard() {
 
   return (
     <div className="space-y-6">
+      <EvidenceReviewDialog evidenceId={viewEvidenceId} open={!!viewEvidenceId} onOpenChange={(o) => !o && setViewEvidenceId(null)} />
       {/* ─── Top Eyebrow / Presence Header ──────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
         <div className="flex items-center gap-4">
@@ -1343,17 +1351,16 @@ export function StaffWorkspaceDashboard() {
                       <span className="font-semibold text-foreground">Uploaded Documents:</span>
                       <div className="flex flex-wrap gap-2">
                         {ev.uploadedFiles.map((f, i) => (
-                          <a
+                          <button
                             key={i}
-                            href={f.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            type="button"
+                            onClick={() => setViewEvidenceId(ev.id)}
                             className="inline-flex items-center gap-1.5 text-foreground bg-muted/60 hover:bg-muted px-2.5 py-1 rounded border border-border"
                           >
                             <FileText className="h-3.5 w-3.5 text-primary" />
                             <span>{f.name}</span>
                             <span className="text-[10px] text-muted-foreground">({Math.round(f.size / 1024)} KB)</span>
-                          </a>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -1784,9 +1791,10 @@ export function StaffWorkspaceDashboard() {
 
             {/* File Upload to Supabase Storage */}
             <div className="space-y-1.5 w-full min-w-0">
-              <Label className="text-xs font-semibold">Upload Document or Screenshot (PDF, DOCX, PNG, ZIP &lt; 25MB)</Label>
+              <Label className="text-xs font-semibold">Upload Documents or Screenshots (PDF, Word, Excel, PowerPoint, images, ZIP &lt; 25MB each, several allowed)</Label>
               <Input
                 type="file"
+                multiple
                 onChange={handleFileUpload}
                 disabled={isUploadingFile}
                 className="h-9 text-xs file:text-xs file:font-semibold w-full min-w-0"

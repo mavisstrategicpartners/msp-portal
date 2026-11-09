@@ -10,8 +10,7 @@ import {
   TaskPriority,
   TaskStatus,
   DependencyStatus,
-  EvidenceReviewStatus,
-} from "./staff-tasks.types";
+  EvidenceReviewStatus, EvidenceFile, EvidenceDetail } from "./staff-tasks.types";
 import { toast } from "sonner";
 
 
@@ -194,7 +193,7 @@ export function useSubmitEvidence() {
     mutationFn: async (payload: {
       taskId: string;
       deliverableLinks?: { title: string; url: string }[];
-      uploadedFiles?: { name: string; url: string; size: number; mimeType: string }[];
+      uploadedFiles?: EvidenceFile[];
       writtenExplanation: string;
       status?: EvidenceReviewStatus;
     }) => {
@@ -347,65 +346,50 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 
-export async function uploadEvidenceFile(
-  file: File,
-  taskId: string
-): Promise<{ name: string; url: string; size: number; mimeType: string }> {
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error(
-      `File format not permitted (${file.type || "unknown"}). Allowed: PDF, Word, Excel, PNG, JPG, CSV, ZIP.`
-    );
+/**
+ * Upload one evidence file to the private "evidence" bucket.
+ * The server checks the task and file, then issues a one-time upload slot; the
+ * file goes straight to storage. Throws on any failure — there is no
+ * browser-only fallback, so a submission can never reference a file that the
+ * reviewing manager cannot open.
+ */
+export async function uploadEvidenceFile(file: File, taskId: string): Promise<EvidenceFile> {
+  if (file.size > MAX_FILE_SIZE) throw new Error("File exceeds the 25 MB upload limit.");
+  if (file.type && !ALLOWED_MIME_TYPES.includes(file.type) && !/^image\//.test(file.type) && file.type !== "video/mp4" && !file.type.includes("presentation") && file.type !== "application/vnd.ms-powerpoint") {
+    throw new Error(`File format not permitted (${file.type}). Allowed: PDF, Word, Excel, PowerPoint, images, CSV, TXT, ZIP, MP4.`);
   }
-
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error("File exceeds 25MB maximum upload limit.");
+  const mimeType = file.type || "application/octet-stream";
+  const headers = await getAuthHeaders();
+  const slotRes = await fetch("/api/staff/evidence/upload-url", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ taskId, fileName: file.name, mimeType, size: file.size }),
+  });
+  const slot = await slotRes.json().catch(() => ({}));
+  if (!slotRes.ok || !slot.path || !slot.token) {
+    throw new Error(slot.error || "Could not prepare the upload. Please try again.");
   }
+  const { error } = await supabase.storage
+    .from("evidence")
+    .uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false });
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+  return { name: file.name, path: slot.path, url: "", size: file.size, mimeType };
+}
 
-  const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const path = `${taskId}/${Date.now()}_${cleanName}`;
+/** Full submission with short-lived links to view/download each file. */
+export async function fetchEvidenceDetail(evidenceId: string): Promise<EvidenceDetail> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`/api/staff/evidence/${encodeURIComponent(evidenceId)}`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not load the submission.");
+  return data.evidence as EvidenceDetail;
+}
 
-  try {
-    const { error: uploadError } = await supabase.storage
-      .from("evidence")
-      .upload(path, file, { upsert: true, contentType: file.type });
-
-    if (uploadError) {
-      console.warn("Supabase storage upload error, falling back to local object preview:", uploadError);
-      return {
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        mimeType: file.type,
-      };
-    }
-
-    // Try creating signed URL (expires in 7 days for authorized inspection)
-    const { data: signedData, error: signError } = await supabase.storage
-      .from("evidence")
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-
-    if (!signError && signedData?.signedUrl) {
-      return {
-        name: file.name,
-        url: signedData.signedUrl,
-        size: file.size,
-        mimeType: file.type,
-      };
-    }
-
-    const { data: publicData } = supabase.storage.from("evidence").getPublicUrl(path);
-    return {
-      name: file.name,
-      url: publicData.publicUrl,
-      size: file.size,
-      mimeType: file.type,
-    };
-  } catch (err: any) {
-    return {
-      name: file.name,
-      url: URL.createObjectURL(file),
-      size: file.size,
-      mimeType: file.type,
-    };
-  }
+export function useEvidenceDetail(evidenceId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["staff", "evidence", "detail", evidenceId],
+    queryFn: () => fetchEvidenceDetail(evidenceId!),
+    enabled: Boolean(evidenceId),
+    staleTime: 60_000, // signed links last 30 minutes
+  });
 }

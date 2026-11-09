@@ -383,7 +383,7 @@ export function DepartmentDashboardPage() {
                       </div>
                       <h4 className="text-sm font-bold text-foreground">{task.title}</h4>
                       <p className="text-xs text-muted-foreground font-medium">
-                        Evidence Submitted: {task.evidenceSubmitted || "Test logs attached in platform"}
+                        Evidence: {task.evidenceSubmitted || "Submitted — open the review to see the files"}
                       </p>
                       <p className="text-[11px] text-muted-foreground font-medium">
                         Submitted by: <strong>{task.assignedToName}</strong> &bull; Target QA Due: <strong>{task.dueDate}</strong>

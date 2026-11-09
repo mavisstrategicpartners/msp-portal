@@ -115,7 +115,32 @@ export type EvidenceReviewStatus =
   | "Draft"
   | "Submitted for Review"
   | "Approved"
-  | "Changes Requested";
+  | "Changes Requested"
+  | "Rejected";
+
+/** A file attached to an evidence submission. `path` is its location in the
+ *  private "evidence" storage bucket; viewing links are issued on demand. */
+export interface EvidenceFile {
+  name: string;
+  /** Storage path (set for every upload since the evidence fix). */
+  path?: string;
+  /** Legacy field / short-lived signed link returned by the server for viewing. */
+  url: string;
+  size: number;
+  mimeType: string;
+  downloadUrl?: string;
+  available?: boolean;
+  unavailableReason?: string;
+}
+
+/** Full submission as returned to an authorised viewer (GET /api/staff/evidence/:id). */
+export interface EvidenceDetail extends EvidenceSubmission {
+  submittingStaffDepartment: string | null;
+  taskDepartment: string | null;
+  taskStatus: string | null;
+  canReview: boolean;
+  history: EvidenceSubmission[];
+}
 
 export interface EvidenceSubmission {
   id: string;
@@ -125,12 +150,7 @@ export interface EvidenceSubmission {
   submittingStaffName: string;
   submissionNumber: number;
   deliverableLinks: SupportingLink[];
-  uploadedFiles: {
-    name: string;
-    url: string;
-    size: number;
-    mimeType: string;
-  }[];
+  uploadedFiles: EvidenceFile[];
   writtenExplanation: string;
   status: EvidenceReviewStatus;
   submittedAt: string;

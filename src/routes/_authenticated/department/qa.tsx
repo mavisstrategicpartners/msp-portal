@@ -14,6 +14,9 @@ import {
   DepartmentTask,
 } from "@/lib/department-manager.service";
 import { useProfile } from "@/lib/use-profile";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
+import type { EvidenceSubmission } from "@/lib/staff-tasks.types";
+import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -39,13 +42,25 @@ export function DepartmentQAPage() {
   const [decisionNotes, setDecisionNotes] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Latest evidence submission per task (department-scoped by the server)
+  const [latestEvidence, setLatestEvidence] = useState<Record<string, EvidenceSubmission>>({});
+  const [openEvidenceId, setOpenEvidenceId] = useState<string | null>(null);
+
   const managerName = profileData?.profile?.full_name || "Department Manager (Media Buying)";
 
   async function loadData() {
     setLoading(true);
     try {
-      const res = await fetchDepartmentData();
+      const [res, evRes] = await Promise.all([
+        fetchDepartmentData(),
+        fetch("/api/staff/evidence", { headers: await getAuthHeaders() }).then((r) => (r.ok ? r.json() : { evidence: [] })),
+      ]);
       setTasks(res.tasks);
+      const map: Record<string, EvidenceSubmission> = {};
+      for (const ev of (evRes.evidence || []) as EvidenceSubmission[]) {
+        if (!map[ev.taskId] || ev.submittedAt > map[ev.taskId].submittedAt) map[ev.taskId] = ev;
+      }
+      setLatestEvidence(map);
     } catch (err: any) {
       toast.error("Failed to load QA queue", { description: err?.message });
     } finally {
@@ -71,11 +86,7 @@ export function DepartmentQAPage() {
   function handleOpenDecision(task: DepartmentTask, type: "Accepted" | "Rework Required") {
     setSelectedTask(task);
     setDecision(type);
-    setDecisionNotes(
-      type === "Accepted"
-        ? "Verified against platform account ID and live tracking debugger test events. Deliverable approved."
-        : ""
-    );
+    setDecisionNotes("");
     setDecisionModalOpen(true);
   }
 
@@ -217,7 +228,17 @@ export function DepartmentQAPage() {
                     </CardDescription>
                   </div>
 
-                  {task.status === "Submitted for Review" && (
+                  {latestEvidence[task.id] && (
+                    <Button
+                      size="sm"
+                      className={`text-xs h-8 shadow-xs font-semibold px-3 cursor-pointer ${task.status === "Submitted for Review" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-secondary text-foreground hover:bg-secondary/80"}`}
+                      onClick={() => setOpenEvidenceId(latestEvidence[task.id].id)}
+                    >
+                      <FileText className="mr-1.5 h-3.5 w-3.5" />
+                      {task.status === "Submitted for Review" ? "Review Evidence" : "View Evidence"}
+                    </Button>
+                  )}
+                  {task.status === "Submitted for Review" && !latestEvidence[task.id] && (
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
@@ -254,9 +275,27 @@ export function DepartmentQAPage() {
                     <span className="text-[10px] uppercase font-bold text-muted-foreground block">
                       Specialist Submitted Evidence
                     </span>
-                    <p className="text-emerald-700 dark:text-emerald-300 font-semibold leading-relaxed">
-                      {task.evidenceSubmitted || "Evidence logs attached directly to platform record."}
-                    </p>
+                    {latestEvidence[task.id] ? (
+                      <div className="space-y-1">
+                        <p className="text-foreground leading-relaxed line-clamp-3">
+                          {latestEvidence[task.id].writtenExplanation || "No description provided."}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Submission #{latestEvidence[task.id].submissionNumber} &bull;{" "}
+                          {new Date(latestEvidence[task.id].submittedAt).toLocaleString()} &bull;{" "}
+                          {latestEvidence[task.id].uploadedFiles.length} file(s) &bull; {latestEvidence[task.id].status}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setOpenEvidenceId(latestEvidence[task.id].id)}
+                          className="text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          Open evidence &rarr;
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground leading-relaxed">No evidence submission on record for this task.</p>
+                    )}
                   </div>
                 </div>
 
@@ -275,6 +314,13 @@ export function DepartmentQAPage() {
           ))
         )}
       </div>
+
+      <EvidenceReviewDialog
+        evidenceId={openEvidenceId}
+        open={!!openEvidenceId}
+        onOpenChange={(o) => !o && setOpenEvidenceId(null)}
+        onReviewed={() => loadData()}
+      />
 
       {/* ── MODAL: QA Decision ─────────────────────────────────────────────── */}
       <Dialog open={decisionModalOpen} onOpenChange={setDecisionModalOpen}>
