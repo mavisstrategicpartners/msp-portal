@@ -38,7 +38,7 @@ export const DASHBOARD_ROLES: RoleConfig[] = [
     id: "finance_admin",
     title: "Finance & Administration",
     shortLabel: "Finance & Admin",
-    description: "Invoices, cash collected, overdue receivables & media spend separation",
+    description: "Invoices, cash collected, overdue receivables & payment verification",
     authority: "Invoices, verified payments, collections, costs and account access appropriate to duties.",
   },
 ];

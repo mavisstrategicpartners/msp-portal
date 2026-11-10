@@ -21,7 +21,6 @@ import {
   Download,
   Building2,
   Calendar,
-  Layers,
   ArrowRight,
   XCircle,
   TrendingDown,
@@ -47,7 +46,7 @@ export interface ClientInvoice {
   client: string;
   package: string;
   monthlyServiceFeeZar: number; // Pure MSP agency fee
-  clientMediaSpendZar: number;  // Direct ad spend on Meta/Google
+  clientMediaSpendZar?: number; // legacy field; ad spend is paid by clients directly to the platforms and is not tracked here
   paymentStatus: "Paid & Verified" | "Awaiting Payment" | "Overdue";
   dueDate: string;
   verifiedAt?: string;
@@ -124,7 +123,6 @@ export function FinanceAdminDashboard() {
   const [newClient, setNewClient] = useState("");
   const [newPackage, setNewPackage] = useState("");
   const [newAgencyFee, setNewAgencyFee] = useState("35000");
-  const [newMediaSpend, setNewMediaSpend] = useState("50000");
   const [newDueDate, setNewDueDate] = useState("");
 
   // Add Expense Modal State
@@ -139,7 +137,6 @@ export function FinanceAdminDashboard() {
 
   // Financial Calculations
   const totalBookedMonthlyRevenue = invoices.reduce((acc, inv) => acc + (Number(inv.monthlyServiceFeeZar) || 0), 0);
-  const totalClientMediaSpend = invoices.reduce((acc, inv) => acc + (Number(inv.clientMediaSpendZar) || 0), 0);
   
   const verifiedInvoices = invoices.filter((inv) => inv.paymentStatus === "Paid & Verified");
   const verifiedCashCollected = verifiedInvoices.reduce((acc, inv) => acc + (Number(inv.monthlyServiceFeeZar) || 0), 0);
@@ -219,7 +216,6 @@ export function FinanceAdminDashboard() {
       client: newClient.trim(),
       package: newPackage.trim() || "Performance Growth Retainer",
       monthlyServiceFeeZar: Number(newAgencyFee) || 35000,
-      clientMediaSpendZar: Number(newMediaSpend) || 0,
       paymentStatus: "Awaiting Payment",
       dueDate: newDueDate || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
     };
@@ -319,11 +315,11 @@ export function FinanceAdminDashboard() {
 
   // Export CSV Handler
   const handleExportCSV = () => {
-    const headers = "InvoiceNumber,Client,Package,MonthlyAgencyFeeZAR,ClientMediaSpendZAR,PaymentStatus,DueDate,VerifiedAt\n";
+    const headers = "InvoiceNumber,Client,Package,MonthlyAgencyFeeZAR,PaymentStatus,DueDate,VerifiedAt\n";
     const rows = invoices
       .map(
         (i) =>
-          `"${i.invoiceNumber}","${i.client}","${i.package}",${i.monthlyServiceFeeZar},${i.clientMediaSpendZar},"${i.paymentStatus}","${i.dueDate}","${i.verifiedAt || ""}"`
+          `"${i.invoiceNumber}","${i.client}","${i.package}",${i.monthlyServiceFeeZar},"${i.paymentStatus}","${i.dueDate}","${i.verifiedAt || ""}"`
       )
       .join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
@@ -361,7 +357,7 @@ export function FinanceAdminDashboard() {
               Finance & Administration Command Centre
             </h1>
             <p className="mt-1 text-sm text-purple-200/80 max-w-3xl">
-              Strict financial oversight: Manage client invoicing, enforce the payment verification gate before onboarding clearance, separate agency fees from client media spend, and maintain budget controls.
+              Strict financial oversight: Manage client invoicing, enforce the payment verification gate before onboarding clearance, and maintain budget controls.
             </p>
           </div>
 
@@ -390,7 +386,7 @@ export function FinanceAdminDashboard() {
         <div className="flex items-center gap-2.5">
           <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
           <span>
-            <strong>Financial Boundary Rule:</strong> Agency service fees are separated from direct client media spend. Verified client payments clear the gate to unlock Operations 2-day client intake.
+            <strong>Financial Boundary Rule:</strong> Only MSP's own agency fees are tracked here. Client ad spend is paid directly to Meta, TikTok and Google and is not MSP revenue. Verified client payments clear the gate to unlock Operations 2-day client intake.
           </span>
         </div>
         <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
@@ -399,7 +395,7 @@ export function FinanceAdminDashboard() {
       </div>
 
       {/* ─── Financial Telemetry KPI Cards ─────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         {/* Metric 1: Invoiced Agency Fees */}
         <Card className="p-4 border-border bg-card shadow-sm hover:border-primary/40 transition">
           <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
@@ -408,7 +404,7 @@ export function FinanceAdminDashboard() {
           </div>
           <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(totalBookedMonthlyRevenue)}</p>
           <p className="text-[11px] text-muted-foreground mt-2">
-            Pure agency service retainers (excludes client ad spend)
+            Agency service retainers invoiced by MSP
           </p>
         </Card>
 
@@ -440,17 +436,6 @@ export function FinanceAdminDashboard() {
           </p>
         </Card>
 
-        {/* Metric 4: Client Media Spend Under Management */}
-        <Card className="p-4 border-border bg-card shadow-sm hover:border-blue-500/40 transition">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Client Ad Spend Managed</span>
-            <Layers className="h-4 w-4 text-blue-400" />
-          </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(totalClientMediaSpend)}</p>
-          <p className="text-[11px] text-muted-foreground mt-2">
-            Direct client ad spend on Meta & Google (Zero agency markup)
-          </p>
-        </Card>
       </div>
 
       {/* ─── Sub-Navigation Tabs ─────────────────────────────────────────── */}
@@ -544,7 +529,7 @@ export function FinanceAdminDashboard() {
                               )}
                             </div>
                             <p className="text-[11px] text-muted-foreground">
-                              Agency Fee: <strong className="text-foreground">{formatZAR(inv.monthlyServiceFeeZar)}</strong> &bull; Media Spend: {formatZAR(inv.clientMediaSpendZar)} &bull; Due: {inv.dueDate}
+                              Agency Fee: <strong className="text-foreground">{formatZAR(inv.monthlyServiceFeeZar)}</strong> &bull; Due: {inv.dueDate}
                             </p>
                           </div>
                           <Button
@@ -658,7 +643,6 @@ export function FinanceAdminDashboard() {
                     <th className="py-2.5 px-3">Invoice #</th>
                     <th className="py-2.5 px-3">Client & Package</th>
                     <th className="py-2.5 px-3">Monthly Agency Fee</th>
-                    <th className="py-2.5 px-3">Client Media Spend</th>
                     <th className="py-2.5 px-3">Due Date</th>
                     <th className="py-2.5 px-3">Status</th>
                     <th className="py-2.5 px-3 text-right">Verification Gate Action</th>
@@ -667,7 +651,7 @@ export function FinanceAdminDashboard() {
                 <tbody className="divide-y divide-border">
                   {filteredInvoices.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-10 text-center text-muted-foreground text-xs">
+                      <td colSpan={6} className="py-10 text-center text-muted-foreground text-xs">
                         No invoices available.
                       </td>
                     </tr>
@@ -683,9 +667,6 @@ export function FinanceAdminDashboard() {
                         </td>
                         <td className="py-3 px-3 font-bold text-foreground">
                           {formatZAR(inv.monthlyServiceFeeZar)}
-                        </td>
-                        <td className="py-3 px-3 text-muted-foreground">
-                          {formatZAR(inv.clientMediaSpendZar)}
                         </td>
                         <td className="py-3 px-3 font-mono text-muted-foreground">
                           {inv.dueDate}
@@ -1013,7 +994,7 @@ export function FinanceAdminDashboard() {
           <DialogHeader>
             <DialogTitle className="text-base font-bold">Issue New Client Invoice</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Generate an official MSP service invoice. Service fee is separated from media ad spend.
+              Generate an official MSP service invoice for agency fees. Client ad spend is paid directly to the platforms and is not invoiced here.
             </DialogDescription>
           </DialogHeader>
 
@@ -1039,29 +1020,16 @@ export function FinanceAdminDashboard() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Monthly Agency Fee (ZAR) *</Label>
-                <Input
-                  type="number"
-                  value={newAgencyFee}
-                  onChange={(e) => setNewAgencyFee(e.target.value)}
-                  placeholder="35000"
-                  required
-                  className="text-xs h-8"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Client Direct Media Spend (ZAR)</Label>
-                <Input
-                  type="number"
-                  value={newMediaSpend}
-                  onChange={(e) => setNewMediaSpend(e.target.value)}
-                  placeholder="50000"
-                  className="text-xs h-8"
-                />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Monthly Agency Fee (ZAR) *</Label>
+              <Input
+                type="number"
+                value={newAgencyFee}
+                onChange={(e) => setNewAgencyFee(e.target.value)}
+                placeholder="35000"
+                required
+                className="text-xs h-8"
+              />
             </div>
 
             <div className="space-y-1">
