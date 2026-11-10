@@ -274,8 +274,21 @@ async function buildOverview(): Promise<ExecutiveOverview> {
 
   const evidence: ExecEvidence[] = [...evidenceMap.values()]
     .filter((e) => e.status !== "Draft")
-    .map((e) => {
-      const task = taskById.get(e.taskId);
+    .map((raw) => {
+      const task = taskById.get(raw.taskId);
+      const rawTask = tasksMap.get(raw.taskId);
+      // Older submissions were approved on the task itself (QA decision) before
+      // evidence had its own review step; show those as approved, not waiting.
+      const reviewedOnTask =
+        raw.status === "Submitted for Review" && rawTask?.status === "Completed" && rawTask?.qaDecisionNotes;
+      const e = reviewedOnTask
+        ? {
+            ...raw,
+            status: "Approved",
+            reviewedByName: raw.reviewedByName || rawTask.qaReviewer || rawTask.assignedByName,
+            reviewerFeedback: raw.reviewerFeedback || rawTask.qaDecisionNotes,
+          }
+        : raw;
       const waiting =
         e.status === "Submitted for Review" && e.submittedAt
           ? Math.round((now.getTime() - new Date(e.submittedAt).getTime()) / 3_600_000)
@@ -595,7 +608,27 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       at: recentRework[0].submittedAt,
       link: "/ceo/delivery?filter=rework",
     });
-  for (const c of clients.filter((x) => x.onboarding?.delayed || x.onboarding?.escalation || x.onboarding?.blocker)) {
+  const troubled = clients.filter((x) => x.onboarding?.delayed || x.onboarding?.escalation || x.onboarding?.blocker);
+  // Escalations always surface individually; plain delays are grouped when there are many.
+  const individually = troubled.length > 3 ? troubled.filter((c) => c.onboarding?.escalation) : troubled;
+  if (troubled.length > 3) {
+    const delayed = troubled.filter((c) => !c.onboarding?.escalation);
+    if (delayed.length)
+      push({
+        id: "clients-delayed",
+        severity: "warning",
+        category: "clients",
+        title: `${delayed.length} client onboardings are past their target date`,
+        detail: delayed
+          .sort((a, b) => (b.onboarding?.daysOverdue ?? 0) - (a.onboarding?.daysOverdue ?? 0))
+          .slice(0, 4)
+          .map((c) => `${c.name} (${c.onboarding?.daysOverdue}d late, ${c.onboarding?.progress}% done)`)
+          .join(" · "),
+        at: null,
+        link: "/ceo/clients?filter=at-risk",
+      });
+  }
+  for (const c of individually) {
     push({
       id: `client-${c.id}`,
       severity: c.onboarding?.escalation ? "critical" : "warning",

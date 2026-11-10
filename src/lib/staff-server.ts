@@ -1170,13 +1170,25 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         .filter((e) => e.taskId === evidence!.taskId && e.id !== evidence!.id)
         .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
         .map((e) => ({ ...e, uploadedFiles: e.uploadedFiles.map((f) => ({ ...f, url: "" })) }));
+      // Older submissions were approved on the task (QA decision) before evidence
+      // had its own review step: report them as approved, not still waiting.
+      const reviewedOnTask =
+        evidence.status === "Submitted for Review" && task?.status === "Completed" && (task as any)?.qaDecisionNotes;
+      const shown = reviewedOnTask
+        ? {
+            ...evidence,
+            status: "Approved" as EvidenceReviewStatus,
+            reviewedByName: evidence.reviewedByName || (task as any).qaReviewer || task!.assignedByName,
+            reviewerFeedback: evidence.reviewerFeedback || (task as any).qaDecisionNotes,
+          }
+        : evidence;
       const detail = {
-        ...evidence,
+        ...shown,
         uploadedFiles: await signEvidenceFiles(evidence.uploadedFiles),
         submittingStaffDepartment: staffDept,
         taskDepartment: task?.department ?? null,
         taskStatus: task?.status ?? null,
-        canReview: canReview && evidence.status === "Submitted for Review",
+        canReview: canReview && shown.status === "Submitted for Review",
         history,
       };
       return new Response(JSON.stringify({ evidence: detail }), { status: 200, headers: HEADERS });
