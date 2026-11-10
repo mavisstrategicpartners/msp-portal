@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-import { computeAccess, getDefaultDashboardRoute, type Profile } from "@/lib/roles";
+import { computeAccess, landingPath, type Profile } from "@/lib/roles";
+import { DEPARTMENTS } from "@/lib/departments";
 
 export { computeAccess, getDefaultDashboardRoute, resolveSystemRole } from "@/lib/roles";
 export type { AccessFlags, MspSystemRole, Profile, RoleTier } from "@/lib/roles";
+
+const deptName = (key?: string | null) => (key ? DEPARTMENTS.find((d) => d.key === key)?.name ?? null : null);
 
 export function useProfile() {
   return useQuery({
@@ -24,6 +27,8 @@ export function useProfile() {
 
       let profile: Profile | null = null;
       let roles: any[] = [];
+      let leadDepartments: string[] = [];
+      let memberDepartments: { department_key: string; is_primary: boolean }[] = [];
       try {
         const [{ data: p }, { data: r }] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
@@ -31,6 +36,12 @@ export function useProfile() {
         ]);
         profile = p as Profile | null;
         roles = r ?? [];
+        const [{ data: l }, { data: m }] = await Promise.all([
+          (supabase as any).from("department_leads").select("department_key").eq("user_id", user.id),
+          (supabase as any).from("department_members").select("department_key, is_primary").eq("user_id", user.id),
+        ]);
+        leadDepartments = ((l as any[]) ?? []).map((x) => x.department_key);
+        memberDepartments = (m as any[]) ?? [];
 
         // If the user is authenticated in Supabase but doesn't have a profile row yet, initialize it
         if (!profile && user.email) {
@@ -79,12 +90,17 @@ export function useProfile() {
         user,
         profile,
         ...access,
-        defaultDashboard: getDefaultDashboardRoute(systemRole),
+        defaultDashboard: landingPath(access, leadDepartments),
+        leadDepartments,
+        isDepartmentLead: leadDepartments.length > 0,
+        departmentKey: memberDepartments.find((d) => d.is_primary)?.department_key ?? null,
+        // Workspace title: the department this person manages, else the one they belong to.
         departmentName:
+          deptName(leadDepartments[0]) ||
+          deptName(memberDepartments.find((d) => d.is_primary)?.department_key) ||
           (user?.user_metadata?.department as string) ||
-          (profile?.department === "Marketing Team" && profile?.job_title?.includes("Media Buying")
-            ? "Media Buying"
-            : profile?.department || "Media Buying"),
+          profile?.department ||
+          null,
       };
     },
     staleTime: 60_000,

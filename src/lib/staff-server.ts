@@ -2,6 +2,20 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { authenticateApiRequest } from "@/lib/api-auth.server";
 import { computeAccess, type AccessFlags } from "@/lib/roles";
 import {
+  assignPolicy,
+  assignableDepartments,
+  canConfigureStructure,
+  departmentPeople,
+  invalidateOrgStructure,
+  ledDepartments,
+  loadOrgStructure,
+  managerOf,
+  managesDepartment,
+  memberDepartments,
+  primaryDepartment,
+  type OrgStructure,
+} from "@/lib/org-structure.server";
+import {
   DEPARTMENTS,
   UNASSIGNED_DEPARTMENT,
   departmentExact,
@@ -38,19 +52,10 @@ interface AuthContext {
   roleTier: string;
   isManagerOrAbove: boolean;
   access: AccessFlags;
-  /** Department keys this user is the confirmed lead of (department_leads). */
+  /** Department keys this user is the confirmed manager of (department_leads). */
   leadDepartments: Set<string>;
-}
-
-// ── Confirmed department leads (public.department_leads) ─────────────────────
-let leadsCache: { at: number; rows: { department_key: string; user_id: string }[] } | null = null;
-type LeadRow = { department_key: string; user_id: string };
-async function loadDepartmentLeads(): Promise<LeadRow[]> {
-  if (leadsCache && Date.now() - leadsCache.at < 60_000) return leadsCache.rows;
-  const { data, error } = await (supabaseAdmin as any).from("department_leads").select("department_key, user_id");
-  const rows: LeadRow[] = error ? [] : data || [];
-  leadsCache = { at: Date.now(), rows };
-  return rows;
+  /** Organisation structure (departments, managers, employees) from the database. */
+  org: OrgStructure;
 }
 
 /** Department key of a task's department field (exact name/key first). */
@@ -63,6 +68,7 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
   // Identity comes only from a verified Supabase token (see api-auth.server.ts).
   const user = await authenticateApiRequest(request);
   if (!user) return null;
+  const org = await loadOrgStructure();
   return {
     userId: user.userId,
     email: user.email,
@@ -70,54 +76,24 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
     jobTitle: user.jobTitle,
     department: user.department,
     roleTier: user.roleTier,
-    // Task management (assign / review work) — not administrator rights.
     isManagerOrAbove: user.access.isManagerOrAbove,
     access: user.access,
-    leadDepartments: new Set(
-      (await loadDepartmentLeads()).filter((l) => l.user_id === user.userId).map((l) => l.department_key),
-    ),
+    leadDepartments: new Set(ledDepartments(org, user.userId)),
+    org,
   };
 }
 
-// ── Department scoping for task oversight and evidence review ────────────────
-// A manager reviews work for the department(s) they run. Their department comes
-// from their profile department plus any department named in their job title
-// (e.g. "Media Buying Lead & Department Manager" in the "Marketing Team").
-const DEPARTMENT_KEYWORDS = [
-  "media buying", "seo", "creative", "graphics", "websites & software", "web development", "software",
-  "crm & ai automation", "crm", "automation", "sales", "business development", "strategy", "onboarding",
-  "reporting", "client success", "finance", "human resources", "hr", "operations", "academy", "marketing",
-];
-
 const norm = (v?: string | null) => (v || "").trim().toLowerCase();
 
-function managedDepartments(auth: AuthContext): Set<string> {
-  // A job title that names a specific department (e.g. "SEO Manager", "Media
-  // Buying Lead") scopes the manager to that department only. Profile
-  // departments such as "Marketing Team" cover several specialist teams, so
-  // they are used only when the title names none.
-  const title = norm(auth.jobTitle);
-  const fromTitle = DEPARTMENT_KEYWORDS.filter((kw) => kw !== "marketing" && title.includes(kw));
-  const set = new Set<string>(fromTitle.length ? fromTitle : [norm(auth.department)].filter(Boolean));
-  if (set.has("hr")) set.add("human resources");
-  if (set.has("human resources")) set.add("hr");
-  if (set.has("crm")) set.add("crm & ai automation");
-  if (set.has("web development") || set.has("software")) set.add("websites & software");
-  return set;
-}
+// ── Who manages what ─────────────────────────────────────────────────────────
+// Authority comes from the organisation structure only (department_leads /
+// department_members), never from job titles:
+//   administrators and the General Manager oversee every department;
+//   a department manager oversees the department(s) they lead.
 
-function departmentMatches(managed: Set<string>, dept?: string | null) {
-  const d = norm(dept);
-  if (!d) return false;
-  if (managed.has(d)) return true;
-  for (const m of managed) if (m.length > 2 && (d.includes(m) || m.includes(d))) return true;
-  return false;
-}
-
-/** Company-wide review rights: administrators, the GM and Operations. (The CEO
- *  sees every department through canViewTask, but does not approve work.) */
+/** Company-wide oversight of work: administrators and the General Manager. */
 function overseesAllDepartments(auth: AuthContext) {
-  return auth.access.isAdmin || auth.access.isGM || auth.access.isOperations;
+  return auth.access.isAdmin || auth.access.isGM;
 }
 
 function isTaskAssignee(auth: AuthContext, task: StaffTask) {
@@ -133,33 +109,28 @@ function isTaskAssignee(auth: AuthContext, task: StaffTask) {
 
 /** Departments this user may create tasks in / move tasks into (keys). */
 function assignableDepartmentKeys(auth: AuthContext): string[] {
-  // Cross-department assignment: administrators, the GM, Operations and the CEO.
-  if (overseesAllDepartments(auth) || auth.access.isCEO) return DEPARTMENTS.map((d) => d.key);
-  const keys = new Set<string>(auth.leadDepartments || []);
-  if (auth.isManagerOrAbove) {
-    for (const m of managedDepartments(auth)) {
-      const d = departmentExact(m) ?? departmentFromText(m);
-      if (d) keys.add(d.key);
-    }
-  }
-  return [...keys];
+  return assignableDepartments(auth.org, auth);
 }
 
 /** May this user see this task and its evidence? Reviewers, plus the CEO
  *  (company-wide, read-only: viewing never grants approval rights). */
-function canViewTask(auth: AuthContext, task: StaffTask, submitterDepartment?: string | null) {
-  return auth.access.isCEO || canReviewTask(auth, task, submitterDepartment);
+function canViewTask(auth: AuthContext, task: StaffTask, _submitterDepartment?: string | null) {
+  return auth.access.isCEO || canReviewTask(auth, task);
 }
 
 /** May this user oversee / review work on this task? */
-function canReviewTask(auth: AuthContext, task: StaffTask, submitterDepartment?: string | null) {
-  if (overseesAllDepartments(auth)) return true;
-  const key = taskDeptKey(task.department);
-  if (key && auth.leadDepartments?.has(key)) return true; // confirmed lead of this department
-  if (task.assignedById && task.assignedById === auth.userId) return true; // the manager who assigned it
-  if (!auth.isManagerOrAbove) return false;
-  const managed = managedDepartments(auth);
-  return departmentMatches(managed, task.department) || departmentMatches(managed, submitterDepartment);
+function canReviewTask(auth: AuthContext, task: StaffTask, _submitterDepartment?: string | null) {
+  if (managesDepartment(auth.org, auth, taskDeptKey(task.department))) return true;
+  // The manager who assigned it keeps oversight of work they handed out.
+  return Boolean(task.assignedById && task.assignedById === auth.userId && auth.isManagerOrAbove);
+}
+
+/** May this user view an employee's records (scorecard)? */
+function canViewEmployee(auth: AuthContext, employeeId: string) {
+  if (employeeId === auth.userId) return true;
+  if (auth.access.isCEO || overseesAllDepartments(auth)) return true;
+  const depts = memberDepartments(auth.org, employeeId);
+  return depts.some((k) => auth.leadDepartments.has(k));
 }
 
 const profileDeptCache = new Map<string, { dept: string | null; at: number }>();
@@ -228,26 +199,13 @@ async function signEvidenceFiles(files: EvidenceSubmission["uploadedFiles"]) {
   return out;
 }
 
-/** Department managers for a department (to notify about new submissions). */
+/** The manager of a task's department (to notify about new submissions). */
 async function departmentManagersFor(dept?: string | null): Promise<string[]> {
-  if (!norm(dept)) return [];
-  const db = supabaseAdmin as any;
-  const { data: managers } = await db
-    .from("profiles")
-    .select("*")
-    .in("role_tier", ["manager", "root_admin"])
-    .eq("is_active", true);
-  const ids = (managers || []).map((m: any) => m.id);
-  if (!ids.length) return [];
-  const { data: roles } = await db.from("user_roles").select("user_id, role").in("user_id", ids);
-  const out: string[] = [];
-  for (const m of managers || []) {
-    const a = computeAccess(m, m.email, (roles || []).filter((r: any) => r.user_id === m.id));
-    if (!a.isDepartmentManager) continue;
-    const pseudo = { department: m.department || "", jobTitle: m.job_title || "" } as AuthContext;
-    if (departmentMatches(managedDepartments(pseudo), dept)) out.push(m.id);
-  }
-  return out;
+  const key = taskDeptKey(dept);
+  if (!key) return [];
+  const org = await loadOrgStructure();
+  const lead = org.leads.get(key);
+  return lead && org.people.get(lead)?.active ? [lead] : [];
 }
 
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────
@@ -404,38 +362,127 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     // 1. TASKS ENDPOINTS (/api/staff/tasks)
     // ══════════════════════════════════════════════════════════════════════════
 
-    // GET /api/staff/departments -> department list, confirmed leads, and the
-    // departments the caller may assign work into
+    // GET /api/staff/departments -> departments with their managers and employees, what the
+    // caller may assign (department -> eligible employees), and the caller's own place in the structure.
     if (method === "GET" && pathname === "/api/staff/departments") {
-      const leads = await loadDepartmentLeads();
-      const ids = leads.map((l) => l.user_id);
-      const { data: people } = ids.length
-        ? await (supabaseAdmin as any).from("profiles").select("id, full_name, email, job_title, is_active").in("id", ids)
-        : { data: [] };
-      const byId = new Map((people || []).map((p: any) => [p.id, p]));
+      const org = await loadOrgStructure(true);
+      const person = (id: string | undefined | null) => {
+        const p = id ? org.people.get(id) : undefined;
+        return p ? { id: p.id, name: p.name, title: p.title, active: p.active } : null;
+      };
+      const assign: Record<string, { reason: string; via: string; assignees: any[] }> = {};
+      for (const d of DEPARTMENTS) {
+        const pol = assignPolicy(org, auth, d.key);
+        if (pol.allowed) assign[d.key] = { reason: pol.reason, via: pol.via, assignees: pol.assignees.map(person).filter(Boolean) };
+      }
+      const myDept = primaryDepartment(org, auth.userId);
       return new Response(
         JSON.stringify({
           departments: DEPARTMENTS.map((d) => {
-            const lead = leads.find((l) => l.department_key === d.key);
-            const p: any = lead ? byId.get(lead.user_id) : null;
-            return {
-              key: d.key,
-              name: d.name,
-              lead: p ? { id: p.id, name: p.full_name || p.email, title: p.job_title || "", active: p.is_active !== false } : null,
-            };
+            const lead = person(org.leads.get(d.key));
+            const members = org.memberships
+              .filter((m) => m.departmentKey === d.key && org.people.get(m.userId)?.active)
+              .map((m) => ({ ...person(m.userId), primary: m.isPrimary, source: m.source }));
+            return { key: d.key, name: d.name, lead: lead && lead.active ? lead : null, members };
           }),
-          assignable: assignableDepartmentKeys(auth),
-          canManageLeads: auth.access.isAdmin,
+          assignable: Object.keys(assign),
+          assign,
+          me: {
+            departmentKey: myDept,
+            departments: memberDepartments(org, auth.userId),
+            manager: person(managerOf(org, auth.userId)),
+            leads: [...auth.leadDepartments],
+          },
+          canManageLeads: canConfigureStructure(auth.access),
+          canConfigure: canConfigureStructure(auth.access),
           canCorrectAny: overseesAllDepartments(auth),
         }),
         { status: 200, headers: HEADERS },
       );
     }
 
-    // PUT /api/staff/departments/:key/lead -> administrators confirm a department lead
+    // GET /api/staff/org/people -> every active person and their departments (CEO / administrators)
+    if (method === "GET" && pathname === "/api/staff/org/people") {
+      if (!canConfigureStructure(auth.access) && !auth.access.isGM) {
+        return new Response(JSON.stringify({ error: "Only the CEO, the General Manager or an administrator can view the structure." }), { status: 403, headers: HEADERS });
+      }
+      const org = await loadOrgStructure(true);
+      const db = supabaseAdmin as any;
+      const [{ data: profs }, { data: roleRows }] = await Promise.all([
+        db.from("profiles").select("*"),
+        db.from("user_roles").select("user_id, role"),
+      ]);
+      // Positions above or outside the departments (not department employees).
+      const position = new Map<string, string>();
+      for (const pr of profs || []) {
+        const a = computeAccess(pr, pr.email, (roleRows || []).filter((r: any) => r.user_id === pr.id));
+        if (a.isCEO) position.set(pr.id, "CEO");
+        else if (a.isGM) position.set(pr.id, "General Manager");
+        else if (a.isAdmin) position.set(pr.id, "Administrator");
+      }
+      const people = [...org.people.values()]
+        .filter((p) => p.active)
+        .map((p) => ({
+          position: position.get(p.id) ?? null,
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          title: p.title,
+          recordedDepartment: p.recordedDepartment,
+          primary: primaryDepartment(org, p.id),
+          additional: org.memberships.filter((m) => m.userId === p.id && !m.isPrimary).map((m) => m.departmentKey),
+          leads: ledDepartments(org, p.id),
+          source: org.memberships.find((m) => m.userId === p.id && m.isPrimary)?.source ?? null,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      return new Response(JSON.stringify({ people }), { status: 200, headers: HEADERS });
+    }
+
+    // PUT /api/staff/org/members/:userId -> set an employee's department (+ other departments they work in)
+    if (method === "PUT" && /^\/api\/staff\/org\/members\/[^/]+$/.test(pathname)) {
+      if (!canConfigureStructure(auth.access)) {
+        return new Response(JSON.stringify({ error: "Only the CEO or an administrator can change departments." }), { status: 403, headers: HEADERS });
+      }
+      const userId = decodeURIComponent(pathname.split("/").pop()!);
+      const body = await request.json().catch(() => ({}));
+      const primary: string | null = body.primary ? String(body.primary) : null;
+      const additional: string[] = Array.isArray(body.additional) ? body.additional.map(String) : [];
+      const valid = (k: string) => DEPARTMENTS.some((d) => d.key === k);
+      if ((primary && !valid(primary)) || additional.some((k) => !valid(k))) {
+        return new Response(JSON.stringify({ error: "Unknown department." }), { status: 400, headers: HEADERS });
+      }
+      if (!primary && additional.length) {
+        return new Response(JSON.stringify({ error: "Choose the main department first." }), { status: 400, headers: HEADERS });
+      }
+      const db = supabaseAdmin as any;
+      const { data: person } = await db.from("profiles").select("id, full_name, is_active").eq("id", userId).maybeSingle();
+      if (!person || person.is_active === false) {
+        return new Response(JSON.stringify({ error: "Choose an active employee." }), { status: 400, headers: HEADERS });
+      }
+      const { data: roleRows } = await db.from("user_roles").select("role").eq("user_id", userId);
+      if ((roleRows || []).some((r: any) => r.role === "ceo") && primary) {
+        return new Response(JSON.stringify({ error: "The CEO is not a member of a department." }), { status: 400, headers: HEADERS });
+      }
+      const nowIso = new Date().toISOString();
+      const rows = [
+        ...(primary ? [{ user_id: userId, department_key: primary, is_primary: true }] : []),
+        ...[...new Set(additional)].filter((k) => k !== primary).map((k) => ({ user_id: userId, department_key: k, is_primary: false })),
+      ].map((r) => ({ ...r, source: "manual", assigned_by: auth.userId, assigned_at: nowIso }));
+      const { error: delErr } = await db.from("department_members").delete().eq("user_id", userId);
+      if (delErr) return new Response(JSON.stringify({ error: delErr.message }), { status: 500, headers: HEADERS });
+      if (rows.length) {
+        const { error } = await db.from("department_members").insert(rows);
+        if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: HEADERS });
+      }
+      invalidateOrgStructure();
+      await logLedgerEntry("department_member_set", userId, { userId, primary, additional, by: auth.fullName });
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: HEADERS });
+    }
+
+    // PUT /api/staff/departments/:key/lead -> the CEO or an administrator appoints a department manager
     if (method === "PUT" && /^\/api\/staff\/departments\/[^/]+\/lead$/.test(pathname)) {
-      if (!auth.access.isAdmin) {
-        return new Response(JSON.stringify({ error: "Only an administrator can set department managers." }), { status: 403, headers: HEADERS });
+      if (!canConfigureStructure(auth.access)) {
+        return new Response(JSON.stringify({ error: "Only the CEO or an administrator can set department managers." }), { status: 403, headers: HEADERS });
       }
       const key = decodeURIComponent(pathname.split("/")[4]);
       const dept = DEPARTMENTS.find((d) => d.key === key);
@@ -449,12 +496,16 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         if (!person || person.is_active === false) {
           return new Response(JSON.stringify({ error: "Choose an active employee." }), { status: 400, headers: HEADERS });
         }
+        const { data: roleRows } = await db.from("user_roles").select("role").eq("user_id", userId);
+        if ((roleRows || []).some((r: any) => r.role === "ceo")) {
+          return new Response(JSON.stringify({ error: "The CEO is not appointed as a department manager." }), { status: 400, headers: HEADERS });
+        }
         const { error } = await db
           .from("department_leads")
           .upsert({ department_key: key, user_id: userId, assigned_by: auth.userId, assigned_at: new Date().toISOString(), note: null });
         if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: HEADERS });
       }
-      leadsCache = null;
+      invalidateOrgStructure();
       await logLedgerEntry("department_lead_set", key, { department: dept.name, userId: userId || null, by: auth.fullName });
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers: HEADERS });
     }
@@ -463,7 +514,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     if (method === "GET" && pathname === "/api/staff/tasks") {
       await initLedgerFromSupabase(true);
       const allTasks = Array.from(tasksStore.values());
-      const showAll = url.searchParams.get("all") === "true" && auth.isManagerOrAbove;
+      const showAll = url.searchParams.get("all") === "true" && (auth.isManagerOrAbove || auth.leadDepartments.size > 0 || auth.access.isCEO);
 
       // Managers see their own department's work (company-wide for CEO/admin, GM, Operations);
       // everyone else sees the tasks assigned to them.
@@ -513,11 +564,15 @@ export async function handleStaffApi(request: Request): Promise<Response> {
 
     // POST /api/staff/tasks -> create new task (authorized assigners)
     if (method === "POST" && pathname === "/api/staff/tasks") {
-      if (!auth.isManagerOrAbove) {
-        return new Response(JSON.stringify({ error: "Only managers and administrators can assign deliverables." }), {
-          status: 403,
-          headers: HEADERS,
-        });
+      if (!assignableDepartmentKeys(auth).length) {
+        return new Response(
+          JSON.stringify({
+            error: auth.access.isCEO
+              ? "The CEO view is read-only; work is assigned by department managers."
+              : "Only department managers, the General Manager and administrators can assign work.",
+          }),
+          { status: 403, headers: HEADERS },
+        );
       }
 
       const body = await request.json();
@@ -554,9 +609,22 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           headers: HEADERS,
         });
       }
-      if (!assignableDepartmentKeys(auth).includes(dept.key)) {
+      const policy = assignPolicy(auth.org, auth, dept.key);
+      if (!policy.allowed) {
+        return new Response(JSON.stringify({ error: policy.reason }), { status: 403, headers: HEADERS });
+      }
+      // Every task has a responsible employee from the department doing the work.
+      if (!assignedToId) {
+        return new Response(JSON.stringify({ error: "Choose the employee responsible for this work." }), { status: 400, headers: HEADERS });
+      }
+      if (!policy.assignees.includes(assignedToId)) {
         return new Response(
-          JSON.stringify({ error: `You can only assign work within your own department. Ask Operations or the GM to assign ${dept.name} work.` }),
+          JSON.stringify({
+            error:
+              policy.via === "general-manager" && auth.org.leads.has(dept.key)
+                ? policy.reason
+                : `That person is not an employee of ${dept.name}. Assign it to someone in ${dept.name}, or ask the CEO or an administrator to add them to the department.`,
+          }),
           { status: 403, headers: HEADERS },
         );
       }
@@ -717,16 +785,29 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         if (!target) {
           return new Response(JSON.stringify({ error: "Choose a valid department." }), { status: 400, headers: HEADERS });
         }
-        const allowed = assignableDepartmentKeys(auth);
         const fromKey = taskDeptKey(task.department);
+        const targetPolicy = assignPolicy(auth.org, auth, target.key);
         const mayMove =
-          overseesAllDepartments(auth) ||
-          task.assignedById === auth.userId ||
-          (allowed.includes(target.key) && (fromKey === null || allowed.includes(fromKey)));
+          targetPolicy.allowed &&
+          (overseesAllDepartments(auth) ||
+            fromKey === null ||
+            managesDepartment(auth.org, auth, fromKey) ||
+            task.assignedById === auth.userId);
         if (!mayMove) {
           return new Response(
-            JSON.stringify({ error: "Only Operations, the GM, an administrator or the assigning manager can move this task to that department." }),
+            JSON.stringify({
+              error: targetPolicy.allowed
+                ? "Only the manager of this task's department, the General Manager or an administrator can move it."
+                : targetPolicy.reason,
+            }),
             { status: 403, headers: HEADERS },
+          );
+        }
+        const responsible = assignedToId || task.assignedToId;
+        if (!responsible || !targetPolicy.assignees.includes(responsible)) {
+          return new Response(
+            JSON.stringify({ error: `Also choose a responsible employee from ${target.name} when moving this task.` }),
+            { status: 400, headers: HEADERS },
           );
         }
         const from = task.department || UNASSIGNED_DEPARTMENT;
@@ -812,8 +893,22 @@ export async function handleStaffApi(request: Request): Promise<Response> {
 
       // Manager-permitted changes: Reassignment, Deadline, Priority, QA
       if (isReviewer) {
-        // Reassignment
+        // Reassignment: only to an employee of the task's department whom this caller may assign.
         if (assignedToId && assignedToId !== task.assignedToId) {
+          const key = taskDeptKey(task.department);
+          const pol = key ? assignPolicy(auth.org, auth, key) : null;
+          if (!pol || !pol.allowed || !pol.assignees.includes(assignedToId)) {
+            return new Response(
+              JSON.stringify({
+                error: !key
+                  ? "Set this task's department before reassigning it."
+                  : pol && !pol.allowed
+                    ? pol.reason
+                    : `That person is not an employee of ${task.department} whom you can assign.`,
+              }),
+              { status: 403, headers: HEADERS },
+            );
+          }
           let newName = assignedToName || task.assignedToName;
           let newEmail = assignedToEmail || task.assignedToEmail || "";
           let newRole = assignedToRole || task.assignedToRole || "Specialist";
@@ -938,8 +1033,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         return new Response(JSON.stringify({ error: "Task not found." }), { status: 404, headers: HEADERS });
       }
 
-      if (!auth.isManagerOrAbove && task.assignedById !== auth.userId) {
-        return new Response(JSON.stringify({ error: "Only managers or task creators can remove deliverables." }), {
+      if (!managesDepartment(auth.org, auth, taskDeptKey(task.department)) && task.assignedById !== auth.userId) {
+        return new Response(JSON.stringify({ error: "Only the department's manager, the General Manager, an administrator or the person who assigned it can remove this task." }), {
           status: 403,
           headers: HEADERS,
         });
@@ -975,7 +1070,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     // GET /api/staff/dependencies
     if (method === "GET" && pathname === "/api/staff/dependencies") {
       const allDeps = Array.from(dependenciesStore.values());
-      const showAll = url.searchParams.get("all") === "true" && auth.isManagerOrAbove;
+      const showAll = url.searchParams.get("all") === "true" && (auth.isManagerOrAbove || auth.leadDepartments.size > 0 || auth.access.isCEO);
 
       // Filter: user is requester, recipient, or authorized manager
       const filtered = showAll
@@ -1450,7 +1545,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       const targetUserId = url.searchParams.get("userId") || auth.userId;
 
       // Ensure staff can only view their own scorecard
-      if (targetUserId !== auth.userId && !auth.isManagerOrAbove) {
+      if (!canViewEmployee(auth, targetUserId)) {
         return new Response(JSON.stringify({ error: "Access denied to other employee scorecards." }), {
           status: 403,
           headers: HEADERS,

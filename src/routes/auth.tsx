@@ -180,6 +180,19 @@ function AuthPage() {
       : isHR
       ? "/hr"
       : "/home";
+    // An appointed department manager (department_leads) whose role would land them on the
+    // generic staff home goes to their Department workspace instead.
+    if (destination === "/home") {
+      try {
+        const { data: leads } = await (supabase as any).from("department_leads").select("department_key").eq("user_id", userId);
+        if ((leads ?? []).length) {
+          await navigate({ to: "/department" as any });
+          return;
+        }
+      } catch {
+        /* fall back to the staff home */
+      }
+    }
     await navigate({ to: destination as any });
   }
 

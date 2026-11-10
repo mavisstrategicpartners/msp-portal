@@ -41,6 +41,7 @@ import {
   ListTree,
   Map as MapIcon,
   MessageCircle,
+  Network,
   Plug,
   Settings,
   ShieldCheck,
@@ -91,6 +92,8 @@ export type NavContext = {
   isSales: boolean;
   isManagerOrAbove: boolean;
   departmentName?: string | null;
+  /** Appointed manager of at least one department (department_leads). */
+  isDepartmentLead?: boolean;
 };
 
 type Workspace = {
@@ -151,6 +154,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/ceo", label: "Executive Overview", icon: LayoutDashboard, exact: true },
           { to: "/ceo/performance", label: "Company Performance", icon: TrendingUp },
           { to: "/ceo/departments", label: "Departments", icon: Building2 },
+          { to: "/ceo/structure", label: "Department Structure", icon: Network },
         ],
       },
       {
@@ -217,6 +221,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/gm/execution", label: "Company Execution", icon: Target },
           { to: "/gm/revenue", label: "Revenue Performance", icon: Banknote },
           { to: "/gm/capacity", label: "Capacity & Workload", icon: Users },
+          { to: "/gm/structure", label: "Department Structure", icon: Network },
           { to: "/gm/approvals", label: "Manager Approvals", icon: CheckSquare },
           { to: "/gm/dependencies", label: "Cross-Dept Dependencies", icon: GitBranch },
           { to: "/gm/escalations", label: "Escalations", icon: AlertTriangle },
@@ -272,6 +277,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     access: (ctx) =>
       ctx.isAdmin ||
       Boolean(ctx.isCEO) ||
+      Boolean(ctx.isDepartmentLead) ||
       ["department_manager", "operations", "general_manager"].includes(ctx.systemRole),
     groups: [
       {
@@ -430,6 +436,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
       "/admin/kpis",
       "/admin/content",
       "/admin/audit",
+      "/admin/structure",
     ],
     // Mirrors the /admin/audit guard: admins and the CEO, never Finance.
     access: (ctx) => ctx.isAdmin && ctx.systemRole !== "finance_admin",
@@ -447,6 +454,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
             visible: (ctx) => ctx.systemRole !== "ceo",
           },
           { to: "/admin/users", label: "Manage Staff", icon: Users },
+          { to: "/admin/structure", label: "Department Structure", icon: Network },
           { to: "/admin/attendance", label: "Live Staff Presence", icon: Clock },
         ],
       },
@@ -700,5 +708,6 @@ export function navContextFromProfile(data: any): NavContext | null {
     isSales: !!data.isSales,
     isManagerOrAbove: !!data.isManagerOrAbove,
     departmentName: data.departmentName ?? null,
+    isDepartmentLead: Boolean(data.isDepartmentLead),
   };
 }

@@ -23,7 +23,7 @@ import {
   DepartmentTeamMember,
   TaskType,
 } from "@/lib/department-manager.service";
-import { useDepartmentOptions } from "@/lib/department-scope";
+import { taskDepartmentKey, useDepartmentOptions } from "@/lib/department-scope";
 import { useProfile } from "@/lib/use-profile";
 import { toast } from "sonner";
 import {
@@ -105,6 +105,11 @@ export function DepartmentTasksPage() {
     (deptOptionsQ.data?.assignable ?? []).includes(d.key),
   );
   const [createDepartment, setCreateDepartment] = useState("");
+  // Who may be made responsible: employees of the chosen department this user may assign (server rules).
+  const assignFor = (deptName?: string | null) => {
+    const key = deptName ? (assignableDepartments.find((d) => d.name === deptName)?.key ?? taskDepartmentKey(deptName)) : "";
+    return deptOptionsQ.data?.assign?.[key];
+  };
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Attachments
@@ -198,7 +203,7 @@ export function DepartmentTasksPage() {
         window.dispatchEvent(new Event("msp:tasks_updated"));
       }
       toast.success("Task assigned successfully.", {
-        description: `Assigned to ${teamMembers.find((m) => m.id === targetMemberId)?.name}`,
+        description: `Assigned to ${assignFor(selectedTask.department)?.assignees.find((m) => m.id === targetMemberId)?.name ?? "the selected employee"}`,
       });
       setReassignModalOpen(false);
       setSelectedTask(null);
@@ -218,6 +223,10 @@ export function DepartmentTasksPage() {
     const chosenDepartment = createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "");
     if (!chosenDepartment) {
       toast.error("Choose the department responsible for this work.");
+      return;
+    }
+    if (!createAssigneeId) {
+      toast.error("Choose the employee responsible for this work.");
       return;
     }
     if (isClientWork && !createClientId) {
@@ -268,7 +277,7 @@ export function DepartmentTasksPage() {
       }
       toast.success("Task created and assigned successfully.", {
         description: createAssigneeId
-          ? `Assigned to ${teamMembers.find((m) => m.id === createAssigneeId)?.name}`
+          ? `Assigned to ${assignFor(createDepartment || assignableDepartments[0]?.name)?.assignees.find((m) => m.id === createAssigneeId)?.name ?? "the selected employee"}`
           : "Created as Unassigned deliverable",
       });
       setCreateTaskModalOpen(false);
@@ -881,7 +890,7 @@ export function DepartmentTasksPage() {
               {selectedTask?.status === "Unassigned" ? "Assign Deliverable" : "Reassign Deliverable"}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Assign this deliverable to any authorised employee across the organisation.
+              Assign this deliverable to an employee of its department.
             </DialogDescription>
           </DialogHeader>
 
@@ -894,19 +903,33 @@ export function DepartmentTasksPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Select Assignee (All System Employees & Specialists)</Label>
-                <Select value={targetMemberId} onValueChange={setTargetMemberId}>
-                  <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                    <SelectValue placeholder="Choose employee from system..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {teamMembers.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name} — {m.role} ({m.department || "Operations"})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-semibold">Responsible employee ({selectedTask.department})</Label>
+                {(() => {
+                  const pol = assignFor(selectedTask.department);
+                  if (!pol)
+                    return (
+                      <p className="text-[11px] text-muted-foreground">
+                        You cannot assign {selectedTask.department} work. Its department manager (or the General Manager) assigns it.
+                      </p>
+                    );
+                  return (
+                    <>
+                      <Select value={targetMemberId} onValueChange={setTargetMemberId}>
+                        <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                          <SelectValue placeholder={pol.assignees.length ? "Choose an employee" : "No employees available"} />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {pol.assignees.map((m) => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.name}{m.title ? ` — ${m.title}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[11px] text-muted-foreground">{pol.reason}</p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -928,7 +951,7 @@ export function DepartmentTasksPage() {
           <DialogHeader>
             <DialogTitle>Create & Assign Deliverable</DialogTitle>
             <DialogDescription className="text-xs">
-              Create a new operational task and assign it to any employee in the organisation.
+              Create a task for your department and assign it to one of its employees.
             </DialogDescription>
           </DialogHeader>
 
@@ -949,13 +972,16 @@ export function DepartmentTasksPage() {
               </Label>
               {assignableDepartments.length === 0 ? (
                 <p className="text-xs text-muted-foreground rounded-md border border-border p-2">
-                  You are not set up to assign work to any department. Ask an administrator to confirm you as a
-                  department manager, or ask Operations or the GM to assign this task.
+                  You are not a department manager, so you cannot assign work. Ask the CEO or an administrator to
+                  appoint you, or ask the General Manager to assign this task.
                 </p>
               ) : (
                 <Select
                   value={createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "")}
-                  onValueChange={setCreateDepartment}
+                  onValueChange={(v) => {
+                    setCreateDepartment(v);
+                    setCreateAssigneeId("");
+                  }}
                 >
                   <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
                     <SelectValue placeholder="Select the responsible department" />
@@ -1009,20 +1035,29 @@ export function DepartmentTasksPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Assignee (All System Employees & Specialists)</Label>
-              <Select value={createAssigneeId} onValueChange={setCreateAssigneeId}>
-                <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                  <SelectValue placeholder="Choose employee from system (or leave unassigned)..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  <SelectItem value="">Unassigned (Open Deliverable)</SelectItem>
-                  {teamMembers.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name} — {m.role} ({m.department || "Operations"})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-xs font-semibold">Responsible employee</Label>
+              {(() => {
+                const chosen = createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "");
+                const pol = assignFor(chosen);
+                if (!chosen) return <p className="text-[11px] text-muted-foreground">Choose the department first.</p>;
+                return (
+                  <>
+                    <Select value={createAssigneeId} onValueChange={setCreateAssigneeId}>
+                      <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                        <SelectValue placeholder={pol?.assignees.length ? `Choose a ${chosen} employee` : "No employees available"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {(pol?.assignees ?? []).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}{m.title ? ` — ${m.title}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {pol?.reason && <p className="text-[11px] text-muted-foreground">{pol.reason}</p>}
+                  </>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

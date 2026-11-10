@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { useProfile } from "@/lib/use-profile";
-import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock, Compass } from "lucide-react";
+import { Sparkles, Lightbulb, TrendingUp, Cog, Workflow, BarChart3, ArrowRight, BookOpen, Briefcase, Wrench, Activity, Users, Clock, Compass, Building2, UserCog } from "lucide-react";
+import { useDepartments } from "@/lib/department-scope";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { StaffAttendanceBoard } from "@/components/StaffAttendanceBoard";
 import { StaffWorkspaceDashboard } from "@/components/dashboards/StaffWorkspaceDashboard";
@@ -67,8 +68,11 @@ function Home() {
       router.navigate({ to: "/operations" as any, replace: true });
     } else if (systemRole === "ceo") {
       router.navigate({ to: "/ceo" as any, replace: true });
+    } else if (data?.isDepartmentLead && !isAdmin) {
+      // Appointed department manager: their department workspace is their dashboard.
+      router.navigate({ to: "/department" as any, replace: true });
     }
-  }, [systemRole, router]);
+  }, [systemRole, router, data?.isDepartmentLead, isAdmin]);
 
   if (systemRole === "hr") {
     return <HRStaffDashboard />;
@@ -137,6 +141,7 @@ function Home() {
 
   return (
     <div className="space-y-10">
+      <MyDepartmentCard />
       {/* ─── Staff Workspace Dashboard Component ───────────────────────────── */}
       <StaffWorkspaceDashboard />
 
@@ -164,6 +169,43 @@ function Home() {
         </div>
       </section>
     </div>
+  );
+}
+
+/** The employee's place in the organisation: their department and the manager they report to. */
+function MyDepartmentCard() {
+  const q = useDepartments();
+  const me = q.data?.me;
+  if (!me) return null;
+  const name = (k: string) => q.data?.departments.find((d) => d.key === k)?.name ?? k;
+  const others = me.departments.filter((k) => k !== me.departmentKey);
+  return (
+    <Card className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 text-sm">
+      <div className="flex items-center gap-2">
+        <Building2 className="h-4 w-4 text-primary" />
+        <span className="text-muted-foreground">Your department:</span>
+        <span className="font-semibold text-foreground">
+          {me.departmentKey ? name(me.departmentKey) : "Not assigned yet"}
+        </span>
+        {others.length > 0 && <span className="text-xs text-muted-foreground">(also {others.map(name).join(", ")})</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <UserCog className="h-4 w-4 text-primary" />
+        <span className="text-muted-foreground">You report to:</span>
+        {me.manager ? (
+          <span className="font-semibold text-foreground">{me.manager.name}</span>
+        ) : (
+          <span className="text-amber-700 dark:text-amber-400">
+            {me.departmentKey ? "Manager not assigned — the General Manager covers this department" : "—"}
+          </span>
+        )}
+      </div>
+      {!me.departmentKey && (
+        <p className="w-full text-xs text-muted-foreground">
+          You have not been placed in a department yet. The CEO or an administrator sets this.
+        </p>
+      )}
+    </Card>
   );
 }
 

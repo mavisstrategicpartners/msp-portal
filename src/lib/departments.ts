@@ -6,19 +6,21 @@
 export type DepartmentDef = { key: string; name: string; match: string[] };
 
 export const DEPARTMENTS: DepartmentDef[] = [
+  { key: "it", name: "IT Department", match: ["it department", "it support", "information technology", "scrum master"] },
+  { key: "marketing", name: "Marketing Department", match: ["marketing department", "marketing team", "marketing admin"] },
   { key: "sales", name: "Sales", match: ["sales", "business development"] },
+  { key: "finance", name: "Finance & Administration", match: ["finance", "accounting", "accountant", "billing", "admin department"] },
   { key: "hr", name: "Human Resources", match: ["human resources", "hr", "people & culture"] },
-  { key: "finance", name: "Finance & Administration", match: ["finance", "accounting", "accountant", "billing"] },
   { key: "operations", name: "Operations & Client Relationships", match: ["operations", "relationship"] },
+  { key: "client-success", name: "Client Success", match: ["client success", "account manager"] },
+  { key: "strategy", name: "Strategy", match: ["strategy", "strategist"] },
+  { key: "creative", name: "Creative", match: ["creative", "graphic", "design", "social media", "content"] },
   { key: "media-buying", name: "Media Buying", match: ["media buying", "paid media", "paid ads"] },
   { key: "seo", name: "SEO", match: ["seo"] },
-  { key: "creative", name: "Creative", match: ["creative", "graphic", "design", "social media", "content"] },
-  { key: "strategy", name: "Strategy", match: ["strategy", "strategist"] },
-  { key: "onboarding", name: "Onboarding", match: ["onboarding"] },
   { key: "websites-software", name: "Websites & Software", match: ["websites & software", "website", "web development", "software", "developer"] },
   { key: "crm-ai", name: "CRM & AI Automation", match: ["crm", "automation"] },
   { key: "reporting", name: "Reporting", match: ["reporting"] },
-  { key: "client-success", name: "Client Success", match: ["client success", "account manager"] },
+  { key: "onboarding", name: "Onboarding", match: ["onboarding"] },
   { key: "academy", name: "MSP Academy", match: ["academy"] },
 ];
 

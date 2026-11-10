@@ -68,24 +68,6 @@ function taskDepartmentKey(dept?: string | null): DepartmentKey {
   return departmentExact(dept)?.key ?? departmentKeyFor(dept) ?? slug(dept || "General");
 }
 
-function departmentsForPerson(title: string, orgDept: string): DepartmentKey[] {
-  const out = new Set<DepartmentKey>();
-  const t = norm(title);
-  const d = norm(orgDept);
-  for (const dep of EXEC_DEPARTMENTS) {
-    if (dep.match.some((kw) => keywordHit(t, kw))) out.add(dep.key);
-  }
-  // Fall back to the profile department only when the title names none
-  // (e.g. "Marketing Team" covers several teams, so it is never used).
-  if (!out.size) {
-    for (const dep of EXEC_DEPARTMENTS) {
-      if (dep.match.some((kw) => keywordHit(d, kw))) out.add(dep.key);
-    }
-  }
-  return [...out];
-}
-
-
 // Accounts that are not individual employees. Shared role logins carry a role
 // or mailbox name instead of a person's name; the misspelled domain is only
 // used by accounts that scripts/seed-sales-users.mjs created.
@@ -269,6 +251,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     approvalsRes,
     followUps,
     leadsRes,
+    membersRes,
   ] = await Promise.all([
     db().from("profiles").select("*").order("full_name"),
     db().from("user_roles").select("user_id, role"),
@@ -295,7 +278,16 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     db().from("finance_approvals").select("*"),
     loadFollowUps(),
     db().from("department_leads").select("department_key, user_id"),
+    db().from("department_members").select("user_id, department_key, is_primary"),
   ]);
+  // Department membership comes only from the organisation structure (department_members).
+  const deptsByUser = new Map<string, string[]>();
+  for (const m of ((membersRes as any).data || []) as any[]) {
+    const list = deptsByUser.get(m.user_id) || [];
+    if (m.is_primary) list.unshift(m.department_key);
+    else list.push(m.department_key);
+    deptsByUser.set(m.user_id, list);
+  }
   const leadByDept = new Map<string, string>(((leadsRes as any).data || []).map((l: any) => [l.department_key, l.user_id]));
 
   const profiles: any[] = profilesRes.data || [];
@@ -414,7 +406,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       email: p.email,
       title: p.job_title || "",
       orgDepartment: p.department || "Unassigned",
-      departments: access.isCEO ? [] : departmentsForPerson(p.job_title || "", p.department || ""),
+      departments: access.isCEO ? [] : deptsByUser.get(p.id) || [],
       roleLabel: access.systemRole.replace(/_/g, " "),
       // The CEO is not an employee or department member of her own dashboard.
       accountType: access.isCEO ? "executive" : accountTypeFor(p),

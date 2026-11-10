@@ -212,6 +212,17 @@ export function getDefaultDashboardRoute(role: MspSystemRole): string {
   }
 }
 
+/**
+ * Where a user lands after signing in. Role-based, plus one structural rule: an appointed
+ * department manager (department_leads) whose role would otherwise give them the generic staff
+ * home lands on their Department workspace.
+ */
+export function landingPath(access: { isCEO: boolean; systemRole: MspSystemRole }, leadDepartments: string[] = []) {
+  if (access.isCEO) return "/ceo";
+  const base = getDefaultDashboardRoute(access.systemRole);
+  return base === "/home" && leadDepartments.length ? "/department" : base;
+}
+
 export type RoleTier = "root_admin" | "manager" | "staff" | "intern";
 
 export type AccessFlags = {

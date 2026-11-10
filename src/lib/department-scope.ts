@@ -9,10 +9,17 @@ export type DepartmentInfo = {
   lead: { id: string; name: string; title: string; active: boolean } | null;
 };
 
+export type OrgPersonRef = { id: string; name: string; title: string; active: boolean };
+
 export type DepartmentsResponse = {
-  departments: DepartmentInfo[];
+  departments: (DepartmentInfo & { members?: (OrgPersonRef & { primary: boolean; source: string })[] })[];
   assignable: string[];
+  /** For each department the caller may assign into: who they may make responsible, and why. */
+  assign: Record<string, { reason: string; via: "admin" | "manager" | "general-manager"; assignees: OrgPersonRef[] }>;
+  /** The caller's own place in the structure. */
+  me: { departmentKey: string | null; departments: string[]; manager: OrgPersonRef | null; leads: string[] };
   canManageLeads: boolean;
+  canConfigure: boolean;
   canCorrectAny: boolean;
 };
 
