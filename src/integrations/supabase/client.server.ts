@@ -31,13 +31,14 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 function createSupabaseAdminClient() {
   const rawUrl = process.env.SUPABASE_URL || "https://tkjytjaerfjpghusrwom.supabase.co";
-  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "sb_secret_1Jk2CqcjaVE7ZsSkgrYdpg_UE-90ZXH";
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const SUPABASE_URL = (rawUrl || "").trim();
   const SUPABASE_SERVICE_ROLE_KEY = (rawKey || "").trim();
 
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("[Supabase Admin] SUPABASE_SERVICE_ROLE_KEY is not set. Operating with fallback.");
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    // No built-in fallback: a secret key must never live in source code.
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set on the server.");
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

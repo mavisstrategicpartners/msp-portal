@@ -6,7 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://tkjytjaerfjpghusrwom.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = "sb_secret_1Jk2CqcjaVE7ZsSkgrYdpg_UE-90ZXH";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const GM_EMAIL = "general.manager@mavisstrategicpartners.co.za";
 const GM_PASSWORD = "General2026!";

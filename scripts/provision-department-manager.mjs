@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL || "https://tkjytjaerfjpghusrwom.supabase.co";
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "sb_secret_1Jk2CqcjaVE7ZsSkgrYdpg_UE-90ZXH";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_kU8G-7AUhbhiWPqd8XD6Ow_GNViYCDs";
 
 const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {

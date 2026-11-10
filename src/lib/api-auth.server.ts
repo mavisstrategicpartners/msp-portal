@@ -29,6 +29,11 @@ export async function authenticateApiRequest(request: Request): Promise<ApiUser 
   try {
     const { data, error } = await supabaseAdmin.auth.getUser(token);
     const user = data?.user;
+    if (error && /api key/i.test(error.message || "")) {
+      // The server's own Supabase key was rejected (revoked or rotated). Every
+      // user would look signed out, so make this loud in the server logs.
+      console.error("[api-auth] Supabase rejected SUPABASE_SERVICE_ROLE_KEY:", error.message);
+    }
     if (error || !user) return null;
 
     const db = supabaseAdmin as any;

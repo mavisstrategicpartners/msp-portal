@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
 const supabaseUrl = "https://tkjytjaerfjpghusrwom.supabase.co";
-const serviceRoleKey = "sb_secret_1Jk2CqcjaVE7ZsSkgrYdpg_UE-90ZXH";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const publishableKey = "sb_publishable_kU8G-7AUhbhiWPqd8XD6Ow_GNViYCDs";
 
 const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {

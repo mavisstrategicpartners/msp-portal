@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
 const supabaseUrl = "https://tkjytjaerfjpghusrwom.supabase.co";
-const serviceRoleKey = "sb_secret_1Jk2CqcjaVE7ZsSkgrYdpg_UE-90ZXH";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
