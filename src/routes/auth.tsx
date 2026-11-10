@@ -180,20 +180,23 @@ function AuthPage() {
       : isHR
       ? "/hr"
       : "/home";
-    // An appointed department manager (department_leads) whose role would land them on the
-    // generic staff home goes to their Department workspace instead.
-    if (destination === "/home") {
+    // Department dashboards follow the organisation structure (department_leads): HR and Finance
+    // dashboards need the matching manager appointment, the Department workspace needs at least one;
+    // an appointed manager who would otherwise get the staff home goes to their Department workspace.
+    let finalDestination: string = destination;
+    if (["/home", "/hr", "/finance", "/department"].includes(destination)) {
       try {
-        const { data: leads } = await (supabase as any).from("department_leads").select("department_key").eq("user_id", userId);
-        if ((leads ?? []).length) {
-          await navigate({ to: "/department" as any });
-          return;
-        }
+        const { data: leadRows } = await (supabase as any).from("department_leads").select("department_key").eq("user_id", userId);
+        const leads: string[] = (leadRows ?? []).map((l: any) => l.department_key);
+        if (destination === "/hr" && !leads.includes("hr")) finalDestination = leads.length ? "/department" : "/home";
+        else if (destination === "/finance" && !leads.includes("finance")) finalDestination = leads.length ? "/department" : "/home";
+        else if (destination === "/department" && !leads.length) finalDestination = "/home";
+        else if (destination === "/home" && leads.length) finalDestination = "/department";
       } catch {
-        /* fall back to the staff home */
+        /* the route guard corrects any wrong destination */
       }
     }
-    await navigate({ to: destination as any });
+    await navigate({ to: finalDestination as any });
   }
 
   async function onSubmit(e: React.FormEvent) {

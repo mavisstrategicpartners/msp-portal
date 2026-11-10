@@ -251,8 +251,32 @@ export function computeAccess(
   profile: Profile | null,
   userEmail?: string,
   roles: any[] = [],
+  /**
+   * Departments this person is the appointed manager of (public.department_leads). When given,
+   * department-management roles require the matching appointment: HR rights need the HR
+   * manager post, Finance rights the Finance manager post, Sales-manager rights the Sales manager
+   * post, and the Department-manager role at least one appointment. Job titles alone never grant
+   * another department's confidential data.
+   */
+  leadDepartments?: string[],
 ): AccessFlags {
-  const systemRole = resolveSystemRole(profile, userEmail, roles);
+  let systemRole = resolveSystemRole(profile, userEmail, roles);
+  if (leadDepartments) {
+    const leads = new Set(leadDepartments);
+    if (systemRole === "hr" && !leads.has("hr")) systemRole = "staff";
+    else if (systemRole === "finance_admin" && !leads.has("finance")) systemRole = "staff";
+    else if (systemRole === "sales_manager" && !leads.has("sales")) systemRole = "sales_consultant";
+    else if (systemRole === "department_manager" && leads.size === 0) systemRole = "staff";
+    // The appointment itself grants the department's management role, whatever the job title says.
+    // Company-wide roles (CEO, administrator, General Manager) are never replaced.
+    if (!["ceo", "admin", "general_manager"].includes(systemRole)) {
+      if (leads.has("hr")) systemRole = "hr";
+      else if (leads.has("finance")) systemRole = "finance_admin";
+      else if (leads.has("operations")) systemRole = "operations";
+      else if (leads.has("sales")) systemRole = "sales_manager";
+      else if (leads.size && ["staff", "client_success", "sales", "sales_consultant"].includes(systemRole)) systemRole = "department_manager";
+    }
+  }
   const tier = (profile?.role_tier ?? null) as RoleTier | null;
   const roleTier: RoleTier =
     tier === "root_admin" || systemRole === "admin"

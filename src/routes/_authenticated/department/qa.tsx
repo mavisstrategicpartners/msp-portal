@@ -24,7 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/department/qa")({
-  head: () => ({ meta: [{ title: "Quality Assurance — Media Buying Workspace" }] }),
+  head: () => ({ meta: [{ title: "Quality Assurance — Department Workspace" }] }),
   component: DepartmentQAPage,
 });
 
@@ -46,7 +46,7 @@ export function DepartmentQAPage() {
   const [latestEvidence, setLatestEvidence] = useState<Record<string, EvidenceSubmission>>({});
   const [openEvidenceId, setOpenEvidenceId] = useState<string | null>(null);
 
-  const managerName = profileData?.profile?.full_name || "Department Manager (Media Buying)";
+  const managerName = profileData?.profile?.full_name || "Department manager";
 
   async function loadData() {
     setLoading(true);
@@ -126,7 +126,7 @@ export function DepartmentQAPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <ShieldCheck className="h-6 w-6 text-primary" />
-            Media Buying Quality Assurance (QA)
+            {profileData?.departmentName ?? "Department"} Quality Assurance (QA)
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Verify deliverable evidence against client acceptance criteria. Submissions must be formally accepted or returned for rework.

@@ -55,11 +55,12 @@ export const getStaffAttendance = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Company-wide presence is for HR, the GM and administrators only.
     const db = supabaseAdmin as any;
-    const [{ data: me }, { data: myRoles }] = await Promise.all([
+    const [{ data: me }, { data: myRoles }, { data: myLeads }] = await Promise.all([
       db.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
       db.from("user_roles").select("role").eq("user_id", context.userId),
+      db.from("department_leads").select("department_key").eq("user_id", context.userId),
     ]);
-    const access = computeAccess(me, me?.email, myRoles ?? []);
+    const access = computeAccess(me, me?.email, myRoles ?? [], (myLeads ?? []).map((l: any) => l.department_key));
     if (!(access.isAdmin || access.isHR || access.isGM || access.isCEO)) {
       throw new Response("Not authorised to view company attendance", { status: 403 });
     }

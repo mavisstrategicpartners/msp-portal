@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/department/tasks")({
-  head: () => ({ meta: [{ title: "My Department Tasks — Media Buying Workspace" }] }),
+  head: () => ({ meta: [{ title: "My Department Tasks — Department Workspace" }] }),
   component: DepartmentTasksPage,
 });
 
@@ -144,7 +144,7 @@ export function DepartmentTasksPage() {
   const [newPriority, setNewPriority] = useState<DepartmentTask["priority"]>("High");
   const [isSavingPriority, setIsSavingPriority] = useState(false);
 
-  const managerName = profileData?.profile?.full_name || "Department Manager (Media Buying)";
+  const managerName = profileData?.profile?.full_name || "Department manager";
 
   async function loadData() {
     setLoading(true);
@@ -355,7 +355,7 @@ export function DepartmentTasksPage() {
             My Department Tasks & Deliverables
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Authoritative Media Buying task assignments, client commitments, delivery deadlines, and QA statuses.
+            Your department's task assignments, client commitments, delivery deadlines and review statuses.
           </p>
         </div>
 

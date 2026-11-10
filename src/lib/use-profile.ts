@@ -74,7 +74,7 @@ export function useProfile() {
         console.warn("Error fetching profile from Supabase:", e);
       }
 
-      const access = computeAccess(profile, user?.email, roles);
+      const access = computeAccess(profile, user?.email, roles, leadDepartments);
       const systemRole = access.systemRole;
 
       if (systemRole === "ceo" && profile) {

@@ -23,7 +23,7 @@ import {
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/department/approvals")({
-  head: () => ({ meta: [{ title: "Department Approvals — Media Buying Workspace" }] }),
+  head: () => ({ meta: [{ title: "Department Approvals — Department Workspace" }] }),
   component: DepartmentApprovalsPage,
 });
 
@@ -41,7 +41,7 @@ export function DepartmentApprovalsPage() {
   const [decisionComments, setDecisionComments] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const managerName = profileData?.profile?.full_name || "Department Manager (Media Buying)";
+  const managerName = profileData?.profile?.full_name || "Department manager";
 
   async function loadData() {
     setLoading(true);
@@ -113,7 +113,7 @@ export function DepartmentApprovalsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <CheckSquare className="h-6 w-6 text-primary" />
-            Media Buying Authorised Approvals
+            {profileData?.departmentName ?? "Department"} Approvals
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Authorised queue for campaign budget sign-offs, QA deliverable acceptances, and schedule adjustments.

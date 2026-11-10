@@ -44,3 +44,21 @@ No verified identity exists for these positions (the HR employee register is emp
 IT Department, Marketing Department, Sales, Client Success, Strategy, Creative, SEO, Websites & Software, CRM & AI Automation, Reporting, Onboarding, MSP Academy.
 
 Existing managers (accounts retained, passwords not changed): Operations — Xongile Mhlari; Human Resources — HR Manager login; Finance & Administration — Finance & Administration Manager login; Media Buying — Department Manager (Media Buying) login.
+
+## 6. System-wide separation audit (10 November 2026, second pass)
+
+Every active account was run through the live role and landing logic, and the database access helpers were reviewed.
+
+| Found | Cause | Fixed in |
+|---|---|---|
+| HR staff (an intern and the receptionist) got the HR workspace **and** read/write access to every HR table, payroll included | `msp_is_hr` / HR role matched anyone in the HR department or with "HR" in their title | Database helpers `msp_is_hr` / `msp_is_finance` now require the HR / Finance manager appointment; app roles likewise (`computeAccess` with appointments) |
+| Accounts with a manager tier but no appointment (Shamah Muchena, Sipho Kupiso) landed on an empty Department workspace | Department-manager role inferred from tier/title | Department-manager role requires an appointment; otherwise staff home |
+| "sales admin" had Sales-manager rights with no Sales manager appointed | Title/tier inference | Sales-manager rights require the Sales manager appointment |
+| The Media Buying manager could see and review every task it had ever assigned, in IT, Websites and Operations | "Assigning manager keeps oversight" rule | Oversight comes only from managing the task's department (GM/admin company-wide); submissions notify that department's manager, else the GM |
+| Department dashboard was written for Media Buying for every department ("Paid Ads & Acquisition", media budgets, a fixed 93.3% target) | Single hard-coded page | Department-aware dashboard built from the department's own tasks and employees, with a focus section suited to the department |
+| Client tools (Client Delivery, Monthly Reports) shown to internal departments | One sidebar for all | Shown only to client-facing departments and company-wide roles |
+| Appointment did not set a manager's role (an HR manager whose title lacked "HR" did not get the HR workspace) | Role came from titles | The appointment grants the department's role (HR, Finance, Operations, Sales, Department manager) |
+
+Verified with an automated check across all 16 departments (215 checks): each manager sees and assigns only their own department's work and employees, cannot review or view another department's tasks, submissions or scorecards, lands on the right dashboard, and only their own manager is notified of submissions; the GM and CEO see every department.
+
+Needs a decision: the new account **Sipho Kupiso** (manager tier, IT Department, no job title) is not placed in a department or appointed — confirm whether he is the IT manager.

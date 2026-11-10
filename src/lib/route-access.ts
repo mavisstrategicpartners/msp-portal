@@ -47,13 +47,14 @@ export async function loadAccess(): Promise<Loaded | null> {
     supabase.from("user_roles").select("role").eq("user_id", user.id),
     (supabase as any).from("department_leads").select("department_key").eq("user_id", user.id),
   ]);
-  const access = computeAccess(profile as Profile | null, user.email, roles ?? []);
+  const leadKeys = ((leads as any[]) ?? []).map((l) => l.department_key);
+  const access = computeAccess(profile as Profile | null, user.email, roles ?? [], leadKeys);
   const value: Loaded = {
     user: { id: user.id, email: user.email },
     mustChangePassword: Boolean((user.app_metadata as any)?.must_change_password),
     access,
     departmentName: (profile as Profile | null)?.department ?? null,
-    leadDepartments: ((leads as any[]) ?? []).map((l) => l.department_key),
+    leadDepartments: leadKeys,
   };
   cache = { userId: user.id, at: Date.now(), value };
   return value;
@@ -77,6 +78,7 @@ export async function guardRoute(pathname: string) {
     ...loaded.access,
     departmentName: loaded.departmentName,
     isDepartmentLead: loaded.leadDepartments.length > 0,
+    leadDepartments: loaded.leadDepartments,
   })!;
   // The CEO has one landing page: the CEO Executive Dashboard. The generic
   // staff home is never shown to her (on login, refresh or a direct link).

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/department/workload")({
-  head: () => ({ meta: [{ title: "Team Workload & Capacity — Media Buying Workspace" }] }),
+  head: () => ({ meta: [{ title: "Team Workload & Capacity — Department Workspace" }] }),
   component: DepartmentWorkloadPage,
 });
 
@@ -41,7 +41,7 @@ export function DepartmentWorkloadPage() {
   const [targetMemberId, setTargetMemberId] = useState("");
   const [isSavingAssign, setIsSavingAssign] = useState(false);
 
-  const managerName = profileData?.profile?.full_name || "Department Manager (Media Buying)";
+  const managerName = profileData?.profile?.full_name || "Department manager";
 
   async function loadData() {
     setLoading(true);
@@ -90,7 +90,7 @@ export function DepartmentWorkloadPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" />
-            Media Buying Team Workload & Capacity
+            {profileData?.departmentName ?? "Department"} Team Workload & Capacity
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Monitor specialist capacity utilization, rebalance unallocated tasks, and review delivery metrics.

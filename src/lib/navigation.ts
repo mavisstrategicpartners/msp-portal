@@ -70,6 +70,17 @@ export type NavItem = {
   visible?: (ctx: NavContext) => boolean;
 };
 
+/** Departments whose work is delivered to clients (client delivery and client reports are relevant). */
+const CLIENT_DEPARTMENTS = new Set([
+  "marketing", "operations", "client-success", "creative", "media-buying", "seo",
+  "websites-software", "crm-ai", "reporting", "onboarding",
+]);
+/** Company-wide roles see everything; a department manager sees client tools only for client-facing departments. */
+function managesClientWork(ctx: NavContext) {
+  if (ctx.isAdmin || ctx.isCEO || ["operations", "general_manager"].includes(ctx.systemRole)) return true;
+  return (ctx.leadDepartments ?? []).some((k) => CLIENT_DEPARTMENTS.has(k));
+}
+
 export type NavGroup = {
   id: string;
   label: string;
@@ -95,6 +106,8 @@ export type NavContext = {
   departmentName?: string | null;
   /** Appointed manager of at least one department (department_leads). */
   isDepartmentLead?: boolean;
+  /** Keys of the departments this person manages. */
+  leadDepartments?: string[];
 };
 
 type Workspace = {
@@ -280,7 +293,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
 
   department: {
     title: (ctx) =>
-      ctx.isCEO ? "Departments (company view)" : `${ctx.departmentName || "Media Buying"} Workspace`,
+      ctx.isCEO ? "Departments (company view)" : `${ctx.departmentName || "Department"} Workspace`,
     subtitle: "Team Execution & QA Approval",
     home: "/department",
     prefixes: ["/department"],
@@ -311,8 +324,8 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         label: "Performance & Clients",
         items: [
           { to: "/department/performance", label: "Targets & Performance", icon: Target },
-          { to: "/department/clients", label: "Client Delivery Details", icon: Building2 },
-          { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
+          { to: "/department/clients", label: "Client Delivery Details", icon: Building2, visible: managesClientWork },
+          { to: "/reports", label: "Monthly Reports", icon: FileBarChart2, visible: managesClientWork },
         ],
       },
     ],
@@ -722,5 +735,6 @@ export function navContextFromProfile(data: any): NavContext | null {
     isManagerOrAbove: !!data.isManagerOrAbove,
     departmentName: data.departmentName ?? null,
     isDepartmentLead: Boolean(data.isDepartmentLead),
+    leadDepartments: Array.isArray(data.leadDepartments) ? data.leadDepartments : [],
   };
 }

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/department/clients")({
-  head: () => ({ meta: [{ title: "Client Delivery Scope — Media Buying Workspace" }] }),
+  head: () => ({ meta: [{ title: "Client Delivery Scope — Department Workspace" }] }),
   component: DepartmentClientsPage,
 });
 
@@ -52,7 +52,7 @@ export function DepartmentClientsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary" />
-            Media Buying Linked Client Delivery Details
+            {profileData?.departmentName ?? "Department"} Client Delivery Details
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Authorised delivery requirements, campaign scopes, client acceptance criteria, and verification checklists.

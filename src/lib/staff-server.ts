@@ -125,11 +125,11 @@ function canViewTask(auth: AuthContext, task: StaffTask, _submitterDepartment?: 
   return auth.access.isCEO || canReviewTask(auth, task);
 }
 
-/** May this user oversee / review work on this task? */
+/** May this user oversee / review work on this task? Only the manager of the task's department
+ *  (or the General Manager / an administrator). Assigning a task never grants oversight of another
+ *  department's work. */
 function canReviewTask(auth: AuthContext, task: StaffTask, _submitterDepartment?: string | null) {
-  if (managesDepartment(auth.org, auth, taskDeptKey(task.department))) return true;
-  // The manager who assigned it keeps oversight of work they handed out.
-  return Boolean(task.assignedById && task.assignedById === auth.userId && auth.isManagerOrAbove);
+  return managesDepartment(auth.org, auth, taskDeptKey(task.department));
 }
 
 /** May this user view an employee's records (scorecard)? */
@@ -206,13 +206,21 @@ async function signEvidenceFiles(files: EvidenceSubmission["uploadedFiles"]) {
   return out;
 }
 
-/** The manager of a task's department (to notify about new submissions). */
+/** Who reviews a task's submissions: its department's manager, or — when the department has no
+ *  manager (or the task has no department) — the General Manager. */
 async function departmentManagersFor(dept?: string | null): Promise<string[]> {
   const key = taskDeptKey(dept);
-  if (!key) return [];
   const org = await loadOrgStructure();
-  const lead = org.leads.get(key);
-  return lead && org.people.get(lead)?.active ? [lead] : [];
+  const lead = key ? org.leads.get(key) : undefined;
+  if (lead && org.people.get(lead)?.active) return [lead];
+  const db = supabaseAdmin as any;
+  const [{ data: profs }, { data: roleRows }] = await Promise.all([
+    db.from("profiles").select("*").eq("is_active", true),
+    db.from("user_roles").select("user_id, role"),
+  ]);
+  return (profs || [])
+    .filter((p: any) => computeAccess(p, p.email, (roleRows || []).filter((r: any) => r.user_id === p.id)).isGM)
+    .map((p: any) => p.id);
 }
 
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────
@@ -836,10 +844,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         const targetPolicy = assignPolicy(auth.org, auth, target.key);
         const mayMove =
           targetPolicy.allowed &&
-          (overseesAllDepartments(auth) ||
-            fromKey === null ||
-            managesDepartment(auth.org, auth, fromKey) ||
-            task.assignedById === auth.userId);
+          (overseesAllDepartments(auth) || managesDepartment(auth.org, auth, fromKey));
         if (!mayMove) {
           return new Response(
             JSON.stringify({
@@ -1080,8 +1085,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         return new Response(JSON.stringify({ error: "Task not found." }), { status: 404, headers: HEADERS });
       }
 
-      if (!managesDepartment(auth.org, auth, taskDeptKey(task.department)) && task.assignedById !== auth.userId) {
-        return new Response(JSON.stringify({ error: "Only the department's manager, the General Manager, an administrator or the person who assigned it can remove this task." }), {
+      if (!managesDepartment(auth.org, auth, taskDeptKey(task.department))) {
+        return new Response(JSON.stringify({ error: "Only the department's manager, the General Manager or an administrator can remove this task." }), {
           status: 403,
           headers: HEADERS,
         });
@@ -1427,9 +1432,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         tasksStore.set(task.id, task);
         await logLedgerEntry("staff_task_upsert", task.id, { task });
 
-        // Notify the assigning manager and the department's manager(s).
+        // Notify whoever reviews this department's work (its manager, else the General Manager).
         const recipients = new Set<string>();
-        if (task.assignedById) recipients.add(task.assignedById);
         for (const id of await departmentManagersFor(task.department)) recipients.add(id);
         recipients.delete(auth.userId);
         const fileNote = files.length ? ` (${files.length} file${files.length === 1 ? "" : "s"} attached)` : "";

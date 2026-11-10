@@ -39,13 +39,20 @@ export async function authenticateApiRequest(request: Request): Promise<ApiUser 
     if ((user.app_metadata as any)?.must_change_password) return null;
 
     const db = supabaseAdmin as any;
-    const [{ data: profile }, { data: roles }] = await Promise.all([
+    const [{ data: profile }, { data: roles }, { data: leads }] = await Promise.all([
       db.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       db.from("user_roles").select("role").eq("user_id", user.id),
+      db.from("department_leads").select("department_key").eq("user_id", user.id),
     ]);
     if (profile && profile.is_active === false) return null; // deactivated accounts lose API access
 
-    const access = computeAccess(profile as Profile | null, user.email, roles ?? []);
+    // Department-management roles require the matching manager appointment (see computeAccess).
+    const access = computeAccess(
+      profile as Profile | null,
+      user.email,
+      roles ?? [],
+      ((leads as any[]) ?? []).map((l) => l.department_key),
+    );
     return {
       userId: user.id,
       email: user.email || "",

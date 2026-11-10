@@ -396,7 +396,12 @@ async function buildOverview(): Promise<ExecutiveOverview> {
 
   const activeProfiles = profiles.filter((p) => p.is_active !== false);
   const people: ExecPerson[] = activeProfiles.map((p) => {
-    const access = computeAccess(p, p.email, rolesByUser.get(p.id) || []);
+    const access = computeAccess(
+      p,
+      p.email,
+      rolesByUser.get(p.id) || [],
+      [...leadByDept.entries()].filter(([, id]) => id === p.id).map(([k]) => k),
+    );
     const live = latestToday.get(p.id);
     const state = live?.state as ExecPerson["attendanceToday"] | undefined;
     const mine = tasks.filter((t) => t.assignedToId === p.id);
