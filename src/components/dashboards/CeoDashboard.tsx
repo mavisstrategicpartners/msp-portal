@@ -24,6 +24,7 @@ import {
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FollowUpDialog,
@@ -63,7 +64,8 @@ function Panel({
   children,
   className = "",
   id,
-  bodyClassName = "p-5",
+  bodyClassName = "p-4",
+  bare,
 }: {
   title: string;
   description?: string;
@@ -72,10 +74,13 @@ function Panel({
   className?: string;
   id?: string;
   bodyClassName?: string;
+  /** Inside a detail panel: content only, no card chrome. */
+  bare?: boolean;
 }) {
+  if (bare) return <div className={bodyClassName === "p-0" ? "" : "px-5 py-4"}>{children}</div>;
   return (
     <section id={id} className={`rounded-xl border border-border bg-card scroll-mt-20 ${className}`}>
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
@@ -111,9 +116,9 @@ function Metric({
           ? "text-muted-foreground"
           : "text-foreground";
   const body = (
-    <div className="flex h-full flex-col rounded-xl border border-border bg-card px-4 py-3.5 transition hover:border-primary/40">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums tracking-tight ${valueColor}`}>{value}</p>
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card px-3.5 py-3 transition hover:border-primary/40">
+      <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 text-xl font-semibold tabular-nums tracking-tight ${valueColor}`}>{value}</p>
       <p className="mt-auto pt-1 text-[11px] leading-snug text-muted-foreground">{context}</p>
     </div>
   );
@@ -176,8 +181,11 @@ const axisProps = {
 } as const;
 
 // ── Page ─────────────────────────────────────────────────────────────────────
+type DetailKey = "attention" | "departments" | "clients" | "finance" | "workforce" | "activity";
+
 function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: string }) {
   const [draft, setDraft] = useState<FollowUpDraft | null>(null);
+  const [detail, setDetail] = useState<DetailKey | null>(focus === "follow-ups" ? "attention" : null);
   const [queueTab, setQueueTab] = useState(focus === "follow-ups" ? "follow-ups" : "new");
   const profile = useProfile();
   const isCEO = Boolean(navContextFromProfile(profile.data)?.isCEO);
@@ -185,37 +193,508 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
   useEffect(() => {
     if (focus === "follow-ups") {
       setQueueTab("follow-ups");
-      document.getElementById("exec-queue")?.scrollIntoView({ behavior: "smooth" });
+      setDetail("attention");
     }
   }, [focus]);
 
+  const openAttention = (tab = "new") => {
+    setQueueTab(tab);
+    setDetail("attention");
+  };
+
   return (
-    <div className="mx-auto max-w-[1440px] space-y-6">
+    <div className="mx-auto max-w-[1440px] space-y-4">
       <ExecutiveHeader data={data} name={profile.data?.profile?.full_name} onFollowUp={() => setDraft({})} />
       <BusinessOverview data={data} />
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-4 lg:grid-cols-12">
+        <AttentionSummary
+          data={data}
+          tracksAlerts={isCEO}
+          onFollowUp={setDraft}
+          onViewAll={openAttention}
+          className="lg:col-span-7"
+        />
+        <DepartmentSummary data={data} onViewAll={() => setDetail("departments")} className="lg:col-span-5" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <ClientsSummary data={data} onViewAll={() => setDetail("clients")} />
+        <FinanceSummary data={data} onViewAll={() => setDetail("finance")} />
+        <WorkforceSummary data={data} onViewAll={() => setDetail("workforce")} />
+        <ActivitySummary data={data} onViewAll={() => setDetail("activity")} />
+      </div>
+
+      <ReadOnlyNote />
+
+      <DetailSheet
+        open={detail === "attention"}
+        onClose={() => setDetail(null)}
+        title="Needs your attention"
+        description="Every open issue with the person responsible and the suggested next step, plus your follow-ups."
+        page={{ to: "/ceo/notifications", label: "Open all notifications" }}
+      >
         <InterventionQueue
           data={data}
           tracksAlerts={isCEO}
           tab={queueTab}
           onTab={setQueueTab}
-          onFollowUp={setDraft}
-          className="lg:col-span-8"
+          onFollowUp={(d) => {
+            setDraft(d);
+          }}
+          bare
         />
-        <CompanyActivity data={data} className="lg:col-span-4" />
-      </div>
+      </DetailSheet>
+      <DetailSheet
+        open={detail === "departments"}
+        onClose={() => setDetail(null)}
+        title="Department performance"
+        description="Every department's manager, employees and recorded work, with the weekly delivery trend."
+        page={{ to: "/ceo/departments", label: "Open department pages" }}
+        wide
+      >
+        <DepartmentPerformance data={data} bare />
+      </DetailSheet>
+      <DetailSheet
+        open={detail === "clients"}
+        onClose={() => setDetail(null)}
+        title="Clients & projects"
+        description="All active clients with onboarding progress, delays and open work."
+        page={{ to: "/ceo/clients", label: "Open Clients & Onboarding" }}
+      >
+        <ClientsDetail data={data} />
+      </DetailSheet>
+      <DetailSheet
+        open={detail === "finance"}
+        onClose={() => setDetail(null)}
+        title="Financial overview"
+        description="Agency fees only — client ad spend is paid to the platforms directly and is not MSP revenue."
+        page={{ to: "/ceo/revenue", label: "Open Financial Overview" }}
+      >
+        <FinancialOverview data={data} bare />
+      </DetailSheet>
+      <DetailSheet
+        open={detail === "workforce"}
+        onClose={() => setDetail(null)}
+        title="Team & workforce"
+        description="Headcount, attendance, leave and staffing by department."
+        page={{ to: "/ceo/team", label: "Open People & Workforce" }}
+      >
+        <WorkforceOverview data={data} bare />
+      </DetailSheet>
+      <DetailSheet
+        open={detail === "activity"}
+        onClose={() => setDetail(null)}
+        title="Company activity"
+        description="Work assigned and completed, submissions, new clients and follow-ups — last 30 days."
+      >
+        <CompanyActivity data={data} bare />
+      </DetailSheet>
 
-      <DepartmentPerformance data={data} />
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <FinancialOverview data={data} />
-        <WorkforceOverview data={data} />
-      </div>
-
-      <ReadOnlyNote />
       <FollowUpDialog open={draft !== null} onOpenChange={(o) => !o && setDraft(null)} draft={draft} data={data} />
     </div>
+  );
+}
+
+// ── Detail panel and "View more" ─────────────────────────────────────────────
+function DetailSheet({
+  open,
+  onClose,
+  title,
+  description,
+  page,
+  wide,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description: string;
+  page?: { to: string; label: string };
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent
+        side="right"
+        className={`w-full overflow-y-auto p-0 ${wide ? "sm:max-w-4xl" : "sm:max-w-2xl"}`}
+      >
+        <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-5 py-4 text-left">
+          <SheetTitle className="text-base">{title}</SheetTitle>
+          <SheetDescription className="text-xs">{description}</SheetDescription>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button type="button" onClick={onClose} className="text-xs font-medium text-primary hover:underline">
+              ← Back to dashboard
+            </button>
+            {page && (
+              <Link to={page.to as any} onClick={onClose} className="text-xs font-medium text-primary hover:underline">
+                {page.label}
+              </Link>
+            )}
+          </div>
+        </SheetHeader>
+        <div className="pb-6">{children}</div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function ViewMore({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+    >
+      {label} <ArrowRight className="h-3 w-3" />
+    </button>
+  );
+}
+
+function SummaryCard({
+  title,
+  action,
+  children,
+  className = "",
+}: {
+  title: string;
+  action: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`flex min-w-0 flex-col rounded-xl border border-border bg-card ${className}`}>
+      <header className="flex items-center justify-between gap-2 px-4 pt-3.5">
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      </header>
+      <div className="flex-1 px-4 py-3">{children}</div>
+      <footer className="border-t border-border px-4 py-2.5">{action}</footer>
+    </section>
+  );
+}
+
+// ── Compact summaries (main dashboard) ───────────────────────────────────────
+function AttentionSummary({
+  data,
+  tracksAlerts,
+  onFollowUp,
+  onViewAll,
+  className,
+}: {
+  data: ExecutiveOverview;
+  tracksAlerts: boolean;
+  onFollowUp: (d: FollowUpDraft) => void;
+  onViewAll: (tab?: string) => void;
+  className?: string;
+}) {
+  const alerts = useAlertState();
+  const navigate = useNavigate();
+  const items = useQueueItems(data);
+  const fresh = tracksAlerts ? items.filter((i) => alerts.isUnread(i.f)) : items;
+  const reviewed = items.length - fresh.length;
+  // Critical items are never hidden behind "View all"; others fill up to five rows.
+  const critical = fresh.filter((i) => i.f.severity === "critical");
+  const rest = fresh.filter((i) => i.f.severity !== "critical");
+  const shown = [...critical, ...rest.slice(0, Math.max(0, 5 - critical.length))];
+  const openFollowUps = data.followUps.filter((f) => f.status !== "Resolved").length;
+  return (
+    <section className={`flex min-w-0 flex-col rounded-xl border border-border bg-card ${className}`}>
+      <header className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">Needs your attention</h2>
+          {fresh.length > 0 && (
+            <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-400">
+              {fresh.length} new
+            </span>
+          )}
+        </div>
+        <button type="button" onClick={() => onViewAll("follow-ups")} className="text-xs text-muted-foreground hover:text-foreground">
+          {openFollowUps} open follow-up{openFollowUps === 1 ? "" : "s"}
+        </button>
+      </header>
+      <div className="flex-1 px-1.5 py-2">
+        {shown.length ? (
+          <ul>
+            {shown.map(({ f, dept, responsible, when }) => {
+              const open = () => {
+                if (tracksAlerts) alerts.markRead(f);
+                const { to, search } = splitLink(f.link);
+                navigate({ to: to as any, search: search as any });
+              };
+              return (
+                <li key={f.id} className="group flex items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-muted/40">
+                  <span className="mt-0.5">{SEV_ICON[f.severity]}</span>
+                  <button type="button" onClick={open} className="min-w-0 flex-1 text-left">
+                    <p className="flex min-w-0 items-center gap-2 text-sm font-medium leading-snug text-foreground">
+                      <span className="min-w-0 truncate">{f.title}</span>
+                      <span className={`shrink-0 rounded border px-1.5 py-px text-[10px] font-semibold ${PRIORITY[f.severity].cls}`}>
+                        {PRIORITY[f.severity].label}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {dept?.name ?? "Company-wide"} ·{" "}
+                      <span className={responsible ? "" : "text-amber-700 dark:text-amber-400"}>
+                        {responsible ?? "Manager not assigned"}
+                      </span>
+                      {when ? ` · ${relTime(when)}` : ""}
+                    </p>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    <button
+                      type="button"
+                      title="Request follow-up"
+                      aria-label="Request follow-up"
+                      onClick={() =>
+                        onFollowUp({
+                          subject: f.title.slice(0, 160),
+                          note: nextAction(f, responsible, dept?.name) ?? "",
+                          departmentKey: dept?.key ?? null,
+                          departmentName: dept?.name ?? null,
+                          assigneeId: dept?.leads[0]?.id,
+                        })
+                      }
+                      className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <MessageSquarePlus className="h-3.5 w-3.5" />
+                    </button>
+                    {tracksAlerts && (
+                      <button
+                        type="button"
+                        title="Mark reviewed"
+                        aria-label="Mark reviewed"
+                        onClick={() => alerts.markRead(f)}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="px-2.5 py-8 text-center text-xs text-muted-foreground">
+            {tracksAlerts ? "You're up to date — nothing new needs your attention." : "Nothing is waiting on an executive decision."}
+          </p>
+        )}
+      </div>
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5">
+        <ViewMore
+          label={fresh.length > shown.length ? `View all ${fresh.length} with next steps` : "View details and next steps"}
+          onClick={() => onViewAll("new")}
+        />
+        {tracksAlerts && reviewed > 0 && (
+          <button type="button" onClick={() => onViewAll("reviewed")} className="text-xs text-muted-foreground hover:text-foreground">
+            {reviewed} reviewed
+          </button>
+        )}
+      </footer>
+    </section>
+  );
+}
+
+function DepartmentSummary({
+  data,
+  onViewAll,
+  className,
+}: {
+  data: ExecutiveOverview;
+  onViewAll: () => void;
+  className?: string;
+}) {
+  const real = data.departments.filter((d) => d.key !== "unassigned");
+  const ranked = [...data.departments].filter((d) => d.status !== "no-activity");
+  const counts = {
+    attention: real.filter((d) => d.status === "attention").length,
+    watch: real.filter((d) => d.status === "watch").length,
+    ok: real.filter((d) => d.status === "on-track").length,
+    noManager: real.filter((d) => !d.leads.length).length,
+  };
+  const dot: Record<string, string> = {
+    attention: "bg-rose-500",
+    watch: "bg-amber-500",
+    "on-track": "bg-emerald-500",
+    "no-activity": "bg-muted-foreground/40",
+  };
+  return (
+    <SummaryCard
+      title="Department performance"
+      className={className}
+      action={<ViewMore label={`View all ${real.length} departments`} onClick={onViewAll} />}
+    >
+      <p className="text-[11px] text-muted-foreground">
+        <span className="font-medium text-rose-700 dark:text-rose-400">{counts.attention} need attention</span> ·{" "}
+        {counts.watch} to watch · {counts.ok} on track ·{" "}
+        <span className="text-amber-700 dark:text-amber-400">{counts.noManager} without a manager</span>
+      </p>
+      {ranked.length ? (
+        <ul className="mt-2 divide-y divide-border">
+          {ranked.slice(0, 6).map((d) => (
+            <li key={d.key} className="flex items-center gap-2.5 py-2">
+              <span className={`h-2 w-2 shrink-0 rounded-full ${dot[d.status]}`} aria-hidden />
+              <div className="min-w-0 flex-1">
+                <Link
+                  to="/ceo/departments"
+                  search={{ dept: d.key } as any}
+                  className="block truncate text-sm font-medium text-foreground hover:text-primary"
+                >
+                  {d.name}
+                </Link>
+                <p className="truncate text-[11px] text-muted-foreground">
+                  {d.leads[0]?.name ?? <span className="text-amber-700 dark:text-amber-400">Manager not assigned</span>}
+                </p>
+              </div>
+              <div className="shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
+                <p>
+                  {d.tasksOpen} active
+                  {d.tasksOverdue ? (
+                    <span className="font-semibold text-rose-600 dark:text-rose-400"> · {d.tasksOverdue} overdue</span>
+                  ) : null}
+                </p>
+                <p>{d.completionRate === null ? "—" : `${d.completionRate}% complete`}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="py-6 text-center text-xs text-muted-foreground">No work is recorded against any department yet.</p>
+      )}
+    </SummaryCard>
+  );
+}
+
+function ClientsSummary({ data, onViewAll }: { data: ExecutiveOverview; onViewAll: () => void }) {
+  const atRisk = data.clients.filter((c) => c.atRisk);
+  return (
+    <SummaryCard title="Clients & projects" action={<ViewMore label={`View all ${data.clients.length} clients`} onClick={onViewAll} />}>
+      <div className="grid grid-cols-3 gap-2">
+        <Figure label="Active" value={data.business.activeClients} />
+        <Figure label="Onboarding" value={data.business.onboardingInProgress} />
+        <Figure label="At risk" value={atRisk.length} tone={atRisk.length ? "bad" : undefined} />
+      </div>
+      {atRisk.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {atRisk.slice(0, 3).map((c) => (
+            <li key={c.id} className="truncate text-[11px] text-muted-foreground">
+              <span className="font-medium text-foreground">{c.name}</span> — {c.riskReasons[0] ?? "needs attention"}
+            </li>
+          ))}
+        </ul>
+      )}
+    </SummaryCard>
+  );
+}
+
+function FinanceSummary({ data, onViewAll }: { data: ExecutiveOverview; onViewAll: () => void }) {
+  const f = data.finance;
+  const s = data.sales;
+  return (
+    <SummaryCard title="Finance & sales" action={<ViewMore label="View more" onClick={onViewAll} />}>
+      {f.recorded ? (
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3">
+          <Figure label="Received" value={zar(f.collected)} />
+          <Figure label="Outstanding" value={zar(Math.max(0, f.invoicedAgencyFees - f.collected))} tone={f.overdueInvoices ? "bad" : undefined} />
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No invoices or expenses are recorded in Finance yet.</p>
+      )}
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        {s.recorded
+          ? `Pipeline: ${s.leads} lead${s.leads === 1 ? "" : "s"} · ${zar(s.openPipelineValue)}/month open · ${s.wonThisMonth} won this month`
+          : "No sales leads captured yet."}
+      </p>
+    </SummaryCard>
+  );
+}
+
+function WorkforceSummary({ data, onViewAll }: { data: ExecutiveOverview; onViewAll: () => void }) {
+  const a = data.attendance;
+  const onLeave = data.leave.upcomingApproved.filter((l) => l.start <= data.today && l.end >= data.today).length;
+  return (
+    <SummaryCard title="Team & workforce" action={<ViewMore label="View more" onClick={onViewAll} />}>
+      <div className="grid grid-cols-3 gap-2">
+        <Figure label="Employees" value={data.business.headcount} />
+        <Figure label="Working now" value={a.clockedIn + a.onBreak} />
+        <Figure label="On leave" value={onLeave} />
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        {data.leave.pending.length ? `${data.leave.pending.length} leave request(s) awaiting HR` : "No leave awaiting HR"}
+        {a.missingClockOut.length ? ` · ${a.missingClockOut.length} unclosed clock-in(s)` : ""}
+      </p>
+    </SummaryCard>
+  );
+}
+
+function ActivitySummary({ data, onViewAll }: { data: ExecutiveOverview; onViewAll: () => void }) {
+  const all = useMemo(() => buildActivity(data), [data]);
+  return (
+    <SummaryCard
+      title="Recent activity"
+      action={<ViewMore label={all.length ? `View all ${all.length} updates` : "View activity"} onClick={onViewAll} />}
+    >
+      {all.length ? (
+        <ul className="space-y-2">
+          {all.slice(0, 3).map((a, i) => (
+            <li key={i} className="min-w-0">
+              <p className="truncate text-xs text-foreground">{a.text}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {a.meta} · {relTime(a.at)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-xs text-muted-foreground">No recorded activity in the last 30 days.</p>
+      )}
+    </SummaryCard>
+  );
+}
+
+function ClientsDetail({ data }: { data: ExecutiveOverview }) {
+  const clients = [...data.clients].sort(
+    (a, b) => Number(b.atRisk) - Number(a.atRisk) || (b.onboarding?.daysOverdue ?? 0) - (a.onboarding?.daysOverdue ?? 0),
+  );
+  if (!clients.length) return <p className="px-5 py-10 text-center text-xs text-muted-foreground">No clients are recorded.</p>;
+  return (
+    <ul className="divide-y divide-border">
+      {clients.map((c) => (
+        <li key={c.id} className="space-y-1.5 px-5 py-3.5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <Link
+                to="/ceo/clients"
+                search={{ client: c.id } as any}
+                className="text-sm font-medium text-foreground hover:text-primary"
+              >
+                {c.name}
+              </Link>
+              <p className="text-[11px] text-muted-foreground">
+                {[c.package, c.industry, c.accountManager && `Account manager: ${c.accountManager}`].filter(Boolean).join(" · ") || "—"}
+              </p>
+            </div>
+            {c.atRisk && <StatusPill status="attention" />}
+          </div>
+          {c.onboarding ? (
+            <div className="flex items-center gap-2">
+              <Progress value={c.onboarding.progress} className="h-1.5 flex-1" />
+              <span className="w-40 text-right text-[11px] text-muted-foreground">
+                {c.onboarding.progress}% onboarded
+                {c.onboarding.delayed ? ` · ${c.onboarding.daysOverdue}d late` : ""}
+              </span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">No onboarding record.</p>
+          )}
+          <p className="text-[11px] text-muted-foreground">
+            {c.openTasks} open task{c.openTasks === 1 ? "" : "s"}
+            {c.overdueTasks ? ` · ${c.overdueTasks} overdue` : ""}
+            {c.riskReasons.length ? ` · ${c.riskReasons.join("; ")}` : ""}
+          </p>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -289,75 +768,56 @@ function BusinessOverview({ data }: { data: ExecutiveOverview }) {
   const f = data.finance;
   const perf = onTimeRate(data);
   const outstanding = Math.max(0, f.invoicedAgencyFees - f.collected);
-  const noInvoices = "No invoices recorded in Finance yet";
   return (
-    <section aria-labelledby="kpi-heading" className="space-y-3">
-      <h2 id="kpi-heading" className="sr-only">
-        Business overview
-      </h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Metric
-          label="Active clients"
-          value={b.activeClients}
-          context={b.clientsAddedLast30 ? `+${b.clientsAddedLast30} in the last 30 days` : "None added in the last 30 days"}
-          to="/ceo/clients"
-        />
-        <Metric
-          label="Monthly billing (MRR)"
-          value={f.invoicedThisMonth === null ? "—" : zar(f.invoicedThisMonth)}
-          context={f.invoicedThisMonth === null ? noInvoices : "Agency fees invoiced for this month"}
-          tone={f.invoicedThisMonth === null ? "muted" : undefined}
-          to="/ceo/revenue"
-        />
-        <Metric
-          label="Revenue received"
-          value={f.recorded ? zar(f.collected) : "—"}
-          context={f.recorded ? `of ${zar(f.invoicedAgencyFees)} invoiced` : noInvoices}
-          tone={f.recorded ? undefined : "muted"}
-          to="/ceo/revenue"
-        />
-        <Metric
-          label="Outstanding payments"
-          value={f.recorded ? zar(outstanding) : "—"}
-          context={
-            f.recorded
-              ? f.overdueInvoices
-                ? `${f.overdueInvoices} invoice${f.overdueInvoices > 1 ? "s" : ""} overdue (${zar(f.overdueAmount)})`
-                : `${f.awaitingPayment} awaiting payment, none overdue`
-              : noInvoices
-          }
-          tone={!f.recorded ? "muted" : f.overdueInvoices ? "bad" : undefined}
-          to="/ceo/revenue"
-        />
-        <Metric
-          label="Active client projects"
-          value={b.onboardingInProgress}
-          context={b.onboardingDelayed ? `${b.onboardingDelayed} past target date` : "All on schedule"}
-          tone={b.onboardingDelayed ? "warn" : undefined}
-          to="/ceo/clients"
-          search={b.onboardingDelayed ? { filter: "at-risk" } : undefined}
-        />
-        <Metric
-          label="Tasks in progress"
-          value={b.openTasks}
-          context={b.awaitingReview ? `${b.awaitingReview} awaiting manager review` : "None awaiting review"}
-          to="/ceo/delivery"
-        />
-        <Metric
-          label="Overdue tasks"
-          value={b.overdueTasks}
-          context={b.overdueTasks ? "Past their due date and not complete" : "Nothing past its due date"}
-          tone={b.overdueTasks ? "bad" : "good"}
-          to="/ceo/delivery"
-        />
-        <Metric
-          label="On-time delivery"
-          value={perf.rate === null ? "—" : `${perf.rate}%`}
-          context={perf.rate === null ? "No completed tasks with a due date yet" : `of ${perf.n} completed tasks with a due date`}
-          tone={perf.rate === null ? "muted" : perf.rate < 70 ? "warn" : undefined}
-          to="/ceo/performance"
-        />
-      </div>
+    <section aria-label="Key indicators" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <Metric
+        label="Active clients"
+        value={b.activeClients}
+        context={b.clientsAddedLast30 ? `+${b.clientsAddedLast30} in the last 30 days` : "None added in 30 days"}
+        to="/ceo/clients"
+      />
+      <Metric
+        label="Monthly billing (MRR)"
+        value={f.invoicedThisMonth === null ? "—" : zar(f.invoicedThisMonth)}
+        context={f.invoicedThisMonth === null ? "No invoices recorded yet" : "Agency fees invoiced this month"}
+        tone={f.invoicedThisMonth === null ? "muted" : undefined}
+        to="/ceo/revenue"
+      />
+      <Metric
+        label="Outstanding payments"
+        value={f.recorded ? zar(outstanding) : "—"}
+        context={
+          !f.recorded
+            ? "No invoices recorded yet"
+            : f.overdueInvoices
+              ? `${f.overdueInvoices} overdue (${zar(f.overdueAmount)})`
+              : `${f.awaitingPayment} awaiting payment`
+        }
+        tone={!f.recorded ? "muted" : f.overdueInvoices ? "bad" : undefined}
+        to="/ceo/revenue"
+      />
+      <Metric
+        label="Active client projects"
+        value={b.onboardingInProgress}
+        context={b.onboardingDelayed ? `${b.onboardingDelayed} past target date` : "All on schedule"}
+        tone={b.onboardingDelayed ? "warn" : undefined}
+        to="/ceo/clients"
+        search={b.onboardingDelayed ? { filter: "at-risk" } : undefined}
+      />
+      <Metric
+        label="Overdue tasks"
+        value={b.overdueTasks}
+        context={`of ${b.openTasks} open · ${b.awaitingReview} awaiting review`}
+        tone={b.overdueTasks ? "bad" : "good"}
+        to="/ceo/delivery"
+      />
+      <Metric
+        label="On-time delivery"
+        value={perf.rate === null ? "—" : `${perf.rate}%`}
+        context={perf.rate === null ? "No completed tasks with due dates" : `of ${perf.n} completed with a due date`}
+        tone={perf.rate === null ? "muted" : perf.rate < 70 ? "warn" : undefined}
+        to="/ceo/performance"
+      />
     </section>
   );
 }
@@ -424,6 +884,7 @@ function InterventionQueue({
   onTab,
   onFollowUp,
   className,
+  bare,
 }: {
   data: ExecutiveOverview;
   tracksAlerts: boolean;
@@ -431,6 +892,7 @@ function InterventionQueue({
   onTab: (t: string) => void;
   onFollowUp: (d: FollowUpDraft) => void;
   className?: string;
+  bare?: boolean;
 }) {
   const alerts = useAlertState();
   const items = useQueueItems(data);
@@ -444,6 +906,7 @@ function InterventionQueue({
       description="Critical issues, overdue decisions, client escalations and financial risks, with the person responsible."
       className={className}
       bodyClassName="p-0"
+      bare={bare}
     >
       <Tabs value={tab} onValueChange={onTab}>
         <div className="border-b border-border px-5 pt-3">
@@ -634,7 +1097,7 @@ function dayLabel(iso: string) {
   return d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" });
 }
 
-function CompanyActivity({ data, className }: { data: ExecutiveOverview; className?: string }) {
+function CompanyActivity({ data, className, bare }: { data: ExecutiveOverview; className?: string; bare?: boolean }) {
   const [limit, setLimit] = useState(10);
   const all = useMemo(() => buildActivity(data), [data]);
   const shown = all.slice(0, limit);
@@ -651,6 +1114,7 @@ function CompanyActivity({ data, className }: { data: ExecutiveOverview; classNa
       description="Work assigned and completed, submissions, new clients and follow-ups — last 30 days."
       className={className}
       bodyClassName="p-0"
+      bare={bare}
     >
       {!all.length ? (
         <p className="px-5 py-10 text-center text-xs text-muted-foreground">No recorded activity in the last 30 days.</p>
@@ -700,7 +1164,7 @@ function CompanyActivity({ data, className }: { data: ExecutiveOverview; classNa
 }
 
 // ── 4. Department performance ────────────────────────────────────────────────
-function DepartmentPerformance({ data }: { data: ExecutiveOverview }) {
+function DepartmentPerformance({ data, bare }: { data: ExecutiveOverview; bare?: boolean }) {
   const [showQuiet, setShowQuiet] = useState(false);
   const active = data.departments.filter((d) => d.status !== "no-activity");
   const quiet = data.departments.filter((d) => d.status === "no-activity");
@@ -717,6 +1181,7 @@ function DepartmentPerformance({ data }: { data: ExecutiveOverview }) {
         </Button>
       }
       bodyClassName="p-0"
+      bare={bare}
     >
       <Tabs defaultValue="table">
         <div className="border-b border-border px-5 pt-3">
@@ -888,7 +1353,7 @@ function DeliveryTrend({ data }: { data: ExecutiveOverview }) {
 }
 
 // ── 5a. Financial overview ───────────────────────────────────────────────────
-function FinancialOverview({ data }: { data: ExecutiveOverview }) {
+function FinancialOverview({ data, bare }: { data: ExecutiveOverview; bare?: boolean }) {
   const f = data.finance;
   const s = data.sales;
   const months = f.monthly.map((m) => ({
@@ -905,6 +1370,7 @@ function FinancialOverview({ data }: { data: ExecutiveOverview }) {
           Details
         </Link>
       }
+      bare={bare}
     >
       {f.recorded ? (
         <div className="space-y-5">
@@ -977,7 +1443,7 @@ function FinancialOverview({ data }: { data: ExecutiveOverview }) {
 }
 
 // ── 5b. Team & workforce ─────────────────────────────────────────────────────
-function WorkforceOverview({ data }: { data: ExecutiveOverview }) {
+function WorkforceOverview({ data, bare }: { data: ExecutiveOverview; bare?: boolean }) {
   const a = data.attendance;
   const real = data.departments.filter((d) => d.key !== "unassigned");
   const managers = real.filter((d) => d.leads.length).length;
@@ -1001,6 +1467,7 @@ function WorkforceOverview({ data }: { data: ExecutiveOverview }) {
           People
         </Link>
       }
+      bare={bare}
     >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Figure label="Employees" value={data.business.headcount} />
