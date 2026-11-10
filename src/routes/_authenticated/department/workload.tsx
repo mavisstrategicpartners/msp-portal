@@ -196,7 +196,7 @@ export function DepartmentWorkloadPage() {
                   </div>
                   <div className="p-2 rounded-lg border border-border bg-muted/30">
                     <span className="text-[10px] text-muted-foreground font-medium uppercase">On-Time SLA</span>
-                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{member.onTimeDeliveryRate}%</div>
+                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{member.onTimeDeliveryRate === null ? "—" : `${member.onTimeDeliveryRate}%`}</div>
                   </div>
                 </div>
 

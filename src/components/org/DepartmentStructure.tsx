@@ -21,6 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthHeaders } from "@/lib/api-auth-headers";
 import { useDepartments } from "@/lib/department-scope";
+import { ManagerAccounts } from "@/components/org/ManagerAccounts";
 
 type OrgPersonRow = {
   id: string;
@@ -122,6 +123,9 @@ export function DepartmentStructure() {
           <TabsTrigger value="people">
             <Users className="mr-1.5 h-3.5 w-3.5" /> People ({people.length})
           </TabsTrigger>
+          <TabsTrigger value="managers">
+            <UserCog className="mr-1.5 h-3.5 w-3.5" /> Manager accounts
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="departments">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -129,6 +133,9 @@ export function DepartmentStructure() {
               <DepartmentCard key={d.key} dept={d} people={people} canEdit={canEdit} onSaved={refresh} />
             ))}
           </div>
+        </TabsContent>
+        <TabsContent value="managers">
+          <ManagerAccounts />
         </TabsContent>
         <TabsContent value="people">
           <PeopleTable people={people} departments={departments} nameOf={nameOf} canEdit={canEdit} onSaved={refresh} />

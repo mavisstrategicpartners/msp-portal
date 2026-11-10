@@ -179,7 +179,8 @@ function DepartmentReviewPage() {
         </TabsContent>
 
         <TabsContent value="managers">
-          <ManagersPanel canEdit={Boolean(deptQ.data?.canManageLeads)} />
+          {/* Managers are appointed in one place: Department Structure (CEO / administrators). */}
+          <ManagersPanel canEdit={false} />
         </TabsContent>
       </Tabs>
     </div>
@@ -228,7 +229,7 @@ function ManagersPanel({ canEdit }: { canEdit: boolean }) {
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
         A confirmed manager oversees their department's tasks, evidence and performance.{" "}
-        {canEdit ? "Only an administrator can change these." : "Ask an administrator to confirm or change a manager."}
+        Managers are appointed by the CEO or an administrator on the Department Structure page.
       </p>
       <div className="grid gap-2 md:grid-cols-2">
         {(deptQ.data?.departments ?? []).map((d) => (

@@ -11,7 +11,8 @@ export interface DepartmentTeamMember {
   avatarUrl?: string;
   activeTasksCount: number;
   capacityUtilizationPct: number;
-  onTimeDeliveryRate: number;
+  /** Share of completed tasks with a due date delivered on time; null when there are none yet. */
+  onTimeDeliveryRate: number | null;
   status: "Available" | "Optimal" | "Near Capacity" | "Overloaded";
 }
 
@@ -38,6 +39,7 @@ export interface DepartmentTask {
   priority: "Urgent" | "High" | "Medium" | "Low";
   status: "In Progress" | "Submitted for Review" | "Blocked" | "Rework Required" | "Accepted Complete" | "Unassigned";
   dueDate: string;
+  completedAt?: string | null;
   estimatedHours: number;
   actualHours?: number;
   dependencies?: string;
@@ -235,6 +237,7 @@ export function staffTaskToDeptTask(st: any): DepartmentTask {
     priority: (st.priority as any) || "High",
     status: deptStatus,
     dueDate: st.dueDate ? st.dueDate.split("T")[0] : new Date().toISOString().split("T")[0],
+    completedAt: st.completionDate || null,
     estimatedHours: st.estimatedHours || 8,
     dependencies: st.dependenciesSummary,
     blocker: st.blockReason,
@@ -299,12 +302,31 @@ export async function fetchDepartmentData(department = "Media Buying") {
   const approvals: DepartmentApprovalItem[] = [];
   const targets: DepartmentTarget[] = [];
 
-  // Build unified team members combining ALL system employees from profiles with department specialists
+  // The manager's team: employees of the department(s) they manage, from the organisation
+  // structure. Company-wide roles (General Manager, administrators) see every department's people.
+  let teamIds: Set<string> | null = null;
+  try {
+    const res = await fetch("/api/staff/departments", { headers: await getAuthHeaders() });
+    if (res.ok) {
+      const org = await res.json();
+      const leads: string[] = org?.me?.leads ?? [];
+      const scope = (org.departments ?? []).filter((d: any) => org.canCorrectAny || leads.includes(d.key));
+      teamIds = new Set(scope.flatMap((d: any) => (d.members ?? []).map((m: any) => m.id)));
+    }
+  } catch (err) {
+    console.warn("Could not load the department structure:", err);
+  }
+
   const unifiedMembers: DepartmentTeamMember[] = [];
 
   if (dbProfiles && dbProfiles.length > 0) {
     for (const p of dbProfiles) {
-      const activeCount = tasks.filter((t) => t.assignedToId === p.id && t.status !== "Accepted Complete").length;
+      if (teamIds && !teamIds.has(p.id)) continue;
+      const mine = tasks.filter((t) => t.assignedToId === p.id);
+      const activeCount = mine.filter((t) => t.status !== "Accepted Complete").length;
+      // On-time rate from this person's completed tasks that had a due date (null when there are none yet).
+      const done = mine.filter((t) => t.status === "Accepted Complete" && t.dueDate && t.completedAt);
+      const onTime = done.filter((t) => String(t.completedAt).slice(0, 10) <= String(t.dueDate).slice(0, 10)).length;
       unifiedMembers.push({
         id: p.id,
         name: p.full_name || p.email || "Employee",
@@ -313,7 +335,7 @@ export async function fetchDepartmentData(department = "Media Buying") {
         department: p.department || "Operations",
         activeTasksCount: activeCount,
         capacityUtilizationPct: activeCount === 0 ? 0 : Math.min(100, activeCount * 25),
-        onTimeDeliveryRate: 100,
+        onTimeDeliveryRate: done.length ? Math.round((onTime / done.length) * 100) : null,
         status: activeCount >= 4 ? "Near Capacity" : "Available",
       });
     }

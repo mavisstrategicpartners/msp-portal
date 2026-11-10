@@ -563,7 +563,7 @@ export function DepartmentDashboardPage() {
 
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border">
                     <span>Active Tasks: <strong className="text-foreground">{member.activeTasksCount}</strong></span>
-                    <span>On-time Delivery: <strong className="text-foreground">{member.onTimeDeliveryRate}%</strong></span>
+                    <span>On-time Delivery: <strong className="text-foreground">{member.onTimeDeliveryRate === null ? "—" : `${member.onTimeDeliveryRate}%`}</strong></span>
                   </div>
                 </div>
               ))}

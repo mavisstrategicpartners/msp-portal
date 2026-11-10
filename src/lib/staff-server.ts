@@ -16,6 +16,13 @@ import {
   type OrgStructure,
 } from "@/lib/org-structure.server";
 import {
+  cancelAppointment,
+  createAppointment,
+  managerReport,
+  runProvisioning,
+  validateAppointment,
+} from "@/lib/manager-provisioning.server";
+import {
   DEPARTMENTS,
   UNASSIGNED_DEPARTMENT,
   departmentExact,
@@ -508,6 +515,46 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       invalidateOrgStructure();
       await logLedgerEntry("department_lead_set", key, { department: dept.name, userId: userId || null, by: auth.fullName });
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers: HEADERS });
+    }
+
+    // ── Department manager appointments and one-time account provisioning ───────
+    // GET /api/staff/org/managers -> every department's manager, pending appointment or vacancy
+    if (method === "GET" && pathname === "/api/staff/org/managers") {
+      if (!canConfigureStructure(auth.access) && !auth.access.isGM) {
+        return new Response(JSON.stringify({ error: "Only the CEO, the General Manager or an administrator can view manager accounts." }), { status: 403, headers: HEADERS });
+      }
+      const report = await managerReport();
+      return new Response(
+        JSON.stringify({ ...report, canAppoint: canConfigureStructure(auth.access), canProvision: auth.access.isAdmin }),
+        { status: 200, headers: HEADERS },
+      );
+    }
+    // POST /api/staff/org/appointments -> CEO / administrator records the verified person appointed
+    if (method === "POST" && pathname === "/api/staff/org/appointments") {
+      if (!canConfigureStructure(auth.access)) {
+        return new Response(JSON.stringify({ error: "Only the CEO or an administrator can appoint managers." }), { status: 403, headers: HEADERS });
+      }
+      const v = validateAppointment(await request.json().catch(() => ({})));
+      if (!v.ok) return new Response(JSON.stringify({ error: v.error }), { status: 400, headers: HEADERS });
+      const r = await createAppointment(v.value, auth.userId);
+      return new Response(JSON.stringify(r.status === 201 ? { appointment: r.appointment } : { error: r.error }), { status: r.status, headers: HEADERS });
+    }
+    // DELETE /api/staff/org/appointments/:id -> cancel a pending appointment
+    if (method === "DELETE" && pathname.startsWith("/api/staff/org/appointments/")) {
+      if (!canConfigureStructure(auth.access)) {
+        return new Response(JSON.stringify({ error: "Only the CEO or an administrator can change appointments." }), { status: 403, headers: HEADERS });
+      }
+      const r = await cancelAppointment(decodeURIComponent(pathname.split("/").pop()!), auth.userId);
+      return new Response(JSON.stringify(r.status === 200 ? { ok: true } : { error: r.error }), { status: r.status, headers: HEADERS });
+    }
+    // POST /api/staff/org/provision -> administrators: create/link accounts for all pending appointments.
+    // Temporary passwords appear only in this response (never stored or logged).
+    if (method === "POST" && pathname === "/api/staff/org/provision") {
+      if (!auth.access.isAdmin) {
+        return new Response(JSON.stringify({ error: "Only an administrator can provision manager accounts." }), { status: 403, headers: HEADERS });
+      }
+      const result = await runProvisioning({ userId: auth.userId, fullName: auth.fullName });
+      return new Response(JSON.stringify(result), { status: 200, headers: { ...HEADERS, "Cache-Control": "no-store" } });
     }
 
     // GET /api/staff/tasks
