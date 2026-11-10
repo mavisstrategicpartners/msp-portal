@@ -278,6 +278,7 @@ function TopBar({
   const unreadCount = notifData?.unreadCount || 0;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isCeoPath = pathname.startsWith('/ceo');
+  const isCEO = Boolean(navContextFromProfile(data)?.isCEO);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -399,12 +400,12 @@ function TopBar({
         </button>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        {!isCeoPath && (
+        {(!isCeoPath || isCEO) && (
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Notifications"
-            onClick={onOpenNotifications}
+            aria-label={unreadCount ? `Notifications (${unreadCount} unread)` : "Notifications"}
+            onClick={() => (isCEO ? navigate({ to: "/ceo/notifications" }) : onOpenNotifications())}
             className="hidden sm:inline-flex relative"
           >
             <Bell className="h-4 w-4" />

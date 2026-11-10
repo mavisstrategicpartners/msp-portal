@@ -289,6 +289,9 @@ async function initLedgerFromSupabase(force = false) {
         } else if (log.action === "staff_evidence_upsert" && d.evidence) {
           evidenceStore.set(d.evidence.id, d.evidence);
         } else if (log.action === "staff_notif_upsert" && d.notification) {
+          // A creation entry never overwrites a notification that already exists (and may have
+          // been read since); only status updates do. This keeps one record per event.
+          if (d.op === "create" && notificationsStore.has(d.notification.id)) continue;
           notificationsStore.set(d.notification.id, d.notification);
         }
       }
@@ -315,6 +318,17 @@ async function logLedgerEntry(action: string, targetId: string, details: any) {
   } catch (e) {
     console.warn("Ledger insert error:", e);
   }
+}
+
+function ledgerRow(action: string, targetId: string, details: any) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
+  return { action, target_id: isUuid ? targetId : null, details: { ...details, target_ref_id: targetId } };
+}
+
+/** A notification belongs to the signed-in user by account id (or, for older records, by email). */
+function ownsNotification(n: StaffNotification, auth: { userId: string; email?: string | null }) {
+  if (n.userId && auth.userId && n.userId.toLowerCase() === auth.userId.toLowerCase()) return true;
+  return Boolean(n.userEmail && auth.email && n.userEmail.toLowerCase() === auth.email.toLowerCase());
 }
 
 // ── Notification Helper ───────────────────────────────────────────────────────
@@ -358,7 +372,7 @@ async function createNotification(
   };
 
   notificationsStore.set(notification.id, notification);
-  await logLedgerEntry("staff_notif_upsert", notification.id, { notification });
+  await logLedgerEntry("staff_notif_upsert", notification.id, { notification, op: "create" });
   return notification;
 }
 
@@ -1557,11 +1571,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     if (method === "GET" && pathname === "/api/staff/notifications") {
       await initLedgerFromSupabase(true);
       const all = Array.from(notificationsStore.values());
-      const userNotifs = all.filter(
-        (n) =>
-          Boolean(n.userId && auth.userId && (n.userId === auth.userId || n.userId.toLowerCase() === auth.userId.toLowerCase())) ||
-          Boolean(n.userEmail && auth.email && n.userEmail.toLowerCase() === auth.email.toLowerCase())
-      );
+      const userNotifs = all.filter((n) => ownsNotification(n, auth));
       userNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       const unreadCount = userNotifs.filter((n) => !n.read).length;
@@ -1571,35 +1581,50 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       });
     }
 
-    // PATCH /api/staff/notifications/:id -> mark read/unread
+    // PATCH /api/staff/notifications/:id -> mark read/unread (own notifications only)
     if (method === "PATCH" && pathname.startsWith("/api/staff/notifications/")) {
-      const notifId = pathname.replace("/api/staff/notifications/", "");
+      const notifId = decodeURIComponent(pathname.replace("/api/staff/notifications/", ""));
+      // Always read the persisted state: a fresh server instance starts with an empty cache.
+      await initLedgerFromSupabase(true);
       const notif = notificationsStore.get(notifId);
-      if (!notif) {
+      if (!notif || !ownsNotification(notif, auth)) {
         return new Response(JSON.stringify({ error: "Notification not found." }), {
           status: 404,
           headers: HEADERS,
         });
       }
 
-      const body = await request.json();
-      notif.read = body.read !== undefined ? Boolean(body.read) : true;
-      notificationsStore.set(notif.id, notif);
-      await logLedgerEntry("staff_notif_upsert", notif.id, { notification: notif });
-
+      const body = await request.json().catch(() => ({}));
+      const read = body.read !== undefined ? Boolean(body.read) : true;
+      if (notif.read !== read) {
+        const updated: StaffNotification = { ...notif, read, readAt: read ? new Date().toISOString() : null };
+        notificationsStore.set(updated.id, updated);
+        await logLedgerEntry("staff_notif_upsert", updated.id, { notification: updated, op: read ? "read" : "unread", actorId: auth.userId });
+        return new Response(JSON.stringify({ ok: true, notification: updated }), { status: 200, headers: HEADERS });
+      }
       return new Response(JSON.stringify({ ok: true, notification: notif }), { status: 200, headers: HEADERS });
     }
 
-    // POST /api/staff/notifications/read-all
+    // POST /api/staff/notifications/read-all -> mark every unread notification of the caller as read
     if (method === "POST" && pathname === "/api/staff/notifications/read-all") {
+      await initLedgerFromSupabase(true);
+      const readAt = new Date().toISOString();
+      const rows: any[] = [];
       for (const notif of notificationsStore.values()) {
-        if (notif.userId === auth.userId && !notif.read) {
-          notif.read = true;
-          await logLedgerEntry("staff_notif_upsert", notif.id, { notification: notif });
+        if (!notif.read && ownsNotification(notif, auth)) {
+          const updated: StaffNotification = { ...notif, read: true, readAt };
+          notificationsStore.set(updated.id, updated);
+          rows.push(ledgerRow("staff_notif_upsert", updated.id, { notification: updated, op: "read", actorId: auth.userId }));
         }
       }
-
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: HEADERS });
+      for (let i = 0; i < rows.length; i += 200) {
+        const { error } = await (supabaseAdmin as any).from("audit_logs").insert(rows.slice(i, i + 200));
+        if (error) {
+          console.error("[staff] mark-all-read failed:", error.message);
+          return new Response(JSON.stringify({ error: "Could not save. Please try again." }), { status: 500, headers: HEADERS });
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, updated: rows.length }), { status: 200, headers: HEADERS });
     }
 
     // 404 for unknown staff endpoint

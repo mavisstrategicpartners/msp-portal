@@ -166,6 +166,10 @@ export interface FeedItem {
   at: string | null;
   link: string;
   departmentKey?: DepartmentKey | null;
+  /** Stable identity of the situation this item reports (e.g. "overdue:seo", "review:<evidenceId>"). */
+  eventGroup: string;
+  /** Records behind it. A new CEO alert is raised only when a record appears that was not alerted before. */
+  eventMembers: string[];
 }
 
 export interface ExecutiveOverview {

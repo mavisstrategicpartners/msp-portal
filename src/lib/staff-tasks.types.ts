@@ -173,7 +173,8 @@ export type NotificationType =
   | "evidence_reviewed"
   | "comment_added"
   | "status_changed"
-  | "executive_follow_up";
+  | "executive_follow_up"
+  | "executive_alert";
 
 export interface StaffNotification {
   id: string;
@@ -186,7 +187,16 @@ export interface StaffNotification {
   relatedDependencyId?: string;
   relatedEvidenceId?: string;
   read: boolean;
+  /** When it was last marked read (absent while unread). */
+  readAt?: string | null;
   createdAt: string;
+  /** Where clicking the notification should take the user (an in-app path). */
+  link?: string;
+  /** Executive alerts only. */
+  severity?: "critical" | "warning" | "info";
+  category?: string;
+  eventGroup?: string;
+  eventMembers?: string[];
 }
 
 export interface PersonalScorecard {

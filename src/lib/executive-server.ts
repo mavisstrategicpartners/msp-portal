@@ -11,6 +11,7 @@
  * The only writes are executive follow-up requests. Viewing never approves,
  * rejects or edits departmental work.
  */
+import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { authenticateApiRequest, jsonError, type ApiUser } from "@/lib/api-auth.server";
 import { computeAccess } from "@/lib/roles";
@@ -176,7 +177,71 @@ async function notifyUser(userId: string, userEmail: string | undefined, title: 
   };
   await db()
     .from("audit_logs")
-    .insert({ action: "staff_notif_upsert", target_id: userId, details: { notification, target_ref_id: notification.id } });
+    .insert({ action: "staff_notif_upsert", target_id: userId, details: { notification, target_ref_id: notification.id, op: "create" } });
+}
+
+/**
+ * Turns the CEO's executive feed into persisted notifications in the portal's existing notification
+ * ledger, so each alert has a stored read/unread status. One notification per event: an alert is raised
+ * for a situation (eventGroup) only when it involves a record not covered by an earlier alert, so
+ * re-loading the dashboard, a shrinking list or a changing "hours waiting" never re-raises it.
+ * Only called for accounts that hold the CEO role; the notifications belong to that account.
+ */
+export async function syncCeoAlerts(user: { userId: string; email?: string | null }, feed: FeedItem[]) {
+  const { data, error } = await db()
+    .from("audit_logs")
+    .select("details")
+    .eq("action", "staff_notif_upsert")
+    .eq("details->notification->>type", "executive_alert")
+    .eq("details->notification->>userId", user.userId);
+  if (error) {
+    console.error("[executive] could not read CEO alerts:", error.message);
+    return 0;
+  }
+  const ids = new Set<string>();
+  const covered = new Map<string, Set<string>>();
+  for (const row of data || []) {
+    const n = (row as any).details?.notification;
+    if (!n?.id) continue;
+    ids.add(n.id);
+    const g = n.eventGroup || "";
+    if (!covered.has(g)) covered.set(g, new Set());
+    for (const m of n.eventMembers || []) covered.get(g)!.add(m);
+  }
+  const nowIso = new Date().toISOString();
+  const rows: any[] = [];
+  for (const f of feed) {
+    const members = [...new Set(f.eventMembers)].sort();
+    const prior = covered.get(f.eventGroup);
+    if (prior && !members.some((m) => !prior.has(m))) continue; // nothing new in this situation
+    const id = `alert-${createHash("sha256").update(`${user.userId}|${f.eventGroup}|${members.join(",")}`).digest("hex").slice(0, 24)}`;
+    if (ids.has(id)) continue;
+    ids.add(id);
+    if (!covered.has(f.eventGroup)) covered.set(f.eventGroup, new Set());
+    for (const m of members) covered.get(f.eventGroup)!.add(m);
+    const notification = {
+      id,
+      userId: user.userId,
+      userEmail: user.email || undefined,
+      title: f.title,
+      message: f.detail,
+      type: "executive_alert",
+      severity: f.severity,
+      category: f.category,
+      link: f.link,
+      eventGroup: f.eventGroup,
+      eventMembers: members,
+      read: false,
+      readAt: null,
+      createdAt: nowIso,
+    };
+    rows.push({ action: "staff_notif_upsert", target_id: user.userId, details: { notification, target_ref_id: id, op: "create" } });
+  }
+  if (rows.length) {
+    const { error: insErr } = await db().from("audit_logs").insert(rows);
+    if (insErr) console.error("[executive] could not save CEO alerts:", insErr.message);
+  }
+  return rows.length;
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
@@ -221,7 +286,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     loadLedger("sales_"),
     db()
       .from("audit_logs")
-      .select("action, created_at, details")
+      .select("id, action, created_at, details")
       .in("action", ["team_member_created", "team_member_deleted"])
       .gte("created_at", new Date(now.getTime() - 30 * DAY).toISOString()),
     db().from("finance_invoices").select("*"),
@@ -490,6 +555,9 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     (!isPaid(i) && i.dueDate && String(i.dueDate).slice(0, 10) < today);
   const collected = invoices.filter(isPaid).reduce((a, i) => a + fee(i), 0);
   const expensesPaid = expenses.filter((e) => e.status === "Paid").reduce((a, e) => a + (Number(e.amountZar) || 0), 0);
+  const overdueInvoiceIds = invoices
+    .filter(isOverdue)
+    .map((i) => `${i.id ?? i.invoiceNumber ?? i.clientName}@${String(i.dueDate || "").slice(0, 10)}`);
   const finance = {
     recorded: invoices.length + expenses.length + budgets.length + approvals.length > 0,
     invoicedAgencyFees: invoices.reduce((a, i) => a + fee(i), 0),
@@ -575,7 +643,8 @@ async function buildOverview(): Promise<ExecutiveOverview> {
 
   // Feed (events that need executive attention; repetitive items are grouped)
   const feed: FeedItem[] = [];
-  const push = (f: FeedItem) => feed.push(f);
+  const push = (f: Omit<FeedItem, "eventGroup" | "eventMembers">, group: string, members: (string | number | null | undefined)[]) =>
+    feed.push({ ...f, eventGroup: group, eventMembers: members.map((m) => String(m ?? "")).filter(Boolean) });
   for (const d of departments) {
     if (d.tasksOverdue)
       push({
@@ -591,7 +660,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         at: null,
         link: `/ceo/departments?dept=${encodeURIComponent(d.key)}`,
         departmentKey: d.key,
-      });
+      }, `overdue:${d.key}`, tasks.filter((t) => t.departmentKey === d.key && t.overdue).map((t) => `${t.id}@${t.dueDate}`));
   }
   for (const e of evidence.filter((x) => x.status === "Submitted for Review")) {
     push({
@@ -603,7 +672,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       at: e.submittedAt,
       link: `/ceo/delivery?evidence=${encodeURIComponent(e.id)}`,
       departmentKey: e.departmentKey,
-    });
+    }, `review:${e.id}`, [e.submittedAt]);
   }
   const recentRework = evidence.filter(
     (e) =>
@@ -622,7 +691,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         .join(" · "),
       at: recentRework[0].submittedAt,
       link: "/ceo/delivery?filter=rework",
-    });
+    }, "rework", recentRework.map((e) => `${e.id}@${e.status}`));
   const troubled = clients.filter((x) => x.onboarding?.delayed || x.onboarding?.escalation || x.onboarding?.blocker);
   // Escalations always surface individually; plain delays are grouped when there are many.
   const individually = troubled.length > 3 ? troubled.filter((c) => c.onboarding?.escalation) : troubled;
@@ -641,7 +710,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
           .join(" · "),
         at: null,
         link: "/ceo/clients?filter=at-risk",
-      });
+      }, "clients-delayed", delayed.map((c) => c.id));
   }
   for (const c of individually) {
     push({
@@ -654,7 +723,11 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         .join(" · "),
       at: null,
       link: `/ceo/clients?client=${encodeURIComponent(c.id)}`,
-    });
+    }, `client:${c.id}`, [
+      c.onboarding?.delayed ? `delayed@${c.onboarding?.targetDate ?? ""}` : null,
+      c.onboarding?.escalation ? `esc:${c.onboarding.escalation}` : null,
+      c.onboarding?.blocker ? `blk:${c.onboarding.blocker}` : null,
+    ]);
   }
   if (attendance.workday && jhbHour(now) >= 10 && attendance.noClockIn)
     push({
@@ -665,7 +738,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       detail: "Includes leave and staff who do not use the clock. Check with HR before acting.",
       at: null,
       link: "/ceo/team?filter=no-clock-in",
-    });
+    }, "attendance-noclock", [today]);
   if (missingClockOut.length)
     push({
       id: "attendance-open",
@@ -678,7 +751,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         .join(" · "),
       at: null,
       link: "/ceo/team?filter=missing-clock-out",
-    });
+    }, "attendance-open", missingClockOut.map((m) => `${m.id}@${m.since}`));
   if (leave.pending.length)
     push({
       id: "leave-pending",
@@ -688,7 +761,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       detail: leave.pending.slice(0, 3).map((l) => `${l.name} ${l.start}–${l.end}`).join(" · "),
       at: leave.pending[0].createdAt,
       link: "/ceo/team?tab=leave",
-    });
+    }, "leave-pending", leave.pending.map((l) => l.id));
   if (finance.overdueInvoices)
     push({
       id: "finance-overdue",
@@ -698,7 +771,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       detail: `R${finance.overdueAmount.toLocaleString("en-ZA")} in agency fees outstanding`,
       at: null,
       link: "/ceo/revenue",
-    });
+    }, "finance-overdue", overdueInvoiceIds);
   for (const a of finance.pendingApprovals)
     push({
       id: `approval-${a.id}`,
@@ -708,7 +781,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       detail: `${a.department} · R${a.amount.toLocaleString("en-ZA")} · requested by ${a.requestedBy}`,
       at: a.date,
       link: "/ceo/revenue",
-    });
+    }, `approval:${a.id}`, [a.id]);
   for (const f of followUps.values()) {
     if (f.status === "Resolved") continue;
     const ageDays = Math.floor((now.getTime() - new Date(f.createdAt).getTime()) / DAY);
@@ -721,7 +794,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         detail: `${f.assigneeName} · requested ${ageDays} day(s) ago`,
         at: f.createdAt,
         link: "/ceo?tab=follow-ups",
-      });
+      }, `fu-unacknowledged:${f.id}`, [f.id]);
   }
   const teamChanges = teamRes.data || [];
   const joined = teamChanges.filter((t: any) => t.action === "team_member_created");
@@ -739,7 +812,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         .join(" · "),
       at: teamChanges.length ? teamChanges[teamChanges.length - 1].created_at : null,
       link: "/ceo/team",
-    });
+    }, "people-changes", teamChanges.map((t: any) => t.id ?? t.created_at));
 
   const sevOrder = { critical: 0, warning: 1, info: 2 };
   feed.sort((a, b) => sevOrder[a.severity] - sevOrder[b.severity] || String(b.at || "").localeCompare(String(a.at || "")));
@@ -834,7 +907,10 @@ export async function handleExecutiveApi(request: Request): Promise<Response> {
     // GET /api/executive/overview — CEO / administrators only
     if (method === "GET" && pathname === "/api/executive/overview") {
       if (!canViewCompany) return jsonError(403, "Company-wide view is limited to the CEO.", HEADERS);
-      return json(await buildOverview());
+      const overview = await buildOverview();
+      // Alerts are kept for the CEO account only (administrators can view the overview but get no alerts).
+      if (auth.access.isCEO) await syncCeoAlerts(auth, overview.feed);
+      return json(overview);
     }
 
     // GET /api/executive/followups — CEO/admin: all; anyone else: those assigned to them

@@ -11,11 +11,17 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 /** Company-wide executive overview (CEO / administrators only). */
 export function useExecutiveOverview() {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: ["executive-overview"],
-    queryFn: () => api<ExecutiveOverview>("/api/executive/overview"),
+    queryFn: async () => {
+      const data = await api<ExecutiveOverview>("/api/executive/overview");
+      // Loading the overview records any new CEO alerts; refresh the notification list to show them.
+      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+      return data;
+    },
     staleTime: 60_000,
-    refetchInterval: 5 * 60_000,
+    refetchInterval: 2 * 60_000,
   });
 }
 

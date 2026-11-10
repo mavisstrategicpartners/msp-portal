@@ -290,21 +290,53 @@ export function useStaffNotifications() {
   });
 }
 
+type NotifCache = { notifications: StaffNotification[]; unreadCount: number };
+const NOTIF_KEY = ["staff", "notifications"] as const;
+
+function withRead(cache: NotifCache | undefined, pick: (n: StaffNotification) => boolean, read: boolean): NotifCache | undefined {
+  if (!cache) return cache;
+  const readAt = read ? new Date().toISOString() : null;
+  const notifications = cache.notifications.map((n) => (pick(n) ? { ...n, read, readAt } : n));
+  return { notifications, unreadCount: notifications.filter((n) => !n.read).length };
+}
+
+/**
+ * Marks one or more of the signed-in user's notifications read (or unread). The list and unread
+ * counts update immediately everywhere they are shown; the change is saved on the server and rolled
+ * back if saving fails.
+ */
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, read = true }: { id: string; read?: boolean }) => {
+    mutationFn: async ({ id, ids, read = true }: { id?: string; ids?: string[]; read?: boolean }) => {
       const headers = await getAuthHeaders();
-      const res = await fetch(`/api/staff/notifications/${id}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({ read }),
-      });
-      return await res.json();
+      const targets = ids ?? (id ? [id] : []);
+      for (const target of targets) {
+        const res = await fetch(`/api/staff/notifications/${encodeURIComponent(target)}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ read }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Could not update the notification.");
+        }
+      }
+      return { ok: true };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+    onMutate: async ({ id, ids, read = true }) => {
+      await queryClient.cancelQueries({ queryKey: NOTIF_KEY });
+      const previous = queryClient.getQueryData<NotifCache>(NOTIF_KEY);
+      const set = new Set(ids ?? (id ? [id] : []));
+      queryClient.setQueryData<NotifCache>(NOTIF_KEY, (c) => withRead(c, (n) => set.has(n.id), read));
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(NOTIF_KEY, ctx.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIF_KEY });
     },
   });
 }
@@ -319,10 +351,21 @@ export function useMarkAllNotificationsRead() {
         method: "POST",
         headers,
       });
-      return await res.json();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Could not mark notifications as read.");
+      return body;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: NOTIF_KEY });
+      const previous = queryClient.getQueryData<NotifCache>(NOTIF_KEY);
+      queryClient.setQueryData<NotifCache>(NOTIF_KEY, (c) => withRead(c, (n) => !n.read, true));
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(NOTIF_KEY, ctx.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIF_KEY });
     },
   });
 }

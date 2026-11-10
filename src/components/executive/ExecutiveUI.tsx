@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
+  Check,
   CheckCircle2,
   CircleDot,
   Clock,
@@ -40,6 +41,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCreateFollowUp, useExecutiveOverview, useUpdateFollowUp } from "@/lib/executive.service";
+import { useMarkNotificationRead, useStaffNotifications } from "@/lib/staff-tasks.service";
+import type { StaffNotification } from "@/lib/staff-tasks.types";
 import type {
   DepartmentScorecard,
   ExecEvidence,
@@ -236,29 +239,85 @@ const SEV_ICON = {
   info: <Info className="h-4 w-4 text-sky-500 shrink-0" />,
 };
 
+/**
+ * Read state of the CEO's alerts. Each feed item is backed by a stored notification
+ * (type "executive_alert", matched by eventGroup); an item is unread while any of its
+ * alert notifications is unread.
+ */
+export function useAlertState() {
+  const { data } = useStaffNotifications();
+  const mark = useMarkNotificationRead();
+  const unreadByGroup = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const n of data?.notifications ?? []) {
+      if (n.type !== "executive_alert" || n.read || !n.eventGroup) continue;
+      m.set(n.eventGroup, [...(m.get(n.eventGroup) ?? []), n.id]);
+    }
+    return m;
+  }, [data]);
+  return {
+    isUnread: (f: FeedItem) => unreadByGroup.has(f.eventGroup),
+    markRead: (f: FeedItem) => {
+      const ids = unreadByGroup.get(f.eventGroup);
+      if (ids?.length) mark.mutate({ ids, read: true });
+    },
+  };
+}
+
+export function UnreadDot({ className = "" }: { className?: string }) {
+  return <span aria-label="Unread" className={`inline-block h-2 w-2 shrink-0 rounded-full bg-primary ${className}`} />;
+}
+
+export function splitLink(link: string) {
+  const [path, query] = link.split("?");
+  return { to: path, search: Object.fromEntries(new URLSearchParams(query || "")) };
+}
+
 export function FeedList({ items, limit, empty }: { items: FeedItem[]; limit?: number; empty?: string }) {
   const [showAll, setShowAll] = useState(false);
+  const alerts = useAlertState();
   const shown = limit && !showAll ? items.slice(0, limit) : items;
   if (!items.length) return <Empty>{empty || "Nothing needs your attention right now."}</Empty>;
   return (
     <div className="space-y-1.5">
       {shown.map((f) => {
-        const [path, query] = f.link.split("?");
-        const search = Object.fromEntries(new URLSearchParams(query || ""));
+        const { to, search } = splitLink(f.link);
+        const unread = alerts.isUnread(f);
         return (
           <Link
             key={f.id}
-            to={path as any}
+            to={to as any}
             search={search as any}
-            className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 hover:border-primary/40 hover:bg-muted/30 transition"
+            onClick={() => alerts.markRead(f)}
+            className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 hover:border-primary/40 hover:bg-muted/30 transition ${
+              unread ? "border-primary/40 bg-primary/5" : "border-border bg-card"
+            }`}
           >
             {SEV_ICON[f.severity]}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-foreground leading-snug">{f.title}</p>
+              <p className={`text-sm leading-snug text-foreground ${unread ? "font-semibold" : "font-medium"}`}>
+                {unread && <UnreadDot className="mr-1.5 align-middle" />}
+                {f.title}
+              </p>
               {f.detail && <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{f.detail}</p>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {f.at && <span className="text-[10px] text-muted-foreground">{relTime(f.at)}</span>}
+              {unread && (
+                <button
+                  type="button"
+                  title="Mark as read"
+                  aria-label="Mark as read"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alerts.markRead(f);
+                  }}
+                  className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+              )}
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
           </Link>
@@ -272,6 +331,17 @@ export function FeedList({ items, limit, empty }: { items: FeedItem[]; limit?: n
     </div>
   );
 }
+
+/** Where a notification should take the CEO when opened. */
+export function notificationLink(n: StaffNotification): string | null {
+  if (n.link) return n.link;
+  if (n.relatedEvidenceId) return `/ceo/evidence?evidence=${encodeURIComponent(n.relatedEvidenceId)}`;
+  if (n.type === "executive_follow_up") return "/ceo?tab=follow-ups";
+  if (n.relatedTaskId) return "/ceo/delivery";
+  return null;
+}
+
+export { SEV_ICON };
 
 // ── Departments ──────────────────────────────────────────────────────────────
 export function pct(v: number | null) {
