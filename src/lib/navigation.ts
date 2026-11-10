@@ -14,6 +14,7 @@
  * - Shared pages (e.g. /services, /me/*, /admin/sales-playbook) do not belong
  *   to a workspace, so visiting them keeps the user's own workspace sidebar.
  */
+import { DEDICATED_WORKSPACES, RECORD_TYPES } from "@/lib/department-modules";
 import {
   AlertTriangle,
   Activity,
@@ -175,6 +176,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/ceo/departments", label: "Department Performance", icon: Building2 },
           { to: "/ceo/structure", label: "Department Structure", icon: Network },
+          { to: "/work", label: "Department Modules", icon: Layers },
         ],
       },
       {
@@ -265,7 +267,9 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
       ctx.systemRole === "operations" ||
       ctx.systemRole === "general_manager" ||
       ctx.isAdmin ||
-      Boolean(ctx.isCEO),
+      Boolean(ctx.isCEO) ||
+      // The Onboarding manager runs client onboarding, which lives in the Operations workspace.
+      (ctx.leadDepartments ?? []).includes("onboarding"),
     groups: [
       {
         id: "ops-delivery",
@@ -317,6 +321,33 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/department/approvals", label: "Approvals", icon: CheckSquare },
           { to: "/department/review", label: "Department Review", icon: ClipboardList },
           { to: "/department/blockers", label: "Blockers & Dependencies", icon: GitBranch },
+        ],
+      },
+      {
+        id: "dept-tools",
+        label: "Department Tools",
+        // Each manager sees their own department's modules (IT support, campaigns, briefs, …).
+        items: [
+          ...RECORD_TYPES.map((t) => ({
+            to: `/work/${t.slug}`,
+            label: t.label,
+            icon: ClipboardList,
+            visible: (ctx: NavContext) => (ctx.leadDepartments ?? []).includes(t.department),
+          })),
+          ...Object.entries(DEDICATED_WORKSPACES).flatMap(([dept, links]) =>
+            links.map((l) => ({
+              to: l.to,
+              label: l.label,
+              icon: Layers,
+              visible: (ctx: NavContext) => (ctx.leadDepartments ?? []).includes(dept),
+            })),
+          ),
+          {
+            to: "/work",
+            label: "All department modules",
+            icon: Layers,
+            visible: (ctx: NavContext) => ctx.isAdmin || ctx.systemRole === "general_manager",
+          },
         ],
       },
       {
@@ -519,6 +550,9 @@ export const PERSONAL_GROUP: NavGroup = {
   items: [
     { to: "/me/leave", label: "My Leave Requests", icon: CalendarDays },
     { to: "/me/declaration", label: "My HR Documents", icon: FileSignature },
+    // Any employee can raise work with another department (IT support, design briefs, bugs,
+    // website changes, CRM work, reports, client complaints) and follow it here.
+    { to: "/requests", label: "Requests to Departments", icon: Wrench },
   ],
 };
 

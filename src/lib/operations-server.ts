@@ -35,8 +35,8 @@ async function verifyAuth(request: Request): Promise<AuthContext | null> {
   const user = await authenticateApiRequest(request);
   if (!user) return null;
   const a = user.access;
-  // Client records are managed by Operations, the GM and administrators only.
-  const canManageClients = a.isAdmin || a.isOperations || a.isGM;
+  // Client records are managed by Operations, the Onboarding manager, the GM and administrators.
+  const canManageClients = a.isAdmin || a.isOperations || a.isGM || (user.leadDepartments ?? []).includes("onboarding");
   return {
     userId: user.userId,
     email: user.email,

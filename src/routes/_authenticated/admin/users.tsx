@@ -32,6 +32,7 @@ import {
   UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Trash2, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DEPARTMENTS as ORG_DEPTS } from "@/lib/departments";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, updateTeamMember, deleteTeamMember, resetStaffPassword } from "@/lib/admin.functions";
 
@@ -54,6 +55,10 @@ interface StaffProfile {
   created_at: string;
 }
 
+/** Departments a new person can be placed in (the organisation structure). */
+const ORG_DEPARTMENTS = ORG_DEPTS;
+
+/** Legacy profile department labels (used by the edit dialog's profile field). */
 const DEPARTMENTS = [
   "IT Department",
   "Marketing Team",
@@ -174,6 +179,8 @@ function ManageUsersPage() {
   };
 
   // ── Add user ──────────────────────────────────────────────────────────────
+  const [appointManager, setAppointManager] = useState(false);
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     const cleanEmail = form.email.trim().toLowerCase();
@@ -188,7 +195,8 @@ function ManageUsersPage() {
           email: cleanEmail,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
           jobTitle: form.jobTitle.trim() || undefined,
-          department: form.department,
+          departmentKey: form.department,
+          appointManager: form.accessLevel === "manager" && appointManager,
           accessLevel: form.accessLevel as any,
           role: "user",
         },
@@ -201,6 +209,7 @@ function ManageUsersPage() {
       });
       setAddOpen(false);
       setForm({ firstName: "", lastName: "", email: "", jobTitle: "", department: "", accessLevel: "staff" });
+      setAppointManager(false);
       await loadStaff();
     } catch (err: any) {
       toast.error("Failed to create user", { description: err?.message ?? String(err) });
@@ -530,8 +539,8 @@ function ManageUsersPage() {
                   <SelectTrigger id="department">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  <SelectContent className="max-h-72">
+                    {ORG_DEPARTMENTS.map((d) => <SelectItem key={d.key} value={d.key}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -547,6 +556,16 @@ function ManageUsersPage() {
                 </Select>
               </div>
             </div>
+
+            {form.accessLevel === "manager" && form.department && (
+              <label className="flex items-start gap-2 rounded-md border border-border p-2.5 text-xs text-foreground">
+                <input type="checkbox" className="mt-0.5" checked={appointManager} onChange={(e) => setAppointManager(e.target.checked)} />
+                <span>
+                  Appoint as manager of {ORG_DEPARTMENTS.find((d) => d.key === form.department)?.name}
+                  <span className="block text-muted-foreground">Only if the department has no manager yet. Managers can also be changed on Department Structure.</span>
+                </span>
+              </label>
+            )}
 
             <p className="text-xs text-muted-foreground rounded-md border border-border bg-muted/40 p-2.5">
               A unique one-time password is generated when you create the account and shown to you once.

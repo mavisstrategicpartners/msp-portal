@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/select";
 import { taskDepartmentKey, useDepartments } from "@/lib/department-scope";
 import { useStaffTasks } from "@/lib/staff-tasks.service";
+import { useQuery } from "@tanstack/react-query";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
+import { DEDICATED_WORKSPACES, computeKpis, typesFor, type DeptRecord } from "@/lib/department-modules";
 import type { StaffTask } from "@/lib/staff-tasks.types";
 import { useProfile } from "@/lib/use-profile";
 
@@ -256,6 +259,8 @@ function DepartmentView({
         />
       </section>
 
+      <DepartmentTools deptKey={dept.key} />
+
       <div className="grid gap-4 lg:grid-cols-12">
         <Card
           title="Needs action"
@@ -388,3 +393,47 @@ function DepartmentView({
   );
 }
 
+/** The department's own modules (support requests, campaigns, briefs…) and dedicated workspaces. */
+function DepartmentTools({ deptKey }: { deptKey: string }) {
+  const types = typesFor(deptKey);
+  const dedicated = DEDICATED_WORKSPACES[deptKey] ?? [];
+  const q = useQuery({
+    queryKey: ["staff", "records", deptKey],
+    enabled: types.length > 0,
+    queryFn: async () => {
+      const res = await fetch(`/api/staff/records?dept=${deptKey}`, { headers: await getAuthHeaders() });
+      if (!res.ok) return { records: [] as DeptRecord[] };
+      return (await res.json()) as { records: DeptRecord[] };
+    },
+  });
+  if (!types.length && !dedicated.length) return null;
+  return (
+    <section aria-label="Department tools" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {types.map((t) => {
+        const recs = (q.data?.records ?? []).filter((r) => r.record_type === t.key);
+        const kpis = computeKpis(t, recs).slice(0, 3);
+        return (
+          <Link key={t.key} to={`/work/${t.slug}` as any} className="block rounded-xl border border-border bg-card p-4 transition hover:border-primary/40">
+            <p className="text-sm font-semibold text-foreground">{t.label}</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {kpis.map((k) => (
+                <div key={k.label} className="min-w-0">
+                  <p className={`text-base font-semibold tabular-nums ${k.alert ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{k.value}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{k.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] font-medium text-primary">Open {t.label.toLowerCase()} →</p>
+          </Link>
+        );
+      })}
+      {dedicated.map((w) => (
+        <Link key={w.to} to={w.to as any} className="block rounded-xl border border-border bg-card p-4 transition hover:border-primary/40">
+          <p className="text-sm font-semibold text-foreground">{w.label}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">This department's dedicated workspace.</p>
+          <p className="mt-2 text-[11px] font-medium text-primary">Open →</p>
+        </Link>
+      ))}
+    </section>
+  );
+}

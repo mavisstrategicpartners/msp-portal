@@ -20,6 +20,7 @@ import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
@@ -86,6 +87,8 @@ import { Route as AuthenticatedOperationsOnboardingRouteImport } from './routes/
 import { Route as AuthenticatedOperationsRecoveryRouteImport } from './routes/_authenticated/operations/recovery'
 import { Route as AuthenticatedOperationsVerificationsRouteImport } from './routes/_authenticated/operations/verifications'
 import { Route as AuthenticatedOperationsWorkflowsRouteImport } from './routes/_authenticated/operations/workflows'
+import { Route as AuthenticatedWorkIndexRouteImport } from './routes/_authenticated/work/index'
+import { Route as AuthenticatedWorkSlugRouteImport } from './routes/_authenticated/work/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -140,6 +143,11 @@ const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRequestsRoute = AuthenticatedRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
@@ -513,6 +521,16 @@ const AuthenticatedOperationsWorkflowsRoute =
     path: '/operations/workflows',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWorkIndexRoute = AuthenticatedWorkIndexRouteImport.update({
+  id: '/work/',
+  path: '/work/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWorkSlugRoute = AuthenticatedWorkSlugRouteImport.update({
+  id: '/work/$slug',
+  path: '/work/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -525,6 +543,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/requests': typeof AuthenticatedRequestsRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
@@ -585,12 +604,14 @@ export interface FileRoutesByFullPath {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/ceo/': typeof AuthenticatedCeoIndexRoute
   '/department/': typeof AuthenticatedDepartmentIndexRoute
   '/gm/': typeof AuthenticatedGmIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/hr/': typeof AuthenticatedHrIndexRoute
   '/operations/': typeof AuthenticatedOperationsIndexRoute
+  '/work/': typeof AuthenticatedWorkIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -603,6 +624,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/requests': typeof AuthenticatedRequestsRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/services': typeof AuthenticatedServicesRoute
@@ -663,12 +685,14 @@ export interface FileRoutesByTo {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/ceo': typeof AuthenticatedCeoIndexRoute
   '/department': typeof AuthenticatedDepartmentIndexRoute
   '/gm': typeof AuthenticatedGmIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/hr': typeof AuthenticatedHrIndexRoute
   '/operations': typeof AuthenticatedOperationsIndexRoute
+  '/work': typeof AuthenticatedWorkIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -683,6 +707,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/services': typeof AuthenticatedServicesRoute
@@ -743,12 +768,14 @@ export interface FileRoutesById {
   '/_authenticated/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/_authenticated/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/_authenticated/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/_authenticated/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
   '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
   '/_authenticated/gm/': typeof AuthenticatedGmIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/hr/': typeof AuthenticatedHrIndexRoute
   '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
+  '/_authenticated/work/': typeof AuthenticatedWorkIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -763,6 +790,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/pricing'
     | '/reports'
+    | '/requests'
     | '/roadmap'
     | '/sales'
     | '/services'
@@ -823,12 +851,14 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
+    | '/work/$slug'
     | '/ceo/'
     | '/department/'
     | '/gm/'
     | '/host/'
     | '/hr/'
     | '/operations/'
+    | '/work/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -841,6 +871,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/pricing'
     | '/reports'
+    | '/requests'
     | '/roadmap'
     | '/sales'
     | '/services'
@@ -901,12 +932,14 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
+    | '/work/$slug'
     | '/ceo'
     | '/department'
     | '/gm'
     | '/host'
     | '/hr'
     | '/operations'
+    | '/work'
   id:
     | '__root__'
     | '/'
@@ -920,6 +953,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/pricing'
     | '/_authenticated/reports'
+    | '/_authenticated/requests'
     | '/_authenticated/roadmap'
     | '/_authenticated/sales'
     | '/_authenticated/services'
@@ -980,12 +1014,14 @@ export interface FileRouteTypes {
     | '/_authenticated/operations/recovery'
     | '/_authenticated/operations/verifications'
     | '/_authenticated/operations/workflows'
+    | '/_authenticated/work/$slug'
     | '/_authenticated/ceo/'
     | '/_authenticated/department/'
     | '/_authenticated/gm/'
     | '/_authenticated/host/'
     | '/_authenticated/hr/'
     | '/_authenticated/operations/'
+    | '/_authenticated/work/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1073,6 +1109,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/requests': {
+      id: '/_authenticated/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof AuthenticatedRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/roadmap': {
@@ -1537,6 +1580,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperationsWorkflowsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/work/': {
+      id: '/_authenticated/work/'
+      path: '/work'
+      fullPath: '/work/'
+      preLoaderRoute: typeof AuthenticatedWorkIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/work/$slug': {
+      id: '/_authenticated/work/$slug'
+      path: '/work/$slug'
+      fullPath: '/work/$slug'
+      preLoaderRoute: typeof AuthenticatedWorkSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -1547,6 +1604,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
@@ -1607,12 +1665,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperationsRecoveryRoute: typeof AuthenticatedOperationsRecoveryRoute
   AuthenticatedOperationsVerificationsRoute: typeof AuthenticatedOperationsVerificationsRoute
   AuthenticatedOperationsWorkflowsRoute: typeof AuthenticatedOperationsWorkflowsRoute
+  AuthenticatedWorkSlugRoute: typeof AuthenticatedWorkSlugRoute
   AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
   AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
   AuthenticatedGmIndexRoute: typeof AuthenticatedGmIndexRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
   AuthenticatedHrIndexRoute: typeof AuthenticatedHrIndexRoute
   AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
+  AuthenticatedWorkIndexRoute: typeof AuthenticatedWorkIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1622,6 +1682,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedServicesRoute: AuthenticatedServicesRoute,
@@ -1687,12 +1748,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperationsVerificationsRoute:
     AuthenticatedOperationsVerificationsRoute,
   AuthenticatedOperationsWorkflowsRoute: AuthenticatedOperationsWorkflowsRoute,
+  AuthenticatedWorkSlugRoute: AuthenticatedWorkSlugRoute,
   AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
   AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
   AuthenticatedGmIndexRoute: AuthenticatedGmIndexRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
   AuthenticatedHrIndexRoute: AuthenticatedHrIndexRoute,
   AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
+  AuthenticatedWorkIndexRoute: AuthenticatedWorkIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

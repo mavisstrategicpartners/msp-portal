@@ -95,7 +95,9 @@ export function DepartmentTasksPage() {
   const [createTitle, setCreateTitle] = useState("");
   const [createTaskType, setCreateTaskType] = useState<TaskType>("Client Work");
   const [createClientId, setCreateClientId] = useState("");
-  const [createAssigneeId, setCreateAssigneeId] = useState("");
+  // One task is created per selected employee (each gets their own task, notification and submission).
+  const [createAssigneeIds, setCreateAssigneeIds] = useState<string[]>([]);
+  const [createDescription, setCreateDescription] = useState("");
   const [createDueDate, setCreateDueDate] = useState("");
   const [createPriority, setCreatePriority] = useState<DepartmentTask["priority"]>("High");
   const [createEvidenceReq, setCreateEvidenceReq] = useState("");
@@ -225,8 +227,8 @@ export function DepartmentTasksPage() {
       toast.error("Choose the department responsible for this work.");
       return;
     }
-    if (!createAssigneeId) {
-      toast.error("Choose the employee responsible for this work.");
+    if (!createAssigneeIds.length) {
+      toast.error("Choose at least one employee responsible for this work.");
       return;
     }
     if (isClientWork && !createClientId) {
@@ -253,21 +255,35 @@ export function DepartmentTasksPage() {
         setUploadingAttachments(false);
       }
 
-      const updated = await mutateCreateDepartmentTask(
-        {
-          title: createTitle.trim(),
-          department: chosenDepartment,
-          taskType: createTaskType,
-          clientId: clientObj?.id || null,
-          clientName: clientObj?.name || undefined,
-          assignedToId: createAssigneeId || undefined,
-          dueDate: createDueDate || new Date().toISOString().split("T")[0],
-          priority: createPriority,
-          evidenceRequired: createEvidenceReq || "Verified deliverables & completion report",
-          attachments: uploadedAttachments,
-        },
-        managerName
-      );
+      const pol = assignFor(chosenDepartment);
+      let updated: any = null;
+      const failedFor: string[] = [];
+      for (const assigneeId of createAssigneeIds) {
+        const person = pol?.assignees.find((m) => m.id === assigneeId);
+        try {
+          updated = await mutateCreateDepartmentTask(
+            {
+              title: createTitle.trim(),
+              description: createDescription.trim() || undefined,
+              department: chosenDepartment,
+              taskType: createTaskType,
+              clientId: clientObj?.id || null,
+              clientName: clientObj?.name || undefined,
+              assignedToId: assigneeId,
+              assignedToName: person?.name,
+              dueDate: createDueDate || new Date().toISOString().split("T")[0],
+              priority: createPriority,
+              evidenceRequired: createEvidenceReq || "Verified deliverables & completion report",
+              attachments: uploadedAttachments,
+            } as any,
+            managerName
+          );
+        } catch (e: any) {
+          failedFor.push(`${person?.name ?? "an employee"}: ${e?.message ?? "failed"}`);
+        }
+      }
+      if (!updated) throw new Error(failedFor.join("; ") || "No task was created.");
+      if (failedFor.length) toast.warning(`Not created for ${failedFor.length}`, { description: failedFor.join("; ") });
       setTasks(updated);
       queryClient.invalidateQueries({ queryKey: ["staff", "tasks"] });
       queryClient.invalidateQueries({ queryKey: ["staff", "notifications"] });
@@ -275,17 +291,16 @@ export function DepartmentTasksPage() {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("msp:tasks_updated"));
       }
-      toast.success("Task created and assigned successfully.", {
-        description: createAssigneeId
-          ? `Assigned to ${assignFor(createDepartment || assignableDepartments[0]?.name)?.assignees.find((m) => m.id === createAssigneeId)?.name ?? "the selected employee"}`
-          : "Created as Unassigned deliverable",
+      toast.success(createAssigneeIds.length > 1 ? `${createAssigneeIds.length - failedFor.length} tasks created and assigned.` : "Task created and assigned.", {
+        description: "Each employee has been notified and sees the task on their dashboard.",
       });
       setCreateTaskModalOpen(false);
       setCreateTitle("");
       setCreateDepartment("");
       setCreateTaskType("Client Work");
       setCreateClientId("");
-      setCreateAssigneeId("");
+      setCreateAssigneeIds([]);
+      setCreateDescription("");
       setCreateDueDate("");
       setCreateEvidenceReq("");
       setAttachmentFiles([]);
@@ -959,10 +974,21 @@ export function DepartmentTasksPage() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Deliverable Title</Label>
               <Input
-                placeholder="e.g. Meta Performance Ads Campaign Launch"
+                placeholder="e.g. Prepare the client's monthly report"
                 value={createTitle}
                 onChange={(e) => setCreateTitle(e.target.value)}
                 className="h-9 text-xs bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Description</Label>
+              <textarea
+                placeholder="What needs to be done, context and instructions"
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                rows={3}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground"
               />
             </div>
 
@@ -980,7 +1006,7 @@ export function DepartmentTasksPage() {
                   value={createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "")}
                   onValueChange={(v) => {
                     setCreateDepartment(v);
-                    setCreateAssigneeId("");
+                    setCreateAssigneeIds([]);
                   }}
                 >
                   <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
@@ -1035,26 +1061,42 @@ export function DepartmentTasksPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Responsible employee</Label>
+              <Label className="text-xs font-semibold">Responsible employee(s)</Label>
               {(() => {
                 const chosen = createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "");
                 const pol = assignFor(chosen);
                 if (!chosen) return <p className="text-[11px] text-muted-foreground">Choose the department first.</p>;
+                const people = pol?.assignees ?? [];
+                if (!people.length) return <p className="text-[11px] text-muted-foreground">{pol?.reason || "No employees available."}</p>;
+                const all = people.every((m) => createAssigneeIds.includes(m.id));
                 return (
                   <>
-                    <Select value={createAssigneeId} onValueChange={setCreateAssigneeId}>
-                      <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
-                        <SelectValue placeholder={pol?.assignees.length ? `Choose a ${chosen} employee` : "No employees available"} />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-72">
-                        {(pol?.assignees ?? []).map((m) => (
-                          <SelectItem key={m.id} value={m.id}>
-                            {m.name}{m.title ? ` — ${m.title}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {pol?.reason && <p className="text-[11px] text-muted-foreground">{pol.reason}</p>}
+                    <div className="max-h-44 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                      {people.length > 1 && (
+                        <label className="flex items-center gap-2 border-b border-border pb-1.5 text-[11px] font-medium text-muted-foreground">
+                          <input type="checkbox" checked={all} onChange={() => setCreateAssigneeIds(all ? [] : people.map((m) => m.id))} />
+                          Everyone in {chosen} ({people.length})
+                        </label>
+                      )}
+                      {people.map((m) => (
+                        <label key={m.id} className="flex items-center gap-2 text-xs text-foreground">
+                          <input
+                            type="checkbox"
+                            checked={createAssigneeIds.includes(m.id)}
+                            onChange={(e) => setCreateAssigneeIds((ids) => (e.target.checked ? [...ids, m.id] : ids.filter((x) => x !== m.id)))}
+                          />
+                          <span className="truncate">
+                            {m.name}
+                            {m.title ? <span className="text-muted-foreground"> — {m.title}</span> : null}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {createAssigneeIds.length > 1
+                        ? `${createAssigneeIds.length} people selected: each gets their own copy of the task to complete and submit.`
+                        : pol?.reason}
+                    </p>
                   </>
                 );
               })()}

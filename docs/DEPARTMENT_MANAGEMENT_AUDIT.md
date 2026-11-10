@@ -62,3 +62,27 @@ Every active account was run through the live role and landing logic, and the da
 Verified with an automated check across all 16 departments (215 checks): each manager sees and assigns only their own department's work and employees, cannot review or view another department's tasks, submissions or scorecards, lands on the right dashboard, and only their own manager is notified of submissions; the GM and CEO see every department.
 
 Needs a decision: the new account **Sipho Kupiso** (manager tier, IT Department, no job title) is not placed in a department or appointed — confirm whether he is the IT manager.
+
+## 7. Department-specific management tools (10 November 2026, third pass)
+
+| Department | Tools |
+|---|---|
+| HR, Finance & Administration, Sales, Operations | Existing dedicated workspaces (reused) |
+| Onboarding | Existing client onboarding module in Operations (now open to the Onboarding manager) |
+| IT | Support requests, incidents, assets & infrastructure, maintenance schedule |
+| Marketing | Campaigns, content calendar |
+| SEO | SEO projects, keyword tracking, ranking reports |
+| Creative | Design briefs (brief → design → review → revisions → approved) |
+| Media Buying | Ad campaigns by platform with client ad budget and spend (client money, labelled) |
+| Websites & Software | Development projects, bugs, releases, change requests |
+| Client Success | Client relationships, complaints & escalations, satisfaction checks |
+| CRM & AI Automation | Automation workflows, integrations, CRM requests |
+| Reporting | Report schedule, data issues |
+| Strategy | Strategic initiatives |
+| MSP Academy | Training programmes, learners, assessments |
+
+Definitions: `src/lib/department-modules.ts`; storage `public.department_records` (server-only); API `/api/staff/records` (`src/lib/department-records.server.ts`).
+Requests to other departments (IT support, design briefs, bugs, website changes, CRM work, reports, client complaints) are raised from **Requests to Departments** and go to that department's manager (or the GM when it has none); the requester is notified as the stage changes.
+Tasks can be assigned to several employees at once (one task each). Add Staff uses the 16 departments, places the person, and can appoint them as manager.
+Temporary manager appointments were recorded for the 12 departments without a manager (`temp.<department>.manager@…`); an administrator creates the logins with **Provision pending accounts**.
+Tested: 448 workflow checks across 16 departments and 27 record types; 215 separation checks; sidebar check per department.

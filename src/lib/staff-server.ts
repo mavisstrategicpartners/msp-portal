@@ -15,6 +15,7 @@ import {
   primaryDepartment,
   type OrgStructure,
 } from "@/lib/org-structure.server";
+import { handleRecordsApi } from "@/lib/department-records.server";
 import {
   cancelAppointment,
   createAppointment,
@@ -209,7 +210,7 @@ async function signEvidenceFiles(files: EvidenceSubmission["uploadedFiles"]) {
 /** Who reviews a task's submissions: its department's manager, or — when the department has no
  *  manager (or the task has no department) — the General Manager. */
 async function departmentManagersFor(dept?: string | null): Promise<string[]> {
-  const key = taskDeptKey(dept);
+  const key = DEPARTMENTS.some((d) => d.key === dept) ? (dept as string) : taskDeptKey(dept);
   const org = await loadOrgStructure();
   const lead = key ? org.leads.get(key) : undefined;
   if (lead && org.people.get(lead)?.active) return [lead];
@@ -373,6 +374,21 @@ export async function handleStaffApi(request: Request): Promise<Response> {
   }
 
   try {
+    // Department module records (support requests, campaigns, briefs, …)
+    if (pathname.startsWith("/api/staff/records")) {
+      await initLedgerFromSupabase();
+      const res = await handleRecordsApi(
+        request,
+        url,
+        auth,
+        async (uid, title, message) => {
+          await createNotification(uid, title, message, "task_assigned");
+        },
+        async (key) => departmentManagersFor(key),
+      );
+      if (res) return res;
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // 1. TASKS ENDPOINTS (/api/staff/tasks)
     // ══════════════════════════════════════════════════════════════════════════

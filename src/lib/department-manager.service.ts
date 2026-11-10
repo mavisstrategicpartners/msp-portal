@@ -412,12 +412,13 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
     body: JSON.stringify({
       title: taskData.title?.trim() || "Untitled Deliverable",
       description:
+        (taskData as any).description ||
         taskData.evidenceRequired ||
         (isInternalTask
           ? `Internal task — ${taskData.taskType || "General"}`
           : `Deliverable for ${resolvedClientName}`),
-      assignedToId: targetMember?.id || "",
-      assignedToName: targetMember?.name || "Unassigned",
+      assignedToId: targetMember?.id || taskData.assignedToId || "",
+      assignedToName: targetMember?.name || (taskData as any).assignedToName || "Unassigned",
       assignedToEmail: targetMember?.email || "",
       assignedToRole: targetMember?.role || "Specialist",
       department: taskData.department,
@@ -430,7 +431,7 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
       evidenceRequired: taskData.evidenceRequired || "Verification report",
       taskType: taskData.taskType || (isInternalTask ? "Internal Operations" : "Client Work"),
       attachments: taskData.attachments || [],
-      status: targetMember ? "In Progress" : "Not Started",
+      status: targetMember || taskData.assignedToId ? "In Progress" : "Not Started",
       estimatedHours: taskData.estimatedHours || 8,
     }),
   });

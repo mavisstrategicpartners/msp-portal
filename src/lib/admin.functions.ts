@@ -39,6 +39,10 @@ const createTeamMemberSchema = z.object({
   fullName: z.string().min(2),
   jobTitle: z.string().optional(),
   department: z.string().optional(),
+  /** One of the 16 departments (src/lib/departments.ts): the person is placed in it. */
+  departmentKey: z.string().optional(),
+  /** Appoint them as that department's manager (only if it has none). */
+  appointManager: z.boolean().optional(),
   accessLevel: z.enum(["staff", "intern", "manager", "hr", "superadmin"]).default("staff"),
   role: z.enum(["admin", "user"]).default("user"),
 });
@@ -58,6 +62,12 @@ export const createTeamMember = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { DEPARTMENTS } = await import("@/lib/departments");
+    if (data.departmentKey && !DEPARTMENTS.some((d) => d.key === data.departmentKey)) throw new Error("Choose a valid department.");
+    if (data.appointManager && data.departmentKey) {
+      const { data: lead } = await (supabaseAdmin as any).from("department_leads").select("user_id").eq("department_key", data.departmentKey).maybeSingle();
+      if (lead) throw new Error("That department already has a manager. Change it on Department Structure.");
+    }
 
     // A unique one-time password, generated here and shown once to the
     // administrator. The employee must replace it at first sign-in.
@@ -80,7 +90,11 @@ export const createTeamMember = createServerFn({ method: "POST" })
       email: data.email,
       full_name: data.fullName,
       job_title: data.jobTitle || null,
-      department: data.accessLevel === "hr" ? "Human Resources" : normalizeDepartment(data.department),
+      department: data.departmentKey
+        ? (await import("@/lib/manager-provisioning.server")).PROFILE_DEPARTMENT[data.departmentKey] ?? null
+        : data.accessLevel === "hr"
+          ? "Human Resources"
+          : normalizeDepartment(data.department),
       role_tier: data.accessLevel === "manager" ? "manager" : data.accessLevel === "superadmin" ? "root_admin" : data.accessLevel === "intern" ? "intern" : "staff",
       is_active: true,
       onboarding_completed: false,
@@ -97,11 +111,32 @@ export const createTeamMember = createServerFn({ method: "POST" })
       .upsert({ user_id: user.id, role: data.accessLevel === "superadmin" ? "admin" : data.role }, { onConflict: "user_id,role" });
     if (roleInsertError) throw roleInsertError;
 
+    // Place them in their department (and appoint them as its manager when asked).
+    if (data.departmentKey) {
+      const now = new Date().toISOString();
+      await (supabaseAdmin as any).from("department_members").insert({
+        user_id: user.id,
+        department_key: data.departmentKey,
+        is_primary: true,
+        source: "manual",
+        assigned_by: context.userId,
+        assigned_at: now,
+      });
+      if (data.appointManager)
+        await (supabaseAdmin as any).from("department_leads").upsert({
+          department_key: data.departmentKey,
+          user_id: user.id,
+          assigned_by: context.userId,
+          assigned_at: now,
+          note: "Appointed when the account was created",
+        });
+    }
+
     await (supabaseAdmin as any).from("audit_logs").insert({
       actor_id: context.userId,
       action: "team_member_created",
       target_id: user.id,
-      details: { email: data.email, accessLevel: data.accessLevel, role: data.role, department: data.department || null },
+      details: { email: data.email, accessLevel: data.accessLevel, role: data.role, department: data.departmentKey || data.department || null, appointedManager: Boolean(data.appointManager) },
     });
 
     // Returned once for the administrator to hand over; never stored or logged.

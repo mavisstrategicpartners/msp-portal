@@ -18,6 +18,8 @@ export type ApiUser = {
   department: string;
   roleTier: string;
   access: AccessFlags;
+  /** Departments this person is the appointed manager of. */
+  leadDepartments: string[];
 };
 
 export async function authenticateApiRequest(request: Request): Promise<ApiUser | null> {
@@ -47,12 +49,8 @@ export async function authenticateApiRequest(request: Request): Promise<ApiUser 
     if (profile && profile.is_active === false) return null; // deactivated accounts lose API access
 
     // Department-management roles require the matching manager appointment (see computeAccess).
-    const access = computeAccess(
-      profile as Profile | null,
-      user.email,
-      roles ?? [],
-      ((leads as any[]) ?? []).map((l) => l.department_key),
-    );
+    const leadDepartments: string[] = ((leads as any[]) ?? []).map((l) => l.department_key);
+    const access = computeAccess(profile as Profile | null, user.email, roles ?? [], leadDepartments);
     return {
       userId: user.id,
       email: user.email || "",
@@ -65,6 +63,7 @@ export async function authenticateApiRequest(request: Request): Promise<ApiUser 
       department: profile?.department || "General",
       roleTier: access.roleTier,
       access,
+      leadDepartments,
     };
   } catch (err) {
     console.warn("[api-auth] token verification failed:", err);

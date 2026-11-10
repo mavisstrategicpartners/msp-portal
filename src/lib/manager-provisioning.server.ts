@@ -23,7 +23,7 @@ const db = () => supabaseAdmin as any;
 const COMPANY_DOMAIN = "@mavisstrategicpartners.co.za";
 
 /** Profile "department" values (database enum) that correspond to a department. */
-const PROFILE_DEPARTMENT: Record<string, string> = {
+export const PROFILE_DEPARTMENT: Record<string, string> = {
   it: "IT Department",
   marketing: "Marketing Team",
   sales: "Sales Team",
