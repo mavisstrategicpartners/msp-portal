@@ -240,252 +240,97 @@ export async function fetchAuthoritativeOperationsData() {
   const realReports: RealDeliverable[] = reportsRes.data || [];
   const realProfiles = profilesRes.data || [];
 
-  // Build real initial state if not in localStorage
-  let workflows = getLocal<ClientWorkflowStage[]>(KEY_WORKFLOWS, []);
-  let onboarding = getLocal<ClientOnboardingRecord[]>(KEY_ONBOARDING, []);
-  let deadlines = getLocal<ServiceDeadlineItem[]>(KEY_DEADLINES, []);
-  let communications = getLocal<ClientCommunicationRecord[]>(KEY_COMMUNICATIONS, []);
-  let recoveryPlans = getLocal<ClientRecoveryPlan[]>(KEY_RECOVERY, []);
-  let verifications = getLocal<VerificationItem[]>(KEY_VERIFICATIONS, []);
-  let escalations = getLocal<OperationalEscalation[]>(KEY_ESCALATIONS, []);
+  // Only genuine records are shown. Earlier versions generated sample workflows,
+  // onboarding progress, deadlines, verifications, client communications, a
+  // recovery plan and an escalation for real clients and saved them in this
+  // browser; those generated records are filtered out below and no longer made.
+  const GENERATED_IDS = new Set(["comm-1", "comm-2", "esc-101", "vr-spec-001"]);
+  const isGenerated = (r: any) =>
+    GENERATED_IDS.has(r?.id) ||
+    (typeof r?.id === "string" &&
+      r.id.startsWith("rec-") &&
+      String(r.reasonForConcern || "").startsWith("Technical SEO and Search Console access blocker"));
 
-  // Sync workflows with real clients
-  if (workflows.length === 0 && realClients.length > 0) {
-    workflows = realClients.map((client) => {
-      const isMakurung = client.name.toLowerCase().includes("makurung");
-      const clientReports = realReports.filter((r) => r.client_id === client.id);
-      const hasReviewPending = clientReports.some((r) => r.status === "internal_review");
+  // Workflow stages, deadlines and verification decisions were only ever the
+  // generated records, so nothing is read back for them from this browser.
+  const workflows: ClientWorkflowStage[] = [];
 
-      return {
-        id: `wf-${client.id}`,
-        clientId: client.id,
-        clientName: client.name,
-        currentStage: isMakurung ? "Service Setup" : "Ongoing Account Management",
-        stageOwner: isMakurung ? "Operations & Relationship Manager" : "Account Lead",
-        dependencies: isMakurung ? "Search Console & Hosting Credentials Handover" : "Monthly Media Content Asset Approvals",
-        requiredEvidence: isMakurung ? "Technical Content Spec Sign-off" : "Monthly Performance Report Signed Pack",
-        nextAction: isMakurung ? "Review Website Content Spec and verify developer handoff" : "Review Ads performance and confirm retainer renewal",
-        nextActionDue: new Date(Date.now() + (isMakurung ? 2 : 5) * 86400000).toISOString().split("T")[0],
-        status: hasReviewPending ? "Pending Review" : "On Track",
-        progressPct: isMakurung ? 65 : 85,
-        lastUpdated: client.updated_at || client.created_at,
-      };
-    });
-    setLocal(KEY_WORKFLOWS, workflows);
+  // Onboarding: the real records kept by the Operations API.
+  let onboarding: ClientOnboardingRecord[] = [];
+  try {
+    const { fetchOperationsClients } = await import("@/lib/operations-client");
+    const clients = await fetchOperationsClients();
+    onboarding = clients
+      .filter((c: any) => Array.isArray(c.steps))
+      .map((c: any) => ({
+        id: c.id,
+        clientId: c.id,
+        clientName: c.name,
+        stage: c.stage,
+        assignedOwner: c.accountManagerName || "Not assigned",
+        targetCompletionDate: c.targetCompletionDate,
+        startDate: c.onboardingStartDate,
+        businessDaysAge: c.onboardingStartDate ? calculateBusinessDays(c.onboardingStartDate) : 0,
+        blocker: c.blocker ?? null,
+        escalationStatus: c.escalationStatus || "Normal",
+        steps: c.steps,
+        contactEmail: c.contactEmail || "",
+      }));
+  } catch (err) {
+    console.warn("Could not load onboarding records:", err);
   }
 
-  // Sync onboarding queue for real clients
-  if (onboarding.length === 0 && realClients.length > 0) {
-    const defaultSteps = (isSetupOnly: boolean): OnboardingStep[] => [
-      { id: "s1", stepKey: "info_verify", title: "Client Info & Contact Verification", required: true, completed: true, completedDate: "2026-04-02", completedBy: "Operations" },
-      { id: "s2", stepKey: "contract_sla", title: "Agreement & Scope of Work Locked", required: true, completed: true, completedDate: "2026-04-05", completedBy: "Operations" },
-      { id: "s3", stepKey: "access_creds", title: "Platform Access & Integration Setup", required: true, completed: !isSetupOnly, completedDate: !isSetupOnly ? "2026-04-10" : null, blocker: isSetupOnly ? "Search Console access pending from client webmaster" : null },
-      { id: "s4", stepKey: "strategy_spec", title: "Strategy & Specification Delivery", required: true, completed: true, completedDate: "2026-04-20" },
-      { id: "s5", stepKey: "internal_assign", title: "Internal Team & Owner Assigned", required: true, completed: true, completedDate: "2026-04-22" },
-      { id: "s6", stepKey: "launch_readiness", title: "Technical Verification & QA Sign-off", required: true, completed: false, blocker: isSetupOnly ? "Website spec awaiting verification" : null },
-      { id: "s7", stepKey: "client_handover", title: "Final Handover & Kickoff Review", required: true, completed: false },
-    ];
-
-    onboarding = realClients.map((client) => {
-      const isMakurung = client.name.toLowerCase().includes("makurung");
-      const steps = defaultSteps(isMakurung);
-      const targetDate = new Date(Date.now() + (isMakurung ? 4 : 14) * 86400000).toISOString().split("T")[0];
-      return {
-        id: `onb-${client.id}`,
-        clientId: client.id,
-        clientName: client.name,
-        stage: isMakurung ? "Access & Specification Sign-off" : "Active Delivery Handover",
-        assignedOwner: "Operations & Relationship Manager",
-        targetCompletionDate: targetDate,
-        startDate: client.created_at.split("T")[0],
-        businessDaysAge: calculateBusinessDays(client.created_at.split("T")[0]),
-        blocker: isMakurung ? "Search Console access pending; Website Spec awaiting review" : null,
-        escalationStatus: isMakurung ? "Overdue Blocker" : "Normal",
-        steps,
-        contactEmail: client.contact_email || "operations@mavisstrategicpartners.co.za",
-      };
-    });
-    setLocal(KEY_ONBOARDING, onboarding);
-  }
-
-  // Sync service deadlines from real reports & service commitments
-  if (deadlines.length === 0 && realReports.length > 0) {
-    deadlines = realReports.map((report) => {
-      const client = realClients.find((c) => c.id === report.client_id);
-      const isPending = report.status === "internal_review";
-      const isMakurung = client?.name.toLowerCase().includes("makurung") ?? false;
-      const originalDate = report.reporting_period_end || new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
-
-      return {
-        id: `dl-${report.id}`,
-        serviceName: report.report_type === "website_spec" ? "Website Build & SEO Architecture" : report.report_type === "seo_gbp" ? "Local SEO & GBP Optimisation" : "Growth Strategy & Performance Ads",
-        clientId: report.client_id,
-        clientName: client?.name || "Client Record",
-        deliverableName: report.title,
-        accountablePerson: report.prepared_by_name || "Operations Team",
-        department: isMakurung ? "IT & SEO Department" : "Marketing Team",
-        originalDeadline: originalDate,
-        currentDeadline: isPending ? new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0] : originalDate,
-        approvedDeadlineChangesCount: isPending ? 1 : 0,
-        status: isPending ? "Submitted for Review" : "Accepted Completion",
-        dependencies: isPending ? "Review of Makurung page wireframes & SEO schema" : "Client feedback received and logged",
-        evidenceLink: `/reports?id=${report.id}`,
-        verificationStatus: isPending ? "Awaiting Review" : "Verified",
-        commitmentRisk: isPending ? "Moderate" : "Low",
-      };
-    });
-    setLocal(KEY_DEADLINES, deadlines);
-  }
-
-  // Sync verification queue from deliverables awaiting verification
-  if (verifications.length === 0) {
-    const unverifiedReports = realReports.filter((r) => r.status === "internal_review");
-    verifications = unverifiedReports.map((r) => {
+  // Deadlines and verifications: derived only from recorded monthly reports.
+  const deadlines: ServiceDeadlineItem[] = realReports.map((report) => {
+    const client = realClients.find((c) => c.id === report.client_id);
+    const isPending = report.status === "internal_review";
+    const due = report.reporting_period_end || "";
+    return {
+      id: `dl-${report.id}`,
+      serviceName: report.report_type === "website_spec" ? "Website Build & SEO Architecture" : report.report_type === "seo_gbp" ? "Local SEO & GBP Optimisation" : "Growth Strategy & Performance Ads",
+      clientId: report.client_id,
+      clientName: client?.name || "Unknown client",
+      deliverableName: report.title,
+      accountablePerson: report.prepared_by_name || "Not recorded",
+      department: "Not recorded",
+      originalDeadline: due,
+      currentDeadline: due,
+      approvedDeadlineChangesCount: 0,
+      status: isPending ? "Submitted for Review" : "Accepted Completion",
+      dependencies: "",
+      evidenceLink: `/reports?id=${report.id}`,
+      verificationStatus: isPending ? "Awaiting Review" : "Verified",
+      commitmentRisk: "Low",
+    } as ServiceDeadlineItem;
+  });
+  const verifications: VerificationItem[] = realReports
+    .filter((r) => r.status === "internal_review")
+    .map((r) => {
       const client = realClients.find((c) => c.id === r.client_id);
       return {
         id: `vr-${r.id}`,
         relatedClientId: r.client_id,
-        clientName: client?.name || "Makurung Process Solutions (Pty) Ltd",
+        clientName: client?.name || "Unknown client",
         recordType: "Deliverable",
         recordTitle: r.title,
-        whatMustBeVerified: "Complete website information architecture, navigation structure, 8 service page specs, and schema markup before developer handover.",
-        submissionEvidence: `Monthly Report record: ${r.title}`,
-        submittedBy: r.prepared_by_name || "Kups Web Team",
-        submittedDate: r.created_at.split("T")[0],
-        verificationRequirements: "Check keyword cluster integration, mobile responsiveness spec, CTA placements, and technical SEO structure compliance.",
-        assignedReviewer: "Operations & Relationship Manager",
+        whatMustBeVerified: "Review the submitted report before it is sent to the client.",
+        submissionEvidence: `Monthly report: ${r.title}`,
+        submittedBy: r.prepared_by_name || "Not recorded",
+        submittedDate: (r.created_at || "").split("T")[0],
+        verificationRequirements: "",
+        assignedReviewer: "Operations",
         currentStatus: "Pending Verification",
-        dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
-      };
+        dueDate: r.reporting_period_end || "",
+      } as VerificationItem;
     });
 
-    // If no reports unverified, make sure Makurung's pending item is in queue
-    if (verifications.length === 0 && realClients.length > 0) {
-      const makurung = realClients.find((c) => c.name.toLowerCase().includes("makurung")) || realClients[0];
-      verifications.push({
-        id: `vr-spec-001`,
-        relatedClientId: makurung.id,
-        clientName: makurung.name,
-        recordType: "Deliverable",
-        recordTitle: "Makurung — Website Development Content Spec",
-        whatMustBeVerified: "Corporate Mining Engineering specification, 8 page wireframes, conversion architecture, and GBP booking integration.",
-        submissionEvidence: "Website Development Content Spec (April/May 2026 Deliverable)",
-        submittedBy: "Web & SEO Delivery Team",
-        submittedDate: "2026-05-01",
-        verificationRequirements: "Verify alignment with Limpopo EPC mining positioning, technical SEO checklist, and contact form schema.",
-        assignedReviewer: "Operations & Relationship Manager",
-        currentStatus: "Pending Verification",
-        dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
-      });
-    }
-    setLocal(KEY_VERIFICATIONS, verifications);
-  }
-
-  // Communications history
-  if (communications.length === 0 && realClients.length > 0) {
-    const makurung = realClients.find((c) => c.name.toLowerCase().includes("makurung")) || realClients[0];
-    const imigidi = realClients.find((c) => c.name.toLowerCase().includes("imigidi")) || realClients[1] || realClients[0];
-
-    communications = [
-      {
-        id: "comm-1",
-        clientId: makurung.id,
-        clientName: makurung.name,
-        interactionDate: "2026-05-04",
-        channel: "Video Conference",
-        responsibleEmployee: "Operations & Relationship Manager",
-        summary: "Walked through the April SEO & GBP Report (414 GBP interactions achieved). Client expressed satisfaction with GBP calls (+14) but raised concern that Search Console access is still not linked to their webmaster.",
-        outstandingQuestions: "Who on Makurung's IT side holds the primary Google account for Search Console delegation?",
-        promisedFollowUp: "Send delegation step-by-step PDF guide to info@makurung.co.za by Friday.",
-        nextCommunicationDate: new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0],
-        hasUnresolvedComplaint: true,
-        isIntegrationSent: false,
-        recordedAt: new Date().toISOString(),
-      },
-      {
-        id: "comm-2",
-        clientId: imigidi.id,
-        clientName: imigidi.name,
-        interactionDate: "2026-05-02",
-        channel: "WhatsApp",
-        responsibleEmployee: "Operations & Relationship Manager",
-        summary: "Confirmed delivery of April Ads Performance Report. Client acknowledged receipt and approved campaign budget reallocation to equipment hire promotions.",
-        outstandingQuestions: "None currently outstanding.",
-        promisedFollowUp: "Send mid-month ad spend telemetry summary.",
-        nextCommunicationDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
-        hasUnresolvedComplaint: false,
-        isIntegrationSent: false,
-        recordedAt: new Date().toISOString(),
-      },
-    ];
-    setLocal(KEY_COMMUNICATIONS, communications);
-  }
-
-  // Real client recovery plans (only for clients with recorded issues)
-  if (recoveryPlans.length === 0 && realClients.length > 0) {
-    const makurung = realClients.find((c) => c.name.toLowerCase().includes("makurung"));
-    if (makurung) {
-      recoveryPlans = [
-        {
-          id: `rec-${makurung.id}`,
-          clientId: makurung.id,
-          clientName: makurung.name,
-          accountOwner: "Operations & Relationship Manager",
-          reasonForConcern: "Technical SEO and Search Console access blocker delayed developer build by 6 business days.",
-          supportingEvidence: "Makurung SEO Report recorded issues: Search Console access not verified; live rank tracking pending; developer handoff on hold.",
-          recoveryObjective: "Restore developer velocity by securing access and completing spec verification within 4 business days.",
-          agreedCorrectiveActions: [
-            "Operations Manager phone call with Makurung IT lead for live access screen share",
-            "Sign-off on Website Content Spec in Verification Queue",
-            "Hand off clean build pack to developer with daily SLA check",
-          ],
-          responsibleOwners: ["Operations & Relationship Manager", "Lead Developer Siphelele Malotana"],
-          milestones: [
-            { title: "Search Console ownership verified", deadline: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0], status: "Pending" },
-            { title: "Website Spec QA verified & accepted", deadline: new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0], status: "Pending" },
-            { title: "Developer sprint started with zero blockers", deadline: new Date(Date.now() + 5 * 86400000).toISOString().split("T")[0], status: "Pending" },
-          ],
-          clientExpectations: "Client expects website structure live by month-end with clear weekly milestones.",
-          reviewDates: [new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0], new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]],
-          escalationPath: "General Manager",
-          status: "Active",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setLocal(KEY_RECOVERY, recoveryPlans);
-    }
-  }
-
-  // Escalations queue
-  if (escalations.length === 0 && realClients.length > 0) {
-    const makurung = realClients.find((c) => c.name.toLowerCase().includes("makurung")) || realClients[0];
-    escalations = [
-      {
-        id: "esc-101",
-        title: "Search Console Access Blocker on Makurung Process Solutions",
-        issueType: "Cross-Department Blocker",
-        relatedClientId: makurung.id,
-        clientOrRecord: makurung.name,
-        raisedBy: "Kups Web & SEO Team",
-        dateRaised: "2026-05-02",
-        priority: "High",
-        businessImpact: "Critical (Revenue/SLA)",
-        currentOwner: "Operations & Relationship Manager",
-        targetResolutionDate: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
-        escalationLevel: "Level 1 (Operations Manager)",
-        status: "Action Pending",
-        progressNotes: [
-          "2026-05-02: Issue flagged in April SEO audit report.",
-          "2026-05-04: Video call held; IT contact identified.",
-          "2026-05-05: Step-by-step delegation instructions prepared.",
-        ],
-        nextAction: "Direct phone call with Makurung webmaster to complete DNS TXT verification token setup.",
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    setLocal(KEY_ESCALATIONS, escalations);
-  }
+  // Entries Operations staff recorded themselves (kept in this browser only).
+  const communications = getLocal<ClientCommunicationRecord[]>(KEY_COMMUNICATIONS, []).filter((r) => !isGenerated(r));
+  const recoveryPlans = getLocal<ClientRecoveryPlan[]>(KEY_RECOVERY, []).filter((r) => !isGenerated(r));
+  const escalations = getLocal<OperationalEscalation[]>(KEY_ESCALATIONS, []).filter((r) => !isGenerated(r));
+  setLocal(KEY_COMMUNICATIONS, communications);
+  setLocal(KEY_RECOVERY, recoveryPlans);
+  setLocal(KEY_ESCALATIONS, escalations);
 
   return {
     realClients,

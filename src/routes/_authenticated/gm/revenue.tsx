@@ -19,14 +19,14 @@ function useRevenue() {
       // Try to fetch revenue records, invoices, or financial data
       const results: any = { invoices: [], revenue_targets: [], payments: [] };
 
-      const { data: invoices, error: invErr } = await supabase.from("invoices").select("*");
-      if (!invErr && invoices) results.invoices = invoices;
-
-      const { data: targets, error: tErr } = await supabase.from("revenue_targets").select("*");
-      if (!tErr && targets) results.revenue_targets = targets;
-
-      const { data: payments, error: pErr } = await supabase.from("payments").select("*");
-      if (!pErr && payments) results.payments = payments;
+      // Same source as the Finance module and the CEO view: agency-fee invoices
+      // in finance_invoices (client ad spend is not MSP revenue). No revenue
+      // targets are recorded in the portal yet.
+      const { data: invoices, error: invErr } = await (supabase as any).from("finance_invoices").select("*");
+      if (!invErr && invoices) {
+        results.invoices = invoices.map((i: any) => ({ ...i, amount: Number(i.monthlyServiceFeeZar) || 0 }));
+        results.payments = results.invoices.filter((i: any) => /paid/i.test(String(i.paymentStatus || "")));
+      }
 
       return results;
     },
@@ -58,7 +58,7 @@ function RevenuePerformancePage() {
   const totalInvoiced = invoices.reduce((sum: number, inv: any) => sum + (inv.amount || inv.total || 0), 0);
   const totalPaid = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
   const totalOutstanding = totalInvoiced - totalPaid;
-  const activeClients = clients.filter((c: any) => c.status === "active" || c.is_active).length;
+  const activeClients = clients.length;
 
   const hasTargets = targets.length > 0;
   const currentTarget = hasTargets ? targets[0] : null;

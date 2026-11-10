@@ -129,6 +129,17 @@ function DepartmentDetail({ data, deptKey }: { data: ExecutiveOverview; deptKey:
         }
       />
 
+      {d.key === "unassigned" && (
+        <Card className="p-4 text-sm border-amber-500/40 bg-amber-500/5">
+          These tasks have no responsible department on record. Operations, the GM, an administrator or the assigning
+          manager can correct them in{" "}
+          <Link to="/department/review" className="text-primary hover:underline">
+            Department Review
+          </Link>
+          .
+        </Card>
+      )}
+
       <Card className="p-4 flex flex-wrap items-center gap-3">
         <StatusPill status={d.status} />
         <p className="text-sm text-muted-foreground">

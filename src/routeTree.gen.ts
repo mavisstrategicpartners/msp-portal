@@ -47,6 +47,7 @@ import { Route as AuthenticatedDepartmentBlockersRouteImport } from './routes/_a
 import { Route as AuthenticatedDepartmentClientsRouteImport } from './routes/_authenticated/department/clients'
 import { Route as AuthenticatedDepartmentPerformanceRouteImport } from './routes/_authenticated/department/performance'
 import { Route as AuthenticatedDepartmentQaRouteImport } from './routes/_authenticated/department/qa'
+import { Route as AuthenticatedDepartmentReviewRouteImport } from './routes/_authenticated/department/review'
 import { Route as AuthenticatedDepartmentTasksRouteImport } from './routes/_authenticated/department/tasks'
 import { Route as AuthenticatedDepartmentWorkloadRouteImport } from './routes/_authenticated/department/workload'
 import { Route as AuthenticatedGmIndexRouteImport } from './routes/_authenticated/gm/index'
@@ -281,6 +282,12 @@ const AuthenticatedDepartmentQaRoute =
     path: '/department/qa',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDepartmentReviewRoute =
+  AuthenticatedDepartmentReviewRouteImport.update({
+    id: '/department/review',
+    path: '/department/review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDepartmentTasksRoute =
   AuthenticatedDepartmentTasksRouteImport.update({
     id: '/department/tasks',
@@ -494,6 +501,7 @@ export interface FileRoutesByFullPath {
   '/department/clients': typeof AuthenticatedDepartmentClientsRoute
   '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
   '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/review': typeof AuthenticatedDepartmentReviewRoute
   '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
   '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
@@ -564,6 +572,7 @@ export interface FileRoutesByTo {
   '/department/clients': typeof AuthenticatedDepartmentClientsRoute
   '/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
   '/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/department/review': typeof AuthenticatedDepartmentReviewRoute
   '/department/tasks': typeof AuthenticatedDepartmentTasksRoute
   '/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/gm/approvals': typeof AuthenticatedGmApprovalsRoute
@@ -636,6 +645,7 @@ export interface FileRoutesById {
   '/_authenticated/department/clients': typeof AuthenticatedDepartmentClientsRoute
   '/_authenticated/department/performance': typeof AuthenticatedDepartmentPerformanceRoute
   '/_authenticated/department/qa': typeof AuthenticatedDepartmentQaRoute
+  '/_authenticated/department/review': typeof AuthenticatedDepartmentReviewRoute
   '/_authenticated/department/tasks': typeof AuthenticatedDepartmentTasksRoute
   '/_authenticated/department/workload': typeof AuthenticatedDepartmentWorkloadRoute
   '/_authenticated/gm/approvals': typeof AuthenticatedGmApprovalsRoute
@@ -708,6 +718,7 @@ export interface FileRouteTypes {
     | '/department/clients'
     | '/department/performance'
     | '/department/qa'
+    | '/department/review'
     | '/department/tasks'
     | '/department/workload'
     | '/gm/approvals'
@@ -778,6 +789,7 @@ export interface FileRouteTypes {
     | '/department/clients'
     | '/department/performance'
     | '/department/qa'
+    | '/department/review'
     | '/department/tasks'
     | '/department/workload'
     | '/gm/approvals'
@@ -849,6 +861,7 @@ export interface FileRouteTypes {
     | '/_authenticated/department/clients'
     | '/_authenticated/department/performance'
     | '/_authenticated/department/qa'
+    | '/_authenticated/department/review'
     | '/_authenticated/department/tasks'
     | '/_authenticated/department/workload'
     | '/_authenticated/gm/approvals'
@@ -1160,6 +1173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDepartmentQaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/department/review': {
+      id: '/_authenticated/department/review'
+      path: '/department/review'
+      fullPath: '/department/review'
+      preLoaderRoute: typeof AuthenticatedDepartmentReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/department/tasks': {
       id: '/_authenticated/department/tasks'
       path: '/department/tasks'
@@ -1412,6 +1432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepartmentClientsRoute: typeof AuthenticatedDepartmentClientsRoute
   AuthenticatedDepartmentPerformanceRoute: typeof AuthenticatedDepartmentPerformanceRoute
   AuthenticatedDepartmentQaRoute: typeof AuthenticatedDepartmentQaRoute
+  AuthenticatedDepartmentReviewRoute: typeof AuthenticatedDepartmentReviewRoute
   AuthenticatedDepartmentTasksRoute: typeof AuthenticatedDepartmentTasksRoute
   AuthenticatedDepartmentWorkloadRoute: typeof AuthenticatedDepartmentWorkloadRoute
   AuthenticatedGmApprovalsRoute: typeof AuthenticatedGmApprovalsRoute
@@ -1480,6 +1501,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepartmentPerformanceRoute:
     AuthenticatedDepartmentPerformanceRoute,
   AuthenticatedDepartmentQaRoute: AuthenticatedDepartmentQaRoute,
+  AuthenticatedDepartmentReviewRoute: AuthenticatedDepartmentReviewRoute,
   AuthenticatedDepartmentTasksRoute: AuthenticatedDepartmentTasksRoute,
   AuthenticatedDepartmentWorkloadRoute: AuthenticatedDepartmentWorkloadRoute,
   AuthenticatedGmApprovalsRoute: AuthenticatedGmApprovalsRoute,

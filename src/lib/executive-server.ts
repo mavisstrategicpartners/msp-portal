@@ -14,6 +14,13 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { authenticateApiRequest, jsonError, type ApiUser } from "@/lib/api-auth.server";
 import { computeAccess } from "@/lib/roles";
+import {
+  DEPARTMENTS,
+  UNASSIGNED_DEPARTMENT,
+  UNASSIGNED_KEY,
+  departmentExact,
+  isUnassignedDepartment,
+} from "@/lib/departments";
 import type {
   DepartmentKey,
   DepartmentScorecard,
@@ -30,24 +37,9 @@ const HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store
 const db = () => supabaseAdmin as any;
 
 // ── Departments ───────────────────────────────────────────────────────────────
-// Service departments the CEO tracks. A task belongs to a department by its
-// department field; a person by keywords in their job title / department.
-export const EXEC_DEPARTMENTS: { key: DepartmentKey; name: string; match: string[] }[] = [
-  { key: "sales", name: "Sales", match: ["sales", "business development"] },
-  { key: "hr", name: "Human Resources", match: ["human resources", "hr", "people & culture"] },
-  { key: "finance", name: "Finance & Administration", match: ["finance", "accounting", "accountant", "billing"] },
-  { key: "operations", name: "Operations & Client Relationships", match: ["operations", "relationship"] },
-  { key: "media-buying", name: "Media Buying", match: ["media buying", "paid media", "paid ads"] },
-  { key: "seo", name: "SEO", match: ["seo"] },
-  { key: "creative", name: "Creative", match: ["creative", "graphic", "design", "social media", "content"] },
-  { key: "strategy", name: "Strategy", match: ["strategy", "strategist"] },
-  { key: "onboarding", name: "Onboarding", match: ["onboarding"] },
-  { key: "websites-software", name: "Websites & Software", match: ["websites & software", "website", "web development", "software", "developer"] },
-  { key: "crm-ai", name: "CRM & AI Automation", match: ["crm", "automation"] },
-  { key: "reporting", name: "Reporting", match: ["reporting"] },
-  { key: "client-success", name: "Client Success", match: ["client success", "account manager"] },
-  { key: "academy", name: "MSP Academy", match: ["academy"] },
-];
+// Service departments come from the shared list (src/lib/departments.ts) so
+// the CEO view, department workspaces and task creation always agree.
+export const EXEC_DEPARTMENTS = DEPARTMENTS;
 
 const norm = (v?: string | null) => (v || "").trim().toLowerCase();
 
@@ -68,9 +60,11 @@ function slug(v: string) {
   return norm(v).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "general";
 }
 
-/** Department key for a task: known service department, or its own name. */
+/** Department key for a task: known service department, "unassigned" when the
+ *  record has none, otherwise its own name. */
 function taskDepartmentKey(dept?: string | null): DepartmentKey {
-  return departmentKeyFor(dept) ?? slug(dept || "General");
+  if (isUnassignedDepartment(dept)) return UNASSIGNED_KEY;
+  return departmentExact(dept)?.key ?? departmentKeyFor(dept) ?? slug(dept || "General");
 }
 
 function departmentsForPerson(title: string, orgDept: string): DepartmentKey[] {
@@ -90,7 +84,6 @@ function departmentsForPerson(title: string, orgDept: string): DepartmentKey[] {
   return [...out];
 }
 
-const LEAD_WORDS = /\b(manager|lead|head|director|supervisor)\b/;
 
 // Accounts that are not individual employees. Shared role logins carry a role
 // or mailbox name instead of a person's name; the misspelled domain is only
@@ -210,6 +203,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     budgetsRes,
     approvalsRes,
     followUps,
+    leadsRes,
   ] = await Promise.all([
     db().from("profiles").select("*").order("full_name"),
     db().from("user_roles").select("user_id, role"),
@@ -235,7 +229,9 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     db().from("finance_budgets").select("*"),
     db().from("finance_approvals").select("*"),
     loadFollowUps(),
+    db().from("department_leads").select("department_key, user_id"),
   ]);
+  const leadByDept = new Map<string, string>(((leadsRes as any).data || []).map((l: any) => [l.department_key, l.user_id]));
 
   const profiles: any[] = profilesRes.data || [];
   const rolesByUser = new Map<string, any[]>();
@@ -265,7 +261,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     return {
       id: t.id,
       title: t.title || "Untitled task",
-      department: t.department || "General",
+      department: isUnassignedDepartment(t.department) ? UNASSIGNED_DEPARTMENT : t.department,
       departmentKey: taskDepartmentKey(t.department),
       status: t.status || "Not Started",
       priority: t.priority || "Medium",
@@ -519,15 +515,15 @@ async function buildOverview(): Promise<ExecutiveOverview> {
   };
 
   // Department scorecards
-  const known = new Map(EXEC_DEPARTMENTS.map((d) => [d.key, d.name]));
+  const known = new Map<string, string>(EXEC_DEPARTMENTS.map((d) => [d.key, d.name]));
   for (const t of tasks) if (!known.has(t.departmentKey)) known.set(t.departmentKey, t.department);
   const departments: DepartmentScorecard[] = [...known.entries()].map(([key, name]) => {
     const dt = tasks.filter((t) => t.departmentKey === key);
     const de = evidence.filter((e) => e.departmentKey === key);
     const members = people.filter((p) => p.departments.includes(key) || dt.some((t) => t.assignedToId === p.id));
-    const leads = people
-      .filter((p) => p.departments.includes(key) && LEAD_WORDS.test(norm(p.title)))
-      .map((p) => ({ id: p.id, name: p.name, title: p.title }));
+    // Only confirmed managers (department_leads); never guessed from job titles.
+    const leadPerson = leadByDept.has(key) ? people.find((p) => p.id === leadByDept.get(key)) : undefined;
+    const leads = leadPerson ? [{ id: leadPerson.id, name: leadPerson.name, title: leadPerson.title }] : [];
     const completed = dt.filter((t) => t.status === "Completed");
     const withDue = completed.filter((t) => t.dueDate && t.completionDate);
     const onTime = withDue.filter((t) => jhbDate(new Date(t.completionDate!)) <= t.dueDate!).length;
@@ -559,9 +555,12 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     const staleReviews = de.filter((e) => e.status === "Submitted for Review" && (e.hoursWaiting ?? 0) >= 48).length;
     if (staleReviews) reasons.push(`${staleReviews} submission(s) waiting over 48h for review`);
     if (card.awaitingReview && !staleReviews) reasons.push(`${card.awaitingReview} submission(s) awaiting review`);
-    if (!leads.length && (dt.length || members.length)) reasons.push("No department lead on record");
+    if (key === UNASSIGNED_KEY && dt.length) reasons.unshift(`${dt.length} task(s) need a department assigned`);
+    else if (!leads.length && (dt.length || members.length)) reasons.push("Manager not assigned");
     card.statusReasons = reasons;
-    card.status = !dt.length && !members.length
+    card.status = key === UNASSIGNED_KEY && dt.length
+      ? "attention"
+      : !dt.length && !members.length
       ? "no-activity"
       : card.tasksOverdue || card.tasksBlocked || staleReviews
         ? "attention"

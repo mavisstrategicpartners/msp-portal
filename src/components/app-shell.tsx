@@ -102,6 +102,12 @@ function ShellInner({ children }: { children: ReactNode }) {
                 <MyFollowUps />
               </div>
             )}
+          {!profileLoading && !blocked && /^\/operations\/(communications|recovery|escalations|workflows)/.test(pathname) && (
+            <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-2.5 text-xs text-foreground">
+              Records on this page are saved only in this browser. They are not yet stored in the shared database, so
+              other staff and the CEO cannot see them.
+            </div>
+          )}
           {profileLoading || blocked ? null : children}
         </main>
       </div>

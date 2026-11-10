@@ -42,7 +42,8 @@ function ClientsPage({ data }: { data: ExecutiveOverview }) {
       return true;
     })
     .sort((a, b) => Number(b.id === search.client) - Number(a.id === search.client) || Number(b.atRisk) - Number(a.atRisk));
-  const opsLead = data.people.find((p) => p.departments.includes("operations") && /manager|head|lead/i.test(p.title));
+  // Confirmed Operations manager (department_leads), if one is set.
+  const opsLead = data.departments.find((d) => d.key === "operations")?.leads[0];
 
   return (
     <div className="space-y-6">

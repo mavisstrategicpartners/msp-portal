@@ -23,6 +23,7 @@ import {
   DepartmentTeamMember,
   TaskType,
 } from "@/lib/department-manager.service";
+import { useDepartmentOptions } from "@/lib/department-scope";
 import { useProfile } from "@/lib/use-profile";
 import { toast } from "sonner";
 import {
@@ -98,6 +99,12 @@ export function DepartmentTasksPage() {
   const [createDueDate, setCreateDueDate] = useState("");
   const [createPriority, setCreatePriority] = useState<DepartmentTask["priority"]>("High");
   const [createEvidenceReq, setCreateEvidenceReq] = useState("");
+  // Department doing the work: chosen explicitly, limited to what this user may assign.
+  const deptOptionsQ = useDepartmentOptions(false);
+  const assignableDepartments = (deptOptionsQ.data?.departments ?? []).filter((d) =>
+    (deptOptionsQ.data?.assignable ?? []).includes(d.key),
+  );
+  const [createDepartment, setCreateDepartment] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Attachments
@@ -208,6 +215,11 @@ export function DepartmentTasksPage() {
       return;
     }
     const isClientWork = createTaskType === "Client Work";
+    const chosenDepartment = createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "");
+    if (!chosenDepartment) {
+      toast.error("Choose the department responsible for this work.");
+      return;
+    }
     if (isClientWork && !createClientId) {
       toast.error("Please select a client for this Client Work task.");
       return;
@@ -235,6 +247,7 @@ export function DepartmentTasksPage() {
       const updated = await mutateCreateDepartmentTask(
         {
           title: createTitle.trim(),
+          department: chosenDepartment,
           taskType: createTaskType,
           clientId: clientObj?.id || null,
           clientName: clientObj?.name || undefined,
@@ -260,6 +273,7 @@ export function DepartmentTasksPage() {
       });
       setCreateTaskModalOpen(false);
       setCreateTitle("");
+      setCreateDepartment("");
       setCreateTaskType("Client Work");
       setCreateClientId("");
       setCreateAssigneeId("");
@@ -927,6 +941,34 @@ export function DepartmentTasksPage() {
                 onChange={(e) => setCreateTitle(e.target.value)}
                 className="h-9 text-xs bg-background border-border text-foreground"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">
+                Department <span className="text-muted-foreground font-normal">(the team doing this work)</span>
+              </Label>
+              {assignableDepartments.length === 0 ? (
+                <p className="text-xs text-muted-foreground rounded-md border border-border p-2">
+                  You are not set up to assign work to any department. Ask an administrator to confirm you as a
+                  department manager, or ask Operations or the GM to assign this task.
+                </p>
+              ) : (
+                <Select
+                  value={createDepartment || (assignableDepartments.length === 1 ? assignableDepartments[0].name : "")}
+                  onValueChange={setCreateDepartment}
+                >
+                  <SelectTrigger className="h-9 text-xs bg-background border-border text-foreground font-medium">
+                    <SelectValue placeholder="Select the responsible department" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {assignableDepartments.map((d) => (
+                      <SelectItem key={d.key} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="space-y-1.5">

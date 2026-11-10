@@ -238,6 +238,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/department/workload", label: "Team Workload", icon: Users },
           { to: "/department/qa", label: "Quality Assurance", icon: ShieldCheck },
           { to: "/department/approvals", label: "Approvals", icon: CheckSquare },
+          { to: "/department/review", label: "Department Review", icon: ClipboardList },
           { to: "/department/blockers", label: "Blockers & Dependencies", icon: GitBranch },
         ],
       },

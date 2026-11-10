@@ -71,7 +71,7 @@ export function DepartmentApprovalsPage() {
     setDecisionType(type);
     setDecisionComments(
       type === "Approved"
-        ? "Approved. Budget and supporting evidence verified in platform."
+        ? ""
         : ""
     );
     setDecisionModalOpen(true);
@@ -169,11 +169,11 @@ export function DepartmentApprovalsPage() {
         {currentList.length === 0 ? (
           <Card className="p-12 text-center border-border">
             <CheckSquare className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-foreground">No Requests in this Queue</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              {activeTab === "pending"
-                ? "There are no pending requests awaiting your decision."
-                : "Decisions made on budget sign-offs and deliverables will be archived here."}
+            <h3 className="text-base font-bold text-foreground">No approval requests recorded</h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+              Budget, deadline and exception requests are not yet captured in the portal's database, so none are
+              shown. Deliverables awaiting your sign-off are in{" "}
+              <a href="/department/qa" className="text-primary hover:underline">Quality Assurance</a>.
             </p>
           </Card>
         ) : (

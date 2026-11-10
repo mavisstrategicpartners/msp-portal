@@ -53,7 +53,7 @@ export function useSupabaseTable(tableName, initialSeed = []) {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed)) {
-            const cleaned = parsed.filter((x) => !isSyntheticItem(x));
+            const cleaned = parsed.filter((x) => !isSyntheticItem(x) && !isSeedRow(x));
             if (cleaned.length !== parsed.length) {
               localStorage.setItem(storageKey, JSON.stringify(cleaned));
             }
@@ -66,8 +66,8 @@ export function useSupabaseTable(tableName, initialSeed = []) {
         console.warn(`[useSupabaseTable] Failed to read localStorage for ${tableName}:`, err);
       }
     }
-    const cleanSeed = (initialSeed || []).filter((x) => !isSyntheticItem(x));
-    return cleanSeed;
+    // Built-in sample rows are never shown: an empty table shows as empty.
+    return [];
   });
 
   const [loading, setLoading] = useState(true);

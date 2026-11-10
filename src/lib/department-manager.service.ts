@@ -1,3 +1,4 @@
+import { UNASSIGNED_DEPARTMENT } from "@/lib/departments";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthHeaders } from "@/lib/api-auth-headers";
 
@@ -230,7 +231,7 @@ export function staffTaskToDeptTask(st: any): DepartmentTask {
     assignedToId: st.assignedToId || undefined,
     assignedToName: st.assignedToName || "Unassigned",
     assignedToRole: st.assignedToRole || "Specialist",
-    department: st.department || "Media Buying",
+    department: st.department || UNASSIGNED_DEPARTMENT,
     priority: (st.priority as any) || "High",
     status: deptStatus,
     dueDate: st.dueDate ? st.dueDate.split("T")[0] : new Date().toISOString().split("T")[0],
@@ -293,12 +294,10 @@ export async function fetchDepartmentData(department = "Media Buying") {
     console.warn("Failed to load department tasks from server, checking local store:", err);
   }
 
-  if (tasks.length === 0) {
-    tasks = getStored<DepartmentTask[]>(KEY_TASKS, INITIAL_TASKS);
-  }
-
-  const approvals = getStored<DepartmentApprovalItem[]>(KEY_APPROVALS, INITIAL_APPROVALS);
-  const targets = getStored<DepartmentTarget[]>(KEY_TARGETS, INITIAL_TARGETS);
+  // Only server records are shown. Approval requests and targets have no shared
+  // database table yet, so they are empty rather than read from this browser.
+  const approvals: DepartmentApprovalItem[] = [];
+  const targets: DepartmentTarget[] = [];
 
   // Build unified team members combining ALL system employees from profiles with department specialists
   const unifiedMembers: DepartmentTeamMember[] = [];
@@ -399,7 +398,7 @@ export async function mutateCreateDepartmentTask(taskData: Partial<DepartmentTas
       assignedToName: targetMember?.name || "Unassigned",
       assignedToEmail: targetMember?.email || "",
       assignedToRole: targetMember?.role || "Specialist",
-      department: taskData.department || "Media Buying",
+      department: taskData.department,
       clientId: resolvedClientId || undefined,
       clientName: resolvedClientName,
       priority: taskData.priority || "High",
