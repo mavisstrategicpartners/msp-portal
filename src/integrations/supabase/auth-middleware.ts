@@ -30,8 +30,14 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
-export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
-  async ({ next }) => {
+/** Accounts created or reset with a temporary password must choose their own
+ *  password before anything else works (flag set by an administrator in
+ *  app_metadata, which users cannot edit themselves). */
+export function mustChangePassword(claims: any): boolean {
+  return Boolean(claims?.app_metadata?.must_change_password);
+}
+
+async function authenticate(allowPendingPasswordChange: boolean) {
     
     const rawUrl = process.env.SUPABASE_URL || "https://tkjytjaerfjpghusrwom.supabase.co";
     const rawKey = process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_kU8G-7AUhbhiWPqd8XD6Ow_GNViYCDs";
@@ -91,12 +97,23 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No user ID found in token');
     }
 
-    return next({
-      context: {
-        supabase,
-        userId: data.claims.sub,
-        claims: data.claims,
-      },
-    });
-  },
+    if (!allowPendingPasswordChange && mustChangePassword(data.claims)) {
+      throw new Error('Password change required: please set your own password first.');
+    }
+
+    return {
+      supabase,
+      userId: data.claims.sub as string,
+      claims: data.claims,
+    };
+}
+
+export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => next({ context: await authenticate(false) }),
+);
+
+/** Same as requireSupabaseAuth, but also lets through an account that still has
+ *  to replace its temporary password. Only the password-change step uses it. */
+export const requireSupabaseSession = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => next({ context: await authenticate(true) }),
 );

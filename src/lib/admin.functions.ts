@@ -41,7 +41,6 @@ const createTeamMemberSchema = z.object({
   department: z.string().optional(),
   accessLevel: z.enum(["staff", "intern", "manager", "hr", "superadmin"]).default("staff"),
   role: z.enum(["admin", "user"]).default("user"),
-  password: z.string().min(6).optional(),
 });
 
 export const createTeamMember = createServerFn({ method: "POST" })
@@ -60,24 +59,19 @@ export const createTeamMember = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let user;
-    if (data.password) {
-      const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: { full_name: data.fullName },
-      });
-      if (createError) throw createError;
-      user = created.user;
-    } else {
-      const { data: invited, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        data.email,
-        { data: { full_name: data.fullName } }
-      );
-      if (inviteError) throw inviteError;
-      user = invited.user;
-    }
+    // A unique one-time password, generated here and shown once to the
+    // administrator. The employee must replace it at first sign-in.
+    const { generateTemporaryPassword } = await import("@/lib/temporary-password.server");
+    const temporaryPassword = generateTemporaryPassword();
+    const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName },
+      app_metadata: { must_change_password: true },
+    });
+    if (createError) throw createError;
+    const user = created.user;
 
     if (!user) throw new Error("The user could not be created.");
 
@@ -110,7 +104,43 @@ export const createTeamMember = createServerFn({ method: "POST" })
       details: { email: data.email, accessLevel: data.accessLevel, role: data.role, department: data.department || null },
     });
 
-    return { id: user.id, email: data.email };
+    // Returned once for the administrator to hand over; never stored or logged.
+    return { id: user.id, email: data.email, temporaryPassword };
+  });
+
+/**
+ * Administrator resets a staff member's password: a new one-time password is
+ * generated and shown once, existing sessions are signed out, and the employee
+ * must choose their own password at next sign-in.
+ */
+export const resetStaffPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data) => z.object({ userId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { generateTemporaryPassword, setMustChangePassword } = await import("@/lib/temporary-password.server");
+    const db = supabaseAdmin as any;
+    const { data: target } = await db.from("profiles").select("id, email, role_tier, is_active").eq("id", data.userId).maybeSingle();
+    if (!target) throw new Response("Staff member not found", { status: 404 });
+    if (target.is_active === false) throw new Response("Reactivate the account before resetting its password", { status: 400 });
+    if (target.role_tier === "root_admin") {
+      const { data: isRoot } = await db.rpc("is_root_admin", { _user_id: context.userId });
+      if (!isRoot) throw new Response("Only superadmins can reset a superadmin's password", { status: 403 });
+    }
+    const temporaryPassword = generateTemporaryPassword();
+    await setMustChangePassword(supabaseAdmin, data.userId, true, temporaryPassword);
+    await db.rpc("revoke_user_sessions", { _user_id: data.userId }).then(
+      () => undefined,
+      () => undefined,
+    );
+    await db.from("audit_logs").insert({
+      actor_id: context.userId,
+      action: "staff_password_reset_by_admin",
+      target_id: data.userId,
+      details: { email: target.email },
+    });
+    return { email: target.email, temporaryPassword };
   });
 
 /**

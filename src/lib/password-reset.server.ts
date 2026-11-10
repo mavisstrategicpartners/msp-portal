@@ -95,7 +95,11 @@ export function getResetDeps(): ResetDeps {
       return data.id as string;
     },
     async setPassword(userId, password) {
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+      // The user chose this password themselves, so any pending
+      // "replace your temporary password" requirement is satisfied.
+      const { data: existing } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const app_metadata = { ...(existing?.user?.app_metadata || {}), must_change_password: false };
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password, app_metadata });
       if (error) throw new Error(error.message);
     },
     async revokeSessions(userId) {

@@ -29,11 +29,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users, UserPlus, Search, MoreVertical, ShieldCheck, Pencil,
-  UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Eye, EyeOff, Trash2,
+  UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Trash2, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createTeamMember, updateTeamMember, deleteTeamMember } from "@/lib/admin.functions";
+import { createTeamMember, updateTeamMember, deleteTeamMember, resetStaffPassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   head: () => ({ meta: [{ title: "Manage Staff — MSP Admin" }] }),
@@ -101,7 +101,6 @@ function ManageUsersPage() {
   // Add user dialog
   const [addOpen, setAddOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -109,8 +108,9 @@ function ManageUsersPage() {
     jobTitle: "",
     department: "",
     accessLevel: "staff",
-    password: "Staff2026",
   });
+  // One-time password to hand to the employee; shown once, never stored.
+  const [issued, setIssued] = useState<{ name: string; email: string; password: string; reason: "created" | "reset" } | null>(null);
 
   // Edit user dialog
   const [editUser, setEditUser] = useState<StaffProfile | null>(null);
@@ -183,7 +183,7 @@ function ManageUsersPage() {
     }
     setAdding(true);
     try {
-      await createTeamMember({
+      const created = await createTeamMember({
         data: {
           email: cleanEmail,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
@@ -191,14 +191,16 @@ function ManageUsersPage() {
           department: form.department,
           accessLevel: form.accessLevel as any,
           role: "user",
-          password: form.password || undefined,
         },
       });
-      toast.success("Staff member created!", {
-        description: `${form.firstName} ${form.lastName} can now log in at ${cleanEmail} with the password.`,
+      setIssued({
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        email: cleanEmail,
+        password: (created as any).temporaryPassword,
+        reason: "created",
       });
       setAddOpen(false);
-      setForm({ firstName: "", lastName: "", email: "", jobTitle: "", department: "", accessLevel: "staff", password: "Staff2026" });
+      setForm({ firstName: "", lastName: "", email: "", jobTitle: "", department: "", accessLevel: "staff" });
       await loadStaff();
     } catch (err: any) {
       toast.error("Failed to create user", { description: err?.message ?? String(err) });
@@ -246,6 +248,16 @@ function ManageUsersPage() {
   }
 
   // ── Toggle active ─────────────────────────────────────────────────────────
+  async function handleResetPassword(s: StaffProfile) {
+    if (!window.confirm(`Reset the password for ${s.full_name || s.email}? They will be signed out and must choose a new password at next sign-in.`)) return;
+    try {
+      const r = await resetStaffPassword({ data: { userId: s.id } });
+      setIssued({ name: s.full_name || s.email, email: r.email, password: r.temporaryPassword, reason: "reset" });
+    } catch (err: any) {
+      toast.error("Could not reset the password", { description: err?.message ?? String(err) });
+    }
+  }
+
   async function toggleActive(s: StaffProfile) {
     try {
       await updateTeamMember({ data: { userId: s.id, isActive: !s.is_active } });
@@ -417,6 +429,11 @@ function ManageUsersPage() {
                             Edit Profile
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {s.is_active && (
+                            <DropdownMenuItem onClick={() => handleResetPassword(s)}>
+                              <KeyRound className="mr-2 h-4 w-4" />Reset password
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => toggleActive(s)} className={s.is_active ? "text-destructive focus:text-destructive" : "text-green-600 focus:text-green-600"}>
                             {s.is_active
                               ? <><UserX className="mr-2 h-4 w-4" />Deactivate</>
@@ -531,31 +548,10 @@ function ManageUsersPage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Temporary Password *</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Min. 8 characters"
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  required
-                  minLength={8}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Share this with the employee — they can change it after logging in.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground rounded-md border border-border bg-muted/40 p-2.5">
+              A unique one-time password is generated when you create the account and shown to you once.
+              The employee must choose their own password the first time they sign in.
+            </p>
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
@@ -678,6 +674,43 @@ function ManageUsersPage() {
               {deleting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               {deleting ? "Deleting…" : "Delete Permanently"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* One-time password handover (shown once; not stored anywhere) */}
+      <Dialog open={!!issued} onOpenChange={(o) => !o && setIssued(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{issued?.reason === "reset" ? "Password reset" : "Staff member created"}</DialogTitle>
+            <DialogDescription>
+              Give {issued?.name} this one-time password in person or over a private channel. It is shown only
+              now. At first sign-in they must choose their own password before they can use the portal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Sign-in email</p>
+            <p className="font-mono text-sm">{issued?.email}</p>
+            <p className="text-xs text-muted-foreground pt-2">One-time password</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 rounded-md border border-border bg-muted px-3 py-2 font-mono text-base tracking-wide select-all">
+                {issued?.password}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard?.writeText(issued?.password || "");
+                  toast.success("Copied");
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIssued(null)}>I have handed it over</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

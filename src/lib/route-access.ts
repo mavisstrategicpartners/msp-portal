@@ -21,6 +21,8 @@ import { canAccessPath, navContextFromProfile } from "@/lib/navigation";
 
 type Loaded = {
   user: { id: string; email?: string };
+  /** Signed in with a temporary password that must be replaced first. */
+  mustChangePassword: boolean;
   access: AccessFlags;
   departmentName: string | null;
 };
@@ -44,6 +46,7 @@ export async function loadAccess(): Promise<Loaded | null> {
   const access = computeAccess(profile as Profile | null, user.email, roles ?? []);
   const value: Loaded = {
     user: { id: user.id, email: user.email },
+    mustChangePassword: Boolean((user.app_metadata as any)?.must_change_password),
     access,
     departmentName: (profile as Profile | null)?.department ?? null,
   };
@@ -63,6 +66,7 @@ export async function guardRoute(pathname: string) {
     console.warn("Access check failed:", err);
   }
   if (!loaded) throw redirect({ to: "/auth", replace: true });
+  if (loaded.mustChangePassword) throw redirect({ to: "/set-password" as any, replace: true });
 
   const ctx = navContextFromProfile({ ...loaded.access, departmentName: loaded.departmentName })!;
   if (!canAccessPath(pathname, ctx)) {

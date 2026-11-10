@@ -35,6 +35,8 @@ export async function authenticateApiRequest(request: Request): Promise<ApiUser 
       console.error("[api-auth] Supabase rejected SUPABASE_SERVICE_ROLE_KEY:", error.message);
     }
     if (error || !user) return null;
+    // A temporary password must be replaced before the account can use the portal.
+    if ((user.app_metadata as any)?.must_change_password) return null;
 
     const db = supabaseAdmin as any;
     const [{ data: profile }, { data: roles }] = await Promise.all([
