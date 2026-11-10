@@ -107,6 +107,17 @@ function AuthPage() {
   }, [navigate]);
 
   async function navigateForDepartment(userId: string) {
+    // The CEO is identified only by the explicit "ceo" role grant and always
+    // lands on the CEO Executive Dashboard.
+    try {
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if ((roles ?? []).some((r: any) => r.role === "ceo")) {
+        await navigate({ to: "/ceo" as any });
+        return;
+      }
+    } catch {
+      /* fall through to the usual destination */
+    }
     let profile: { department?: string | null; role_tier?: string | null; job_title?: string | null } | null = null;
     try {
       const profileResult = await supabase
@@ -123,7 +134,6 @@ function AuthPage() {
       await navigate({ to: "/home" });
       return;
     }
-    const isCeo = profile?.department === "Executive" || profile?.job_title === "Chief Executive Officer";
     const isHR = profile?.department === "Human Resources";
     const deptLower = (profile?.department || "").toLowerCase();
     const titleLower = (profile?.job_title || "").toLowerCase();
@@ -157,9 +167,7 @@ function AuthPage() {
       (titleLower.includes("department manager") ||
        titleLower.includes("media buying") ||
        (profile?.role_tier === "manager" && !isOps && !isGM && !isHR && !isFinance));
-    const destination = isCeo
-      ? "/ceo"
-      : isGM
+    const destination = isGM
       ? "/gm"
       : isOps
       ? "/operations"

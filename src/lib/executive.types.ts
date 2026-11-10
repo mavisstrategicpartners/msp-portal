@@ -32,7 +32,7 @@ export interface ExecPerson {
   roleLabel: string;
   /** named: a real person. shared-role: a generic login for a role or mailbox.
    *  setup-script: created by scripts/seed-sales-users.mjs, not by HR. */
-  accountType: "named" | "shared-role" | "setup-script";
+  accountType: "named" | "shared-role" | "setup-script" | "executive";
   tier: string;
   active: boolean;
   lastLoginAt: string | null;

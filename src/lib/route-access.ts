@@ -69,6 +69,11 @@ export async function guardRoute(pathname: string) {
   if (loaded.mustChangePassword) throw redirect({ to: "/set-password" as any, replace: true });
 
   const ctx = navContextFromProfile({ ...loaded.access, departmentName: loaded.departmentName })!;
+  // The CEO has one landing page: the CEO Executive Dashboard. The generic
+  // staff home is never shown to her (on login, refresh or a direct link).
+  if (loaded.access.isCEO && (pathname === "/home" || pathname === "/")) {
+    throw redirect({ to: "/ceo" as any, replace: true });
+  }
   if (!canAccessPath(pathname, ctx)) {
     const home = getDefaultDashboardRoute(loaded.access.systemRole);
     throw redirect({ to: (canAccessPath(home, ctx) ? home : "/home") as any, replace: true });

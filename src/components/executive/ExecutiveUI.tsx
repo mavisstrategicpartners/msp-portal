@@ -517,7 +517,11 @@ export function PeopleTable({ people, empty = "No employees match." }: { people:
                   {p.name}
                   {p.accountType !== "named" && (
                     <Badge variant="outline" className="ml-1.5 text-[9px] align-middle">
-                      {p.accountType === "setup-script" ? "Created by setup script" : "Shared role login"}
+                      {p.accountType === "executive"
+                        ? "CEO"
+                        : p.accountType === "setup-script"
+                          ? "Created by setup script"
+                          : "Shared role login"}
                     </Badge>
                   )}
                 </p>
@@ -585,7 +589,7 @@ export function FollowUpDialog({
   const options = useMemo(() => {
     const leads = new Set((dept?.leads || []).map((l) => l.id));
     return [...data.people]
-      .filter((p) => p.active)
+      .filter((p) => p.active && p.accountType !== "executive")
       .sort((a, b) => Number(leads.has(b.id)) - Number(leads.has(a.id)) || a.name.localeCompare(b.name))
       .map((p) => ({ ...p, isLead: leads.has(p.id) }));
   }, [data.people, dept]);

@@ -38,6 +38,10 @@ import { Route as AuthenticatedCeoIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCeoClientsRouteImport } from './routes/_authenticated/ceo/clients'
 import { Route as AuthenticatedCeoDeliveryRouteImport } from './routes/_authenticated/ceo/delivery'
 import { Route as AuthenticatedCeoDepartmentsRouteImport } from './routes/_authenticated/ceo/departments'
+import { Route as AuthenticatedCeoEvidenceRouteImport } from './routes/_authenticated/ceo/evidence'
+import { Route as AuthenticatedCeoInitiativesRouteImport } from './routes/_authenticated/ceo/initiatives'
+import { Route as AuthenticatedCeoNotificationsRouteImport } from './routes/_authenticated/ceo/notifications'
+import { Route as AuthenticatedCeoPerformanceRouteImport } from './routes/_authenticated/ceo/performance'
 import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
 import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
 import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
@@ -229,6 +233,30 @@ const AuthenticatedCeoDepartmentsRoute =
   AuthenticatedCeoDepartmentsRouteImport.update({
     id: '/ceo/departments',
     path: '/ceo/departments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoEvidenceRoute =
+  AuthenticatedCeoEvidenceRouteImport.update({
+    id: '/ceo/evidence',
+    path: '/ceo/evidence',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoInitiativesRoute =
+  AuthenticatedCeoInitiativesRouteImport.update({
+    id: '/ceo/initiatives',
+    path: '/ceo/initiatives',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoNotificationsRoute =
+  AuthenticatedCeoNotificationsRouteImport.update({
+    id: '/ceo/notifications',
+    path: '/ceo/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoPerformanceRoute =
+  AuthenticatedCeoPerformanceRouteImport.update({
+    id: '/ceo/performance',
+    path: '/ceo/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCeoRevenueRoute = AuthenticatedCeoRevenueRouteImport.update({
@@ -493,6 +521,10 @@ export interface FileRoutesByFullPath {
   '/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
   '/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
+  '/ceo/evidence': typeof AuthenticatedCeoEvidenceRoute
+  '/ceo/initiatives': typeof AuthenticatedCeoInitiativesRoute
+  '/ceo/notifications': typeof AuthenticatedCeoNotificationsRoute
+  '/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -564,6 +596,10 @@ export interface FileRoutesByTo {
   '/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
   '/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
+  '/ceo/evidence': typeof AuthenticatedCeoEvidenceRoute
+  '/ceo/initiatives': typeof AuthenticatedCeoInitiativesRoute
+  '/ceo/notifications': typeof AuthenticatedCeoNotificationsRoute
+  '/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -637,6 +673,10 @@ export interface FileRoutesById {
   '/_authenticated/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/_authenticated/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
   '/_authenticated/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
+  '/_authenticated/ceo/evidence': typeof AuthenticatedCeoEvidenceRoute
+  '/_authenticated/ceo/initiatives': typeof AuthenticatedCeoInitiativesRoute
+  '/_authenticated/ceo/notifications': typeof AuthenticatedCeoNotificationsRoute
+  '/_authenticated/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -710,6 +750,10 @@ export interface FileRouteTypes {
     | '/ceo/clients'
     | '/ceo/delivery'
     | '/ceo/departments'
+    | '/ceo/evidence'
+    | '/ceo/initiatives'
+    | '/ceo/notifications'
+    | '/ceo/performance'
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
@@ -781,6 +825,10 @@ export interface FileRouteTypes {
     | '/ceo/clients'
     | '/ceo/delivery'
     | '/ceo/departments'
+    | '/ceo/evidence'
+    | '/ceo/initiatives'
+    | '/ceo/notifications'
+    | '/ceo/performance'
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
@@ -853,6 +901,10 @@ export interface FileRouteTypes {
     | '/_authenticated/ceo/clients'
     | '/_authenticated/ceo/delivery'
     | '/_authenticated/ceo/departments'
+    | '/_authenticated/ceo/evidence'
+    | '/_authenticated/ceo/initiatives'
+    | '/_authenticated/ceo/notifications'
+    | '/_authenticated/ceo/performance'
     | '/_authenticated/ceo/revenue'
     | '/_authenticated/ceo/sales'
     | '/_authenticated/ceo/team'
@@ -1108,6 +1160,34 @@ declare module '@tanstack/react-router' {
       path: '/ceo/departments'
       fullPath: '/ceo/departments'
       preLoaderRoute: typeof AuthenticatedCeoDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/evidence': {
+      id: '/_authenticated/ceo/evidence'
+      path: '/ceo/evidence'
+      fullPath: '/ceo/evidence'
+      preLoaderRoute: typeof AuthenticatedCeoEvidenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/initiatives': {
+      id: '/_authenticated/ceo/initiatives'
+      path: '/ceo/initiatives'
+      fullPath: '/ceo/initiatives'
+      preLoaderRoute: typeof AuthenticatedCeoInitiativesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/notifications': {
+      id: '/_authenticated/ceo/notifications'
+      path: '/ceo/notifications'
+      fullPath: '/ceo/notifications'
+      preLoaderRoute: typeof AuthenticatedCeoNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/performance': {
+      id: '/_authenticated/ceo/performance'
+      path: '/ceo/performance'
+      fullPath: '/ceo/performance'
+      preLoaderRoute: typeof AuthenticatedCeoPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ceo/revenue': {
@@ -1424,6 +1504,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCeoClientsRoute: typeof AuthenticatedCeoClientsRoute
   AuthenticatedCeoDeliveryRoute: typeof AuthenticatedCeoDeliveryRoute
   AuthenticatedCeoDepartmentsRoute: typeof AuthenticatedCeoDepartmentsRoute
+  AuthenticatedCeoEvidenceRoute: typeof AuthenticatedCeoEvidenceRoute
+  AuthenticatedCeoInitiativesRoute: typeof AuthenticatedCeoInitiativesRoute
+  AuthenticatedCeoNotificationsRoute: typeof AuthenticatedCeoNotificationsRoute
+  AuthenticatedCeoPerformanceRoute: typeof AuthenticatedCeoPerformanceRoute
   AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
   AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
   AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
@@ -1492,6 +1576,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCeoClientsRoute: AuthenticatedCeoClientsRoute,
   AuthenticatedCeoDeliveryRoute: AuthenticatedCeoDeliveryRoute,
   AuthenticatedCeoDepartmentsRoute: AuthenticatedCeoDepartmentsRoute,
+  AuthenticatedCeoEvidenceRoute: AuthenticatedCeoEvidenceRoute,
+  AuthenticatedCeoInitiativesRoute: AuthenticatedCeoInitiativesRoute,
+  AuthenticatedCeoNotificationsRoute: AuthenticatedCeoNotificationsRoute,
+  AuthenticatedCeoPerformanceRoute: AuthenticatedCeoPerformanceRoute,
   AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
   AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
   AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,

@@ -135,24 +135,69 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
   },
 
   ceo: {
-    title: () => "CEO Workspace",
+    title: () => "CEO Executive Dashboard",
     subtitle: "Company-wide Executive Oversight",
     home: "/ceo",
     prefixes: ["/ceo"],
     access: (ctx) => Boolean(ctx.isCEO) || ctx.isAdmin,
+    // The CEO's own navigation. Shown on every page she opens (see
+    // activeWorkspace), so visiting a department workspace never turns her
+    // sidebar into the GM's, Operations' or a manager's.
     groups: [
       {
         id: "ceo-exec",
-        label: "Executive Health",
+        label: "Executive",
         items: [
-          { to: "/ceo", label: "Executive Dashboard", icon: LayoutDashboard, exact: true },
+          { to: "/ceo", label: "Executive Overview", icon: LayoutDashboard, exact: true },
+          { to: "/ceo/performance", label: "Company Performance", icon: TrendingUp },
           { to: "/ceo/departments", label: "Departments", icon: Building2 },
-          { to: "/ceo/team", label: "People & Attendance", icon: Users },
-          { to: "/ceo/delivery", label: "Tasks & Deliverables", icon: ListChecks },
-          { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
-          { to: "/ceo/revenue", label: "Financial Oversight", icon: Banknote },
-          { to: "/ceo/sales", label: "Sales Pipeline", icon: TrendingUp },
         ],
+      },
+      {
+        id: "ceo-org",
+        label: "Organisation",
+        items: [
+          { to: "/ceo/team", label: "People & Workforce", icon: Users },
+          { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
+          { to: "/ceo/delivery", label: "Operations & Deliverables", icon: ListChecks },
+          { to: "/ceo/evidence", label: "Evidence & Approvals", icon: CheckSquare },
+        ],
+      },
+      {
+        id: "ceo-finance",
+        label: "Finance & Reporting",
+        items: [
+          { to: "/ceo/revenue", label: "Financial Overview", icon: Banknote },
+          { to: "/reports", label: "Reports & Analytics", icon: FileBarChart2 },
+        ],
+      },
+      {
+        id: "ceo-leadership",
+        label: "Leadership",
+        items: [
+          { to: "/ceo/initiatives", label: "Strategic Initiatives", icon: Target },
+          { to: "/ceo/notifications", label: "Notifications", icon: AlertTriangle },
+        ],
+      },
+      {
+        id: "ceo-inspect",
+        label: "Inspect Department Workspaces",
+        defaultOpen: false,
+        visible: (ctx) => Boolean(ctx.isCEO),
+        items: [
+          { to: "/gm", label: "GM Workspace (view)", icon: Crown, exact: true },
+          { to: "/operations", label: "Operations Workspace (view)", icon: Layers, exact: true },
+          { to: "/department", label: "Department Workspace (view)", icon: Building2, exact: true },
+          { to: "/sales", label: "Sales Workspace (view)", icon: TrendingUp, exact: true },
+          { to: "/finance", label: "Finance Workspace (view)", icon: Banknote, exact: true },
+          { to: "/hr", label: "HR Workspace (view)", icon: Users, exact: true },
+        ],
+      },
+      {
+        id: "ceo-account",
+        label: "Account",
+        visible: (ctx) => Boolean(ctx.isCEO),
+        items: [{ to: "/me/profile", label: "Account Settings", icon: Settings }],
       },
     ],
   },
@@ -540,6 +585,8 @@ export function canAccessPath(pathname: string, ctx: NavContext) {
 
 /** The workspace whose sidebar should be shown for the current URL. */
 export function activeWorkspace(pathname: string, ctx: NavContext): WorkspaceKey {
+  // The CEO always sees her own executive navigation, whichever page she opens.
+  if (ctx.isCEO) return "ceo";
   const ws = workspaceForPath(pathname);
   if (ws && WORKSPACES[ws].access(ctx)) return ws;
   return homeWorkspace(ctx);
@@ -554,6 +601,8 @@ function visibleGroups(groups: NavGroup[], ctx: NavContext): NavGroup[] {
 
 /** Other workspaces the user may switch to (excludes the one being shown). */
 export function workspaceSwitcherGroup(current: WorkspaceKey, ctx: NavContext): NavGroup | null {
+  // The CEO's sidebar has its own "Inspect Department Workspaces" section.
+  if (ctx.isCEO) return null;
   const home = homeWorkspace(ctx);
   const items: NavItem[] = WORKSPACE_ORDER.filter((key) => {
     if (key === current) return false;

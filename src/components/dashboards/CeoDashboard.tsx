@@ -61,7 +61,7 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
   return (
     <div className="space-y-6">
       <ExecHeader
-        title="Executive Dashboard"
+        title="CEO Executive Dashboard"
         subtitle="Company-wide view of every department, employee, client and decision."
         source="live portal records: staff profiles, task and evidence ledger, attendance clock events, leave requests, clients and onboarding, the Sales ledger and the Finance tables"
         data={data}

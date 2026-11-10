@@ -55,7 +55,7 @@ function PeoplePage({ data }: { data: ExecutiveOverview }) {
     if (att === "no-clock-in") return p.attendanceToday === "No clock-in";
     if (att === "missing-clock-out") return missing.has(p.id);
     if (att === "overdue") return p.overdueTasks > 0;
-    if (att === "shared") return p.accountType !== "named";
+    if (att === "shared") return p.accountType === "shared-role" || p.accountType === "setup-script";
     return true;
   });
 

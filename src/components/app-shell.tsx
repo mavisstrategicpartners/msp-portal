@@ -102,6 +102,17 @@ function ShellInner({ children }: { children: ReactNode }) {
                 <MyFollowUps />
               </div>
             )}
+          {!profileLoading && !blocked && profileData?.isCEO && /^\/(gm|operations|department|sales|finance|hr)(\/|$)/.test(pathname) && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs text-foreground">
+              <span>
+                You are inspecting this department workspace as CEO. Your account and role are unchanged; decisions and
+                approvals here stay with the responsible manager.
+              </span>
+              <Link to={"/ceo" as any} className="font-semibold text-primary hover:underline">
+                Back to CEO Executive Dashboard
+              </Link>
+            </div>
+          )}
           {!profileLoading && !blocked && /^\/operations\/(communications|recovery|escalations|workflows)/.test(pathname) && (
             <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-2.5 text-xs text-foreground">
               Records on this page are saved only in this browser. They are not yet stored in the shared database, so
