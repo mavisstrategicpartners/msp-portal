@@ -25,6 +25,7 @@ function SalesPage({ data }: { data: ExecutiveOverview }) {
         title="Sales Pipeline"
         subtitle="Leads, pipeline value and conversions captured by the Sales team in the portal."
         data={data}
+        source="the Sales team's lead ledger"
         actions={
           <Button asChild size="sm" variant="outline">
             <Link to="/sales">Open Sales workspace</Link>

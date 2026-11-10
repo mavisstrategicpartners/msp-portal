@@ -62,7 +62,8 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
     <div className="space-y-6">
       <ExecHeader
         title="Executive Dashboard"
-        subtitle="Company-wide view of every department, employee, client and decision, drawn from live portal records."
+        subtitle="Company-wide view of every department, employee, client and decision."
+        source="live portal records: staff profiles, task and evidence ledger, attendance clock events, leave requests, clients and onboarding, the Sales ledger and the Finance tables"
         data={data}
         actions={
           <Button size="sm" onClick={() => setDraft({})}>
@@ -125,7 +126,7 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
           <Kpi
             label="Team"
             value={b.headcount}
-            hint={`${present} working now · ${b.joinersLast30} added in 30 days`}
+            hint={`named employees · ${present} working now${b.sharedAccounts ? ` · ${b.sharedAccounts} shared/system logins not counted` : ""}`}
             to="/ceo/team"
           />
         </div>
@@ -146,7 +147,7 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
           <section className="space-y-3">
             <SectionTitle
               title="Department performance"
-              hint="Scorecards from each department's assigned tasks and reviewed deliverables. Open one to drill down."
+              hint="Built from the department recorded on each task and its reviewed deliverables. Open one to drill down."
               action={
                 <Button asChild size="sm" variant="outline">
                   <Link to="/ceo/departments">All departments</Link>

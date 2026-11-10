@@ -34,6 +34,7 @@ const ATTENDANCE_FILTERS = [
   { value: "no-clock-in", label: "No clock-in today" },
   { value: "missing-clock-out", label: "Missing clock-out" },
   { value: "overdue", label: "Has overdue tasks" },
+  { value: "shared", label: "Shared & script-created logins" },
 ];
 
 function PeoplePage({ data }: { data: ExecutiveOverview }) {
@@ -54,6 +55,7 @@ function PeoplePage({ data }: { data: ExecutiveOverview }) {
     if (att === "no-clock-in") return p.attendanceToday === "No clock-in";
     if (att === "missing-clock-out") return missing.has(p.id);
     if (att === "overdue") return p.overdueTasks > 0;
+    if (att === "shared") return p.accountType !== "named";
     return true;
   });
 
@@ -62,10 +64,15 @@ function PeoplePage({ data }: { data: ExecutiveOverview }) {
       <ExecHeader
         title="People & Workforce"
         subtitle="Employee directory with today's attendance, the last 7 days of clock-ins, workload and leave."
+        source="staff profiles, attendance clock-in/out events, the task ledger and leave requests"
         data={data}
       />
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
-        <Kpi label="Active employees" value={data.people.length} hint={`${orgDepartments.length} departments`} />
+        <Kpi
+          label="Named employees"
+          value={data.business.headcount}
+          hint={`${data.business.sharedAccounts} shared or script-created logins listed separately`}
+        />
         <Kpi label="Working now" value={a.clockedIn + a.onBreak} hint={`${a.onBreak} on break`} tone="good" />
         <Kpi label="Clocked out today" value={a.clockedOut} />
         <Kpi

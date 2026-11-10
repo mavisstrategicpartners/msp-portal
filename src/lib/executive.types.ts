@@ -30,6 +30,9 @@ export interface ExecPerson {
   orgDepartment: string;
   departments: DepartmentKey[];
   roleLabel: string;
+  /** named: a real person. shared-role: a generic login for a role or mailbox.
+   *  setup-script: created by scripts/seed-sales-users.mjs, not by HR. */
+  accountType: "named" | "shared-role" | "setup-script";
   tier: string;
   active: boolean;
   lastLoginAt: string | null;
@@ -174,7 +177,9 @@ export interface ExecutiveOverview {
     onboardingInProgress: number;
     onboardingDelayed: number;
     atRiskClients: number;
+    /** Named employees only (shared role logins and script-created accounts excluded). */
     headcount: number;
+    sharedAccounts: number;
     joinersLast30: number;
     openTasks: number;
     overdueTasks: number;

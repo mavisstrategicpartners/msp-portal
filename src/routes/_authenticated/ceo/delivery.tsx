@@ -87,6 +87,7 @@ function DeliveryPage({ data }: { data: ExecutiveOverview }) {
         title="Tasks & Deliverables"
         subtitle="Every task assigned in the portal and every deliverable submitted as evidence, across all departments."
         data={data}
+        source="the staff task ledger and evidence submissions"
       />
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Open" value={t.filter((x) => x.status !== "Completed").length} hint={`${t.length} tasks in total`} />

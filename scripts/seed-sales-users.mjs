@@ -2,6 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://tkjytjaerfjpghusrwom.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Passwords are never stored in this file. Set SEED_ACCOUNT_PASSWORD when running it.
+if (!SUPABASE_SERVICE_ROLE_KEY || !process.env.SEED_ACCOUNT_PASSWORD) {
+  console.error("Set SUPABASE_SERVICE_ROLE_KEY and SEED_ACCOUNT_PASSWORD in the environment first.");
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -10,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 const accountsToProvision = [
   {
     email: "mavis@mavisstrateegicpartners.co.za",
-    password: "MSPAdmin@2026!",
+    password: process.env.SEED_ACCOUNT_PASSWORD,
     fullName: "Mavis Muchena",
     jobTitle: "Chief Executive Officer & Administrator",
     department: "CEO",
@@ -19,7 +24,7 @@ const accountsToProvision = [
   },
   {
     email: "manager@mavisstrateegicpartners.co.za",
-    password: "MSPManager@2026!",
+    password: process.env.SEED_ACCOUNT_PASSWORD,
     fullName: "Sales Manager",
     jobTitle: "Head of Sales & Business Development",
     department: "Sales Team",
@@ -28,7 +33,7 @@ const accountsToProvision = [
   },
   {
     email: "consultant1@mavisstrateegicpartners.co.za",
-    password: "MSPConsultant1@2026!",
+    password: process.env.SEED_ACCOUNT_PASSWORD,
     fullName: "Sales Consultant 1",
     jobTitle: "Senior Sales Consultant",
     department: "Sales Team",
@@ -37,7 +42,7 @@ const accountsToProvision = [
   },
   {
     email: "consultant2@mavisstrateegicpartners.co.za",
-    password: "MSPConsultant2@2026!",
+    password: process.env.SEED_ACCOUNT_PASSWORD,
     fullName: "Sales Consultant 2",
     jobTitle: "Sales Consultant",
     department: "Sales Team",
@@ -46,7 +51,7 @@ const accountsToProvision = [
   },
   {
     email: "consultant3@mavisstrateegicpartners.co.za",
-    password: "MSPConsultant3@2026!",
+    password: process.env.SEED_ACCOUNT_PASSWORD,
     fullName: "Sales Consultant 3",
     jobTitle: "Junior Sales Consultant",
     department: "Sales Team",

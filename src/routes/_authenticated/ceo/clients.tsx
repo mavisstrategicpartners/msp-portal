@@ -50,6 +50,7 @@ function ClientsPage({ data }: { data: ExecutiveOverview }) {
         title="Clients & Onboarding"
         subtitle="Client portfolio, onboarding progress against target dates, and service delivery work per client."
         data={data}
+        source="the clients table, onboarding records and client-linked tasks"
       />
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Kpi label="Clients" value={data.clients.length} hint={`${data.business.clientsAddedLast30} added in 30 days`} />

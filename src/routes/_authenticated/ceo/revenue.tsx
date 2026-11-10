@@ -26,6 +26,7 @@ function FinancePage({ data }: { data: ExecutiveOverview }) {
         title="Financial Oversight"
         subtitle="MSP's own agency revenue, expenses and budgets from the Finance module. Client ad spend is paid directly to the platforms and is not MSP money, so it is excluded."
         data={data}
+        source="the Finance module (invoices, expenses, budgets, spend approvals)"
         actions={
           <Button asChild size="sm" variant="outline">
             <Link to="/finance">Open Finance workspace</Link>

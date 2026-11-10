@@ -92,6 +92,18 @@ function departmentsForPerson(title: string, orgDept: string): DepartmentKey[] {
 
 const LEAD_WORDS = /\b(manager|lead|head|director|supervisor)\b/;
 
+// Accounts that are not individual employees. Shared role logins carry a role
+// or mailbox name instead of a person's name; the misspelled domain is only
+// used by accounts that scripts/seed-sales-users.mjs created.
+const SHARED_NAME =
+  /^(msp\b|department manager\b|operations manager$|sales (consultant|manager|executive|admin)\b|consultant \d|finance & administration manager$|administration dept$|operations & relationship manager$)/i;
+const SCRIPT_DOMAIN = "@mavisstrateegicpartners.co.za";
+export function accountTypeFor(p: { email?: string | null; full_name?: string | null }): "named" | "shared-role" | "setup-script" {
+  if (norm(p.email).endsWith(SCRIPT_DOMAIN)) return "setup-script";
+  if (!p.full_name || SHARED_NAME.test(p.full_name.trim())) return "shared-role";
+  return "named";
+}
+
 // ── Time helpers (Africa/Johannesburg) ────────────────────────────────────────
 function jhbDate(d: Date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -343,6 +355,7 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       orgDepartment: p.department || "Unassigned",
       departments: departmentsForPerson(p.job_title || "", p.department || ""),
       roleLabel: access.systemRole.replace(/_/g, " "),
+      accountType: accountTypeFor(p),
       tier: p.role_tier || "staff",
       active: p.is_active !== false,
       lastLoginAt: p.last_login_at || null,
@@ -365,12 +378,14 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     }
   }
 
+  // Attendance figures cover named employees only: shared logins don't clock in.
+  const employees = people.filter((p) => p.accountType === "named");
   const attendance = {
     workday: weekday,
-    clockedIn: people.filter((p) => p.attendanceToday === "Clocked In").length,
-    onBreak: people.filter((p) => p.attendanceToday === "On Break").length,
-    clockedOut: people.filter((p) => p.attendanceToday === "Clocked Out").length,
-    noClockIn: people.filter((p) => p.attendanceToday === "No clock-in").length,
+    clockedIn: employees.filter((p) => p.attendanceToday === "Clocked In").length,
+    onBreak: employees.filter((p) => p.attendanceToday === "On Break").length,
+    clockedOut: employees.filter((p) => p.attendanceToday === "Clocked Out").length,
+    noClockIn: employees.filter((p) => p.attendanceToday === "No clock-in").length,
     missingClockOut,
   };
 
@@ -766,7 +781,8 @@ async function buildOverview(): Promise<ExecutiveOverview> {
       onboardingInProgress,
       onboardingDelayed,
       atRiskClients,
-      headcount: activeProfiles.length,
+      headcount: employees.length,
+      sharedAccounts: people.length - employees.length,
       joinersLast30: joined.length,
       openTasks,
       overdueTasks,

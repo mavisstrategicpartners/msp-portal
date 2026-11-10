@@ -102,11 +102,14 @@ export function ExecHeader({
   subtitle,
   data,
   actions,
+  source,
 }: {
   title: string;
   subtitle: string;
   data?: ExecutiveOverview;
   actions?: ReactNode;
+  /** Where the figures on this page come from (shown to the reader). */
+  source?: string;
 }) {
   const { refetch, isFetching } = useOverview();
   return (
@@ -114,6 +117,11 @@ export function ExecHeader({
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{subtitle}</p>
+        {source && (
+          <p className="mt-1 text-[11px] text-muted-foreground/80 max-w-3xl">
+            Source: {source}. Figures are counted from these records only; nothing is estimated or filled in.
+          </p>
+        )}
       </div>
       <div className="flex items-center gap-2">
         {data && (
@@ -505,7 +513,14 @@ export function PeopleTable({ people, empty = "No employees match." }: { people:
           {people.map((p) => (
             <tr key={p.id} className="hover:bg-muted/20">
               <td className="px-3 py-2.5">
-                <p className="font-medium text-foreground">{p.name}</p>
+                <p className="font-medium text-foreground">
+                  {p.name}
+                  {p.accountType !== "named" && (
+                    <Badge variant="outline" className="ml-1.5 text-[9px] align-middle">
+                      {p.accountType === "setup-script" ? "Created by setup script" : "Shared role login"}
+                    </Badge>
+                  )}
+                </p>
                 <p className="text-[11px] text-muted-foreground">{p.title || "No job title"}</p>
               </td>
               <td className="px-3 py-2.5 text-muted-foreground">{p.orgDepartment}</td>

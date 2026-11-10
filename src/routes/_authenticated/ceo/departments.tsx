@@ -54,6 +54,7 @@ function DepartmentIndex({ data }: { data: ExecutiveOverview }) {
         title="Departments"
         subtitle="Every department's scorecard. Departments needing attention are listed first."
         data={data}
+        source="the task ledger, evidence submissions, staff profiles and attendance"
       />
       <DepartmentGrid departments={data.departments} includeInactive />
       <ReadOnlyNote />
@@ -117,6 +118,7 @@ function DepartmentDetail({ data, deptKey }: { data: ExecutiveOverview; deptKey:
             : `No department lead on record · ${d.members} ${d.members === 1 ? "person" : "people"}`
         }
         data={data}
+        source="the task ledger, evidence submissions, staff profiles and attendance"
         actions={
           <Button
             size="sm"
