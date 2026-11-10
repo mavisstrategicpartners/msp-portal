@@ -1,3 +1,4 @@
+import { MyFollowUps } from "@/components/executive/MyFollowUps";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -95,6 +96,12 @@ function ShellInner({ children }: { children: ReactNode }) {
           onOpenSettings={() => setSettingsOpen(true)}
         />
         <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-8">
+          {!profileLoading && !blocked && profileData && !profileData.isCEO &&
+            pathname === (profileData.defaultDashboard ?? "/home") && (
+              <div className="mb-6">
+                <MyFollowUps />
+              </div>
+            )}
           {profileLoading || blocked ? null : children}
         </main>
       </div>

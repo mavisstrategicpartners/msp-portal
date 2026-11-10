@@ -27,6 +27,8 @@ interface AuthenticatedUser {
   department: string;
   roleTier: string;
   isAdmin: boolean;
+  /** CEO oversight: may read the Sales API but not change it. */
+  readOnly: boolean;
   isManager: boolean;
 }
 
@@ -480,7 +482,9 @@ async function verifyAuth(request: Request): Promise<AuthenticatedUser | null> {
   if (!user) return null;
   const a = user.access;
   // Only the Sales team, the GM and administrators may use the Sales API.
-  if (!(a.isSales || a.isGM || a.isAdmin)) return null;
+  // The CEO may read it for company-wide oversight, but not change it.
+  if (!(a.isSales || a.isGM || a.isAdmin || a.isCEO)) return null;
+  const readOnly = a.isCEO && !(a.isSales || a.isGM || a.isAdmin);
   return {
     userId: user.userId,
     email: user.email,
@@ -489,6 +493,7 @@ async function verifyAuth(request: Request): Promise<AuthenticatedUser | null> {
     department: user.department,
     roleTier: user.roleTier,
     isAdmin: a.isAdmin,
+    readOnly,
     // Sales Manager rights: the sales manager role, the GM and administrators.
     // Other departments' managers are not sales managers.
     isManager: a.isAdmin || a.isGM || a.isSalesManager,
@@ -519,6 +524,12 @@ export async function handleSalesApi(request: Request): Promise<Response> {
       status: 401,
       headers: HEADERS,
     });
+  }
+  if (auth.readOnly && method !== "GET") {
+    return new Response(
+      JSON.stringify({ error: "Executive view is read-only. Sales changes are made by the Sales team." }),
+      { status: 403, headers: HEADERS },
+    );
   }
 
   try {

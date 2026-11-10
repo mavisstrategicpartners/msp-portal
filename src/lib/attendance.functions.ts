@@ -60,7 +60,7 @@ export const getStaffAttendance = createServerFn({ method: "GET" })
       db.from("user_roles").select("role").eq("user_id", context.userId),
     ]);
     const access = computeAccess(me, me?.email, myRoles ?? []);
-    if (!(access.isAdmin || access.isHR || access.isGM)) {
+    if (!(access.isAdmin || access.isHR || access.isGM || access.isCEO)) {
       throw new Response("Not authorised to view company attendance", { status: 403 });
     }
 

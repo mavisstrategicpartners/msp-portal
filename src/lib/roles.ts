@@ -40,14 +40,10 @@ export function resolveSystemRole(
   const title = (profile?.job_title || "").toLowerCase();
   const tier = profile?.role_tier;
 
-  // 1. CEO
-  if (
-    email === "ceo@mavisstrategicpartners.co.za" ||
-    title === "chief executive officer" ||
-    title === "ceo" ||
-    (dept === "ceo" && tier === "root_admin") ||
-    (dept === "executive" && (title.includes("ceo") || title.includes("chief executive")))
-  ) {
+  // 1. CEO — only an explicit "ceo" role grant in user_roles. Job titles,
+  //    departments and mailbox names never make someone the CEO, because the
+  //    CEO has company-wide visibility.
+  if (roles.some((r) => r?.role === "ceo")) {
     return "ceo";
   }
 
@@ -221,6 +217,10 @@ export type RoleTier = "root_admin" | "manager" | "staff" | "intern";
 export type AccessFlags = {
   systemRole: MspSystemRole;
   roleTier: RoleTier;
+  /** Explicitly granted CEO: company-wide read access, not administrator rights. */
+  isCEO: boolean;
+  /** May see every department's records (CEO or system administrator). */
+  canViewCompany: boolean;
   isAdmin: boolean;
   isRootAdmin: boolean;
   isHR: boolean;
@@ -244,17 +244,25 @@ export function computeAccess(
   const systemRole = resolveSystemRole(profile, userEmail, roles);
   const tier = (profile?.role_tier ?? null) as RoleTier | null;
   const roleTier: RoleTier =
-    tier === "root_admin" || systemRole === "ceo" || systemRole === "admin"
+    tier === "root_admin" || systemRole === "admin"
       ? "root_admin"
-      : tier || (systemRole.includes("manager") ? "manager" : "staff");
+      : systemRole === "ceo"
+        ? "manager"
+        : tier || (systemRole.includes("manager") ? "manager" : "staff");
   const isSales =
     systemRole === "sales" || systemRole === "sales_manager" || systemRole === "sales_consultant";
+  // root_admin tier is an explicit admin grant (set via Manage Staff "superadmin").
+  // The CEO is deliberately NOT an administrator: she sees everything, but
+  // approvals, payroll and user management stay with their owners.
+  const isAdmin = systemRole === "admin" || tier === "root_admin";
+  const isCEO = systemRole === "ceo";
   return {
     systemRole,
     roleTier,
-    // root_admin tier is an explicit admin grant (set via Manage Staff "superadmin").
-    isAdmin: systemRole === "admin" || systemRole === "ceo" || tier === "root_admin",
-    isRootAdmin: systemRole === "ceo",
+    isCEO,
+    canViewCompany: isCEO || isAdmin,
+    isAdmin,
+    isRootAdmin: tier === "root_admin",
     isHR: systemRole === "hr",
     isGM: systemRole === "general_manager",
     isOperations: systemRole === "operations",

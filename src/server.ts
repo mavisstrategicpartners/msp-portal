@@ -56,6 +56,11 @@ export default {
         return await handleOperationsApi(request);
       }
 
+      if (url.pathname.startsWith("/api/executive")) {
+        const { handleExecutiveApi } = await import("./lib/executive-server");
+        return await handleExecutiveApi(request);
+      }
+
       if (url.pathname.startsWith("/api/sales")) {
         const { handleSalesApi } = await import("./lib/sales-server");
         return await handleSalesApi(request);

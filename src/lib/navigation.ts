@@ -82,6 +82,10 @@ export type WorkspaceKey =
 
 export type NavContext = {
   systemRole: MspSystemRole;
+  /** Explicit CEO grant: may open every department workspace (read-only oversight). */
+  isCEO?: boolean;
+  /** CEO or system administrator. */
+  canViewCompany?: boolean;
   isAdmin: boolean;
   isHR: boolean;
   isSales: boolean;
@@ -132,21 +136,22 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
 
   ceo: {
     title: () => "CEO Workspace",
-    subtitle: "Executive Command & Analytics",
+    subtitle: "Company-wide Executive Oversight",
     home: "/ceo",
     prefixes: ["/ceo"],
-    access: (ctx) => ctx.isAdmin,
+    access: (ctx) => Boolean(ctx.isCEO) || ctx.isAdmin,
     groups: [
       {
         id: "ceo-exec",
         label: "Executive Health",
         items: [
           { to: "/ceo", label: "Executive Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/ceo/sales", label: "Sales Health", icon: TrendingUp },
-          { to: "/ceo/revenue", label: "Revenue Health", icon: Banknote },
-          { to: "/ceo/clients", label: "Client Health", icon: Building2 },
-          { to: "/ceo/delivery", label: "Delivery Health", icon: ListChecks },
-          { to: "/ceo/team", label: "Team Health", icon: Users },
+          { to: "/ceo/departments", label: "Departments", icon: Building2 },
+          { to: "/ceo/team", label: "People & Attendance", icon: Users },
+          { to: "/ceo/delivery", label: "Tasks & Deliverables", icon: ListChecks },
+          { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
+          { to: "/ceo/revenue", label: "Financial Oversight", icon: Banknote },
+          { to: "/ceo/sales", label: "Sales Pipeline", icon: TrendingUp },
         ],
       },
     ],
@@ -157,7 +162,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     subtitle: "Company Execution & Operations",
     home: "/gm",
     prefixes: ["/gm"],
-    access: (ctx) => ctx.systemRole === "general_manager" || ctx.isAdmin,
+    access: (ctx) => ctx.systemRole === "general_manager" || ctx.isAdmin || Boolean(ctx.isCEO),
     groups: [
       {
         id: "gm-command",
@@ -181,7 +186,10 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     home: "/operations",
     prefixes: ["/operations"],
     access: (ctx) =>
-      ctx.systemRole === "operations" || ctx.systemRole === "general_manager" || ctx.isAdmin,
+      ctx.systemRole === "operations" ||
+      ctx.systemRole === "general_manager" ||
+      ctx.isAdmin ||
+      Boolean(ctx.isCEO),
     groups: [
       {
         id: "ops-delivery",
@@ -208,7 +216,8 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
   },
 
   department: {
-    title: (ctx) => `${ctx.departmentName || "Media Buying"} Workspace`,
+    title: (ctx) =>
+      ctx.isCEO ? "Departments (company view)" : `${ctx.departmentName || "Media Buying"} Workspace`,
     subtitle: "Team Execution & QA Approval",
     home: "/department",
     prefixes: ["/department"],
@@ -217,6 +226,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     // given another department's workspace just because they manage people.
     access: (ctx) =>
       ctx.isAdmin ||
+      Boolean(ctx.isCEO) ||
       ["department_manager", "operations", "general_manager"].includes(ctx.systemRole),
     groups: [
       {
@@ -248,7 +258,8 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     subtitle: "Pipeline & Revenue Generation",
     home: "/sales",
     prefixes: ["/sales"],
-    access: (ctx) => ctx.isSales || ctx.systemRole === "general_manager" || ctx.isAdmin,
+    access: (ctx) =>
+      ctx.isSales || ctx.systemRole === "general_manager" || ctx.isAdmin || Boolean(ctx.isCEO),
     groups: [
       {
         id: "sales-command",
@@ -283,7 +294,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     home: "/hr",
     prefixes: ["/hr", "/host/hr"],
     // Mirrors the beforeLoad guards on /hr/*.
-    access: (ctx) => ctx.isHR || ctx.isAdmin,
+    access: (ctx) => ctx.isHR || ctx.isAdmin || Boolean(ctx.isCEO),
     groups: [
       {
         id: "hr-overview",
@@ -514,7 +525,8 @@ export function homeWorkspace(ctx: NavContext): WorkspaceKey {
 const RESTRICTED_SHARED_PAGES: { prefix: string; access: (ctx: NavContext) => boolean }[] = [
   {
     prefix: "/admin/sales-playbook",
-    access: (ctx) => ctx.isSales || ctx.isAdmin || ctx.systemRole === "general_manager",
+    access: (ctx) =>
+      ctx.isSales || ctx.isAdmin || ctx.systemRole === "general_manager" || Boolean(ctx.isCEO),
   },
 ];
 
@@ -631,6 +643,8 @@ export function navContextFromProfile(data: any): NavContext | null {
   if (!data) return null;
   return {
     systemRole: (data.systemRole ?? "staff") as MspSystemRole,
+    isCEO: !!data.isCEO,
+    canViewCompany: !!data.canViewCompany,
     isAdmin: !!data.isAdmin,
     isHR: !!data.isHR,
     isSales: !!data.isSales,

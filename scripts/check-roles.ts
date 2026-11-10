@@ -5,7 +5,11 @@ const mk = (email: string, job_title: string, department: string, role_tier: str
   ({ p: { id: "x", email, job_title, department, role_tier, full_name: "", phone: null, avatar_url: null, is_active: true, onboarding_completed: true } as any, roles: roles.map((role) => ({ role })) });
 // [label, account, expected systemRole, expected isAdmin]
 const cases: [string, ReturnType<typeof mk>, string, boolean][] = [
-  ["CEO", mk("ceo@mavisstrategicpartners.co.za", "Chief Executive Officer", "CEO", "root_admin", ["user", "admin"]), "ceo", true],
+  // CEO comes only from an explicit "ceo" role grant, and is not an administrator.
+  ["CEO (explicit ceo role)", mk("ceo@mavisstrategicpartners.co.za", "", "", "staff", ["user", "ceo"]), "ceo", false],
+  ["CEO mailbox without the role", mk("ceo@mavisstrategicpartners.co.za", "", "", "staff"), "staff", false],
+  ["'CEO' job title, manager tier", mk("shamah@mavisstrategicpartners.co.za", "CEO", "CEO", "manager"), "department_manager", false],
+  ["CEO title on a root admin account", mk("mavis@mavisstrateegicpartners.co.za", "Chief Executive Officer & Administrator", "CEO", "root_admin", ["user", "admin"]), "admin", true],
   ["General Manager (auto-admin row)", mk("general.manager@mavisstrategicpartners.co.za", "General Manager", "Managing Director", "manager", ["user", "admin"]), "general_manager", false],
   ["Operations Manager (auto-admin row)", mk("operations@mavisstrategicpartners.co.za", "Operations & Relationship Manager", "Operations Manager", "manager", ["user", "admin"]), "operations", false],
   ["Finance Manager (auto-admin row)", mk("financeadministration@mavisstrategicpartners.co.za", "Finance & Admin Manager", "Admin Department", "manager", ["user", "admin"]), "finance_admin", false],
@@ -31,6 +35,22 @@ for (const [label, a, role, admin] of cases) {
   const ok = r.systemRole === role && r.isAdmin === admin;
   if (!ok) fail++;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label.padEnd(36)} -> ${r.systemRole.padEnd(18)} admin=${r.isAdmin} manager=${r.isManagerOrAbove}${ok ? "" : `   (expected ${role}, admin=${admin})`}`);
+}
+// Company-wide visibility: the explicit CEO and system administrators only.
+const visibility: [string, ReturnType<typeof mk>, boolean][] = [
+  ["CEO sees the whole company", mk("ceo@mavisstrategicpartners.co.za", "", "", "staff", ["user", "ceo"]), true],
+  ["Root admin sees the whole company", mk("admin@mavisstrategicpartners.co.za", "Root Administrator", "IT Department", "root_admin", ["user", "admin"]), true],
+  ["General Manager is not company-wide CEO view", mk("general.manager@mavisstrategicpartners.co.za", "General Manager", "Managing Director", "manager"), false],
+  ["Sales Manager stays in Sales", mk("manager@mavisstrategicpartners.co.za", "Head of Sales & Business Development", "Sales Team", "manager", ["user", "admin"]), false],
+  ["HR Manager stays in HR", mk("hr@mavisstrategicpartners.co.za", "HR Manager", "Human Resources", "manager"), false],
+  ["SEO Manager stays in SEO", mk("ntokozo@mavisstrategicpartners.co.za", "SEO Manager", "Marketing Team", "manager"), false],
+  ["'CEO' job title alone", mk("shamah@mavisstrategicpartners.co.za", "CEO", "CEO", "manager"), false],
+];
+for (const [label, a, expected] of visibility) {
+  const r = computeAccess(a.p, a.p.email, a.roles);
+  const ok = r.canViewCompany === expected && r.isCEO === (r.systemRole === "ceo");
+  if (!ok) fail++;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label.padEnd(44)} canViewCompany=${r.canViewCompany}${ok ? "" : `   (expected ${expected})`}`);
 }
 console.log(fail ? `${fail} FAILED` : "all passed");
 process.exit(fail ? 1 : 0);

@@ -85,7 +85,8 @@ function departmentMatches(managed: Set<string>, dept?: string | null) {
   return false;
 }
 
-/** Company-wide oversight: CEO / administrators, the GM and Operations. */
+/** Company-wide review rights: administrators, the GM and Operations. (The CEO
+ *  sees every department through canViewTask, but does not approve work.) */
 function overseesAllDepartments(auth: AuthContext) {
   return auth.access.isAdmin || auth.access.isGM || auth.access.isOperations;
 }
@@ -99,6 +100,12 @@ function isTaskAssignee(auth: AuthContext, task: StaffTask) {
         task.assignedToName.toLowerCase() === auth.fullName.toLowerCase() &&
         auth.fullName.toLowerCase() !== "staff member"),
   );
+}
+
+/** May this user see this task and its evidence? Reviewers, plus the CEO
+ *  (company-wide, read-only: viewing never grants approval rights). */
+function canViewTask(auth: AuthContext, task: StaffTask, submitterDepartment?: string | null) {
+  return auth.access.isCEO || canReviewTask(auth, task, submitterDepartment);
 }
 
 /** May this user oversee / review work on this task? */
@@ -347,7 +354,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       // Managers see their own department's work (company-wide for CEO/admin, GM, Operations);
       // everyone else sees the tasks assigned to them.
       const userTasks = showAll
-        ? allTasks.filter((t) => canReviewTask(auth, t) || isTaskAssignee(auth, t))
+        ? allTasks.filter((t) => canViewTask(auth, t) || isTaskAssignee(auth, t))
         : allTasks.filter((t) => {
             const matchesId = Boolean(
               t.assignedToId &&
@@ -995,7 +1002,7 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           continue;
         }
         const task = tasksStore.get(e.taskId);
-        if (task && canReviewTask(auth, task, await profileDepartment(e.submittingStaffId))) visible.push(e);
+        if (task && canViewTask(auth, task, await profileDepartment(e.submittingStaffId))) visible.push(e);
       }
       visible.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
       return new Response(JSON.stringify({ evidence: visible }), { status: 200, headers: HEADERS });
@@ -1152,7 +1159,8 @@ export async function handleStaffApi(request: Request): Promise<Response> {
       const staffDept = await profileDepartment(evidence.submittingStaffId);
       const isSubmitter = evidence.submittingStaffId === auth.userId;
       const canReview = Boolean(task && canReviewTask(auth, task, staffDept)) && !isSubmitter;
-      if (!isSubmitter && !canReview && !(task && isTaskAssignee(auth, task))) {
+      const canView = Boolean(task && canViewTask(auth, task, staffDept));
+      if (!isSubmitter && !canReview && !canView && !(task && isTaskAssignee(auth, task))) {
         return new Response(JSON.stringify({ error: "You are not authorised to view this submission." }), {
           status: 403,
           headers: HEADERS,

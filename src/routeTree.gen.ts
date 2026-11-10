@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCeoIndexRouteImport } from './routes/_authenticated/ceo/index'
 import { Route as AuthenticatedCeoClientsRouteImport } from './routes/_authenticated/ceo/clients'
 import { Route as AuthenticatedCeoDeliveryRouteImport } from './routes/_authenticated/ceo/delivery'
+import { Route as AuthenticatedCeoDepartmentsRouteImport } from './routes/_authenticated/ceo/departments'
 import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
 import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
 import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
@@ -215,6 +216,12 @@ const AuthenticatedCeoDeliveryRoute =
   AuthenticatedCeoDeliveryRouteImport.update({
     id: '/ceo/delivery',
     path: '/ceo/delivery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCeoDepartmentsRoute =
+  AuthenticatedCeoDepartmentsRouteImport.update({
+    id: '/ceo/departments',
+    path: '/ceo/departments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCeoRevenueRoute = AuthenticatedCeoRevenueRouteImport.update({
@@ -471,6 +478,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -539,6 +547,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -609,6 +618,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/ceo/clients': typeof AuthenticatedCeoClientsRoute
   '/_authenticated/ceo/delivery': typeof AuthenticatedCeoDeliveryRoute
+  '/_authenticated/ceo/departments': typeof AuthenticatedCeoDepartmentsRoute
   '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
   '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -679,6 +689,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/ceo/clients'
     | '/ceo/delivery'
+    | '/ceo/departments'
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
@@ -747,6 +758,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/ceo/clients'
     | '/ceo/delivery'
+    | '/ceo/departments'
     | '/ceo/revenue'
     | '/ceo/sales'
     | '/ceo/team'
@@ -816,6 +828,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/ceo/clients'
     | '/_authenticated/ceo/delivery'
+    | '/_authenticated/ceo/departments'
     | '/_authenticated/ceo/revenue'
     | '/_authenticated/ceo/sales'
     | '/_authenticated/ceo/team'
@@ -1055,6 +1068,13 @@ declare module '@tanstack/react-router' {
       path: '/ceo/delivery'
       fullPath: '/ceo/delivery'
       preLoaderRoute: typeof AuthenticatedCeoDeliveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/departments': {
+      id: '/_authenticated/ceo/departments'
+      path: '/ceo/departments'
+      fullPath: '/ceo/departments'
+      preLoaderRoute: typeof AuthenticatedCeoDepartmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ceo/revenue': {
@@ -1363,6 +1383,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedCeoClientsRoute: typeof AuthenticatedCeoClientsRoute
   AuthenticatedCeoDeliveryRoute: typeof AuthenticatedCeoDeliveryRoute
+  AuthenticatedCeoDepartmentsRoute: typeof AuthenticatedCeoDepartmentsRoute
   AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
   AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
   AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
@@ -1429,6 +1450,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedCeoClientsRoute: AuthenticatedCeoClientsRoute,
   AuthenticatedCeoDeliveryRoute: AuthenticatedCeoDeliveryRoute,
+  AuthenticatedCeoDepartmentsRoute: AuthenticatedCeoDepartmentsRoute,
   AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
   AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
   AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,

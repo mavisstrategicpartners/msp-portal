@@ -48,8 +48,9 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
   const auth = await authenticateApiRequest(request);
   if (!auth) return jsonError(401, "Sign in required.", headers);
   const a = auth.access;
-  // Company-wide presence and the weekly register: HR, the GM and administrators.
-  const canViewAllAttendance = a.isAdmin || a.isHR || a.isGM;
+  // Company-wide presence and the weekly register: HR, the GM, administrators,
+  // and the CEO (read-only oversight; every write below is the caller's own record).
+  const canViewAllAttendance = a.isAdmin || a.isHR || a.isGM || a.isCEO;
 
   try {
     // 1. POST /api/attendance -> save attendance event (clock-in, break, clock-out)

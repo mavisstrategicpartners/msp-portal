@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { CeoDashboard } from "@/components/dashboards/CeoDashboard";
 
 export const Route = createFileRoute("/_authenticated/ceo/")({
-  head: () => ({ meta: [{ title: "CEO Command Centre — Executive Dashboard" }] }),
+  validateSearch: z.object({ tab: z.string().optional() }),
+  head: () => ({ meta: [{ title: "Executive Dashboard — MSP Portal" }] }),
   component: CeoIndexPage,
 });
 
 function CeoIndexPage() {
-  return (
-    <div className="space-y-6">
-      <CeoDashboard />
-    </div>
-  );
+  const { tab } = Route.useSearch();
+  return <CeoDashboard focus={tab} />;
 }

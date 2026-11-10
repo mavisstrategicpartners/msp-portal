@@ -172,7 +172,8 @@ export type NotificationType =
   | "dependency_fulfilled"
   | "evidence_reviewed"
   | "comment_added"
-  | "status_changed";
+  | "status_changed"
+  | "executive_follow_up";
 
 export interface StaffNotification {
   id: string;
