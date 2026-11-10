@@ -1,254 +1,216 @@
 /**
- * CEO Executive Dashboard — company-wide summary with drill-down.
- * All figures come from /api/executive/overview (live portal records).
+ * CEO Executive Dashboard — company-wide command centre for Mavis Muchena.
+ *
+ * Layout (one 12-column grid, the same panel style throughout):
+ *   1. Executive header        greeting, date, one-line company status, refresh, follow-up
+ *   2. Business overview       eight KPI cards
+ *   3. Intervention queue  |  Company activity
+ *   4. Department performance  (table, with a delivery-trend tab)
+ *   5. Financial overview  |  Team & workforce
+ *
+ * Every figure comes from /api/executive/overview (live portal records). Where a record type
+ * has no data yet the card says so; nothing is estimated or filled in.
  */
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { MessageSquarePlus } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  CircleDot,
+  MessageSquarePlus,
+  RefreshCw,
+} from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DepartmentGrid,
-  ExecHeader,
-  FeedList,
   FollowUpDialog,
   FollowUpList,
-  Kpi,
   OverviewGate,
   ReadOnlyNote,
-  SectionTitle,
+  SEV_ICON,
+  StatusPill,
+  relTime,
+  splitLink,
   useAlertState,
   zar,
   type FollowUpDraft,
 } from "@/components/executive/ExecutiveUI";
-import type { ExecutiveOverview, FeedItem } from "@/lib/executive.types";
+import { useExecutiveOverview } from "@/lib/executive.service";
+import { useStaffNotifications } from "@/lib/staff-tasks.service";
+import type { DepartmentScorecard, ExecutiveOverview, FeedItem } from "@/lib/executive.types";
 import { navContextFromProfile } from "@/lib/navigation";
 import { useProfile } from "@/lib/use-profile";
 
-const FEED_FILTERS: { value: string; label: string; match: (f: FeedItem) => boolean }[] = [
-  { value: "all", label: "All activity", match: () => true },
-  { value: "work", label: "Tasks & deliverables", match: (f) => f.category === "tasks" || f.category === "deliverables" },
-  { value: "clients", label: "Clients", match: (f) => f.category === "clients" },
-  { value: "people", label: "People, attendance & leave", match: (f) => ["people", "attendance", "leave"].includes(f.category) },
-  { value: "finance", label: "Finance & sales", match: (f) => f.category === "finance" || f.category === "sales" },
-  { value: "follow-ups", label: "Follow-ups", match: (f) => f.category === "follow-ups" },
-];
+const DAY = 86_400_000;
+
+/** Employees whose main department is this one (from the organisation structure). */
+function employeesIn(data: ExecutiveOverview, key: string) {
+  return data.people.filter((p) => p.accountType !== "executive" && p.departments[0] === key).length;
+}
 
 export function CeoDashboard({ focus }: { focus?: string }) {
   return <OverviewGate>{(data) => <ExecutiveDashboard data={data} focus={focus} />}</OverviewGate>;
 }
 
-function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: string }) {
-  const [feedFilter, setFeedFilter] = useState("all");
-  const [draft, setDraft] = useState<FollowUpDraft | null>(null);
-  const b = data.business;
-  const feed = useMemo(
-    () => data.feed.filter(FEED_FILTERS.find((f) => f.value === feedFilter)!.match),
-    [data.feed, feedFilter],
+// ── Layout primitives ────────────────────────────────────────────────────────
+function Panel({
+  title,
+  description,
+  action,
+  children,
+  className = "",
+  id,
+  bodyClassName = "p-5",
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  id?: string;
+  bodyClassName?: string;
+}) {
+  return (
+    <section id={id} className={`rounded-xl border border-border bg-card scroll-mt-20 ${className}`}>
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+        </div>
+        {action}
+      </header>
+      <div className={bodyClassName}>{children}</div>
+    </section>
   );
-  const openFollowUps = data.followUps.filter((f) => f.status !== "Resolved");
-  const present = data.attendance.clockedIn + data.attendance.onBreak;
-  // The CEO's alerts are stored with a read status; read ones leave the dashboard and live in the bell.
-  const isCEO = Boolean(navContextFromProfile(useProfile().data)?.isCEO);
-  const alerts = useAlertState();
-  const tracksAlerts = isCEO;
+}
+
+function Metric({
+  label,
+  value,
+  context,
+  tone,
+  to,
+  search,
+}: {
+  label: string;
+  value: ReactNode;
+  context: ReactNode;
+  tone?: "bad" | "warn" | "good" | "muted";
+  to?: string;
+  search?: Record<string, string>;
+}) {
+  const valueColor =
+    tone === "bad"
+      ? "text-rose-600 dark:text-rose-400"
+      : tone === "warn"
+        ? "text-amber-600 dark:text-amber-400"
+        : tone === "muted"
+          ? "text-muted-foreground"
+          : "text-foreground";
+  const body = (
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card px-4 py-3.5 transition hover:border-primary/40">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums tracking-tight ${valueColor}`}>{value}</p>
+      <p className="mt-auto pt-1 text-[11px] leading-snug text-muted-foreground">{context}</p>
+    </div>
+  );
+  return to ? (
+    <Link to={to as any} search={search as any} className="block h-full">
+      {body}
+    </Link>
+  ) : (
+    body
+  );
+}
+
+function Figure({ label, value, tone }: { label: string; value: ReactNode; tone?: "bad" | "good" }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p
+        className={`mt-0.5 text-lg font-semibold tabular-nums ${
+          tone === "bad" ? "text-rose-600 dark:text-rose-400" : "text-foreground"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ChartTooltip({ active, payload, label, format }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-sm">
+      <p className="mb-1 font-medium text-foreground">{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} className="flex items-center gap-2 text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-sm" style={{ background: p.color }} />
+          {p.name}: <span className="font-medium text-foreground tabular-nums">{format ? format(p.value) : p.value}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function Legend({ items }: { items: { label: string; color: string }[] }) {
+  return (
+    <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+      {items.map((i) => (
+        <span key={i.label} className="flex items-center gap-1.5">
+          <span className="inline-block h-2 w-2 rounded-sm" style={{ background: i.color }} />
+          {i.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+const axisProps = {
+  tickLine: false,
+  axisLine: false,
+  tick: { fontSize: 11, fill: "var(--muted-foreground)" },
+} as const;
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: string }) {
+  const [draft, setDraft] = useState<FollowUpDraft | null>(null);
+  const [queueTab, setQueueTab] = useState(focus === "follow-ups" ? "follow-ups" : "new");
+  const profile = useProfile();
+  const isCEO = Boolean(navContextFromProfile(profile.data)?.isCEO);
 
   useEffect(() => {
-    if (focus === "follow-ups") document.getElementById("exec-follow-ups")?.scrollIntoView({ behavior: "smooth" });
+    if (focus === "follow-ups") {
+      setQueueTab("follow-ups");
+      document.getElementById("exec-queue")?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [focus]);
 
   return (
-    <div className="space-y-6">
-      <ExecHeader
-        title="CEO Executive Dashboard"
-        subtitle="Company-wide view of every department, employee, client and decision."
-        source="live portal records: staff profiles, task and evidence ledger, attendance clock events, leave requests, clients and onboarding, the Sales ledger and the Finance tables"
-        data={data}
-        actions={
-          <Button size="sm" onClick={() => setDraft({})}>
-            <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Request follow-up
-          </Button>
-        }
-      />
+    <div className="mx-auto max-w-[1440px] space-y-6">
+      <ExecutiveHeader data={data} name={profile.data?.profile?.full_name} onFollowUp={() => setDraft({})} />
+      <BusinessOverview data={data} />
 
-      {/* Business overview */}
-      <section className="space-y-3">
-        <SectionTitle title="Business overview" />
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          <Kpi
-            label="Active clients"
-            value={b.activeClients}
-            hint={`${b.clientsAddedLast30} added in the last 30 days`}
-            to="/ceo/clients"
-          />
-          <Kpi
-            label="Onboarding"
-            value={b.onboardingInProgress}
-            hint={b.onboardingDelayed ? `${b.onboardingDelayed} past target date` : "in progress, none delayed"}
-            tone={b.onboardingDelayed ? "bad" : undefined}
-            to="/ceo/clients"
-          />
-          <Kpi
-            label="At-risk clients"
-            value={b.atRiskClients}
-            hint="delays, blockers, escalations or overdue work"
-            tone={b.atRiskClients ? "warn" : "good"}
-            to="/ceo/clients"
-            search={{ filter: "at-risk" }}
-          />
-          <Kpi
-            label="Open tasks"
-            value={b.openTasks}
-            hint={`${b.overdueTasks} overdue`}
-            tone={b.overdueTasks ? "bad" : undefined}
-            to="/ceo/delivery"
-          />
-          <Kpi
-            label="Awaiting review"
-            value={b.awaitingReview}
-            hint="deliverables with department managers"
-            tone={b.awaitingReview ? "warn" : undefined}
-            to="/ceo/delivery"
-            search={{ filter: "review" }}
-          />
-          <Kpi
-            label="Team"
-            value={b.headcount}
-            hint={`named employees · ${present} working now${b.sharedAccounts ? ` · ${b.sharedAccounts} shared/system logins not counted` : ""}`}
-            to="/ceo/team"
-          />
-        </div>
-      </section>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <InterventionQueue
+          data={data}
+          tracksAlerts={isCEO}
+          tab={queueTab}
+          onTab={setQueueTab}
+          onFollowUp={setDraft}
+          className="lg:col-span-8"
+        />
+        <CompanyActivity data={data} className="lg:col-span-4" />
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="space-y-6 xl:col-span-2">
-          {/* Decisions & interventions */}
-          <section className="space-y-3">
-            <SectionTitle
-              title="Needs your attention"
-              hint={
-                tracksAlerts
-                  ? "New items you haven't opened yet. Once read they move to the notification bell, where the full history stays."
-                  : "Overdue work, stalled reviews, client delays, financial matters and unanswered follow-ups."
-              }
-            />
-            <FeedList
-              items={tracksAlerts ? data.decisions.filter((f) => alerts.isUnread(f)) : data.decisions}
-              limit={6}
-              empty={
-                tracksAlerts
-                  ? "You're up to date. Earlier alerts are in the notification bell."
-                  : "Nothing is waiting on an executive decision."
-              }
-            />
-          </section>
+      <DepartmentPerformance data={data} />
 
-          {/* Department performance */}
-          <section className="space-y-3">
-            <SectionTitle
-              title="Department performance"
-              hint="Built from the department recorded on each task and its reviewed deliverables. Open one to drill down."
-              action={
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/ceo/departments">All departments</Link>
-                </Button>
-              }
-            />
-            <DepartmentGrid departments={data.departments} />
-          </section>
-
-          {/* Finance & sales snapshot */}
-          <section className="grid gap-3 md:grid-cols-2">
-            <Card className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Financial snapshot</p>
-                <Link to="/ceo/revenue" className="text-xs text-primary hover:underline">
-                  Details
-                </Link>
-              </div>
-              {data.finance.recorded ? (
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <Mini label="Agency fees invoiced" value={zar(data.finance.invoicedAgencyFees)} />
-                  <Mini label="Collected" value={zar(data.finance.collected)} />
-                  <Mini label="Overdue" value={zar(data.finance.overdueAmount)} bad={data.finance.overdueAmount > 0} />
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  No invoices, expenses or budgets have been recorded in the Finance module yet.
-                </p>
-              )}
-            </Card>
-            <Card className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Sales snapshot</p>
-                <Link to="/ceo/sales" className="text-xs text-primary hover:underline">
-                  Details
-                </Link>
-              </div>
-              {data.sales.recorded ? (
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <Mini label="Leads" value={String(data.sales.leads)} />
-                  <Mini label="Open pipeline / month" value={zar(data.sales.openPipelineValue)} />
-                  <Mini label="Won this month" value={`${data.sales.wonThisMonth} · ${zar(data.sales.wonValueThisMonth)}`} />
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">No leads have been captured in the Sales module yet.</p>
-              )}
-            </Card>
-          </section>
-        </div>
-
-        <div className="space-y-6">
-          {/* Activity feed */}
-          <section className="space-y-3">
-            <SectionTitle
-              title="Executive activity feed"
-              action={
-                <Select value={feedFilter} onValueChange={setFeedFilter}>
-                  <SelectTrigger className="h-8 w-[190px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FEED_FILTERS.map((f) => (
-                      <SelectItem key={f.value} value={f.value} className="text-xs">
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              }
-            />
-            <FeedList
-              items={tracksAlerts ? feed.filter((f) => alerts.isUnread(f)) : feed}
-              limit={8}
-              empty={
-                tracksAlerts
-                  ? "No unread activity here. Everything you've read is in the notification bell."
-                  : "No notable activity in this category."
-              }
-            />
-          </section>
-
-          {/* Follow-ups */}
-          <section id="exec-follow-ups" className="space-y-3 scroll-mt-20">
-            <SectionTitle
-              title="Your follow-ups"
-              hint={`${openFollowUps.length} open · ${data.followUps.length - openFollowUps.length} resolved`}
-            />
-            <FollowUpList
-              followUps={data.followUps.slice(0, 8)}
-              mode="ceo"
-              empty="Use “Request follow-up” to ask a manager to act on something you've seen."
-            />
-          </section>
-        </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <FinancialOverview data={data} />
+        <WorkforceOverview data={data} />
       </div>
 
       <ReadOnlyNote />
@@ -257,11 +219,840 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
   );
 }
 
-function Mini({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
+// ── 1. Executive header ──────────────────────────────────────────────────────
+function greeting(d = new Date()) {
+  const h = Number(new Intl.DateTimeFormat("en-ZA", { hour: "numeric", hour12: false, timeZone: "Africa/Johannesburg" }).format(d));
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+
+function ExecutiveHeader({
+  data,
+  name,
+  onFollowUp,
+}: {
+  data: ExecutiveOverview;
+  name?: string | null;
+  onFollowUp: () => void;
+}) {
+  const { refetch, isFetching } = useExecutiveOverview();
+  const b = data.business;
+  const first = (name || "Mavis").trim().split(/\s+/)[0];
+  const date = new Intl.DateTimeFormat("en-ZA", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Johannesburg",
+  }).format(new Date());
   return (
-    <div className="rounded-md bg-muted/40 p-2">
-      <p className={`font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-muted-foreground">
+          Chief Executive Officer · {date}
+        </p>
+        <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
+          {greeting()}, {first}
+        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+          <StatusPill status={b.status} />
+          <span className="text-muted-foreground">
+            {b.status === "on-track"
+              ? "No overdue work, delayed onboardings or outstanding financial issues are recorded."
+              : b.statusReasons.join(" · ")}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="hidden text-[11px] text-muted-foreground sm:inline">Updated {relTime(data.generatedAt)}</span>
+        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh data">
+          <RefreshCw className={`h-3.5 w-3.5 sm:mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
+        <Button size="sm" onClick={onFollowUp}>
+          <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Request follow-up
+        </Button>
+      </div>
+    </header>
+  );
+}
+
+// ── 2. Business overview ─────────────────────────────────────────────────────
+function onTimeRate(data: ExecutiveOverview) {
+  const done = data.tasks.filter((t) => t.status === "Completed" && t.dueDate && t.completionDate);
+  if (!done.length) return { rate: null as number | null, n: 0 };
+  const onTime = done.filter((t) => t.completionDate!.slice(0, 10) <= t.dueDate!).length;
+  return { rate: Math.round((onTime / done.length) * 100), n: done.length };
+}
+
+function BusinessOverview({ data }: { data: ExecutiveOverview }) {
+  const b = data.business;
+  const f = data.finance;
+  const perf = onTimeRate(data);
+  const outstanding = Math.max(0, f.invoicedAgencyFees - f.collected);
+  const noInvoices = "No invoices recorded in Finance yet";
+  return (
+    <section aria-labelledby="kpi-heading" className="space-y-3">
+      <h2 id="kpi-heading" className="sr-only">
+        Business overview
+      </h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Metric
+          label="Active clients"
+          value={b.activeClients}
+          context={b.clientsAddedLast30 ? `+${b.clientsAddedLast30} in the last 30 days` : "None added in the last 30 days"}
+          to="/ceo/clients"
+        />
+        <Metric
+          label="Monthly billing (MRR)"
+          value={f.invoicedThisMonth === null ? "—" : zar(f.invoicedThisMonth)}
+          context={f.invoicedThisMonth === null ? noInvoices : "Agency fees invoiced for this month"}
+          tone={f.invoicedThisMonth === null ? "muted" : undefined}
+          to="/ceo/revenue"
+        />
+        <Metric
+          label="Revenue received"
+          value={f.recorded ? zar(f.collected) : "—"}
+          context={f.recorded ? `of ${zar(f.invoicedAgencyFees)} invoiced` : noInvoices}
+          tone={f.recorded ? undefined : "muted"}
+          to="/ceo/revenue"
+        />
+        <Metric
+          label="Outstanding payments"
+          value={f.recorded ? zar(outstanding) : "—"}
+          context={
+            f.recorded
+              ? f.overdueInvoices
+                ? `${f.overdueInvoices} invoice${f.overdueInvoices > 1 ? "s" : ""} overdue (${zar(f.overdueAmount)})`
+                : `${f.awaitingPayment} awaiting payment, none overdue`
+              : noInvoices
+          }
+          tone={!f.recorded ? "muted" : f.overdueInvoices ? "bad" : undefined}
+          to="/ceo/revenue"
+        />
+        <Metric
+          label="Active client projects"
+          value={b.onboardingInProgress}
+          context={b.onboardingDelayed ? `${b.onboardingDelayed} past target date` : "All on schedule"}
+          tone={b.onboardingDelayed ? "warn" : undefined}
+          to="/ceo/clients"
+          search={b.onboardingDelayed ? { filter: "at-risk" } : undefined}
+        />
+        <Metric
+          label="Tasks in progress"
+          value={b.openTasks}
+          context={b.awaitingReview ? `${b.awaitingReview} awaiting manager review` : "None awaiting review"}
+          to="/ceo/delivery"
+        />
+        <Metric
+          label="Overdue tasks"
+          value={b.overdueTasks}
+          context={b.overdueTasks ? "Past their due date and not complete" : "Nothing past its due date"}
+          tone={b.overdueTasks ? "bad" : "good"}
+          to="/ceo/delivery"
+        />
+        <Metric
+          label="On-time delivery"
+          value={perf.rate === null ? "—" : `${perf.rate}%`}
+          context={perf.rate === null ? "No completed tasks with a due date yet" : `of ${perf.n} completed tasks with a due date`}
+          tone={perf.rate === null ? "muted" : perf.rate < 70 ? "warn" : undefined}
+          to="/ceo/performance"
+        />
+      </div>
+    </section>
+  );
+}
+
+// ── 3a. Intervention queue ───────────────────────────────────────────────────
+const RESPONSIBLE_DEPT: Record<string, string> = {
+  clients: "operations",
+  finance: "finance",
+  leave: "hr",
+  attendance: "hr",
+  people: "hr",
+};
+const PRIORITY: Record<FeedItem["severity"], { label: string; cls: string }> = {
+  critical: { label: "Critical", cls: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400" },
+  warning: { label: "High", cls: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400" },
+  info: { label: "Normal", cls: "border-border bg-muted text-muted-foreground" },
+};
+
+function useQueueItems(data: ExecutiveOverview) {
+  const notifs = useStaffNotifications();
+  const firstSeen = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const n of notifs.data?.notifications ?? [])
+      if (n.type === "executive_alert" && n.eventGroup) {
+        const prev = m.get(n.eventGroup);
+        if (!prev || n.createdAt > prev) m.set(n.eventGroup, n.createdAt);
+      }
+    return m;
+  }, [notifs.data]);
+  return useMemo(
+    () =>
+      // Informational items (attendance, leave, team changes) live in the workforce section and the bell.
+      data.feed
+        .filter((f) => f.severity !== "info")
+        .map((f) => {
+          const deptKey = f.departmentKey || RESPONSIBLE_DEPT[f.category] || null;
+          const dept = deptKey ? data.departments.find((d) => d.key === deptKey) : undefined;
+          const lead = dept?.leads[0]?.name ?? null;
+          const followUpOwner = f.category === "follow-ups" ? f.detail.split(" · ")[0] : null;
+          const responsible = followUpOwner || lead;
+          return { f, dept, responsible, when: f.at || firstSeen.get(f.eventGroup) || null };
+        }),
+    [data, firstSeen],
+  );
+}
+
+function nextAction(f: FeedItem, who: string | null, deptName?: string) {
+  const owner = who ?? (deptName ? `the General Manager (${deptName} has no manager)` : "the General Manager");
+  if (f.category === "tasks") return `Ask ${owner} for a recovery date on the overdue work.`;
+  if (f.eventGroup.startsWith("review:")) return `Ask ${owner} to review the submission.`;
+  if (f.category === "deliverables") return `Check with ${owner} why work is being returned for rework.`;
+  if (f.category === "clients") return `Agree an onboarding recovery plan with ${owner}.`;
+  if (f.eventGroup.startsWith("approval:")) return `Ask ${owner} to approve or decline the request.`;
+  if (f.category === "finance") return `Ask ${owner} to follow up the outstanding invoices.`;
+  if (f.category === "follow-ups") return `Chase ${who ?? "the assignee"} for an acknowledgement.`;
+  if (f.category === "attendance") return `Check with ${owner} before acting.`;
+  return null;
+}
+
+function InterventionQueue({
+  data,
+  tracksAlerts,
+  tab,
+  onTab,
+  onFollowUp,
+  className,
+}: {
+  data: ExecutiveOverview;
+  tracksAlerts: boolean;
+  tab: string;
+  onTab: (t: string) => void;
+  onFollowUp: (d: FollowUpDraft) => void;
+  className?: string;
+}) {
+  const alerts = useAlertState();
+  const items = useQueueItems(data);
+  const fresh = tracksAlerts ? items.filter((i) => alerts.isUnread(i.f)) : items;
+  const reviewed = tracksAlerts ? items.filter((i) => !alerts.isUnread(i.f)) : [];
+  const openFollowUps = data.followUps.filter((f) => f.status !== "Resolved");
+  return (
+    <Panel
+      id="exec-queue"
+      title="Needs your attention"
+      description="Critical issues, overdue decisions, client escalations and financial risks, with the person responsible."
+      className={className}
+      bodyClassName="p-0"
+    >
+      <Tabs value={tab} onValueChange={onTab}>
+        <div className="border-b border-border px-5 pt-3">
+          <TabsList className="h-8">
+            <TabsTrigger value="new" className="text-xs">
+              {tracksAlerts ? "New" : "Open"} ({fresh.length})
+            </TabsTrigger>
+            {tracksAlerts && (
+              <TabsTrigger value="reviewed" className="text-xs">
+                Reviewed ({reviewed.length})
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="follow-ups" className="text-xs">
+              Your follow-ups ({openFollowUps.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="new" className="m-0">
+          <QueueList
+            items={fresh}
+            onFollowUp={onFollowUp}
+            onReviewed={tracksAlerts ? (f) => alerts.markRead(f) : undefined}
+            empty={
+              tracksAlerts
+                ? "You're up to date. Reviewed items are under Reviewed and in the notification bell."
+                : "Nothing is waiting on an executive decision."
+            }
+          />
+        </TabsContent>
+        {tracksAlerts && (
+          <TabsContent value="reviewed" className="m-0">
+            <QueueList items={reviewed} onFollowUp={onFollowUp} empty="Nothing reviewed is still open." muted />
+          </TabsContent>
+        )}
+        <TabsContent value="follow-ups" className="m-0 p-5">
+          <FollowUpList
+            followUps={data.followUps.slice(0, 10)}
+            mode="ceo"
+            empty="Use “Request follow-up” to ask a manager to act on something you've seen."
+          />
+        </TabsContent>
+      </Tabs>
+    </Panel>
+  );
+}
+
+function QueueList({
+  items,
+  onFollowUp,
+  onReviewed,
+  empty,
+  muted,
+}: {
+  items: ReturnType<typeof useQueueItems>;
+  onFollowUp: (d: FollowUpDraft) => void;
+  onReviewed?: (f: FeedItem) => void;
+  empty: string;
+  muted?: boolean;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
+  if (!items.length) return <p className="px-5 py-10 text-center text-xs text-muted-foreground">{empty}</p>;
+  const shown = showAll ? items : items.slice(0, 5);
+  return (
+    <div>
+      <ul className="divide-y divide-border">
+        {shown.map(({ f, dept, responsible, when }) => {
+          const action = nextAction(f, responsible, dept?.name);
+          const open = () => {
+            onReviewed?.(f);
+            const { to, search } = splitLink(f.link);
+            navigate({ to: to as any, search: search as any });
+          };
+          return (
+            <li key={f.id} className={`px-5 py-4 ${muted ? "opacity-80" : ""}`}>
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5">{SEV_ICON[f.severity]}</span>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY[f.severity].cls}`}>
+                      {PRIORITY[f.severity].label}
+                    </span>
+                    <p className="text-sm font-medium leading-snug text-foreground">{f.title}</p>
+                  </div>
+                  {f.detail && <p className="line-clamp-2 text-xs text-muted-foreground">{f.detail}</p>}
+                  <dl className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                    <div>
+                      <dt className="inline">Department: </dt>
+                      <dd className="inline text-foreground">{dept?.name ?? "Company-wide"}</dd>
+                    </div>
+                    <div>
+                      <dt className="inline">Responsible: </dt>
+                      <dd className={`inline ${responsible ? "text-foreground" : "text-amber-700 dark:text-amber-400"}`}>
+                        {responsible ?? "Manager not assigned"}
+                      </dd>
+                    </div>
+                    {when && (
+                      <div>
+                        <dt className="inline">Raised: </dt>
+                        <dd className="inline">{relTime(when)}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  {action && (
+                    <p className="text-xs text-foreground">
+                      <span className="text-muted-foreground">Next step: </span>
+                      {action}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 pl-7">
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={open}>
+                  Open <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs"
+                  onClick={() =>
+                    onFollowUp({
+                      subject: f.title.slice(0, 160),
+                      note: action ?? "",
+                      departmentKey: dept?.key ?? null,
+                      departmentName: dept?.name ?? null,
+                      assigneeId: dept?.leads[0]?.id,
+                    })
+                  }
+                >
+                  <MessageSquarePlus className="mr-1 h-3 w-3" /> Request follow-up
+                </Button>
+                {onReviewed && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => onReviewed(f)}>
+                    <Check className="mr-1 h-3 w-3" /> Mark reviewed
+                  </Button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {items.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          className="flex w-full items-center justify-center gap-1 border-t border-border py-2.5 text-xs font-medium text-primary hover:bg-muted/40"
+        >
+          {showAll ? "Show fewer" : `Show all ${items.length}`}
+          <ChevronDown className={`h-3.5 w-3.5 transition ${showAll ? "rotate-180" : ""}`} />
+        </button>
+      )}
     </div>
   );
 }
+
+// ── 3b. Company activity ─────────────────────────────────────────────────────
+type Activity = { at: string; text: string; meta: string; link?: string };
+
+function buildActivity(data: ExecutiveOverview): Activity[] {
+  const since = Date.now() - 30 * DAY;
+  const out: Activity[] = [];
+  const recent = (iso?: string | null) => Boolean(iso && new Date(iso).getTime() >= since);
+  for (const t of data.tasks) {
+    if (recent(t.completionDate) && t.status === "Completed")
+      out.push({ at: t.completionDate!, text: `${t.assignedToName} completed “${t.title}”`, meta: t.department, link: "/ceo/delivery" });
+    if (recent(t.createdAt))
+      out.push({ at: t.createdAt, text: `${t.assignedByName} assigned “${t.title}” to ${t.assignedToName}`, meta: t.department, link: "/ceo/delivery" });
+  }
+  for (const e of data.evidence)
+    if (recent(e.submittedAt))
+      out.push({ at: e.submittedAt, text: `${e.submittedBy} submitted “${e.taskTitle}” for review`, meta: e.department, link: `/ceo/evidence?evidence=${encodeURIComponent(e.id)}` });
+  for (const c of data.clients)
+    if (recent(c.createdAt))
+      out.push({ at: c.createdAt!, text: `New client: ${c.name}`, meta: c.package || c.industry || "Client", link: `/ceo/clients?client=${encodeURIComponent(c.id)}` });
+  for (const f of data.followUps) {
+    if (recent(f.createdAt)) out.push({ at: f.createdAt, text: `Follow-up requested: ${f.subject}`, meta: f.assigneeName, link: "/ceo?tab=follow-ups" });
+    if (f.status === "Resolved" && recent(f.updatedAt))
+      out.push({ at: f.updatedAt, text: `${f.assigneeName} resolved: ${f.subject}`, meta: "Follow-up", link: "/ceo?tab=follow-ups" });
+  }
+  return out.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const key = (x: Date) => x.toLocaleDateString("en-ZA", { timeZone: "Africa/Johannesburg" });
+  if (key(d) === key(new Date())) return "Today";
+  if (key(d) === key(new Date(Date.now() - DAY))) return "Yesterday";
+  return d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" });
+}
+
+function CompanyActivity({ data, className }: { data: ExecutiveOverview; className?: string }) {
+  const [limit, setLimit] = useState(10);
+  const all = useMemo(() => buildActivity(data), [data]);
+  const shown = all.slice(0, limit);
+  const groups: { label: string; items: Activity[] }[] = [];
+  for (const a of shown) {
+    const label = dayLabel(a.at);
+    const g = groups[groups.length - 1];
+    if (g && g.label === label) g.items.push(a);
+    else groups.push({ label, items: [a] });
+  }
+  return (
+    <Panel
+      title="Company activity"
+      description="Work assigned and completed, submissions, new clients and follow-ups — last 30 days."
+      className={className}
+      bodyClassName="p-0"
+    >
+      {!all.length ? (
+        <p className="px-5 py-10 text-center text-xs text-muted-foreground">No recorded activity in the last 30 days.</p>
+      ) : (
+        <div>
+          <div className="space-y-4 px-5 py-4">
+            {groups.map((g) => (
+              <div key={g.label}>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
+                <ol className="space-y-2.5 border-l border-border pl-3.5">
+                  {g.items.map((a, i) => (
+                    <li key={i} className="relative">
+                      <CircleDot className="absolute -left-[21px] top-0.5 h-3 w-3 bg-card text-muted-foreground" />
+                      {a.link ? (
+                        <Link
+                          to={splitLink(a.link).to as any}
+                          search={splitLink(a.link).search as any}
+                          className="text-xs leading-snug text-foreground hover:text-primary"
+                        >
+                          {a.text}
+                        </Link>
+                      ) : (
+                        <p className="text-xs leading-snug text-foreground">{a.text}</p>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        {a.meta} · {new Date(a.at).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Johannesburg" })}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+          {all.length > limit && (
+            <button
+              type="button"
+              onClick={() => setLimit((l) => l + 15)}
+              className="w-full border-t border-border py-2.5 text-xs font-medium text-primary hover:bg-muted/40"
+            >
+              Show earlier activity ({all.length - limit} more)
+            </button>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// ── 4. Department performance ────────────────────────────────────────────────
+function DepartmentPerformance({ data }: { data: ExecutiveOverview }) {
+  const [showQuiet, setShowQuiet] = useState(false);
+  const active = data.departments.filter((d) => d.status !== "no-activity");
+  const quiet = data.departments.filter((d) => d.status === "no-activity");
+  const real = data.departments.filter((d) => d.key !== "unassigned");
+  const noManager = real.filter((d) => !d.leads.length).length;
+  const rows = showQuiet ? [...active, ...quiet] : active;
+  return (
+    <Panel
+      title="Department performance"
+      description={`Work recorded against each department. ${noManager} of ${real.length} departments have no manager appointed.`}
+      action={
+        <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+          <Link to="/ceo/structure">Department structure</Link>
+        </Button>
+      }
+      bodyClassName="p-0"
+    >
+      <Tabs defaultValue="table">
+        <div className="border-b border-border px-5 pt-3">
+          <TabsList className="h-8">
+            <TabsTrigger value="table" className="text-xs">
+              Departments
+            </TabsTrigger>
+            <TabsTrigger value="trend" className="text-xs">
+              Delivery trend
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="table" className="m-0">
+          {/* Desktop / tablet: table */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <th className="px-5 py-2.5 font-medium">Department</th>
+                  <th className="px-3 py-2.5 font-medium">Manager</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Employees</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Active</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Completed</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Overdue</th>
+                  <th className="w-44 px-3 py-2.5 font-medium">Completion</th>
+                  <th className="px-5 py-2.5 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((d) => (
+                  <DeptRow key={d.key} d={d} employees={employeesIn(data, d.key)} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile: one card per department */}
+          <ul className="divide-y divide-border md:hidden">
+            {rows.map((d) => (
+              <li key={d.key} className="space-y-2 px-5 py-4">
+                <div className="flex items-start justify-between gap-2">
+                  <Link to="/ceo/departments" search={{ dept: d.key } as any} className="text-sm font-medium text-foreground">
+                    {d.name}
+                  </Link>
+                  <StatusPill status={d.status} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {d.leads[0]?.name ?? <span className="text-amber-700 dark:text-amber-400">Manager not assigned</span>} ·{" "}
+                  {employeesIn(data, d.key)} employee{employeesIn(data, d.key) === 1 ? "" : "s"}
+                </p>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <Figure label="Active" value={d.tasksOpen} />
+                  <Figure label="Completed" value={d.tasksCompleted} />
+                  <Figure label="Overdue" value={d.tasksOverdue} tone={d.tasksOverdue ? "bad" : undefined} />
+                </div>
+                {d.completionRate !== null && <Progress value={d.completionRate} className="h-1.5" />}
+              </li>
+            ))}
+          </ul>
+          {quiet.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowQuiet((v) => !v)}
+              className="flex w-full items-center justify-center gap-1 border-t border-border py-2.5 text-xs font-medium text-primary hover:bg-muted/40"
+            >
+              {showQuiet ? "Hide" : "Show"} {quiet.length} department{quiet.length === 1 ? "" : "s"} with no recorded work
+              <ChevronDown className={`h-3.5 w-3.5 transition ${showQuiet ? "rotate-180" : ""}`} />
+            </button>
+          )}
+        </TabsContent>
+        <TabsContent value="trend" className="m-0 p-5">
+          <DeliveryTrend data={data} />
+        </TabsContent>
+      </Tabs>
+    </Panel>
+  );
+}
+
+function DeptRow({ d, employees }: { d: DepartmentScorecard; employees: number }) {
+  return (
+    <tr className="border-b border-border last:border-0 hover:bg-muted/30">
+      <td className="px-5 py-3">
+        <Link to="/ceo/departments" search={{ dept: d.key } as any} className="font-medium text-foreground hover:text-primary">
+          {d.name}
+        </Link>
+      </td>
+      <td className="px-3 py-3 text-xs">
+        {d.leads[0] ? (
+          <span className="text-foreground">{d.leads[0].name}</span>
+        ) : (
+          <span className="text-amber-700 dark:text-amber-400">Not assigned</span>
+        )}
+      </td>
+      <td className="px-3 py-3 text-right tabular-nums">{employees}</td>
+      <td className="px-3 py-3 text-right tabular-nums">{d.tasksOpen}</td>
+      <td className="px-3 py-3 text-right tabular-nums">{d.tasksCompleted}</td>
+      <td className={`px-3 py-3 text-right tabular-nums ${d.tasksOverdue ? "font-semibold text-rose-600 dark:text-rose-400" : ""}`}>
+        {d.tasksOverdue}
+      </td>
+      <td className="px-3 py-3">
+        {d.completionRate === null ? (
+          <span className="text-xs text-muted-foreground">—</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Progress value={d.completionRate} className="h-1.5 flex-1" />
+            <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{d.completionRate}%</span>
+          </div>
+        )}
+      </td>
+      <td className="px-5 py-3">
+        <StatusPill status={d.status} />
+      </td>
+    </tr>
+  );
+}
+
+function weekStart(d: Date) {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dow = (x.getUTCDay() + 6) % 7; // Monday = 0
+  return new Date(x.getTime() - dow * DAY);
+}
+
+function DeliveryTrend({ data }: { data: ExecutiveOverview }) {
+  const series = useMemo(() => {
+    const start = weekStart(new Date());
+    return Array.from({ length: 8 }, (_, i) => {
+      const from = new Date(start.getTime() - (7 - i) * 7 * DAY);
+      const to = new Date(from.getTime() + 7 * DAY);
+      const inWeek = (iso?: string | null) => Boolean(iso && new Date(iso) >= from && new Date(iso) < to);
+      return {
+        week: from.toLocaleDateString("en-ZA", { day: "numeric", month: "short" }),
+        assigned: data.tasks.filter((t) => inWeek(t.createdAt)).length,
+        completed: data.tasks.filter((t) => t.status === "Completed" && inWeek(t.completionDate)).length,
+      };
+    });
+  }, [data.tasks]);
+  const any = series.some((s) => s.assigned || s.completed);
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium text-foreground">Tasks assigned and completed per week</p>
+          <p className="text-xs text-muted-foreground">Last 8 weeks, weeks starting Monday</p>
+        </div>
+        <Legend
+          items={[
+            { label: "Assigned", color: "var(--viz-1)" },
+            { label: "Completed", color: "var(--viz-2)" },
+          ]}
+        />
+      </div>
+      {any ? (
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={series} barGap={2} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
+              <XAxis dataKey="week" {...axisProps} />
+              <YAxis allowDecimals={false} {...axisProps} />
+              <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.4 }} content={<ChartTooltip />} />
+              <Bar isAnimationActive={false} dataKey="assigned" name="Assigned" fill="var(--viz-1)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+              <Bar isAnimationActive={false} dataKey="completed" name="Completed" fill="var(--viz-2)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <p className="py-10 text-center text-xs text-muted-foreground">No tasks were assigned or completed in the last 8 weeks.</p>
+      )}
+    </div>
+  );
+}
+
+// ── 5a. Financial overview ───────────────────────────────────────────────────
+function FinancialOverview({ data }: { data: ExecutiveOverview }) {
+  const f = data.finance;
+  const s = data.sales;
+  const months = f.monthly.map((m) => ({
+    ...m,
+    label: new Date(`${m.month}-01T00:00:00Z`).toLocaleDateString("en-ZA", { month: "short", year: "2-digit", timeZone: "UTC" }),
+  }));
+  const anyMonthly = months.some((m) => m.invoiced || m.collected);
+  return (
+    <Panel
+      title="Financial overview"
+      description="Agency fees only — client ad spend is paid to the platforms directly and is not MSP revenue."
+      action={
+        <Link to="/ceo/revenue" className="text-xs font-medium text-primary hover:underline">
+          Details
+        </Link>
+      }
+    >
+      {f.recorded ? (
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Figure label="Invoiced" value={zar(f.invoicedAgencyFees)} />
+            <Figure label="Received" value={zar(f.collected)} />
+            <Figure label="Outstanding" value={zar(Math.max(0, f.invoicedAgencyFees - f.collected))} tone={f.overdueInvoices ? "bad" : undefined} />
+            <Figure label="Expenses paid" value={zar(f.expensesPaid)} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <p className="text-xs font-medium text-foreground">Monthly invoicing, last 6 months</p>
+              <Legend
+                items={[
+                  { label: "Invoiced", color: "var(--viz-1)" },
+                  { label: "Received", color: "var(--viz-2)" },
+                ]}
+              />
+            </div>
+            {anyMonthly ? (
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={months} barGap={2} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                    <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
+                    <XAxis dataKey="label" {...axisProps} />
+                    <YAxis {...axisProps} width={56} tickFormatter={(v) => (v >= 1000 ? `R${Math.round(v / 1000)}k` : `R${v}`)} />
+                    <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.4 }} content={<ChartTooltip format={zar} />} />
+                    <Bar isAnimationActive={false} dataKey="invoiced" name="Invoiced" fill="var(--viz-1)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+                    <Bar isAnimationActive={false} dataKey="collected" name="Received" fill="var(--viz-2)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="py-6 text-center text-xs text-muted-foreground">No invoices fall in the last 6 months.</p>
+            )}
+          </div>
+          {f.pendingApprovals.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {f.pendingApprovals.length} spending approval{f.pendingApprovals.length > 1 ? "s" : ""} pending with Finance.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
+          <p className="text-sm font-medium text-foreground">No financial records yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Revenue, payments and expenses appear here once Finance records invoices and expenses in the portal.
+          </p>
+        </div>
+      )}
+      <div className="mt-5 border-t border-border pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-medium text-foreground">Sales pipeline</p>
+          <Link to="/ceo/sales" className="text-xs font-medium text-primary hover:underline">
+            Pipeline
+          </Link>
+        </div>
+        {s.recorded ? (
+          <div className="grid grid-cols-3 gap-4">
+            <Figure label="Leads" value={s.leads} />
+            <Figure label="Open pipeline / month" value={zar(s.openPipelineValue)} />
+            <Figure label="Won this month" value={`${s.wonThisMonth} · ${zar(s.wonValueThisMonth)}`} />
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No leads have been captured in the Sales module yet.</p>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+// ── 5b. Team & workforce ─────────────────────────────────────────────────────
+function WorkforceOverview({ data }: { data: ExecutiveOverview }) {
+  const a = data.attendance;
+  const real = data.departments.filter((d) => d.key !== "unassigned");
+  const managers = real.filter((d) => d.leads.length).length;
+  const today = data.today;
+  const onLeave = data.leave.upcomingApproved.filter((l) => l.start <= today && l.end >= today).length;
+  const staffing = data.departments
+    .map((d) => ({ key: d.key, name: d.name, members: employeesIn(data, d.key) }))
+    .filter((d) => d.members > 0)
+    .sort((x, y) => y.members - x.members);
+  const maxMembers = Math.max(1, ...staffing.map((d) => d.members));
+  const daily = a.daily.map((d) => ({
+    ...d,
+    label: new Date(`${d.date}T12:00:00Z`).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", timeZone: "UTC" }),
+  }));
+  return (
+    <Panel
+      title="Team & workforce"
+      description="Headcount, staffing by department, attendance and leave. Individual records are on People & Workforce."
+      action={
+        <Link to="/ceo/team" className="text-xs font-medium text-primary hover:underline">
+          People
+        </Link>
+      }
+    >
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Figure label="Employees" value={data.business.headcount} />
+        <Figure label="Department managers" value={`${managers} of ${real.length}`} />
+        <Figure label="Working now" value={a.clockedIn + a.onBreak} />
+        <Figure label="On leave today" value={onLeave} />
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        {data.leave.pending.length
+          ? `${data.leave.pending.length} leave request${data.leave.pending.length > 1 ? "s" : ""} awaiting HR`
+          : "No leave requests awaiting HR"}
+        {a.missingClockOut.length ? ` · ${a.missingClockOut.length} clock-in session(s) never closed` : ""}
+        {data.business.sharedAccounts ? ` · ${data.business.sharedAccounts} shared/system logins not counted` : ""}
+      </p>
+
+      <div className="mt-5 space-y-2">
+        <p className="text-xs font-medium text-foreground">Employees clocked in, last 7 days</p>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={daily} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
+              <XAxis dataKey="label" {...axisProps} />
+              <YAxis allowDecimals={false} {...axisProps} />
+              <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.4 }} content={<ChartTooltip />} />
+              <Bar isAnimationActive={false} dataKey="present" name="Clocked in" fill="var(--viz-1)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <p className="text-xs font-medium text-foreground">Staffing by department</p>
+        {staffing.length ? (
+          <ul className="space-y-1.5">
+            {staffing.map((d) => (
+              <li key={d.key} className="grid grid-cols-[minmax(0,10rem)_1fr_2rem] items-center gap-3 text-xs">
+                <span className="truncate text-muted-foreground">{d.name}</span>
+                <span className="h-1.5 rounded-full bg-muted">
+                  <span
+                    className="block h-1.5 rounded-full"
+                    style={{ width: `${(d.members / maxMembers) * 100}%`, background: "var(--viz-1)" }}
+                  />
+                </span>
+                <span className="text-right tabular-nums text-foreground">{d.members}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">No employees are placed in departments yet.</p>
+        )}
+      </div>
+    </Panel>
+  );
+}
+

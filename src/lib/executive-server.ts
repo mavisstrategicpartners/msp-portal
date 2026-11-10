@@ -441,6 +441,11 @@ async function buildOverview(): Promise<ExecutiveOverview> {
     clockedOut: employees.filter((p) => p.attendanceToday === "Clocked Out").length,
     noClockIn: employees.filter((p) => p.attendanceToday === "No clock-in").length,
     missingClockOut,
+    // Employees who clocked in on each of the last 7 days (from attendance clock events).
+    daily: Array.from({ length: 7 }, (_, i) => {
+      const day = jhbDate(new Date(now.getTime() - (6 - i) * DAY));
+      return { date: day, present: employees.filter((p) => daysPresent.get(p.id)?.has(day)).length };
+    }),
   };
 
   // Leave
@@ -573,6 +578,24 @@ async function buildOverview(): Promise<ExecutiveOverview> {
         date: a.date,
       })),
     netPosition: invoices.length || expenses.length ? collected - expensesPaid : null,
+    // Agency fees on invoices due this month (monthly recurring billing); null when none are recorded.
+    invoicedThisMonth: invoices.some((i) => String(i.dueDate || "").slice(0, 7) === today.slice(0, 7))
+      ? invoices.filter((i) => String(i.dueDate || "").slice(0, 7) === today.slice(0, 7)).reduce((a, i) => a + fee(i), 0)
+      : null,
+    // Last 6 months: fees invoiced (by due month), collected (by verification month, else due month), expenses paid.
+    monthly: Array.from({ length: 6 }, (_, k) => {
+      const d = new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1 - (5 - k), 1));
+      const m = d.toISOString().slice(0, 7);
+      const month = (v: any) => String(v || "").slice(0, 7);
+      return {
+        month: m,
+        invoiced: invoices.filter((i) => month(i.dueDate) === m).reduce((a, i) => a + fee(i), 0),
+        collected: invoices.filter((i) => isPaid(i) && month(i.verifiedAt || i.dueDate) === m).reduce((a, i) => a + fee(i), 0),
+        expenses: expenses
+          .filter((e) => e.status === "Paid" && month(e.date || e.paidAt || e.created_at) === m)
+          .reduce((a, e) => a + (Number(e.amountZar) || 0), 0),
+      };
+    }),
   };
 
   // Department scorecards

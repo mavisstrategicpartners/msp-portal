@@ -60,6 +60,10 @@
 }
 
 :root {
+  /* Data-viz series (validated categorical slots 1-2 + sequential), light surface */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-grid: oklch(0.9 0.006 250);
   /* Light mode — ink on paper, magenta accent (MSP brand mark) */
   --radius: 0.5rem;
   --background: oklch(0.975 0.008 250);
@@ -101,6 +105,10 @@
 }
 
 .dark {
+  /* Data-viz series stepped for the dark surface */
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-grid: oklch(0.3 0.015 250);
   /* Professional dark theme: slate surfaces with restrained MSP accent. */
   --background: oklch(0.16 0.018 250);
   --foreground: oklch(0.95 0.006 250);

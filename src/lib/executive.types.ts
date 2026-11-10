@@ -201,6 +201,7 @@ export interface ExecutiveOverview {
     clockedOut: number;
     noClockIn: number;
     missingClockOut: { id: string; name: string; since: string }[];
+    daily: { date: string; present: number }[];
   };
   leave: {
     pending: { id: string; name: string; start: string; end: string; reason: string | null; createdAt: string }[];
@@ -231,6 +232,8 @@ export interface ExecutiveOverview {
     budgets: { dept: string; budget: number; actual: number }[];
     pendingApprovals: { id: string; title: string; department: string; amount: number; requestedBy: string; date: string }[];
     netPosition: number | null;
+    invoicedThisMonth: number | null;
+    monthly: { month: string; invoiced: number; collected: number; expenses: number }[];
   };
   followUps: FollowUp[];
   feed: FeedItem[];

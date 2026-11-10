@@ -47,6 +47,8 @@ import {
   ShieldCheck,
   Tag,
   Target,
+  Bell,
+  Flag,
   TrendingUp,
   User,
   UserPlus,
@@ -149,39 +151,52 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     groups: [
       {
         id: "ceo-exec",
-        label: "Executive",
+        label: "Executive Overview",
         items: [
-          { to: "/ceo", label: "Executive Overview", icon: LayoutDashboard, exact: true },
+          { to: "/ceo", label: "Executive Dashboard", icon: LayoutDashboard, exact: true },
           { to: "/ceo/performance", label: "Company Performance", icon: TrendingUp },
-          { to: "/ceo/departments", label: "Departments", icon: Building2 },
+          { to: "/ceo/notifications", label: "Notifications", icon: Bell },
+        ],
+      },
+      {
+        id: "ceo-departments",
+        label: "Departments",
+        items: [
+          { to: "/ceo/departments", label: "Department Performance", icon: Building2 },
           { to: "/ceo/structure", label: "Department Structure", icon: Network },
         ],
       },
       {
-        id: "ceo-org",
-        label: "Organisation",
+        id: "ceo-people",
+        label: "Team & Workforce",
+        items: [{ to: "/ceo/team", label: "People & Workforce", icon: Users }],
+      },
+      {
+        id: "ceo-clients",
+        label: "Clients & Projects",
         items: [
-          { to: "/ceo/team", label: "People & Workforce", icon: Users },
           { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
-          { to: "/ceo/delivery", label: "Operations & Deliverables", icon: ListChecks },
+          { to: "/ceo/sales", label: "Sales Pipeline", icon: Target },
+        ],
+      },
+      {
+        id: "ceo-ops",
+        label: "Tasks & Operations",
+        items: [
+          { to: "/ceo/delivery", label: "Tasks & Deliverables", icon: ListChecks },
           { to: "/ceo/evidence", label: "Evidence & Approvals", icon: CheckSquare },
+          { to: "/ceo/initiatives", label: "Strategic Initiatives", icon: Flag },
         ],
       },
       {
         id: "ceo-finance",
-        label: "Finance & Reporting",
-        items: [
-          { to: "/ceo/revenue", label: "Financial Overview", icon: Banknote },
-          { to: "/reports", label: "Reports & Analytics", icon: FileBarChart2 },
-        ],
+        label: "Finance",
+        items: [{ to: "/ceo/revenue", label: "Financial Overview", icon: Banknote }],
       },
       {
-        id: "ceo-leadership",
-        label: "Leadership",
-        items: [
-          { to: "/ceo/initiatives", label: "Strategic Initiatives", icon: Target },
-          { to: "/ceo/notifications", label: "Notifications", icon: AlertTriangle },
-        ],
+        id: "ceo-reports",
+        label: "Reports & Analytics",
+        items: [{ to: "/reports", label: "Reports & Analytics", icon: FileBarChart2 }],
       },
       {
         id: "ceo-inspect",
@@ -199,7 +214,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
       },
       {
         id: "ceo-account",
-        label: "Account",
+        label: "Settings",
         visible: (ctx) => Boolean(ctx.isCEO),
         items: [{ to: "/me/profile", label: "Account Settings", icon: Settings }],
       },
