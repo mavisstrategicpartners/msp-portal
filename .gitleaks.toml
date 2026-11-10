@@ -1,0 +1,20 @@
+# Secret scanning rules (used by .github/workflows/secret-scan.yml).
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-secret-key"
+description = "Supabase secret API key"
+regex = '''sb_secret_[A-Za-z0-9_-]{20,}'''
+keywords = ["sb_secret_"]
+
+[[rules]]
+id = "hardcoded-password-field"
+description = "Password literal assigned in code"
+regex = '''(?i)password\s*[:=]\s*["'][^"'\s]{6,}["']'''
+keywords = ["password"]
+
+[allowlist]
+description = "Publishable (public) keys and test fixtures"
+regexes = ['''sb_publishable_[A-Za-z0-9_-]+''']
+paths = ['''(^|/)node_modules/''', '''(^|/)scripts/check-roles\.ts$''']

@@ -426,7 +426,7 @@ export default function HRIntegrations() {
               <label className="text-xs font-semibold text-muted-foreground uppercase">API Secret Key / Token</label>
               <input
                 type="password"
-                defaultValue="sk_live_948a7b1c3e5d8f0293847"
+                defaultValue=""
                 className="mt-1 w-full rounded-md border border-input bg-background p-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>

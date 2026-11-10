@@ -9,7 +9,8 @@ const SUPABASE_URL = "https://tkjytjaerfjpghusrwom.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const GM_EMAIL = "general.manager@mavisstrategicpartners.co.za";
-const GM_PASSWORD = "General2026!";
+const GM_PASSWORD = process.env.GM_PASSWORD;
+if (!GM_PASSWORD) { console.error("Set GM_PASSWORD in the environment first."); process.exit(1); }
 
 function isNewApiKey(value) {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');

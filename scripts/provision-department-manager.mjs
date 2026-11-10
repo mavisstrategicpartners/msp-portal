@@ -100,7 +100,8 @@ async function provisionDeptManager(email, initialPassword, departmentName) {
 
 async function main() {
   const targetEmail = process.env.DEPT_MGR_EMAIL || "department.manager@mavistrategicpartners.co.za";
-  const initialPassword = process.env.DEPT_MGR_PASSWORD || process.argv[2] || "Department2026!";
+  const initialPassword = process.env.DEPT_MGR_PASSWORD || process.argv[2];
+  if (!initialPassword) { console.error("Set DEPT_MGR_PASSWORD or pass a password argument."); process.exit(1); }
   const department = "Media Buying";
 
   await provisionDeptManager(targetEmail, initialPassword, department);

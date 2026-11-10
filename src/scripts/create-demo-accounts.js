@@ -20,17 +20,17 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 const demoUsers = [
   {
     email: 'financeadministration@mavisstrategicpartners.co.za',
-    password: 'Finance2026!',
+    password: process.env.DEMO_ACCOUNT_PASSWORD,
     role: 'finance_administration',
   },
   {
     email: 'sales@mavisstrategicpartners.co.za',
-    password: 'Sales2026!',
+    password: process.env.DEMO_ACCOUNT_PASSWORD,
     role: 'sales',
   },
   {
     email: 'hr@mavisstrategicpartners.co.za',
-    password: 'MspHr2026!',
+    password: process.env.DEMO_ACCOUNT_PASSWORD,
     role: 'staff',
   },
 ];
