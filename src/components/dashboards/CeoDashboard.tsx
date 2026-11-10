@@ -24,11 +24,13 @@ import {
   OverviewGate,
   ReadOnlyNote,
   SectionTitle,
-  StatusPill,
+  useAlertState,
   zar,
   type FollowUpDraft,
 } from "@/components/executive/ExecutiveUI";
 import type { ExecutiveOverview, FeedItem } from "@/lib/executive.types";
+import { navContextFromProfile } from "@/lib/navigation";
+import { useProfile } from "@/lib/use-profile";
 
 const FEED_FILTERS: { value: string; label: string; match: (f: FeedItem) => boolean }[] = [
   { value: "all", label: "All activity", match: () => true },
@@ -53,6 +55,10 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
   );
   const openFollowUps = data.followUps.filter((f) => f.status !== "Resolved");
   const present = data.attendance.clockedIn + data.attendance.onBreak;
+  // The CEO's alerts are stored with a read status; read ones leave the dashboard and live in the bell.
+  const isCEO = Boolean(navContextFromProfile(useProfile().data)?.isCEO);
+  const alerts = useAlertState();
+  const tracksAlerts = isCEO;
 
   useEffect(() => {
     if (focus === "follow-ups") document.getElementById("exec-follow-ups")?.scrollIntoView({ behavior: "smooth" });
@@ -71,17 +77,6 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
           </Button>
         }
       />
-
-      {/* Company status */}
-      <Card className="p-4 flex flex-wrap items-center gap-3 border-border bg-card">
-        <StatusPill status={b.status} />
-        <p className="text-sm text-foreground">
-          {b.status === "on-track"
-            ? "No overdue work, delayed onboardings or outstanding financial issues are recorded."
-            : `${b.attentionCount} item${b.attentionCount === 1 ? "" : "s"} need${b.attentionCount === 1 ? "s" : ""} executive attention`}
-          {b.statusReasons.length > 0 && <span className="text-muted-foreground">: {b.statusReasons.join(" · ")}</span>}
-        </p>
-      </Card>
 
       {/* Business overview */}
       <section className="space-y-3">
@@ -138,9 +133,21 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
           <section className="space-y-3">
             <SectionTitle
               title="Needs your attention"
-              hint="Overdue work, stalled reviews, client delays, financial matters and unanswered follow-ups."
+              hint={
+                tracksAlerts
+                  ? "New items you haven't opened yet. Once read they move to the notification bell, where the full history stays."
+                  : "Overdue work, stalled reviews, client delays, financial matters and unanswered follow-ups."
+              }
             />
-            <FeedList items={data.decisions} limit={6} empty="Nothing is waiting on an executive decision." />
+            <FeedList
+              items={tracksAlerts ? data.decisions.filter((f) => alerts.isUnread(f)) : data.decisions}
+              limit={6}
+              empty={
+                tracksAlerts
+                  ? "You're up to date. Earlier alerts are in the notification bell."
+                  : "Nothing is waiting on an executive decision."
+              }
+            />
           </section>
 
           {/* Department performance */}
@@ -218,7 +225,15 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
                 </Select>
               }
             />
-            <FeedList items={feed} limit={8} empty="No notable activity in this category." />
+            <FeedList
+              items={tracksAlerts ? feed.filter((f) => alerts.isUnread(f)) : feed}
+              limit={8}
+              empty={
+                tracksAlerts
+                  ? "No unread activity here. Everything you've read is in the notification bell."
+                  : "No notable activity in this category."
+              }
+            />
           </section>
 
           {/* Follow-ups */}

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/use-profile";
+import { CeoNotificationBell } from "@/components/executive/CeoNotificationBell";
 import { useStaffNotifications } from "@/lib/staff-tasks.service";
 import { useTheme, ThemeProvider } from "@/components/theme-provider";
 import { MspLogo } from "@/components/msp-logo";
@@ -400,12 +401,13 @@ function TopBar({
         </button>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        {(!isCeoPath || isCEO) && (
+        {isCEO && <CeoNotificationBell />}
+        {!isCEO && !isCeoPath && (
           <Button
             variant="ghost"
             size="icon"
-            aria-label={unreadCount ? `Notifications (${unreadCount} unread)` : "Notifications"}
-            onClick={() => (isCEO ? navigate({ to: "/ceo/notifications" }) : onOpenNotifications())}
+            aria-label="Notifications"
+            onClick={onOpenNotifications}
             className="hidden sm:inline-flex relative"
           >
             <Bell className="h-4 w-4" />
