@@ -47,7 +47,6 @@ import {
   ShieldCheck,
   Tag,
   Target,
-  Bell,
   Flag,
   TrendingUp,
   User,
@@ -155,7 +154,6 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/ceo", label: "Executive Dashboard", icon: LayoutDashboard, exact: true },
           { to: "/ceo/performance", label: "Company Performance", icon: TrendingUp },
-          { to: "/ceo/notifications", label: "Notifications", icon: Bell },
         ],
       },
       {
