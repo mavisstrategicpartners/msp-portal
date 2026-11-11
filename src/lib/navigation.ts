@@ -518,6 +518,12 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
         ],
       },
+      {
+        id: "admin-account",
+        label: "My Account",
+        // The administrator's own profile and password (change password).
+        items: [{ to: "/me/profile", label: "Account & Password", icon: KeyRound }],
+      },
     ],
   },
 };

@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
+import { changeMyPassword } from "@/lib/account.functions";
+import { PASSWORD_REQUIREMENTS } from "@/lib/password-rules";
 import { useProfile } from "@/lib/use-profile";
 import { canAccessPath, navContextFromProfile, searchableItems } from "@/lib/navigation";
 import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
@@ -1203,41 +1205,31 @@ export function ProfilePage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const pwRules = PASSWORD_REQUIREMENTS.map((r) => ({ ...r, ok: r.test(passwordForm.newPassword) }));
+  const pwMatch = passwordForm.confirmPassword.length > 0 && passwordForm.newPassword === passwordForm.confirmPassword;
+  const pwSame = passwordForm.newPassword.length > 0 && passwordForm.newPassword === passwordForm.currentPassword;
+  const pwReady = Boolean(passwordForm.currentPassword) && pwRules.every((r) => r.ok) && pwMatch && !pwSame;
+  const [pwResult, setPwResult] = useState<{ ok: boolean; message: string } | null>(null);
+  // Checked and saved on the server (current password verified with Supabase Auth, new one
+  // stored hashed by Supabase Auth). Passwords are never shown, stored or logged by the portal.
   const changePassword = useMutation({
     mutationFn: async () => {
-      if (!passwordForm.currentPassword) {
-        throw new Error("Please enter your current/temporary password.");
-      }
-      if (passwordForm.newPassword.length < 8) {
-        throw new Error("New password must be at least 8 characters long.");
-      }
-      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-        throw new Error("New password and confirm password do not match.");
-      }
-      if (passwordForm.currentPassword === passwordForm.newPassword) {
-        throw new Error("New password must be different from your current temporary password.");
-      }
-
-      // Verify current password first
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: profile!.email,
-        password: passwordForm.currentPassword,
-      });
-      if (verifyError) {
-        throw new Error("Current password is incorrect.");
-      }
-
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
-      if (updateError) throw updateError;
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) throw new Error("The new password and its confirmation do not match.");
+      await changeMyPassword({ data: passwordForm });
     },
     onSuccess: () => {
-      toast.success("Password updated successfully!", {
-        description: "Your corporate account password has been updated.",
-      });
+      setPwResult({ ok: true, message: "Password changed. Use your new password the next time you sign in." });
+      toast.success("Password changed", { description: "Your new password works from your next sign-in." });
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => {
+      const message = (e as Error).message || "The password could not be changed.";
+      setPwResult({ ok: false, message });
+      toast.error("Password not changed", { description: message });
+    },
   });
 
   if (!profile) return <EmptyState title="Loading profile" description="One moment." />;
@@ -1269,13 +1261,13 @@ export function ProfilePage() {
           <Button className="mt-4" disabled={saveProfile.isPending} onClick={() => saveProfile.mutate()}>Save changes</Button>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 scroll-mt-20" id="password">
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
             <div>
               <h3 className="font-semibold">Change Password</h3>
               <p className="text-xs text-muted-foreground">
-                Enter your current password, then set your new password.
+                Enter your current password, then choose a new one. Your passwords are never shown or stored by the portal.
               </p>
             </div>
           </div>
@@ -1283,7 +1275,8 @@ export function ProfilePage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              changePassword.mutate();
+              setPwResult(null);
+              if (pwReady) changePassword.mutate();
             }}
             className="mt-4 space-y-3.5"
           >
@@ -1296,12 +1289,14 @@ export function ProfilePage() {
                   placeholder="••••••••••••"
                   value={passwordForm.currentPassword}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  autoComplete="current-password"
                   required
                   className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword((v) => !v)}
+                  aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -1319,6 +1314,7 @@ export function ProfilePage() {
                     placeholder="Min. 8 characters"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))}
+                    autoComplete="new-password"
                     required
                     minLength={8}
                     className="pr-10"
@@ -1326,6 +1322,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowNewPassword((v) => !v)}
+                  aria-label={showNewPassword ? "Hide new password" : "Show new password"}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -1342,6 +1339,8 @@ export function ProfilePage() {
                     placeholder="Repeat new password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    autoComplete="new-password"
+                    aria-invalid={passwordForm.confirmPassword.length > 0 && !pwMatch}
                     required
                     minLength={8}
                     className="pr-10"
@@ -1349,6 +1348,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
+                  aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -1357,14 +1357,30 @@ export function ProfilePage() {
               </div>
             </div>
 
+            <ul className="grid gap-1 text-xs sm:grid-cols-2" aria-label="Password requirements">
+              {pwRules.map((r) => (
+                <li key={r.id} className={r.ok ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
+                  {r.ok ? "✓" : "○"} {r.label}
+                </li>
+              ))}
+              <li className={pwMatch ? "text-emerald-600 dark:text-emerald-400" : passwordForm.confirmPassword ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}>
+                {pwMatch ? "✓ Passwords match" : passwordForm.confirmPassword ? "✗ Passwords do not match" : "○ Confirmation matches"}
+              </li>
+              {pwSame && <li className="text-rose-600 dark:text-rose-400">✗ Must differ from your current password</li>}
+            </ul>
+
+            {pwResult && (
+              <p
+                role={pwResult.ok ? "status" : "alert"}
+                className={`rounded-md border px-3 py-2 text-sm ${pwResult.ok ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400"}`}
+              >
+                {pwResult.message}
+              </p>
+            )}
+
             <Button
               type="submit"
-              disabled={
-                !passwordForm.currentPassword ||
-                passwordForm.newPassword.length < 8 ||
-                passwordForm.confirmPassword.length < 8 ||
-                changePassword.isPending
-              }
+              disabled={!pwReady || changePassword.isPending}
               className="mt-1"
             >
               {changePassword.isPending ? "Updating password…" : "Update Password"}

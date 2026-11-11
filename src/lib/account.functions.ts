@@ -35,3 +35,29 @@ export const completePasswordChange = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/**
+ * Change your own password (My Profile → Change password). Checks the current password with
+ * Supabase Auth, applies the portal's password rules and stores the new one through Supabase
+ * Auth (hashed). Only the signed-in user's own account can be changed here.
+ */
+export const changeMyPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseSession])
+  .validator((data) =>
+    z.object({ currentPassword: z.string().max(200), newPassword: z.string().max(200), confirmPassword: z.string().max(200) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { changeOwnPassword, verifyPasswordWithSupabase } = await import("@/lib/password-change.server");
+    return changeOwnPassword(
+      {
+        admin: supabaseAdmin,
+        verify: verifyPasswordWithSupabase,
+        audit: async (row) => {
+          await (supabaseAdmin as any).from("audit_logs").insert(row);
+        },
+      },
+      context.userId,
+      data,
+    );
+  });
