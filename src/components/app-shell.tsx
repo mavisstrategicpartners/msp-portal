@@ -225,6 +225,8 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
                         <Link
                           to={item.to as any}
                           search={(item.search ?? undefined) as any}
+                          // Links that open a section of a page scroll to that section themselves.
+                          resetScroll={item.search ? false : undefined}
                           aria-current={active ? "page" : undefined}
                           className={cn(
                             "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium no-underline transition",

@@ -8,7 +8,7 @@
  * add, edit and delete; the CEO sees everything read-only. Exports are PDF.
  */
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { formatZAR } from "@/lib/currency";
@@ -135,7 +135,11 @@ export function FinanceAdminDashboard() {
   const urlTab = useRouterState({ select: (s) => String((s.location.search as any)?.tab ?? "") });
   const navigate = useNavigate();
   const activeTab = TABS.includes(urlTab) ? urlTab : "overview";
-  const setActiveTab = (t: string) => navigate({ to: "/finance", search: (t === "overview" ? {} : { tab: t }) as any });
+  const setActiveTab = (t: string) => navigate({ to: "/finance", search: (t === "overview" ? {} : { tab: t }) as any, resetScroll: false });
+  // A section opened from the sidebar (or a link) is scrolled into view: the tabs sit below the
+  // banner, attendance and summary cards, so without this the change happens off-screen.
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const loadedOnce = useRef(false);
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editing, setEditing] = useState<{ kind: Kind; record: any | null } | null>(null);
@@ -211,6 +215,14 @@ export function FinanceAdminDashboard() {
   };
 
   const exportData: FinanceData = { invoices, expenses, approvals, budgets, audit: auditLogs };
+
+  useEffect(() => {
+    if (!data) return;
+    const first = !loadedOnce.current;
+    loadedOnce.current = true;
+    if (!urlTab || (first && urlTab === "overview")) return;
+    requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: first ? "auto" : "smooth", block: "start" }));
+  }, [urlTab, Boolean(data)]);
 
   const RowActions = ({ kind, record }: { kind: Kind; record: any }) => (
     <div className="flex items-center justify-end gap-0.5">
@@ -342,7 +354,7 @@ export function FinanceAdminDashboard() {
       </div>
 
       {/* ─── Tabs ─────────────────────────────────────────────────────────── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs ref={sectionRef} value={activeTab} onValueChange={setActiveTab} className="scroll-mt-24 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TabsList className="bg-muted/70 p-1 rounded-lg border border-border flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="overview" className="text-xs px-3 py-1.5">Financial Overview</TabsTrigger>
