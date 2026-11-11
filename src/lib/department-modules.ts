@@ -51,7 +51,22 @@ export type RecordType = {
   openToAll?: { action: string; titleLabel: string };
   /** A numeric field summed in the summary. */
   total?: { field: string; label: string };
+  /** Supporting files can be attached (uploaded to private storage, linked to the record). */
+  attachments?: boolean;
   fields: ModuleField[];
+};
+
+export type RecordAttachment = {
+  name: string;
+  path: string;
+  size: number;
+  mimeType: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  /** Short-lived links, only present when fetched through /files. */
+  url?: string;
+  downloadUrl?: string;
+  available?: boolean;
 };
 
 export type DeptRecord = {
@@ -66,6 +81,7 @@ export type DeptRecord = {
   client_name: string | null;
   due_date: string | null;
   data: Record<string, any>;
+  attachments?: RecordAttachment[];
   task_id: string | null;
   created_by: string | null;
   created_by_name?: string | null;
@@ -265,6 +281,7 @@ export const RECORD_TYPES: RecordType[] = [
     due: { label: "Due date" },
     assignee: { label: "Designer" },
     openToAll: { action: "Submit a design brief", titleLabel: "What needs designing?" },
+    attachments: true,
     fields: [
       { key: "deliverable", label: "Deliverable", type: "select", options: ["Social post", "Carousel", "Video / reel", "Banner / ad", "Logo / branding", "Presentation", "Print", "Website graphics", "Other"], required: true, list: true, intake: true },
       { key: "brief", label: "Brief", type: "textarea", required: true, intake: true },

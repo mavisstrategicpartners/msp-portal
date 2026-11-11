@@ -16,6 +16,7 @@ import {
   type OrgStructure,
 } from "@/lib/org-structure.server";
 import { handleRecordsApi } from "@/lib/department-records.server";
+import { handleReportsApi } from "@/lib/monthly-reports.server";
 import {
   cancelAppointment,
   createAppointment,
@@ -224,6 +225,21 @@ async function departmentManagersFor(dept?: string | null): Promise<string[]> {
     .map((p: any) => p.id);
 }
 
+/** The CEO and General Manager(s): active accounts with company-wide oversight. */
+async function executiveIds(): Promise<string[]> {
+  const db = supabaseAdmin as any;
+  const [{ data: profs }, { data: roleRows }] = await Promise.all([
+    db.from("profiles").select("*").eq("is_active", true),
+    db.from("user_roles").select("user_id, role"),
+  ]);
+  return (profs || [])
+    .filter((p: any) => {
+      const a = computeAccess(p, p.email, (roleRows || []).filter((r: any) => r.user_id === p.id));
+      return a.isCEO || a.isGM;
+    })
+    .map((p: any) => p.id);
+}
+
 // ── In-Memory Cached State backed by Supabase audit_logs ───────────────────────
 
 let isInitialized = false;
@@ -385,6 +401,21 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           await createNotification(uid, title, message, "task_assigned");
         },
         async (key) => departmentManagersFor(key),
+      );
+      if (res) return res;
+    }
+
+    // Monthly reports (department reports + client reports)
+    if (pathname.startsWith("/api/staff/reports")) {
+      await initLedgerFromSupabase();
+      const res = await handleReportsApi(
+        request,
+        url,
+        auth,
+        async (uid, title, message) => {
+          await createNotification(uid, title, message, "task_assigned");
+        },
+        async (key) => ({ managers: await departmentManagersFor(key), executives: await executiveIds() }),
       );
       if (res) return res;
     }

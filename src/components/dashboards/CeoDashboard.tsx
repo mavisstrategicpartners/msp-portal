@@ -40,6 +40,9 @@ import {
   type FollowUpDraft,
 } from "@/components/executive/ExecutiveUI";
 import { useExecutiveOverview } from "@/lib/executive.service";
+import { useQuery } from "@tanstack/react-query";
+import { getAuthHeaders } from "@/lib/api-auth-headers";
+import type { MonthlyReportRow } from "@/lib/monthly-reports";
 import { useStaffNotifications } from "@/lib/staff-tasks.service";
 import type { DepartmentScorecard, ExecutiveOverview, FeedItem } from "@/lib/executive.types";
 import { navContextFromProfile } from "@/lib/navigation";
@@ -225,6 +228,8 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
         <ActivitySummary data={data} onViewAll={() => setDetail("activity")} />
       </div>
 
+      <MonthlyReportsStrip />
+
       <ReadOnlyNote />
 
       <DetailSheet
@@ -293,6 +298,46 @@ function ExecutiveDashboard({ data, focus }: { data: ExecutiveOverview; focus?: 
 
       <FollowUpDialog open={draft !== null} onOpenChange={(o) => !o && setDraft(null)} draft={draft} data={data} />
     </div>
+  );
+}
+
+// ── Monthly reports (last completed month) ───────────────────────────────────
+function MonthlyReportsStrip() {
+  const q = useQuery({
+    queryKey: ["staff", "monthly-reports"],
+    queryFn: async () => {
+      const res = await fetch("/api/staff/reports", { headers: await getAuthHeaders() });
+      if (!res.ok) throw new Error("Could not load monthly reports.");
+      return (await res.json()) as { reports: MonthlyReportRow[]; departments: { key: string; name: string }[] | null };
+    },
+    staleTime: 60_000,
+  });
+  const last = new Date();
+  last.setDate(1);
+  last.setMonth(last.getMonth() - 1);
+  const key = `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, "0")}`;
+  const label = last.toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
+  const rows = (q.data?.reports ?? []).filter((r) => r.department_key && r.reporting_month.startsWith(key));
+  const submitted = rows.filter((r) => r.status === "submitted");
+  const total = q.data?.departments?.length ?? 16;
+  return (
+    <section className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-card px-4 py-2.5" aria-label="Monthly reports">
+      <h2 className="text-sm font-semibold text-foreground">Monthly reports · {label}</h2>
+      {q.isLoading ? (
+        <span className="text-xs text-muted-foreground">Loading…</span>
+      ) : q.error ? (
+        <span className="text-xs text-muted-foreground">Unavailable right now.</span>
+      ) : (
+        <span className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">{submitted.length} of {total}</span> departments submitted
+          {rows.length > submitted.length ? ` · ${rows.length - submitted.length} in draft` : ""}
+          {submitted.length ? ` · latest: ${submitted.sort((a, b) => String(b.submitted_at).localeCompare(String(a.submitted_at)))[0].department_name}` : ""}
+        </span>
+      )}
+      <Link to="/reports" className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+        View all reports <ArrowRight className="h-3 w-3" />
+      </Link>
+    </section>
   );
 }
 

@@ -1,3 +1,4 @@
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useState, useMemo, useEffect } from "react";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
@@ -583,6 +584,9 @@ export function SalesDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* ─── My attendance (clock in / out) ─────────────────────────────── */}
+      <StaffAttendanceWidget />
 
       {/* ─── Telemetry KPI Cards ─────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

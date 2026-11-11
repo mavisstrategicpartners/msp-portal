@@ -962,15 +962,15 @@ export function DepartmentTasksPage() {
 
       {/* ── MODAL: Create & Assign Task ─────────────────────────────────────── */}
       <Dialog open={createTaskModalOpen} onOpenChange={setCreateTaskModalOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-0 overflow-hidden bg-card p-0 border-border text-foreground">
+          <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5 pr-10 text-left">
             <DialogTitle>Create & Assign Deliverable</DialogTitle>
             <DialogDescription className="text-xs">
               Create a task for your department and assign it to one of its employees.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
+          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-5 py-4 text-xs">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Deliverable Title</Label>
               <Input
@@ -1102,7 +1102,7 @@ export function DepartmentTasksPage() {
               })()}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Target Deadline</Label>
                 <Input
@@ -1189,7 +1189,7 @@ export function DepartmentTasksPage() {
                     return (
                       <div
                         key={`${file.name}-${idx}`}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-[11px] font-medium text-foreground max-w-[220px] group"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-[11px] font-medium text-foreground max-w-full sm:max-w-[220px] group"
                       >
                         {isImage ? (
                           <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
@@ -1213,7 +1213,7 @@ export function DepartmentTasksPage() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 gap-2 border-t border-border bg-card px-5 py-3 sm:space-x-0">
             <Button variant="outline" size="sm" onClick={() => setCreateTaskModalOpen(false)}>
               Cancel
             </Button>

@@ -1,3 +1,4 @@
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useState, useMemo } from "react";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
@@ -380,6 +381,9 @@ export function FinanceAdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ─── My attendance (clock in / out) ─────────────────────────────── */}
+      <StaffAttendanceWidget />
 
       {/* ─── Financial Boundary Notice ────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 p-3.5 rounded-lg border border-primary/30 bg-primary/10 text-foreground text-xs">

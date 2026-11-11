@@ -2040,9 +2040,9 @@ const STATUS_LABEL: Record<MonthlyReport["status"], string> = {
   sent_to_client: "Sent to Client",
 };
 
-export function MonthlyReportsPage() {
-  const { data: profileData } = useProfile();
-  const canEdit = profileData?.isManagerOrAbove ?? false;
+/** Client reports (sent to clients): readable by all staff. Department monthly reports live in
+ *  src/components/reports/MonthlyReports.tsx, which shows this panel as its "Client reports" tab. */
+export function ClientReportsPanel() {
   const [selectedClient, setSelectedClient] = useState<string | "all">("all");
   const [selectedReport, setSelectedReport] = useState<MonthlyReport | null>(null);
 
@@ -2056,11 +2056,11 @@ export function MonthlyReportsPage() {
   });
 
   const { data: reports = [] } = useQuery({
-    queryKey: ["monthly_reports"],
+    queryKey: ["monthly_reports", "client"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("monthly_reports").select("*").order("reporting_month", { ascending: false });
+      const { data, error } = await (supabase as any).from("monthly_reports").select("*").is("department_key", null).order("reporting_month", { ascending: false });
       if (error) throw error;
-      return data as MonthlyReport[];
+      return (data as MonthlyReport[]).filter((r) => r.client_id);
     },
   });
 
@@ -2069,7 +2069,6 @@ export function MonthlyReportsPage() {
 
   return (
     <div>
-      {pageTitle(FileBarChart2, "Client Delivery", "Monthly Reports", canEdit ? "Create, review and export monthly client reports across all four report types." : "Read-only view of live client reports — a learning window into how we present results.")}
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div>
           <Label className="mb-1 text-xs">Filter by client</Label>
@@ -2081,7 +2080,7 @@ export function MonthlyReportsPage() {
             </SelectContent>
           </Select>
         </div>
-        {canEdit && <Button className="ml-auto" disabled title="Report authoring UI coming next"><Plus className="mr-1 h-4 w-4" /> New report</Button>}
+        <p className="ml-auto max-w-md text-xs text-muted-foreground">Reports prepared for clients. Read-only here.</p>
       </div>
 
       <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">

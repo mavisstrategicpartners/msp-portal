@@ -180,66 +180,56 @@ export async function getTodayAttendance(userId: string): Promise<AttendanceReco
 }
 
 // 2. Save attendance event (Clock in, Break start, Break end, Clock out)
+export type AttendanceSaveResult = { ok: true; record: AttendanceRecord } | { ok: false; error: string };
+
+/**
+ * Ask the server to clock in, start/end a break or clock out. The server checks the action
+ * against the person's current status, stamps the time and computes hours; the returned record
+ * is what was saved. Nothing is shown as saved unless the server accepted it.
+ */
 export async function recordAttendance(
   userId: string,
   record: AttendanceRecord,
-  hoursWorked: string
-): Promise<boolean> {
-  const payload = {
-    userId,
-    state: record.state,
-    clockInTime: record.clockInTime,
-    breakStartTime: record.breakStartTime,
-    totalBreakMs: record.totalBreakMs,
-    clockOutTime: record.state === "Clocked Out" ? (record.clockOutTime || Date.now()) : null,
-    hoursWorked,
-  };
-
-  // 1) Save to localStorage immediately so UI has instantaneous state
+  _hoursWorked?: string
+): Promise<AttendanceSaveResult> {
+  let res: Response;
   try {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(payload));
+    res = await fetch("/api/attendance", {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ state: record.state }),
+    });
+  } catch {
+    return { ok: false, error: "No connection to the attendance system. Check your internet and try again." };
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body?.data) return { ok: false, error: body?.error || "Attendance could not be saved." };
+  const d = body.data;
+  const saved: AttendanceRecord = {
+    state: d.state,
+    clockInTime: d.clock_in_time ?? null,
+    breakStartTime: d.break_start_time ?? null,
+    totalBreakMs: d.total_break_ms || 0,
+    hoursWorked: d.hours_worked || "0h 0m",
+    ...(d.clock_out_time ? { clockOutTime: d.clock_out_time } : {}),
+  } as AttendanceRecord;
+
+  try {
+    localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(saved));
   } catch {
     // ignore
   }
-
-  // 2) Broadcast on Supabase Realtime so admins viewing the board see it in < 100ms
+  // Tell open attendance boards straight away.
   try {
-    const channel = supabase.channel("attendance-realtime");
-    channel.send({
+    supabase.channel("attendance-realtime").send({
       type: "broadcast",
       event: "attendance_update",
-      payload: {
-        userId,
-        state: record.state,
-        clockInTime: record.clockInTime,
-        breakStartTime: record.breakStartTime,
-        totalBreakMs: record.totalBreakMs,
-        hoursWorked,
-        timestamp: Date.now(),
-      },
+      payload: { userId, ...saved, timestamp: Date.now() },
     });
   } catch (e) {
     console.warn("[Attendance Client] Realtime broadcast error:", e);
   }
-
-  // 3) Persist to Supabase via server API
-  try {
-    const res = await fetch("/api/attendance", {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.warn("[Attendance Client] Server record failed:", err);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.warn("[Attendance Client] Server record network error:", err);
-    return false;
-  }
+  return { ok: true, record: saved };
 }
 
 // 3. Fetch all staff members for the Live Attendance Board

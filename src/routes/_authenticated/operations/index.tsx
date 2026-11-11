@@ -1,3 +1,4 @@
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,6 +285,9 @@ export function OperationsDashboardOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* My attendance (clock in / out) */}
+      <StaffAttendanceWidget />
 
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">

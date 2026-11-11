@@ -143,12 +143,6 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         label: "Home",
         items: [{ to: "/home", label: "Dashboard", icon: LayoutDashboard, exact: true }],
       },
-      {
-        id: "staff-delivery",
-        label: "Client Delivery",
-        visible: isManagerOnly,
-        items: [{ to: "/reports", label: "Monthly Reports", icon: FileBarChart2 }],
-      },
     ],
   },
 
@@ -280,7 +274,6 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
           { to: "/operations/workflows", label: "Client Workflows", icon: Layers },
           { to: "/operations/deadlines", label: "Service Deadlines", icon: Clock },
           { to: "/operations/verifications", label: "Verification Queue", icon: CheckSquare },
-          { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
         ],
       },
       {
@@ -356,7 +349,6 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/department/performance", label: "Targets & Performance", icon: Target },
           { to: "/department/clients", label: "Client Delivery Details", icon: Building2, visible: managesClientWork },
-          { to: "/reports", label: "Monthly Reports", icon: FileBarChart2, visible: managesClientWork },
         ],
       },
     ],
@@ -553,6 +545,9 @@ export const PERSONAL_GROUP: NavGroup = {
     // Any employee can raise work with another department (IT support, design briefs, bugs,
     // website changes, CRM work, reports, client complaints) and follow it here.
     { to: "/requests", label: "Requests to Departments", icon: Wrench },
+    // Each department's monthly report (written by the department, read by management), plus
+    // the client report library.
+    { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
   ],
 };
 

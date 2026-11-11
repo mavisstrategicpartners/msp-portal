@@ -4,10 +4,10 @@
  * The record type definition (src/lib/department-modules.ts) decides the fields, statuses and
  * summary figures; the server decides who may see and change what.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ClipboardList, Link2, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, Download, Eye, FileText, Image as ImageIcon, Link2, Loader2, Paperclip, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,9 +32,11 @@ import {
   typesFor,
   type DeptRecord,
   type ModuleField,
+  type RecordAttachment,
   type RecordType,
 } from "@/lib/department-modules";
 import { useProfile } from "@/lib/use-profile";
+import { supabase } from "@/integrations/supabase/client";
 
 type RecordsResponse = {
   records: DeptRecord[];
@@ -203,9 +205,14 @@ export function RecordModule({ type }: { type: RecordType }) {
                       <tr key={r.id} onClick={() => setEditing(r)} className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30">
                         <td className="max-w-[18rem] px-4 py-2.5">
                           <p className="truncate font-medium text-foreground">{r.title}</p>
-                          {r.task_id && (
-                            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Link2 className="h-3 w-3" /> task linked
+                          {(r.task_id || Boolean(r.attachments?.length)) && (
+                            <p className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                              {r.task_id && (
+                                <span className="inline-flex items-center gap-1"><Link2 className="h-3 w-3" /> task linked</span>
+                              )}
+                              {Boolean(r.attachments?.length) && (
+                                <span className="inline-flex items-center gap-1"><Paperclip className="h-3 w-3" /> {r.attachments!.length} file{r.attachments!.length === 1 ? "" : "s"}</span>
+                              )}
                             </p>
                           )}
                         </td>
@@ -267,6 +274,127 @@ export function RecordModule({ type }: { type: RecordType }) {
   );
 }
 
+
+const ATTACH_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.zip,.mp4,.mov,.ai,.psd,.eps,.indd,.fig,.sketch,.xd";
+const sizeLabel = (n: number) => (n >= 1024 * 1024 ? `${(n / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+const previewable = (f: RecordAttachment) => /^image\//.test(f.mimeType) || f.mimeType === "application/pdf" || /\.(pdf|png|jpe?g|webp|gif)$/i.test(f.name);
+
+/** Upload one file to private storage through a one-time slot issued by the server. */
+async function uploadRecordFile(typeKey: string, file: File): Promise<RecordAttachment> {
+  if (file.size > 25 * 1024 * 1024) throw new Error(`${file.name} is larger than 25 MB.`);
+  const slot = await api("/api/staff/records/upload-url", {
+    method: "POST",
+    body: JSON.stringify({ type: typeKey, fileName: file.name, mimeType: file.type, size: file.size }),
+  });
+  const mimeType = file.type || "application/octet-stream";
+  const { error } = await supabase.storage.from("evidence").uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false });
+  if (error) throw new Error(`${file.name}: upload failed (${error.message}).`);
+  return { name: file.name, path: slot.path, size: file.size, mimeType };
+}
+
+function Attachments({
+  type,
+  record,
+  files,
+  setFiles,
+  canEdit,
+  onBusy,
+}: {
+  type: RecordType;
+  record: DeptRecord | null;
+  files: RecordAttachment[];
+  setFiles: (fn: (f: RecordAttachment[]) => RecordAttachment[]) => void;
+  canEdit: boolean;
+  onBusy: (busy: boolean) => void;
+}) {
+  const [uploading, setUploading] = useState(0);
+  const saved = useMemo(() => new Set((record?.attachments ?? []).map((f) => f.path)), [record]);
+  const links = useQuery({
+    queryKey: ["staff", "records", "files", record?.id],
+    queryFn: async () => (await api(`/api/staff/records/${record!.id}/files`)).files as RecordAttachment[],
+    enabled: Boolean(record?.id && record.attachments?.length),
+    staleTime: 10 * 60_000,
+  });
+  const linkFor = (path: string) => links.data?.find((f) => f.path === path);
+
+  const add = async (list: FileList | null) => {
+    if (!list?.length) return;
+    const chosen = Array.from(list).slice(0, Math.max(0, 10 - files.length));
+    if (chosen.length < list.length) toast.warning("At most 10 files can be attached.");
+    setUploading((n) => n + chosen.length);
+    onBusy(true);
+    for (const file of chosen) {
+      try {
+        const up = await uploadRecordFile(type.key, file);
+        setFiles((f) => [...f, up]);
+      } catch (e: any) {
+        toast.error(e.message);
+      } finally {
+        setUploading((n) => n - 1);
+      }
+    }
+    onBusy(false);
+  };
+  const remove = async (f: RecordAttachment) => {
+    setFiles((list) => list.filter((x) => x.path !== f.path));
+    // A file uploaded in this session and never saved is deleted straight away; a saved one is
+    // removed when the record is saved.
+    if (!saved.has(f.path)) api("/api/staff/records/discard-upload", { method: "POST", body: JSON.stringify({ path: f.path }) }).catch(() => {});
+  };
+
+  if (!canEdit && !files.length) return null;
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <Label className="flex items-center gap-1.5 text-xs">
+        <Paperclip className="h-3.5 w-3.5" /> Attachments
+        <span className="font-normal text-muted-foreground">({files.length}{canEdit ? " of 10" : ""})</span>
+      </Label>
+      {canEdit && (
+        <label className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-border bg-muted/30 px-3 py-3 text-center hover:border-muted-foreground/50">
+          <input type="file" multiple accept={ATTACH_ACCEPT} className="sr-only" aria-label="Attach files" onChange={(e) => { add(e.target.files); e.target.value = ""; }} disabled={files.length >= 10} />
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground">
+            <Paperclip className="h-3.5 w-3.5" /> {uploading ? `Uploading ${uploading} file${uploading === 1 ? "" : "s"}…` : "Attach files"}
+          </span>
+          <span className="text-[10px] text-muted-foreground">Documents, images, design files (AI, PSD, Figma…), ZIP or video. Max 25 MB each.</span>
+        </label>
+      )}
+      {files.length > 0 && (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {files.map((f) => {
+            const l = saved.has(f.path) ? linkFor(f.path) : undefined;
+            const Icon = /^image\//.test(f.mimeType) ? ImageIcon : FileText;
+            return (
+              <li key={f.path} className="flex items-center gap-2 px-3 py-2 text-xs">
+                <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate font-medium text-foreground" title={f.name}>{f.name}</span>
+                <span className="shrink-0 text-[10px] text-muted-foreground">{sizeLabel(f.size)}</span>
+                {!saved.has(f.path) && <Badge variant="outline" className="shrink-0 text-[9px]">not saved yet</Badge>}
+                {l?.available && previewable(f) && (
+                  <a href={l.url} target="_blank" rel="noreferrer" className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title="Preview" aria-label={`Preview ${f.name}`}>
+                    <Eye className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {l?.available && (
+                  <a href={l.downloadUrl} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title="Download" aria-label={`Download ${f.name}`}>
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {saved.has(f.path) && links.isLoading && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />}
+                {l && !l.available && <span className="shrink-0 text-[10px] text-rose-600">missing</span>}
+                {canEdit && (
+                  <button type="button" onClick={() => remove(f)} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Remove" aria-label={`Remove ${f.name}`}>
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function RecordEditor({
   type,
   record,
@@ -295,6 +423,20 @@ function RecordEditor({
   const [fields, setFields] = useState<Record<string, any>>({ ...(record?.data ?? {}) });
   const [saving, setSaving] = useState(false);
   const [taskFor, setTaskFor] = useState<string>(record?.assigned_to ?? "");
+  const [files, setFiles] = useState<RecordAttachment[]>(record?.attachments ?? []);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const savedRef = useRef(false);
+  const filesRef = useRef(files);
+  filesRef.current = files;
+  // Closing without saving deletes files uploaded in this session (they were never linked).
+  const close = () => {
+    if (!savedRef.current) {
+      const before = new Set((record?.attachments ?? []).map((f) => f.path));
+      for (const f of filesRef.current)
+        if (!before.has(f.path)) api("/api/staff/records/discard-upload", { method: "POST", body: JSON.stringify({ path: f.path }) }).catch(() => {});
+    }
+    onClose();
+  };
 
   const body = () => ({
     type: type.key,
@@ -305,6 +447,7 @@ function RecordEditor({
     ...(type.due ? { dueDate: due } : {}),
     ...(type.assignee && data.canManage ? { assignedTo: assignee === NONE ? null : assignee } : {}),
     data: fields,
+    ...(type.attachments && canEdit ? { attachments: files.map(({ name, path, size, mimeType }) => ({ name, path, size, mimeType })) } : {}),
   });
 
   const save = async () => {
@@ -314,7 +457,8 @@ function RecordEditor({
       else await api(`/api/staff/records/${record!.id}`, { method: "PATCH", body: JSON.stringify(body()) });
       toast.success(isNew ? `${type.singular[0].toUpperCase()}${type.singular.slice(1)} added` : "Saved");
       onSaved();
-      onClose();
+      savedRef.current = true;
+      close();
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -327,7 +471,7 @@ function RecordEditor({
       await api(`/api/staff/records/${record.id}`, { method: "DELETE" });
       toast.success("Deleted");
       onSaved();
-      onClose();
+      close();
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -406,7 +550,7 @@ function RecordEditor({
   };
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
+    <Sheet open onOpenChange={(o) => !o && close()}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader className="text-left">
           <SheetTitle>{isNew ? `New ${type.singular}` : record!.title}</SheetTitle>
@@ -479,6 +623,9 @@ function RecordEditor({
             </div>
           )}
           {type.fields.map(field)}
+          {type.attachments && (
+            <Attachments type={type} record={record} files={files} setFiles={setFiles} canEdit={Boolean(canEdit)} onBusy={setUploadBusy} />
+          )}
         </div>
 
         {!isNew && data.canManage && (
@@ -516,11 +663,11 @@ function RecordEditor({
             <span />
           )}
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={onClose}>
+            <Button size="sm" variant="outline" onClick={close}>
               {canEdit ? "Cancel" : "Close"}
             </Button>
             {canEdit && (
-              <Button size="sm" onClick={save} disabled={saving || !title.trim()}>
+              <Button size="sm" onClick={save} disabled={saving || uploadBusy || !title.trim()}>
                 {saving ? "Saving…" : isNew ? "Add" : "Save"}
               </Button>
             )}

@@ -17,7 +17,7 @@ type Notify = (userId: string, title: string, message: string) => Promise<void>;
 /** Who receives a department's requests: its manager, or the General Manager(s) when it has none. */
 type Reviewers = (departmentKey: string) => Promise<string[]>;
 const db = () => supabaseAdmin as any;
-const json = (body: unknown, status = 200) =>
+export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 function rights(actor: Actor, dept: string) {
@@ -84,6 +84,118 @@ function clean(t: RecordType, body: any, partial: boolean): { ok: true; row: Rec
   return { ok: true, row };
 }
 
+
+// ── Attachments (design briefs) ───────────────────────────────────────────────
+// Files go to the private "evidence" bucket under records/<department>/<uploader>/.
+// The browser receives a one-time upload slot; it never gets a permanent link. Viewing
+// and download links are issued per request, only to people who may see the record.
+const FILE_BUCKET = "evidence";
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const MAX_FILES = 10;
+export const ATTACHMENT_EXTENSIONS = [
+  "pdf", "png", "jpg", "jpeg", "webp", "gif", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+  "csv", "txt", "zip", "mp4", "mov", "ai", "psd", "eps", "indd", "fig", "sketch", "xd",
+];
+const ext = (name: string) => (name.includes(".") ? name.split(".").pop()!.toLowerCase() : "");
+const store = () => db().storage.from(FILE_BUCKET);
+
+/** Validate a file and issue a one-time upload slot under <root>/<dept>/<uploader>/. */
+export async function createUploadSlot(root: string, dept: string, userId: string, body: any): Promise<Response> {
+  const fileName = String(body.fileName || "").trim();
+  const size = Number(body.size) || 0;
+  if (!fileName) return json({ error: "Missing file name." }, 400);
+  if (!ATTACHMENT_EXTENSIONS.includes(ext(fileName)))
+    return json({ error: `This file type is not allowed. Allowed: ${ATTACHMENT_EXTENSIONS.join(", ").toUpperCase()}.` }, 400);
+  if (size <= 0) return json({ error: "The file is empty." }, 400);
+  if (size > MAX_FILE_BYTES) return json({ error: "Files can be at most 25 MB." }, 400);
+  const safe = fileName.replace(/[^\w.\-]+/g, "_").slice(-100);
+  const path = `${root}/${dept}/${userId}/${crypto.randomUUID()}-${safe}`;
+  const { data, error } = await store().createSignedUploadUrl(path);
+  if (error || !data?.token) return json({ error: "Could not prepare the upload." }, 500);
+  return json({ path, token: data.token });
+}
+
+/** Delete a file the person uploaded but never linked (not referenced by any row of the table). */
+export async function discardUpload(root: string, table: string, userId: string, body: any): Promise<Response> {
+  const path = String(body.path || "");
+  const parts = path.split("/");
+  if (parts[0] !== root || parts.length < 4 || parts[2] !== userId || path.includes("..")) return json({ error: "Not your upload." }, 403);
+  const { data: used } = await db().from(table).select("id").contains("attachments", [{ path }]).limit(1);
+  if (used?.length) return json({ error: "This file is attached; remove it from the record instead." }, 409);
+  await removeFiles([path]);
+  return json({ ok: true });
+}
+
+async function fileExists(path: string) {
+  const dir = path.slice(0, path.lastIndexOf("/"));
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const { data, error } = await store().list(dir, { search: name, limit: 5 });
+  return !error && Array.isArray(data) && data.some((o: any) => o.name === name);
+}
+
+/** Validate the attachment list sent with a create/update. Files already on the record are kept
+ *  as stored; new ones must have been uploaded by this person for this department. */
+export async function cleanAttachments(
+  list: any,
+  dept: string,
+  actor: { userId: string },
+  existing: any[] = [],
+  root = "records",
+): Promise<{ ok: true; files: any[] } | { ok: false; error: string }> {
+  if (!Array.isArray(list)) return { ok: false, error: "Attachments must be a list." };
+  if (list.length > MAX_FILES) return { ok: false, error: `Attach at most ${MAX_FILES} files.` };
+  const byPath = new Map(existing.map((f: any) => [f.path, f]));
+  const out: any[] = [];
+  const seen = new Set<string>();
+  for (const f of list) {
+    const path = String(f?.path || "");
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    const kept = byPath.get(path);
+    if (kept) {
+      out.push(kept);
+      continue;
+    }
+    if (!path.startsWith(`${root}/${dept}/${actor.userId}/`) || path.includes(".."))
+      return { ok: false, error: "One of the files does not belong to this upload." };
+    if (!(await fileExists(path))) return { ok: false, error: `"${f?.name || "A file"}" did not finish uploading. Remove it and try again.` };
+    out.push({
+      name: String(f.name || path.split("/").pop()).slice(0, 200),
+      path,
+      size: Math.max(0, Number(f.size) || 0),
+      mimeType: String(f.mimeType || "application/octet-stream").slice(0, 120),
+      uploadedBy: actor.userId,
+      uploadedAt: new Date().toISOString(),
+    });
+  }
+  return { ok: true, files: out };
+}
+
+export async function signFiles(files: any[]) {
+  const out = [];
+  for (const f of files || []) {
+    const [view, dl] = await Promise.all([
+      store().createSignedUrl(f.path, 60 * 30),
+      store().createSignedUrl(f.path, 60 * 30, { download: f.name }),
+    ]);
+    out.push(
+      view.error || !view.data?.signedUrl
+        ? { ...f, available: false }
+        : { ...f, url: view.data.signedUrl, downloadUrl: dl.data?.signedUrl || view.data.signedUrl, available: true },
+    );
+  }
+  return out;
+}
+
+export async function removeFiles(paths: string[]) {
+  if (paths.length) await store().remove(paths);
+}
+
+/** Who may see a record: its department (manager, members), CEO/GM, and the person who raised it. */
+function canSeeRecord(actor: Actor, row: any) {
+  return rights(actor, row.department_key).view || row.created_by === actor.userId || row.assigned_to === actor.userId;
+}
+
 export async function handleRecordsApi(
   request: Request,
   url: URL,
@@ -94,6 +206,32 @@ export async function handleRecordsApi(
   const { pathname } = url;
   const method = request.method;
   if (!pathname.startsWith("/api/staff/records")) return null;
+
+
+  // POST /api/staff/records/upload-url -> a one-time slot to upload one file for a record type
+  if (method === "POST" && pathname === "/api/staff/records/upload-url") {
+    const body = await request.json().catch(() => ({}));
+    const t = typeByKey(String(body.type || ""));
+    if (!t || !t.attachments) return json({ error: "Files cannot be attached here." }, 400);
+    const r = rights(actor, t.department);
+    if (!r.manages && !r.member && !t.openToAll) return json({ error: "You cannot attach files to this department's records." }, 403);
+    return createUploadSlot("records", t.department, actor.userId, body);
+  }
+
+  // POST /api/staff/records/discard-upload -> remove a file the person uploaded but did not attach
+  if (method === "POST" && pathname === "/api/staff/records/discard-upload") {
+    const body = await request.json().catch(() => ({}));
+    return discardUpload("records", "department_records", actor.userId, body);
+  }
+
+  // GET /api/staff/records/:id/files -> short-lived view/download links for the record's files
+  const fm = pathname.match(/^\/api\/staff\/records\/([^/]+)\/files$/);
+  if (method === "GET" && fm) {
+    const { data: row } = await db().from("department_records").select("*").eq("id", decodeURIComponent(fm[1])).maybeSingle();
+    if (!row) return json({ error: "Record not found." }, 404);
+    if (!canSeeRecord(actor, row)) return json({ error: "You do not have access to these files." }, 403);
+    return json({ files: await signFiles(row.attachments || []) });
+  }
 
   // GET /api/staff/records/mine -> requests this person raised with any department
   if (method === "GET" && pathname === "/api/staff/records/mine") {
@@ -134,6 +272,12 @@ export async function handleRecordsApi(
     const c = clean(t, body, false);
     if (!c.ok) return json({ error: c.error }, 400);
     const row: Record<string, any> = { ...c.row };
+    if (body.attachments !== undefined && Array.isArray(body.attachments) && body.attachments.length) {
+      if (!t.attachments) return json({ error: "Files cannot be attached here." }, 400);
+      const a = await cleanAttachments(body.attachments, t.department, actor);
+      if (!a.ok) return json({ error: a.error }, 400);
+      row.attachments = a.files;
+    }
     if (outsider || (!r.manages && t.openToAll && !r.member)) {
       // An employee logging a request: it starts new and unassigned, and records who asked.
       row.status = t.statuses[0];
@@ -177,6 +321,7 @@ export async function handleRecordsApi(
     if (method === "DELETE") {
       if (!r.manages) return json({ error: "Only the department's manager can delete records." }, 403);
       await db().from("department_records").delete().eq("id", id);
+      await removeFiles((existing.attachments || []).map((f: any) => f.path));
       return json({ ok: true });
     }
     const own = existing.assigned_to === actor.userId || existing.created_by === actor.userId;
@@ -192,6 +337,15 @@ export async function handleRecordsApi(
         return json({ error: "Assign it to someone in this department." }, 400);
       patch.assigned_to = body.assignedTo || null;
     }
+    let removedPaths: string[] = [];
+    if (body.attachments !== undefined) {
+      if (!t.attachments) return json({ error: "Files cannot be attached here." }, 400);
+      const a = await cleanAttachments(body.attachments, existing.department_key, actor, existing.attachments || []);
+      if (!a.ok) return json({ error: a.error }, 400);
+      const keep = new Set(a.files.map((f: any) => f.path));
+      removedPaths = (existing.attachments || []).map((f: any) => f.path).filter((p: string) => !keep.has(p));
+      patch.attachments = a.files;
+    }
     if (body.taskId !== undefined && r.manages) patch.task_id = body.taskId ? String(body.taskId) : null;
     const { data, error } = await db()
       .from("department_records")
@@ -200,6 +354,7 @@ export async function handleRecordsApi(
       .select()
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
+    await removeFiles(removedPaths);
     // The person who raised a request hears when its status changes.
     if (t.openToAll && patch.status && patch.status !== existing.status && existing.created_by && existing.created_by !== actor.userId)
       await notify(existing.created_by, `Your ${t.singular} is now "${patch.status}"`, `Your ${t.singular} "${existing.title}" moved to ${patch.status} (updated by ${actor.fullName}).`);

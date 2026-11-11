@@ -84,86 +84,49 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
     return formatElapsed(total);
   };
 
-  const updateRecord = async (newRecord: AttendanceRecord) => {
-    setRecord(newRecord);
-    if (userIdRef.current) {
-      setSaving(true);
-      try {
-        // Calculate hours at the moment of the state change
-        let hoursStr: string;
-        if (!newRecord.clockInTime || newRecord.state === "Clocked Out") {
-          // For clock-out, compute final hours based on the record being saved
-          let elapsed = now - (record.clockInTime || now) - (newRecord.totalBreakMs || 0);
-          hoursStr = formatElapsed(Math.max(0, elapsed));
-        } else {
-          let elapsed = now - newRecord.clockInTime - (newRecord.totalBreakMs || 0);
-          if (newRecord.state === "On Break" && newRecord.breakStartTime) {
-            elapsed -= (now - newRecord.breakStartTime);
-          }
-          hoursStr = formatElapsed(Math.max(0, elapsed));
-        }
-        await recordAttendance(userIdRef.current, newRecord, hoursStr);
-      } finally {
-        setSaving(false);
+  /** Send the action to the server and show what it saved. Returns the saved record, or null. */
+  const updateRecord = async (newRecord: AttendanceRecord): Promise<AttendanceRecord | null> => {
+    if (!userIdRef.current || saving) return null;
+    setSaving(true);
+    try {
+      const res = await recordAttendance(userIdRef.current, newRecord);
+      if (res.ok) {
+        setRecord(res.record);
+        return res.record;
       }
+      toast.error("Attendance not updated", { description: res.error });
+      // Show the true current status (for example, already clocked in on another device).
+      setRecord(await getTodayAttendance(userIdRef.current));
+      return null;
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleClockIn = async () => {
-    const newRecord: AttendanceRecord = {
-      state: "Clocked In",
-      clockInTime: Date.now(),
-      breakStartTime: null,
-      totalBreakMs: 0,
-    };
-    await updateRecord(newRecord);
-    toast.success("Clocked In Successfully", {
-      description: "Your session is live. Time will calculate continuously even if you log out.",
-    });
+    const saved = await updateRecord({ ...DEFAULT_RECORD, state: "Clocked In" });
+    if (saved)
+      toast.success("Clocked in", {
+        description: `Started at ${formatJohannesburgTime(saved.clockInTime)}. Time keeps counting even if you sign out.`,
+      });
   };
 
   const handleStartBreak = async () => {
-    const newRecord: AttendanceRecord = {
-      ...record,
-      state: "On Break",
-      breakStartTime: Date.now(),
-    };
-    await updateRecord(newRecord);
-    toast.info("Break Started", { description: "Timer paused for break." });
+    const saved = await updateRecord({ ...record, state: "On Break" });
+    if (saved) toast.info("Break started", { description: "Break time is not counted as working time." });
   };
 
   const handleEndBreak = async () => {
-    const extraBreak = record.breakStartTime ? Date.now() - record.breakStartTime : 0;
-    const newRecord: AttendanceRecord = {
-      ...record,
-      state: "Clocked In",
-      breakStartTime: null,
-      totalBreakMs: (record.totalBreakMs || 0) + extraBreak,
-    };
-    await updateRecord(newRecord);
-    toast.success("Break Ended", { description: "Welcome back! Work timer resumed." });
+    const saved = await updateRecord({ ...record, state: "Clocked In" });
+    if (saved) toast.success("Break ended", { description: "Work timer resumed." });
   };
 
   const handleClockOut = async () => {
-    const extraBreak =
-      record.state === "On Break" && record.breakStartTime
-        ? Date.now() - record.breakStartTime
-        : 0;
-    const finalTotalBreakMs = (record.totalBreakMs || 0) + extraBreak;
-    // Compute final hours: total elapsed - all breaks
-    const elapsed = record.clockInTime ? now - record.clockInTime - finalTotalBreakMs : 0;
-    const finalHours = formatElapsed(Math.max(0, elapsed));
-    const newRecord: AttendanceRecord = {
-      ...record,
-      state: "Clocked Out",
-      breakStartTime: null,
-      totalBreakMs: finalTotalBreakMs,
-      hoursWorked: finalHours,
-    };
-    await updateRecord(newRecord);
-    toast.success("Clocked Out", {
-      description: `Great work today! Final recorded time: ${finalHours}.`,
-    });
+    const saved = await updateRecord({ ...record, state: "Clocked Out" });
+    if (saved)
+      toast.success("Clocked out", {
+        description: `Hours worked today (breaks excluded): ${saved.hoursWorked}.`,
+      });
   };
 
   const { state } = record;

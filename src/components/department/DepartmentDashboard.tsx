@@ -6,6 +6,7 @@
  * department's responsibilities. Departments with their own dedicated workspace (HR, Finance,
  * Sales, Operations) link to it. Every figure is counted from task records; nothing is estimated.
  */
+import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight, ClipboardList, Loader2, Plus, RefreshCw, UserCog, Users } from "lucide-react";
@@ -244,6 +245,8 @@ function DepartmentView({
           </Button>
         </div>
       </header>
+
+      <StaffAttendanceWidget />
 
       <section aria-label="Department indicators" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Active tasks" value={open.length} hint={`${tasks.length} recorded in total`} to="/department/tasks" />

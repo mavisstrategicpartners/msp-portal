@@ -4,6 +4,29 @@ import { authenticateApiRequest, jsonError } from "@/lib/api-auth.server";
 /**
  * Returns today's start-of-day date object (00:00:00.000) specifically in Africa/Johannesburg (UTC+2)
  */
+
+const fail = (status: number, error: string, headers: Record<string, string>) =>
+  new Response(JSON.stringify({ error }), { status, headers: { ...headers, "Content-Type": "application/json" } });
+
+/** Serialise attendance writes per person within this server instance (double clicks). */
+const userLocks = new Map<string, Promise<void>>();
+async function lockUser(userId: string): Promise<() => void> {
+  const prev = userLocks.get(userId) ?? Promise.resolve();
+  let release!: () => void;
+  const next = new Promise<void>((r) => (release = r));
+  userLocks.set(userId, prev.then(() => next));
+  await prev;
+  return () => {
+    release();
+    if (userLocks.get(userId) === next || !userLocks.has(userId)) userLocks.delete(userId);
+  };
+}
+
+function formatWorked(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60000);
+  return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+}
+
 function getJohannesburgStartOfDay(): Date {
   const now = new Date();
   const jhbDateStr = new Intl.DateTimeFormat("en-CA", {
@@ -61,68 +84,74 @@ export async function handleAttendanceApi(request: Request): Promise<Response> {
       const body = await request.json();
       // Staff clock themselves in/out only: the user is always the token's owner.
       const userId = auth.userId;
-      const {
-        state,
-        clockInTime,
-        breakStartTime,
-        totalBreakMs,
-        clockOutTime,
-        hoursWorked,
-      } = body;
-
-      if (!userId || !state) {
-        return new Response(JSON.stringify({ error: "Missing userId or state" }), {
-          status: 400,
-          headers,
-        });
+      const { state } = body;
+      if (!userId || !["Clocked In", "On Break", "Clocked Out"].includes(state)) {
+        return fail(400, "Missing or invalid attendance action.", headers);
       }
 
-      const now = Date.now();
-      // Ensure clock_in_time is never in the future (client system clock desync protection)
-      let sanitizedClockIn = clockInTime || null;
-      if (sanitizedClockIn && sanitizedClockIn > now + 60000) {
-        sanitizedClockIn = now;
-      }
-      if (state === "Clocked In" && !sanitizedClockIn) {
-        sanitizedClockIn = now;
-      }
+      // The server is the authority: it reads the person's current status, refuses actions that
+      // do not follow from it (a second clock-in, a clock-out or break while not clocked in), and
+      // stamps every time with the server clock. Working hours exclude all breaks.
+      const release = await lockUser(userId);
+      let logDetails: Record<string, any>;
+      try {
+        const { data: lastRows, error: lastErr } = await (supabaseAdmin as any)
+          .from("audit_logs")
+          .select("details, created_at")
+          .eq("actor_id", userId)
+          .like("action", "attendance_%")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (lastErr) return fail(500, lastErr.message, headers);
+        const cur: any = lastRows?.[0]?.details || {};
+        const curState: string = cur.state || "Clocked Out";
+        const now = Date.now();
+        const curBreak = Number(cur.total_break_ms) || 0;
+        const since = cur.clock_in_time ? ` since ${formatJhbTime(cur.clock_in_time)}` : "";
+        let next: { clock_in_time: number | null; break_start_time: number | null; total_break_ms: number; clock_out_time: number | null };
 
-      let sanitizedBreakStart = breakStartTime || null;
-      if (sanitizedBreakStart && sanitizedBreakStart > now + 60000) {
-        sanitizedBreakStart = now;
-      }
+        if (state === "Clocked In") {
+          if (curState === "Clocked In") return fail(409, `You are already clocked in${since}.`, headers);
+          if (curState === "On Break") {
+            // Ending a break: the break time is added to the day's breaks.
+            next = {
+              clock_in_time: cur.clock_in_time || now,
+              break_start_time: null,
+              total_break_ms: curBreak + Math.max(0, now - (Number(cur.break_start_time) || now)),
+              clock_out_time: null,
+            };
+          } else {
+            next = { clock_in_time: now, break_start_time: null, total_break_ms: 0, clock_out_time: null };
+          }
+        } else if (state === "On Break") {
+          if (curState === "On Break") return fail(409, "You are already on a break.", headers);
+          if (curState !== "Clocked In") return fail(409, "Clock in before starting a break.", headers);
+          next = { clock_in_time: cur.clock_in_time || now, break_start_time: now, total_break_ms: curBreak, clock_out_time: null };
+        } else {
+          if (curState === "Clocked Out") return fail(409, "You are not clocked in, so you cannot clock out.", headers);
+          const ongoing = curState === "On Break" ? Math.max(0, now - (Number(cur.break_start_time) || now)) : 0;
+          next = { clock_in_time: cur.clock_in_time || now, break_start_time: null, total_break_ms: curBreak + ongoing, clock_out_time: now };
+        }
 
-      const resolvedClockOut = state === "Clocked Out" ? (clockOutTime || now) : null;
-
-      // Persist in audit_logs with service_role key (bypasses RLS)
-      const actionKey = `attendance_${state.toLowerCase().replace(/\s+/g, "_")}`;
-      const logDetails = {
-        state,
-        clock_in_time: sanitizedClockIn,
-        break_start_time: sanitizedBreakStart,
-        total_break_ms: totalBreakMs || 0,
-        clock_out_time: resolvedClockOut,
-        hours_worked: hoursWorked || "0h 0m",
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await (supabaseAdmin as any)
-        .from("audit_logs")
-        .insert({
-          actor_id: userId,
-          action: actionKey,
-          target_id: userId,
-          details: logDetails,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Attendance insert error:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers,
-        });
+        const end = next.clock_out_time ?? (next.break_start_time ?? now);
+        const workedMs = Math.max(0, end - (next.clock_in_time ?? now) - next.total_break_ms);
+        logDetails = {
+          state,
+          ...next,
+          hours_worked: formatWorked(workedMs),
+          worked_ms: workedMs,
+          updated_at: new Date(now).toISOString(),
+        };
+        const actionKey = `attendance_${String(state).toLowerCase().replace(/\s+/g, "_")}`;
+        const { error } = await (supabaseAdmin as any)
+          .from("audit_logs")
+          .insert({ actor_id: userId, action: actionKey, target_id: userId, details: logDetails });
+        if (error) {
+          console.error("Attendance insert error:", error);
+          return fail(500, error.message, headers);
+        }
+      } finally {
+        release();
       }
 
       // If user clocked in, also update last_login_at on their profile

@@ -86,3 +86,27 @@ Requests to other departments (IT support, design briefs, bugs, website changes,
 Tasks can be assigned to several employees at once (one task each). Add Staff uses the 16 departments, places the person, and can appoint them as manager.
 Temporary manager appointments were recorded for the 12 departments without a manager (`temp.<department>.manager@…`); an administrator creates the logins with **Provision pending accounts**.
 Tested: 448 workflow checks across 16 departments and 27 record types; 215 separation checks; sidebar check per department.
+
+## 8. Task modal, design brief files, monthly reports, manager attendance (11 Nov 2026)
+
+- **Create & Assign Task modal** had no height limit, so long forms (Creative has many employees)
+  ran off the screen. It now has a fixed header and action buttons with a scrolling form, centred
+  at every screen size. Every dialog in the portal is also capped to the screen height.
+- **Design brief attachments**: files go to the private `evidence` bucket under
+  `records/<department>/<uploader>/` through one-time upload slots; the brief row stores them in
+  `department_records.attachments`. Viewing/download links last 30 minutes and are issued only to
+  the department, the CEO/GM and the person who raised the brief. A file can only be attached by
+  the person who uploaded it; removed files and unsaved uploads are deleted from storage.
+- **Monthly reports** were disabled because the "New report" button was a placeholder: the
+  authoring screen had never been built, and the table only held client reports. The existing
+  `monthly_reports` table now also holds department reports (`department_key`, `submitted_at`,
+  `attachments`; `client_id` optional). One report per department per month; draft → submitted
+  (manager can return it to draft); the department manager, CEO and GM are notified on submission.
+  Department reports are readable only by that department, the CEO, GM and administrators
+  (enforced by the API and by the `reports_read_scoped` database policy). The four existing client
+  reports are unchanged and shown under "Client reports". The CEO dashboard shows last month's
+  submissions with a link to every report.
+- **Clock-in / clock-out** is on every manager's landing page (department dashboard, Finance,
+  Sales, Operations; HR and GM already had it), using the existing attendance system. The server
+  now decides the outcome: it refuses a second clock-in, a break or clock-out when not clocked
+  in, uses the server clock for all times, and computes hours worked excluding breaks.
