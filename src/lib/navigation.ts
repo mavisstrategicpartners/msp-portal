@@ -67,6 +67,10 @@ export type NavItem = {
   exact?: boolean;
   /** Extra paths that should also highlight this item. */
   alsoActive?: string[];
+  /** Query parameters the link sets (e.g. a page's tab). The item is active when they match. */
+  search?: Record<string, string>;
+  /** With `search`: also active when those parameters are absent (the page's default view). */
+  searchDefault?: boolean;
   /** Optional visibility rule on top of the workspace/group rule. */
   visible?: (ctx: NavContext) => boolean;
 };
@@ -380,11 +384,48 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
     prefixes: ["/finance"],
     // Mirrors the beforeLoad guard on /finance.
     access: (ctx) => ["finance_admin", "ceo", "admin", "general_manager"].includes(ctx.systemRole),
+    // One place for Finance & Administration: each Command Centre section, then (for the Finance
+    // manager) their team's task tools. The Finance manager does not also get the generic
+    // department workspace, which would repeat the dashboard and approvals under other names.
     groups: [
       {
         id: "finance-main",
-        label: "Finance & Admin",
-        items: [{ to: "/finance", label: "Finance Dashboard", icon: LayoutDashboard, exact: true }],
+        label: "Finance & Administration",
+        items: [{ to: "/finance", label: "Financial Overview", icon: LayoutDashboard, search: { tab: "overview" }, searchDefault: true }],
+      },
+      {
+        id: "finance-money",
+        label: "Invoices & Expenses",
+        items: [
+          { to: "/finance", label: "Invoices & Payments", icon: Banknote, search: { tab: "invoices" } },
+          { to: "/finance", label: "Expenses", icon: TrendingUp, search: { tab: "expenses" } },
+        ],
+      },
+      {
+        id: "finance-control",
+        label: "Budgets & Approvals",
+        items: [
+          { to: "/finance", label: "Budgets & Client Fees", icon: Target, search: { tab: "budgets" } },
+          { to: "/finance", label: "Financial Approvals", icon: CheckSquare, search: { tab: "approvals" } },
+        ],
+      },
+      {
+        id: "finance-reports",
+        label: "Reports & Records",
+        items: [{ to: "/finance", label: "Audit Trail & PDF Reports", icon: FileBarChart2, search: { tab: "audit_reports" } }],
+      },
+      {
+        id: "finance-team",
+        label: "Finance Team",
+        // The Finance manager's own team: assign and follow tasks, review submitted work.
+        visible: (ctx) => ctx.systemRole === "finance_admin",
+        items: [
+          { to: "/department/tasks", label: "Team Tasks", icon: ListChecks },
+          { to: "/department/workload", label: "Team Workload", icon: Users },
+          { to: "/department/qa", label: "Review Submitted Work", icon: ShieldCheck },
+          { to: "/department/blockers", label: "Blockers & Dependencies", icon: GitBranch },
+          { to: "/department/performance", label: "Team Performance", icon: Target },
+        ],
       },
     ],
   },
@@ -593,9 +634,18 @@ export function pathMatches(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(prefix + "/");
 }
 
-export function isItemActive(item: NavItem, pathname: string) {
+export function isItemActive(item: NavItem, pathname: string, search: Record<string, unknown> = {}) {
+  if (item.search) {
+    if (pathname !== item.to) return false;
+    return Object.entries(item.search).every(([k, v]) => (search[k] === undefined || search[k] === "" ? Boolean(item.searchDefault) : String(search[k]) === v));
+  }
   const targets = [item.to, ...(item.alsoActive ?? [])];
   return targets.some((t) => (item.exact ? pathname === t : pathMatches(pathname, t)));
+}
+
+/** A link's identity: its path plus any query parameters it sets. */
+export function itemKey(item: NavItem) {
+  return item.search ? `${item.to}?${new URLSearchParams(item.search).toString()}` : item.to;
 }
 
 /** The workspace that owns a URL, or null for shared pages. */
@@ -657,6 +707,8 @@ export function activeWorkspace(pathname: string, ctx: NavContext): WorkspaceKey
   // The CEO always sees her own executive navigation, whichever page she opens.
   if (ctx.isCEO) return "ceo";
   const ws = workspaceForPath(pathname);
+  // The Finance manager's team pages (/department/*) belong to Finance & Administration.
+  if (ws === "department" && ctx.systemRole === "finance_admin") return "finance";
   if (ws && WORKSPACES[ws].access(ctx)) return ws;
   return homeWorkspace(ctx);
 }
@@ -675,6 +727,8 @@ export function workspaceSwitcherGroup(current: WorkspaceKey, ctx: NavContext): 
   const home = homeWorkspace(ctx);
   const items: NavItem[] = WORKSPACE_ORDER.filter((key) => {
     if (key === current) return false;
+    // Finance & Administration already includes the Finance manager's team tools.
+    if (key === "department" && ctx.systemRole === "finance_admin") return false;
     const ws = WORKSPACES[key];
     return key === home ? ws.access(ctx) : (ws.listFor ?? ws.access)(ctx);
   }).map((key) => ({
@@ -725,7 +779,7 @@ export function buildSidebar(pathname: string, ctx: NavContext) {
   const deduped = groups
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => (seen.has(i.to) ? false : (seen.add(i.to), true))),
+      items: g.items.filter((i) => (seen.has(itemKey(i)) ? false : (seen.add(itemKey(i)), true))),
     }))
     .filter((g) => g.items.length > 0);
 

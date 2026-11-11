@@ -10,6 +10,7 @@
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -128,7 +129,13 @@ export function FinanceAdminDashboard() {
   const canEdit = Boolean(data?.canEdit);
   const refresh = () => qc.invalidateQueries({ queryKey: KEY });
 
-  const [activeTab, setActiveTab] = useState("overview");
+  // The open section follows the address (?tab=…), so sidebar links and the browser's back button
+  // open the right section.
+  const TABS = ["overview", "invoices", "expenses", "budgets", "approvals", "audit_reports"];
+  const urlTab = useRouterState({ select: (s) => String((s.location.search as any)?.tab ?? "") });
+  const navigate = useNavigate();
+  const activeTab = TABS.includes(urlTab) ? urlTab : "overview";
+  const setActiveTab = (t: string) => navigate({ to: "/finance", search: (t === "overview" ? {} : { tab: t }) as any });
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editing, setEditing] = useState<{ kind: Kind; record: any | null } | null>(null);

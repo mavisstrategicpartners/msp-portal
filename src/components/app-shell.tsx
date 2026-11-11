@@ -6,7 +6,7 @@ import {
   User, Search, Bell, Sun, Moon, LogOut, HelpCircle, ChevronsLeft, ChevronsRight, ChevronDown,
   MessageCircle, Crown, KeyRound, Menu, Camera, UserRound,
 } from "lucide-react";
-import { buildSidebar, canAccessPath, isItemActive, navContextFromProfile } from "@/lib/navigation";
+import { buildSidebar, canAccessPath, isItemActive, itemKey, navContextFromProfile } from "@/lib/navigation";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -152,6 +152,7 @@ function writeGroupState(state: Record<string, boolean>) {
 
 function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const search = useRouterState({ select: (s) => (s.location.search ?? {}) as Record<string, unknown> });
   const { data } = useProfile();
   const ctx = navContextFromProfile(data);
   const nav = ctx ? buildSidebar(pathname, ctx) : null;
@@ -163,7 +164,7 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
 
   // When navigation lands on a page inside a closed group, open that group so
   // the active item is visible. The user can still collapse it afterwards.
-  const activeGroupId = nav?.groups.find((g) => g.items.some((i) => isItemActive(i, pathname)))?.id;
+  const activeGroupId = nav?.groups.find((g) => g.items.some((i) => isItemActive(i, pathname, search)))?.id;
   useEffect(() => {
     if (!activeGroupId) return;
     setOpenState((prev) => (prev[activeGroupId] === false ? { ...prev, [activeGroupId]: true } : prev));
@@ -218,11 +219,12 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
               {isOpen && (
                 <ul id={listId} className="space-y-0.5">
                   {group.items.map((item) => {
-                    const active = isItemActive(item, pathname);
+                    const active = isItemActive(item, pathname, search);
                     return (
-                      <li key={item.to}>
+                      <li key={itemKey(item)}>
                         <Link
                           to={item.to as any}
+                          search={(item.search ?? undefined) as any}
                           aria-current={active ? "page" : undefined}
                           className={cn(
                             "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium no-underline transition",
