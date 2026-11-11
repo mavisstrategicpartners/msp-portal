@@ -205,6 +205,8 @@ const updateTeamMemberSchema = z.object({
   email: z.string().email().optional(),
   jobTitle: z.string().nullable().optional(),
   department: z.string().nullable().optional(),
+  /** Organisation department key (e.g. "seo"): moves the person's main department. */
+  departmentKey: z.string().max(40).optional(),
   roleTier: z.enum(["root_admin", "manager", "staff", "intern"]).optional(),
   phone: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -227,6 +229,18 @@ export const updateTeamMember = createServerFn({ method: "POST" })
     if (data.roleTier !== undefined) patch.role_tier = data.roleTier;
     if (data.phone !== undefined) patch.phone = data.phone;
     if (data.isActive !== undefined) patch.is_active = data.isActive;
+
+    // Department change: move the person's main department in the organisation structure (what
+    // dashboards and permissions use) and keep the legacy profile label in step. Never grants a
+    // manager or administrator role.
+    let departmentMove: Awaited<ReturnType<typeof import("@/lib/staff-department.server").setMainDepartment>> | null = null;
+    if (data.departmentKey !== undefined) {
+      const { setMainDepartment } = await import("@/lib/staff-department.server");
+      departmentMove = await setMainDepartment(supabaseAdmin, data.userId, data.departmentKey, context.userId);
+      patch.department = departmentMove.profileLabel;
+      const { invalidateOrgStructure } = await import("@/lib/org-structure.server");
+      invalidateOrgStructure();
+    }
 
     // If email changed, also update in Supabase auth via admin API
     if (data.email !== undefined) {
@@ -254,9 +268,11 @@ export const updateTeamMember = createServerFn({ method: "POST" })
       actor_id: context.userId,
       action: "team_member_updated",
       target_id: data.userId,
-      details: patch,
+      details: departmentMove
+        ? { ...patch, department_key: data.departmentKey, previous_department_key: departmentMove.previous }
+        : patch,
     });
-    return { ok: true };
+    return { ok: true, warnings: departmentMove?.warnings ?? [] };
   });
 
 const setRoleSchema = z.object({

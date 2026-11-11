@@ -32,7 +32,9 @@ import {
   UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Trash2, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
-import { DEPARTMENTS as ORG_DEPTS } from "@/lib/departments";
+import { DEPARTMENTS as ORG_DEPTS, departmentFromText } from "@/lib/departments";
+import { useDepartments } from "@/lib/department-scope";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, updateTeamMember, deleteTeamMember, resetStaffPassword } from "@/lib/admin.functions";
 
@@ -58,20 +60,6 @@ interface StaffProfile {
 /** Departments a new person can be placed in (the organisation structure). */
 const ORG_DEPARTMENTS = ORG_DEPTS;
 
-/** Legacy profile department labels (used by the edit dialog's profile field). */
-const DEPARTMENTS = [
-  "IT Department",
-  "Marketing Team",
-  "Graphics Team",
-  "Sales Team",
-  "Human Resources",
-  "Admin Department",
-  "Operations Manager",
-  "Client Relationship Manager",
-  "Social Media Manager",
-  "Managing Director",
-  "CEO",
-];
 
 const ROLE_OPTIONS: { value: string; label: string; tier: RoleTier }[] = [
   { value: "staff", label: "Staff Member", tier: "staff" },
@@ -123,6 +111,7 @@ function ManageUsersPage() {
     fullName: string;
     email: string;
     jobTitle: string;
+    /** Organisation department key of the person's main department. */
     department: string;
     roleTier: RoleTier;
   }>({
@@ -156,12 +145,26 @@ function ManageUsersPage() {
 
   useEffect(() => { loadStaff(); }, [loadStaff]);
 
+  // Departments come from the organisation structure served by the API (the same source that
+  // drives dashboards and permissions), with each person's main department.
+  const queryClient = useQueryClient();
+  const orgQ = useDepartments();
+  const orgDepartments = orgQ.data?.departments ?? [];
+  const mainDepartment = (s: StaffProfile): { key: string; name: string } | null => {
+    const primary = orgDepartments.find((d) => d.members?.some((m) => m.id === s.id && m.primary));
+    const any = primary ?? orgDepartments.find((d) => d.members?.some((m) => m.id === s.id) || d.lead?.id === s.id);
+    if (any) return { key: any.key, name: any.name };
+    const legacy = departmentFromText(s.department);
+    return legacy ? { key: legacy.key, name: legacy.name } : null;
+  };
+
   const filtered = staff.filter((s) => {
     const q = search.toLowerCase();
     const matchSearch =
       (s.full_name?.toLowerCase().includes(q) ?? false) ||
       s.email.toLowerCase().includes(q) ||
       (s.department?.toLowerCase().includes(q) ?? false) ||
+      (mainDepartment(s)?.name.toLowerCase().includes(q) ?? false) ||
       (s.job_title?.toLowerCase().includes(q) ?? false);
     const matchRole = filterRole === "all" || s.role_tier === filterRole;
     const matchStatus =
@@ -225,7 +228,7 @@ function ManageUsersPage() {
       fullName: s.full_name ?? "",
       email: s.email ?? "",
       jobTitle: s.job_title ?? "",
-      department: s.department ?? "",
+      department: mainDepartment(s)?.key ?? "",
       roleTier: s.role_tier ?? "staff",
     });
   }
@@ -236,19 +239,23 @@ function ManageUsersPage() {
     setSaving(true);
     try {
       const emailChanged = editForm.email.trim().toLowerCase() !== editUser.email.toLowerCase();
-      await updateTeamMember({
+      const departmentChanged = Boolean(editForm.department) && editForm.department !== (mainDepartment(editUser)?.key ?? "");
+      const res: any = await updateTeamMember({
         data: {
           userId: editUser.id,
           fullName: editForm.fullName || undefined,
           ...(emailChanged ? { email: editForm.email.trim().toLowerCase() } : {}),
           jobTitle: editForm.jobTitle || null,
-          department: editForm.department || null,
+          ...(departmentChanged ? { departmentKey: editForm.department } : {}),
           roleTier: editForm.roleTier,
         },
       });
-      toast.success("Profile updated.");
+      const newDept = orgDepartments.find((d) => d.key === editForm.department)?.name;
+      toast.success(departmentChanged ? `Profile updated. ${editForm.fullName || "They"} now works in ${newDept}.` : "Profile updated.", {
+        description: res?.warnings?.length ? res.warnings.join(" ") : undefined,
+      });
       setEditUser(null);
-      await loadStaff();
+      await Promise.all([loadStaff(), queryClient.invalidateQueries({ queryKey: ["staff", "departments"] })]);
     } catch (err: any) {
       toast.error("Failed to update: " + (err?.message ?? String(err)));
     } finally {
@@ -413,7 +420,7 @@ function ManageUsersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">{s.department ?? "—"}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{mainDepartment(s)?.name ?? s.department ?? "—"}</td>
                     <td className="px-6 py-4">{roleBadge(s.role_tier)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide font-medium ${
@@ -623,14 +630,21 @@ function ManageUsersPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-dept">Department</Label>
-                <Select value={editForm.department} onValueChange={(v) => setEditForm((f) => ({ ...f, department: v }))}>
+                <Select
+                  value={editForm.department || undefined}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, department: v }))}
+                  disabled={orgQ.isLoading || !orgDepartments.length}
+                >
                   <SelectTrigger id="edit-dept">
-                    <SelectValue placeholder="Select department…" />
+                    <SelectValue placeholder={orgQ.isLoading ? "Loading departments…" : orgQ.error ? "Departments unavailable" : "Select department…"} />
                   </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  <SelectContent className="max-h-72">
+                    {orgDepartments.map((d) => (
+                      <SelectItem key={d.key} value={d.key}>{d.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                <p className="text-[11px] text-muted-foreground">Their main department. Does not change their role.</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="edit-role">Role</Label>
