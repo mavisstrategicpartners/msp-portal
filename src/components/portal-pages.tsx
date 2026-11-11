@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { changeMyPassword } from "@/lib/account.functions";
 import { PASSWORD_REQUIREMENTS } from "@/lib/password-rules";
+import { useMyHrDocuments } from "@/components/hr/MyHrDocuments";
 import { useProfile } from "@/lib/use-profile";
 import { canAccessPath, navContextFromProfile, searchableItems } from "@/lib/navigation";
 import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
@@ -1161,18 +1162,12 @@ export function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [prefs, setPrefs] = useState({ digest: true, logChat: true });
-  const [declaration, setDeclaration] = useState<any>(null);
 
   useEffect(() => {
     if (profile) setForm({ full_name: profile.full_name || "", phone: profile.phone || "", email: profile.email || "" });
   }, [profile?.id]);
 
-  useEffect(() => {
-    (async () => {
-      const { data: rows } = await (supabase as any).from("employee_declarations").select("*").order("submitted_at", { ascending: false }).limit(1);
-      setDeclaration(rows?.[0] ?? null);
-    })();
-  }, []);
+
 
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -1396,17 +1391,7 @@ export function ProfilePage() {
           </div>
         </Card>
 
-        <Card className="p-5">
-          <h3 className="font-semibold">Non-Solicitation / HR Declaration</h3>
-          {declaration ? (
-            <p className="mt-2 text-sm text-success flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Completed on {declaration.declaration_date}</p>
-          ) : (
-            <div className="mt-2 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Not yet completed.</p>
-              <Link to="/me/declaration"><Button size="sm">Complete now</Button></Link>
-            </div>
-          )}
-        </Card>
+        <HrDocumentsSummary />
       </div>
     </div>
   );
@@ -1459,57 +1444,26 @@ export function LeavePage() {
 }
 
 // ============ DECLARATION ============
-export function DeclarationPage() {
-  const queryClient = useQueryClient();
-  const { data: profileData } = useProfile();
-  const [ack, setAck] = useState(false);
-  const [signature, setSignature] = useState("");
-  const [outsideWork, setOutsideWork] = useState("");
-  const { data: existing } = useQuery({
-    queryKey: ["declaration"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).from("employee_declarations").select("*").maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-  const submit = useMutation({
-    mutationFn: async () => {
-      const profile = profileData?.profile;
-      const user = profileData?.user;
-      if (!user) throw new Error("You must be signed in.");
-      const { error } = await (supabase as any).from("employee_declarations").insert({
-        user_id: user.id,
-        company_name: "Mavis Strategic Partners",
-        employee_name: profile?.full_name || user.email || signature,
-        position: profile?.job_title || "Team Member",
-        id_number: "N/A",
-        declaration_date: new Date().toISOString().slice(0, 10),
-        outside_employment_details: outsideWork || null,
-        non_solicitation_months: 12,
-        confidentiality_acknowledged: ack,
-        signature_typed_name: signature,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("HR declaration submitted"); queryClient.invalidateQueries({ queryKey: ["declaration"] }); },
-    onError: (error) => toast.error((error as Error).message),
-  });
+/** My Profile: what HR has asked this employee for (nothing when HR has requested nothing). */
+function HrDocumentsSummary() {
+  const q = useMyHrDocuments();
+  const open = (q.data?.requests ?? []).filter((r) => r.status === "Outstanding" || r.status === "Returned");
+  if (!q.data || (!open.length && !q.data.requests.length)) return null;
   return (
-    <div className="space-y-6">
-      {pageTitle(FileSignature, "HR", "HR Documents", "Sign the internal confidentiality and conflict declaration.")}
-      {existing ? <Alert className="border-primary/20 bg-primary/5"><CheckCircle2 className="h-4 w-4" /><AlertTitle>Declaration submitted</AlertTitle><AlertDescription>Signed as {existing.signature_typed_name} on {existing.declaration_date}.</AlertDescription></Alert> : null}
-      <Card className="p-5">
-        <h2 className="font-semibold">Employee declaration</h2>
-        <p className="mt-2 text-sm text-muted-foreground">I acknowledge confidentiality, non-solicitation and company information handling rules for Mavis Strategic Partners.</p>
-        <div className="mt-4 space-y-4">
-          <div><Label>Outside employment / conflict details</Label><Textarea value={outsideWork} onChange={(e) => setOutsideWork(e.target.value)} placeholder="Type none, or explain any outside work." /></div>
-          <label className="flex items-start gap-3 text-sm"><Checkbox checked={ack} onCheckedChange={(value) => setAck(Boolean(value))} /><span>I understand and acknowledge the confidentiality declaration.</span></label>
-          <div><Label>Typed signature</Label><Input value={signature} onChange={(e) => setSignature(e.target.value)} placeholder="Your full name" /></div>
+    <Card className="p-5">
+      <h3 className="font-semibold">HR documents</h3>
+      {open.length ? (
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            HR has asked you for {open.length} document{open.length === 1 ? "" : "s"}: {open.slice(0, 3).map((r) => r.title).join(", ")}
+            {open.length > 3 ? "…" : ""}
+          </p>
+          <Link to="/me/declaration"><Button size="sm">Open</Button></Link>
         </div>
-        <Button className="mt-4" disabled={!ack || signature.length < 2 || submit.isPending || Boolean(existing)} onClick={() => submit.mutate()}><FileSignature className="mr-2 h-4 w-4" /> Submit declaration</Button>
-      </Card>
-    </div>
+      ) : (
+        <p className="mt-2 flex items-center gap-2 text-sm text-success"><CheckCircle2 className="h-4 w-4" /> All requested documents handed in.</p>
+      )}
+    </Card>
   );
 }
 

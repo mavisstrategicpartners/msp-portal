@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DeclarationPage } from "@/components/portal-pages";
+import { MyHrDocumentsPage } from "@/components/hr/MyHrDocuments";
 
+// "My HR Documents": only the documents HR has requested from this employee.
 export const Route = createFileRoute("/_authenticated/me/declaration")({
-  head: () => ({ meta: [{ title: "HR Documents — MSP Portal" }] }),
-  component: DeclarationPage,
+  head: () => ({ meta: [{ title: "My HR Documents — MSP Portal" }] }),
+  component: MyHrDocumentsPage,
 });

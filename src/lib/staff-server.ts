@@ -18,6 +18,7 @@ import {
 import { handleRecordsApi } from "@/lib/department-records.server";
 import { handleReportsApi } from "@/lib/monthly-reports.server";
 import { handleFinanceApi } from "@/lib/finance-server";
+import { handleHrDocumentsApi } from "@/lib/hr-documents.server";
 import {
   cancelAppointment,
   createAppointment,
@@ -402,6 +403,20 @@ export async function handleStaffApi(request: Request): Promise<Response> {
           await createNotification(uid, title, message, "task_assigned");
         },
         async (key) => departmentManagersFor(key),
+      );
+      if (res) return res;
+    }
+
+    // HR document requests (employees: their own; HR: manage)
+    if (pathname.startsWith("/api/staff/hr-documents")) {
+      const res = await handleHrDocumentsApi(
+        request,
+        url,
+        auth,
+        async (uid, title, message) => {
+          await createNotification(uid, title, message, "task_assigned");
+        },
+        async () => departmentManagersFor("hr"),
       );
       if (res) return res;
     }

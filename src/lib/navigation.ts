@@ -481,6 +481,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
             icon: Folder,
             alsoActive: ["/host/hr/documents"],
           },
+          { to: "/hr/document-requests", label: "Document Requests", icon: FileSignature },
           {
             to: "/hr/relations",
             label: "Employee Relations",

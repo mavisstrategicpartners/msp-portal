@@ -69,6 +69,7 @@ import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHostSplatRouteImport } from './routes/_authenticated/host/$'
 import { Route as AuthenticatedHrIndexRouteImport } from './routes/_authenticated/hr/index'
 import { Route as AuthenticatedHrAttendanceRouteImport } from './routes/_authenticated/hr/attendance'
+import { Route as AuthenticatedHrDocumentRequestsRouteImport } from './routes/_authenticated/hr/document-requests'
 import { Route as AuthenticatedHrDocumentsRouteImport } from './routes/_authenticated/hr/documents'
 import { Route as AuthenticatedHrLeaveRouteImport } from './routes/_authenticated/hr/leave'
 import { Route as AuthenticatedHrPayrollRouteImport } from './routes/_authenticated/hr/payroll'
@@ -417,6 +418,12 @@ const AuthenticatedHrAttendanceRoute =
     path: '/hr/attendance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedHrDocumentRequestsRoute =
+  AuthenticatedHrDocumentRequestsRouteImport.update({
+    id: '/hr/document-requests',
+    path: '/hr/document-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHrDocumentsRoute =
   AuthenticatedHrDocumentsRouteImport.update({
     id: '/hr/documents',
@@ -587,6 +594,7 @@ export interface FileRoutesByFullPath {
   '/gm/structure': typeof AuthenticatedGmStructureRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/hr/document-requests': typeof AuthenticatedHrDocumentRequestsRoute
   '/hr/documents': typeof AuthenticatedHrDocumentsRoute
   '/hr/leave': typeof AuthenticatedHrLeaveRoute
   '/hr/payroll': typeof AuthenticatedHrPayrollRoute
@@ -668,6 +676,7 @@ export interface FileRoutesByTo {
   '/gm/structure': typeof AuthenticatedGmStructureRoute
   '/host/$': typeof AuthenticatedHostSplatRoute
   '/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/hr/document-requests': typeof AuthenticatedHrDocumentRequestsRoute
   '/hr/documents': typeof AuthenticatedHrDocumentsRoute
   '/hr/leave': typeof AuthenticatedHrLeaveRoute
   '/hr/payroll': typeof AuthenticatedHrPayrollRoute
@@ -751,6 +760,7 @@ export interface FileRoutesById {
   '/_authenticated/gm/structure': typeof AuthenticatedGmStructureRoute
   '/_authenticated/host/$': typeof AuthenticatedHostSplatRoute
   '/_authenticated/hr/attendance': typeof AuthenticatedHrAttendanceRoute
+  '/_authenticated/hr/document-requests': typeof AuthenticatedHrDocumentRequestsRoute
   '/_authenticated/hr/documents': typeof AuthenticatedHrDocumentsRoute
   '/_authenticated/hr/leave': typeof AuthenticatedHrLeaveRoute
   '/_authenticated/hr/payroll': typeof AuthenticatedHrPayrollRoute
@@ -834,6 +844,7 @@ export interface FileRouteTypes {
     | '/gm/structure'
     | '/host/$'
     | '/hr/attendance'
+    | '/hr/document-requests'
     | '/hr/documents'
     | '/hr/leave'
     | '/hr/payroll'
@@ -915,6 +926,7 @@ export interface FileRouteTypes {
     | '/gm/structure'
     | '/host/$'
     | '/hr/attendance'
+    | '/hr/document-requests'
     | '/hr/documents'
     | '/hr/leave'
     | '/hr/payroll'
@@ -997,6 +1009,7 @@ export interface FileRouteTypes {
     | '/_authenticated/gm/structure'
     | '/_authenticated/host/$'
     | '/_authenticated/hr/attendance'
+    | '/_authenticated/hr/document-requests'
     | '/_authenticated/hr/documents'
     | '/_authenticated/hr/leave'
     | '/_authenticated/hr/payroll'
@@ -1454,6 +1467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHrAttendanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hr/document-requests': {
+      id: '/_authenticated/hr/document-requests'
+      path: '/hr/document-requests'
+      fullPath: '/hr/document-requests'
+      preLoaderRoute: typeof AuthenticatedHrDocumentRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/hr/documents': {
       id: '/_authenticated/hr/documents'
       path: '/hr/documents'
@@ -1648,6 +1668,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGmStructureRoute: typeof AuthenticatedGmStructureRoute
   AuthenticatedHostSplatRoute: typeof AuthenticatedHostSplatRoute
   AuthenticatedHrAttendanceRoute: typeof AuthenticatedHrAttendanceRoute
+  AuthenticatedHrDocumentRequestsRoute: typeof AuthenticatedHrDocumentRequestsRoute
   AuthenticatedHrDocumentsRoute: typeof AuthenticatedHrDocumentsRoute
   AuthenticatedHrLeaveRoute: typeof AuthenticatedHrLeaveRoute
   AuthenticatedHrPayrollRoute: typeof AuthenticatedHrPayrollRoute
@@ -1727,6 +1748,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGmStructureRoute: AuthenticatedGmStructureRoute,
   AuthenticatedHostSplatRoute: AuthenticatedHostSplatRoute,
   AuthenticatedHrAttendanceRoute: AuthenticatedHrAttendanceRoute,
+  AuthenticatedHrDocumentRequestsRoute: AuthenticatedHrDocumentRequestsRoute,
   AuthenticatedHrDocumentsRoute: AuthenticatedHrDocumentsRoute,
   AuthenticatedHrLeaveRoute: AuthenticatedHrLeaveRoute,
   AuthenticatedHrPayrollRoute: AuthenticatedHrPayrollRoute,
