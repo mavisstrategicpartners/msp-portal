@@ -17,6 +17,7 @@ import {
 } from "@/lib/org-structure.server";
 import { handleRecordsApi } from "@/lib/department-records.server";
 import { handleReportsApi } from "@/lib/monthly-reports.server";
+import { handleFinanceApi } from "@/lib/finance-server";
 import {
   cancelAppointment,
   createAppointment,
@@ -402,6 +403,12 @@ export async function handleStaffApi(request: Request): Promise<Response> {
         },
         async (key) => departmentManagersFor(key),
       );
+      if (res) return res;
+    }
+
+    // Finance & Administration Command Centre records
+    if (pathname.startsWith("/api/staff/finance")) {
+      const res = await handleFinanceApi(request, url, auth);
       if (res) return res;
     }
 
