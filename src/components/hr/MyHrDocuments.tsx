@@ -22,11 +22,11 @@ export type HrFile = { name: string; path: string; size: number; mimeType: strin
 export type HrRequest = {
   id: string;
   title: string;
-  kind: "sign" | "complete" | "upload" | "declaration";
+  kind: "sign" | "acknowledge" | "complete" | "upload" | "declaration";
   category: string | null;
   instructions: string | null;
   due_date: string | null;
-  status: "Outstanding" | "Submitted" | "Signed" | "Accepted" | "Returned" | "Cancelled";
+  status: "Outstanding" | "Submitted" | "Signed" | "Accepted" | "Returned" | "Rejected" | "Cancelled";
   template: HrFile | null;
   submission: HrFile[];
   response: string | null;
@@ -45,6 +45,7 @@ export type HrRequest = {
 
 export const KIND_LABEL: Record<HrRequest["kind"], string> = {
   sign: "Read and sign",
+  acknowledge: "Read and acknowledge",
   complete: "Complete and return",
   upload: "Upload a document",
   declaration: "Confidentiality & Conflict Declaration",
@@ -67,12 +68,12 @@ export function StatusBadge({ r }: { r: Pick<HrRequest, "status" | "due_date"> }
       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
       : r.status === "Submitted"
         ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400"
-        : r.status === "Returned" || late
+        : r.status === "Returned" || r.status === "Rejected" || late
           ? "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400"
           : r.status === "Cancelled"
             ? "text-muted-foreground"
             : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
-  return <Badge variant="outline" className={`text-[10px] ${cls}`}>{late ? "Overdue" : r.status === "Returned" ? "Returned for changes" : r.status}</Badge>;
+  return <Badge variant="outline" className={`text-[10px] ${cls}`}>{late ? "Overdue" : r.status === "Returned" ? "Returned for changes" : r.status === "Signed" && (r as any).kind === "acknowledge" ? "Acknowledged" : r.status}</Badge>;
 }
 
 const fmtDate = (d?: string | null) => (d ? format(parseISO(d), "d MMM yyyy") : "—");
@@ -177,8 +178,9 @@ function DoneRow({ r }: { r: HrRequest }) {
         <div className="min-w-0">
           <p className="font-medium">{r.title}</p>
           <p className="text-xs text-muted-foreground">
-            {KIND_LABEL[r.kind]} · {r.status === "Signed" || r.kind === "sign" || r.kind === "declaration" ? `signed as ${r.signature_name ?? "—"} on ${fmtDate(r.signed_at)}` : `submitted ${fmtDate(r.submitted_at)}`}
+            {KIND_LABEL[r.kind]} · {r.kind === "acknowledge" ? `acknowledged on ${fmtDate(r.signed_at)}` : r.status === "Signed" || r.kind === "sign" || r.kind === "declaration" ? `signed as ${r.signature_name ?? "—"} on ${fmtDate(r.signed_at)}` : `submitted ${fmtDate(r.submitted_at)}`}
             {r.status === "Accepted" ? ` · accepted ${fmtDate(r.reviewed_at)}` : ""}
+            {r.status === "Rejected" ? ` · rejected ${fmtDate(r.reviewed_at)}${r.review_note ? `: ${r.review_note}` : ""}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -231,7 +233,7 @@ function OpenRequest({ r }: { r: HrRequest }) {
         method: "POST",
         body: JSON.stringify({ acknowledged: ack, signature, response, files: uploads }),
       });
-      toast.success(r.kind === "sign" || r.kind === "declaration" ? "Signed and sent to HR" : "Submitted to HR");
+      toast.success(r.kind === "acknowledge" ? "Acknowledgement sent to HR" : r.kind === "sign" || r.kind === "declaration" ? "Signed and sent to HR" : "Submitted to HR");
       await qc.invalidateQueries({ queryKey: ["hr-documents"] });
     } catch (e: any) {
       toast.error(e.message);
@@ -240,8 +242,9 @@ function OpenRequest({ r }: { r: HrRequest }) {
     }
   };
 
+  const acks = r.kind === "acknowledge";
   const signs = r.kind === "sign" || r.kind === "declaration";
-  const ready = signs ? ack && signature.trim().length >= 2 : uploads.length > 0;
+  const ready = acks ? ack : signs ? ack && signature.trim().length >= 2 : uploads.length > 0;
 
   return (
     <Card className={`p-5 ${late ? "border-rose-500/40" : ""}`}>
@@ -282,7 +285,12 @@ function OpenRequest({ r }: { r: HrRequest }) {
             </div>
           </>
         )}
-        {signs ? (
+        {acks ? (
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox checked={ack} onCheckedChange={(v) => setAck(Boolean(v))} />
+            <span>I have read and understood this document.</span>
+          </label>
+        ) : signs ? (
           <>
             <label className="flex items-start gap-3 text-sm">
               <Checkbox checked={ack} onCheckedChange={(v) => setAck(Boolean(v))} />
@@ -322,7 +330,7 @@ function OpenRequest({ r }: { r: HrRequest }) {
         )}
         <Button onClick={submit} disabled={!ready || busy}>
           {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : signs ? <FileSignature className="mr-2 h-4 w-4" /> : <Upload className="mr-2 h-4 w-4" />}
-          {signs ? "Sign and send to HR" : "Submit to HR"}
+          {acks ? "Acknowledge" : signs ? "Sign and send to HR" : "Submit to HR"}
         </Button>
       </div>
     </Card>

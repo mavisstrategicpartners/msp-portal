@@ -477,7 +477,7 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           {
             to: "/hr/documents",
-            label: "Employee Documents",
+            label: "Employee Folders",
             icon: Folder,
             alsoActive: ["/host/hr/documents"],
           },
@@ -588,7 +588,7 @@ export const PERSONAL_GROUP: NavGroup = {
   label: "My Workspace",
   visible: (ctx) => ctx.systemRole !== "ceo" && ctx.systemRole !== "admin" && !ctx.isAdmin,
   items: [
-    { to: "/me/leave", label: "My Leave Requests", icon: CalendarDays },
+    { to: "/me/leave", label: "My Leave", icon: CalendarDays },
     { to: "/me/declaration", label: "My HR Documents", icon: FileSignature },
     // Any employee can raise work with another department (IT support, design briefs, bugs,
     // website changes, CRM work, reports, client complaints) and follow it here.

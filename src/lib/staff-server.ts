@@ -19,6 +19,7 @@ import { handleRecordsApi } from "@/lib/department-records.server";
 import { handleReportsApi } from "@/lib/monthly-reports.server";
 import { handleFinanceApi } from "@/lib/finance-server";
 import { handleHrDocumentsApi } from "@/lib/hr-documents.server";
+import { handleHrRecordsApi } from "@/lib/hr-records.server";
 import {
   cancelAppointment,
   createAppointment,
@@ -410,6 +411,20 @@ export async function handleStaffApi(request: Request): Promise<Response> {
     // HR document requests (employees: their own; HR: manage)
     if (pathname.startsWith("/api/staff/hr-documents")) {
       const res = await handleHrDocumentsApi(
+        request,
+        url,
+        auth,
+        async (uid, title, message) => {
+          await createNotification(uid, title, message, "task_assigned");
+        },
+        async () => departmentManagersFor("hr"),
+      );
+      if (res) return res;
+    }
+
+    // HR administration: employee folders, employee details, leave
+    if (pathname.startsWith("/api/staff/hr/") || pathname.startsWith("/api/staff/leave")) {
+      const res = await handleHrRecordsApi(
         request,
         url,
         auth,

@@ -1,20 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HRPageWrapper } from "@/components/HRPageWrapper";
-import Leave from "@/host-portal/pages/HR/Leave.jsx";
+import { HrLeavePage } from "@/components/hr/HrLeave";
 
 export const Route = createFileRoute("/_authenticated/hr/leave")({
   ssr: false,
-  head: () => ({
-    meta: [{ title: "Leave Management — HR Workspace" }],
-  }),
-  // Access is enforced by the signed-in layout guard (src/lib/route-access.ts).
-  component: LeavePage,
+  head: () => ({ meta: [{ title: "Leave Management — HR Workspace" }] }),
+  // Access is enforced by the signed-in layout guard (HR workspace) and by the server API.
+  component: HrLeavePage,
 });
-
-function LeavePage() {
-  return (
-    <HRPageWrapper path="/host/hr/leave">
-      <Leave />
-    </HRPageWrapper>
-  );
-}

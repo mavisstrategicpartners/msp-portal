@@ -1,20 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HRPageWrapper } from "@/components/HRPageWrapper";
-import HRDocuments from "@/host-portal/pages/HR/Documents.jsx";
+import { EmployeeFoldersPage } from "@/components/hr/EmployeeFolders";
 
 export const Route = createFileRoute("/_authenticated/hr/documents")({
   ssr: false,
-  head: () => ({
-    meta: [{ title: "Employee Documents — HR Workspace" }],
-  }),
-  // Access is enforced by the signed-in layout guard (src/lib/route-access.ts).
-  component: DocumentsPage,
+  head: () => ({ meta: [{ title: "Employee Folders — HR Workspace" }] }),
+  // Access is enforced by the signed-in layout guard (HR workspace) and by the server API.
+  component: EmployeeFoldersPage,
 });
-
-function DocumentsPage() {
-  return (
-    <HRPageWrapper path="/host/hr/documents">
-      <HRDocuments />
-    </HRPageWrapper>
-  );
-}

@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { hrApi } from "@/components/hr/MyHrDocuments";
 import {
   Users,
   Clock,
@@ -71,6 +72,10 @@ interface HRTelemetry {
   pendingLeaveCount: number;
   timesheetReviewCount: number;
   pendingLeaveRequests: any[];
+  docOutstanding: number;
+  docOverdue: number;
+  docToReview: number;
+  docCompleted: number;
 }
 
 export function HRStaffDashboard() {
@@ -90,6 +95,10 @@ export function HRStaffDashboard() {
     pendingLeaveCount: 0,
     timesheetReviewCount: 0,
     pendingLeaveRequests: [],
+    docOutstanding: 0,
+    docOverdue: 0,
+    docToReview: 0,
+    docCompleted: 0,
   });
 
   const loadHRData = useCallback(async () => {
@@ -151,7 +160,27 @@ export function HRStaffDashboard() {
         timesheetReviewCount = 0;
       }
 
+      // 5. HR document requests (pending, completed, overdue)
+      let docOutstanding = 0, docOverdue = 0, docToReview = 0, docCompleted = 0;
+      try {
+        const { data: reqs } = await (supabase as any).from("hr_document_requests").select("status, due_date");
+        const today = new Date().toISOString().slice(0, 10);
+        for (const r of reqs || []) {
+          if (r.status === "Outstanding" || r.status === "Returned") {
+            docOutstanding++;
+            if (r.due_date && r.due_date < today) docOverdue++;
+          } else if (r.status === "Submitted" || r.status === "Signed") docToReview++;
+          else if (r.status === "Accepted") docCompleted++;
+        }
+      } catch {
+        /* counts stay at zero */
+      }
+
       setTelemetry({
+        docOutstanding,
+        docOverdue,
+        docToReview,
+        docCompleted,
         totalEmployees,
         clockedInCount,
         onBreakCount,
@@ -183,12 +212,8 @@ export function HRStaffDashboard() {
   // Handle Quick Approve of Leave Request
   const handleApproveLeave = async (id: string, staffName: string) => {
     try {
-      const { error } = await supabase
-        .from("leave_requests")
-        .update({ status: "approved" })
-        .eq("id", id);
-
-      if (error) throw error;
+      // Through the HR API so the decision is audited and the employee is notified.
+      await hrApi(`/api/staff/hr/leave/${id}`, { method: "PATCH", body: JSON.stringify({ action: "approve" }) });
 
       toast.success("Leave Approved", {
         description: `Approved leave request for ${staffName}.`,
@@ -201,30 +226,6 @@ export function HRStaffDashboard() {
       }));
     } catch (e: any) {
       toast.error("Failed to approve leave", { description: e?.message });
-    }
-  };
-
-  // Handle Quick Decline of Leave Request
-  const handleDeclineLeave = async (id: string, staffName: string) => {
-    try {
-      const { error } = await supabase
-        .from("leave_requests")
-        .update({ status: "declined" })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast.error("Leave Declined", {
-        description: `Declined leave request for ${staffName}.`,
-      });
-
-      setTelemetry((prev) => ({
-        ...prev,
-        pendingLeaveCount: Math.max(0, prev.pendingLeaveCount - 1),
-        pendingLeaveRequests: prev.pendingLeaveRequests.filter((r) => r.id !== id),
-      }));
-    } catch (e: any) {
-      toast.error("Failed to decline leave", { description: e?.message });
     }
   };
 
@@ -263,11 +264,19 @@ export function HRStaffDashboard() {
     },
     {
       to: "/hr/documents",
-      title: "Employee Documents",
-      desc: "Contracts, IDs, compliance declarations, and certifications.",
+      title: "Employee Folders",
+      desc: "Each employee's HR folder: details, contracts, IDs, certificates, leave and history.",
       icon: Folder,
-      badge: "Secure Vault",
+      badge: "Confidential",
       badgeColor: "bg-muted text-muted-foreground",
+    },
+    {
+      to: "/hr/document-requests",
+      title: "Document Requests",
+      desc: `${telemetry.docToReview} to review · ${telemetry.docCompleted} completed · ${telemetry.docOverdue} overdue`,
+      icon: ClipboardList,
+      badge: `${telemetry.docOutstanding} outstanding`,
+      badgeColor: telemetry.docOverdue > 0 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" : telemetry.docOutstanding > 0 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" : "bg-muted text-muted-foreground",
     },
     {
       to: "/hr/relations",
@@ -512,10 +521,10 @@ export function HRStaffDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeclineLeave(req.id, staffName)}
+                      onClick={() => navigate({ to: "/hr/leave" })}
                       className="h-7 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-border"
                     >
-                      <XCircle className="h-3.5 w-3.5 mr-1" /> Decline
+                      <XCircle className="h-3.5 w-3.5 mr-1" /> Decline / ask…
                     </Button>
                     <Button
                       size="sm"

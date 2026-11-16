@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LeavePage } from "@/components/portal-pages";
+import { MyLeavePage } from "@/components/hr/MyLeave";
 
 export const Route = createFileRoute("/_authenticated/me/leave")({
-  head: () => ({ meta: [{ title: "Leave Requests — MSP Portal" }] }),
-  component: LeavePage,
+  ssr: false,
+  head: () => ({ meta: [{ title: "My Leave — MSP Portal" }] }),
+  component: MyLeavePage,
 });

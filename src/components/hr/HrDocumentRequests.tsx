@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { DEPARTMENTS } from "@/lib/departments";
+import { FOLDER_CATEGORIES } from "@/lib/hr-shared";
 import { FileLinks, KIND_LABEL, StatusBadge, hrApi, isOverdue, type HrFile, type HrRequest } from "@/components/hr/MyHrDocuments";
 
 type ListResponse = { requests: HrRequest[]; people: { id: string; name: string; title: string | null }[]; canManage: boolean };
@@ -27,8 +28,9 @@ const DONE = ["Submitted", "Signed", "Accepted"];
 
 export function HrDocumentRequestsPage() {
   const q = useQuery({ queryKey: KEY, queryFn: async () => (await hrApi("/api/staff/hr-documents/requests")) as ListResponse });
-  const [creating, setCreating] = useState(false);
-  const [filter, setFilter] = useState<"all" | "outstanding" | "review" | "overdue">("all");
+  const preset = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("employee") : null;
+  const [creating, setCreating] = useState(Boolean(preset));
+  const [filter, setFilter] = useState<"all" | "outstanding" | "review" | "overdue" | "accepted" | "rejected">("all");
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
@@ -49,7 +51,9 @@ export function HrDocumentRequestsPage() {
             (filter === "all" ||
               (filter === "outstanding" && ["Outstanding", "Returned"].includes(r.status)) ||
               (filter === "review" && ["Submitted", "Signed"].includes(r.status)) ||
-              (filter === "overdue" && isOverdue(r))) &&
+              (filter === "overdue" && isOverdue(r)) ||
+              (filter === "accepted" && r.status === "Accepted") ||
+              (filter === "rejected" && r.status === "Rejected")) &&
             (!s || [b.head.title, r.employee_name].some((v) => String(v ?? "").toLowerCase().includes(s))),
         ),
       }))
@@ -73,7 +77,7 @@ export function HrDocumentRequestsPage() {
           </div>
           <h1 className="mt-3 text-2xl font-bold tracking-tight">Document Requests</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Ask employees to sign, complete or upload documents. Each employee sees only what you request from them in My HR Documents.
+            Ask employees to sign, acknowledge, complete or upload documents. Accepted documents are filed in the employee's HR folder automatically. Each employee sees only what you request from them in My HR Documents.
           </p>
         </div>
         {q.data?.canManage && (
@@ -88,7 +92,7 @@ export function HrDocumentRequestsPage() {
           ["Outstanding", counts.outstanding, "outstanding"],
           ["To review", counts.review, "review"],
           ["Overdue", counts.overdue, "overdue"],
-          ["Accepted", counts.accepted, "all"],
+          ["Accepted", counts.accepted, "accepted"],
         ].map(([label, n, f]) => (
           <button key={label as string} type="button" onClick={() => setFilter(f as any)} className={`rounded-xl border bg-card px-4 py-3 text-left transition hover:border-primary/40 ${filter === f && f !== "all" ? "border-primary" : "border-border"}`}>
             <p className="text-xs text-muted-foreground">{label}</p>
@@ -107,6 +111,8 @@ export function HrDocumentRequestsPage() {
           <option value="outstanding">Outstanding</option>
           <option value="review">Submitted / signed — to review</option>
           <option value="overdue">Overdue</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
 
@@ -148,7 +154,7 @@ export function HrDocumentRequestsPage() {
         </div>
       )}
 
-      {creating && q.data && <NewRequestDialog people={q.data.people} onClose={() => setCreating(false)} />}
+      {creating && q.data && <NewRequestDialog people={q.data.people} preset={preset} onClose={() => setCreating(false)} />}
     </div>
   );
 }
@@ -159,12 +165,12 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const files = useQuery({ queryKey: ["hr-documents", "requests", r.id, "files"], queryFn: async () => hrApi(`/api/staff/hr-documents/requests/${r.id}/files`), enabled: show });
-  const act = async (action: "accept" | "return" | "cancel") => {
+  const act = async (action: "accept" | "return" | "reject" | "cancel") => {
     if (action === "cancel" && !confirm(`Cancel this request for ${r.employee_name}? It will disappear from their HR Documents.`)) return;
     setBusy(true);
     try {
       await hrApi(`/api/staff/hr-documents/requests/${r.id}`, { method: "PATCH", body: JSON.stringify({ action, note }) });
-      toast.success(action === "accept" ? "Accepted" : action === "return" ? "Returned to the employee" : "Request cancelled");
+      toast.success(action === "accept" ? "Accepted and filed in the employee's HR folder" : action === "return" ? "Returned to the employee for corrections" : action === "reject" ? "Rejected" : "Request cancelled");
       setNote("");
       await qc.invalidateQueries({ queryKey: ["hr-documents"] });
     } catch (e: any) {
@@ -179,7 +185,7 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
       <div className="flex flex-wrap items-center gap-3">
         <span className="min-w-0 flex-1 font-medium">{r.employee_name ?? "Former employee"}</span>
         <span className="text-xs text-muted-foreground">
-          {r.signed_at ? `signed ${fmt(r.signed_at)} as ${r.signature_name}` : r.submitted_at ? `submitted ${fmt(r.submitted_at)}` : "not yet submitted"}
+          {r.signed_at ? (r.kind === "acknowledge" ? `acknowledged ${fmt(r.signed_at)}` : `signed ${fmt(r.signed_at)} as ${r.signature_name}`) : r.submitted_at ? `submitted ${fmt(r.submitted_at)}` : "not yet submitted"}
         </span>
         <StatusBadge r={r} />
         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShow((v) => !v)}>{show ? "Close" : review ? "Review" : "Details"}</Button>
@@ -199,14 +205,15 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
               {review && (
                 <>
                   <div className="min-w-[16rem] flex-1">
-                    <Label className="text-xs" htmlFor={`note-${r.id}`}>Note to the employee (required to return)</Label>
+                    <Label className="text-xs" htmlFor={`note-${r.id}`}>Note to the employee (required to return or reject)</Label>
                     <Input id={`note-${r.id}`} value={note} onChange={(e) => setNote(e.target.value)} className="h-8 text-xs" />
                   </div>
                   <Button size="sm" className="h-8 text-xs" disabled={busy} onClick={() => act("accept")}>Accept</Button>
-                  <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy || !note.trim()} onClick={() => act("return")}>Return for changes</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy || !note.trim()} onClick={() => act("return")}>Request corrections</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-rose-600" disabled={busy || !note.trim()} onClick={() => { if (confirm(`Reject "${r.title}" from ${r.employee_name}? This closes the request.`)) act("reject"); }}>Reject</Button>
                 </>
               )}
-              {r.status !== "Accepted" && (
+              {!["Accepted", "Rejected"].includes(r.status) && (
                 <Button size="sm" variant="ghost" className="h-8 text-xs text-rose-600" disabled={busy} onClick={() => act("cancel")}>Cancel request</Button>
               )}
             </div>
@@ -217,7 +224,7 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
   );
 }
 
-function NewRequestDialog({ people, onClose }: { people: ListResponse["people"]; onClose: () => void }) {
+function NewRequestDialog({ people, preset, onClose }: { people: ListResponse["people"]; preset?: string | null; onClose: () => void }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<HrRequest["kind"]>("sign");
@@ -225,7 +232,7 @@ function NewRequestDialog({ people, onClose }: { people: ListResponse["people"];
   const [instructions, setInstructions] = useState("");
   const [due, setDue] = useState("");
   const [audience, setAudience] = useState<"people" | "departments" | "all">("people");
-  const [chosen, setChosen] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<string[]>(preset && people.some((p) => p.id === preset) ? [preset] : []);
   const [depts, setDepts] = useState<string[]>([]);
   const [find, setFind] = useState("");
   const [template, setTemplate] = useState<HrFile | null>(null);
@@ -274,7 +281,7 @@ function NewRequestDialog({ people, onClose }: { people: ListResponse["people"];
   };
 
   const shown = people.filter((p) => !find.trim() || p.name.toLowerCase().includes(find.toLowerCase()));
-  const needsFile = kind === "sign";
+  const needsFile = kind === "sign" || kind === "acknowledge";
   const ready = (kind === "declaration" || title.trim()) && (!needsFile || template) && (audience === "all" || (audience === "people" ? chosen.length : depts.length));
 
   return (
@@ -289,6 +296,7 @@ function NewRequestDialog({ people, onClose }: { people: ListResponse["people"];
             <Label className="text-xs" htmlFor="req-kind">What should they do?</Label>
             <select id="req-kind" value={kind} onChange={(e) => setKind(e.target.value as any)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
               <option value="sign">Read and sign a document</option>
+              <option value="acknowledge">Read and acknowledge a document (e.g. a policy)</option>
               <option value="complete">Complete a form and return it</option>
               <option value="upload">Upload a document (e.g. ID, bank letter, certificate)</option>
               <option value="declaration">Sign the Internal Confidentiality and Conflict Declaration</option>
@@ -303,7 +311,7 @@ function NewRequestDialog({ people, onClose }: { people: ListResponse["people"];
               <Label className="text-xs" htmlFor="req-cat">Category</Label>
               <select id="req-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
                 <option value="">—</option>
-                {["Contracts", "Identification", "Tax & Banking", "Qualifications", "Policies & Declarations", "Performance", "Other"].map((c) => (
+                {FOLDER_CATEGORIES.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>

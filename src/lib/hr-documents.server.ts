@@ -17,6 +17,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DEPARTMENTS } from "@/lib/departments";
 import { departmentPeople, type OrgStructure } from "@/lib/org-structure.server";
 import type { AccessFlags } from "@/lib/roles";
+import { FOLDER_CATEGORIES, hrAudit } from "@/lib/hr-records.server";
 
 type Actor = { userId: string; fullName: string; access: AccessFlags; org: OrgStructure };
 type Notify = (userId: string, title: string, message: string) => Promise<void>;
@@ -27,7 +28,7 @@ const BUCKET = "hr-documents";
 const store = () => db().storage.from(BUCKET);
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-export const REQUEST_KINDS = ["sign", "complete", "upload", "declaration"] as const;
+export const REQUEST_KINDS = ["sign", "acknowledge", "complete", "upload", "declaration"] as const;
 export const OPEN_STATUSES = ["Outstanding", "Returned"];
 const EXT = ["pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "webp", "heic", "txt", "csv", "zip"];
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -103,6 +104,44 @@ function resolveAudience(org: OrgStructure, body: any): { ids: string[]; label: 
   return { ids: [...ids], label: labels.join(", ") };
 }
 
+/** An accepted request becomes part of the employee's HR folder (public.hr_documents). */
+async function fileIntoFolder(actor: Actor, row: any, employeeName: string | null) {
+  const { data: existing } = await db().from("hr_documents").select("id").eq("source", "request").eq("source_id", row.id);
+  if (existing?.length) return; // already filed (e.g. accepted earlier, returned and accepted again)
+  const now = new Date().toISOString();
+  const category = (FOLDER_CATEGORIES as readonly string[]).includes(row.category)
+    ? row.category
+    : ["sign", "acknowledge", "declaration"].includes(row.kind)
+      ? "Policies & declarations"
+      : "Other";
+  const base = {
+    employee_id: row.employee_id,
+    employee_name: employeeName,
+    type: category,
+    category,
+    access: "HR Only",
+    uploaded: now.slice(0, 10),
+    document_date: (row.signed_at || row.submitted_at || now).slice(0, 10),
+    uploaded_by: actor.userId,
+    uploaded_by_name: actor.fullName,
+    source: "request",
+    source_id: row.id,
+    created_at: now,
+    updated_at: now,
+  };
+  const signedNote = row.signature_name ? `${row.kind === "acknowledge" ? "Acknowledged" : "Signed"} by ${row.signature_name} on ${String(row.signed_at || now).slice(0, 10)}.` : "";
+  const rows: any[] = [];
+  if (row.kind === "upload" || row.kind === "complete") {
+    for (const f of row.submission || [])
+      rows.push({ ...base, id: `hrd-${crypto.randomUUID()}`, name: f.name || row.title, size: f.size || 0, mime_type: f.mimeType || null, storage_path: f.path, notes: `Submitted for "${row.title}".${row.response ? ` Employee note: ${row.response}` : ""}` });
+  } else if (row.kind === "declaration") {
+    rows.push({ ...base, id: `hrd-${crypto.randomUUID()}`, name: row.title, size: 0, storage_path: null, notes: `${signedNote} Internal Confidentiality and Conflict Declaration (record ${row.declaration_id ?? "on file"}).` });
+  } else if (row.template) {
+    rows.push({ ...base, id: `hrd-${crypto.randomUUID()}`, name: row.title, size: row.template.size || 0, mime_type: row.template.mimeType || null, storage_path: row.template.path, notes: signedNote });
+  }
+  if (rows.length) await db().from("hr_documents").insert(rows);
+}
+
 export async function handleHrDocumentsApi(request: Request, url: URL, actor: Actor, notify: Notify, hrRecipients: HrRecipients): Promise<Response | null> {
   const { pathname } = url;
   if (!pathname.startsWith("/api/staff/hr-documents")) return null;
@@ -139,7 +178,10 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
       const previousFiles: string[] = (row.submission || []).map((f: any) => f?.path).filter(Boolean);
       const now = new Date().toISOString();
       const patch: Record<string, any> = { submitted_at: now, updated_at: now, response: text(body.response, 2000) || null };
-      if (row.kind === "sign") {
+      if (row.kind === "acknowledge") {
+        if (!body.acknowledged) return json({ error: "Confirm that you have read and understood the document." }, 400);
+        Object.assign(patch, { status: "Signed", signature_name: text(body.signature, 120) || actor.fullName, acknowledged: true, signed_at: now });
+      } else if (row.kind === "sign") {
         const name = text(body.signature, 120);
         if (!body.acknowledged) return json({ error: "Confirm that you have read the document." }, 400);
         if (name.length < 2) return json({ error: "Type your full name to sign." }, 400);
@@ -186,8 +228,10 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
         const old = previousFiles.filter((p) => !keep.has(p));
         if (old.length) await store().remove(old);
       }
+      const done = row.kind === "acknowledge" ? "acknowledged" : patch.status === "Signed" ? "signed" : "submitted";
+      await hrAudit(actor, `HR document ${done}`, { id: actor.userId, name: actor.fullName }, row.title);
       for (const uid of await hrRecipients())
-        if (uid !== actor.userId) await notify(uid, `HR document ${patch.status === "Signed" ? "signed" : "submitted"}`, `${actor.fullName} ${patch.status === "Signed" ? "signed" : "submitted"} "${row.title}".`);
+        if (uid !== actor.userId) await notify(uid, `HR document ${done}`, `${actor.fullName} ${done} "${row.title}".`);
       return json({ request: data ?? { ...row, ...patch } });
     }
     return json({ error: "Not found." }, 404);
@@ -257,7 +301,8 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
       template = await checkFile(body.template, `templates/${actor.userId}`);
       if (!template) return json({ error: "The attached document did not finish uploading." }, 400);
     }
-    if (body.kind === "sign" && !template) return json({ error: "Attach the document the employee must sign." }, 400);
+    if ((body.kind === "sign" || body.kind === "acknowledge") && !template)
+      return json({ error: body.kind === "sign" ? "Attach the document the employee must sign." : "Attach the document the employee must read and acknowledge." }, 400);
     const who = resolveAudience(actor.org, body);
     if ("error" in who) return json({ error: who.error }, 400);
     if (!who.ids.length) return json({ error: "Choose at least one employee or department." }, 400);
@@ -281,7 +326,8 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
     }));
     const { error } = await db().from("hr_document_requests").insert(rows);
     if (error) return json({ error: error.message }, 500);
-    const verb = body.kind === "sign" || body.kind === "declaration" ? "sign" : body.kind === "upload" ? "upload" : "complete";
+    const verb = body.kind === "sign" || body.kind === "declaration" ? "sign" : body.kind === "acknowledge" ? "read and acknowledge" : body.kind === "upload" ? "upload" : "complete";
+    for (const id of who.ids) await hrAudit(actor, "HR document requested", { id, name: actor.org.people.get(id)?.name ?? null }, `${title} (${body.kind})${due ? `, due ${due}` : ""}`);
     for (const id of who.ids)
       if (id !== actor.userId) await notify(id, "HR document requested", `HR asked you to ${verb} "${title}"${due ? ` by ${due}` : ""}. Open My HR Documents.`);
     return json({ created: rows.length, batch_id: batch }, 201);
@@ -295,11 +341,12 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
     const now = new Date().toISOString();
     const patch: Record<string, any> = { updated_at: now };
     const before = { status: row.status };
-    if (body.action === "accept" || body.action === "return") {
+    if (body.action === "accept" || body.action === "return" || body.action === "reject") {
       if (!["Submitted", "Signed"].includes(row.status)) return json({ error: "Only submitted or signed documents can be reviewed." }, 409);
       const note = text(body.note, 2000);
       if (body.action === "return" && !note) return json({ error: "Tell the employee what to change." }, 400);
-      Object.assign(patch, { status: body.action === "accept" ? "Accepted" : "Returned", review_note: note || null, reviewed_by: actor.userId, reviewed_by_name: actor.fullName, reviewed_at: now });
+      if (body.action === "reject" && !note) return json({ error: "Give the reason for rejecting." }, 400);
+      Object.assign(patch, { status: body.action === "accept" ? "Accepted" : body.action === "reject" ? "Rejected" : "Returned", review_note: note || null, reviewed_by: actor.userId, reviewed_by_name: actor.fullName, reviewed_at: now });
     } else if (body.action === "cancel") {
       if (row.status === "Cancelled") return json({ error: "Already cancelled." }, 409);
       patch.status = "Cancelled";
@@ -318,7 +365,14 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
     }
     const { data, error } = await db().from("hr_document_requests").update(patch).eq("id", row.id).select().maybeSingle();
     if (error) return json({ error: error.message }, 500);
-    if (patch.status === "Accepted") await notify(row.employee_id, "HR document accepted", `HR accepted "${row.title}".`);
+    const emp = { id: row.employee_id, name: actor.org.people.get(row.employee_id)?.name ?? null };
+    if (patch.status && patch.status !== before.status) await hrAudit(actor, `HR document ${String(patch.status).toLowerCase()}`, emp, `${row.title}${patch.review_note ? ` — ${patch.review_note}` : ""}`);
+    else if (!patch.status) await hrAudit(actor, "HR document request edited", emp, row.title);
+    if (patch.status === "Accepted") {
+      await fileIntoFolder(actor, { ...row, ...patch }, emp.name);
+      await notify(row.employee_id, "HR document accepted", `HR accepted "${row.title}".`);
+    }
+    if (patch.status === "Rejected") await notify(row.employee_id, "HR document rejected", `HR rejected "${row.title}": ${patch.review_note}`);
     if (patch.status === "Returned") await notify(row.employee_id, "HR document returned", `HR returned "${row.title}" for changes: ${patch.review_note}`);
     if (patch.status === "Cancelled" && before.status !== "Cancelled") await notify(row.employee_id, "HR document request cancelled", `HR no longer needs "${row.title}".`);
     return json({ request: withNames(actor.org, data ?? { ...row, ...patch }) });
