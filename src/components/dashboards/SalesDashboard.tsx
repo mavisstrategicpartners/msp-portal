@@ -34,7 +34,6 @@ import {
   Flame,
   Award,
   Zap,
-  Crown,
   RefreshCw,
   ExternalLink,
   ChevronRight,
@@ -70,7 +69,6 @@ import {
   useDeleteLead,
   useSalesTargets,
   useAssignSalesTarget,
-  useSalesLeaderboard,
   useSalesTeam,
   useIndustryPerformance,
   useGHLAppointments,
@@ -111,7 +109,12 @@ export function SalesDashboard() {
   });
 
   const { data: targets = [], refetch: refetchTargets } = useSalesTargets(selectedMonth);
-  const { data: leaderboard = [], refetch: refetchLeaderboard } = useSalesLeaderboard(selectedMonth);
+  // Headline figures are never broken down per consultant: managers see team totals (whatever
+  // consultant the lead list is filtered to), consultants see only their own records.
+  const { data: teamLeads = [] } = useSalesLeads({
+    industry: industryFilter !== "all" ? industryFilter : undefined,
+    stage: stageFilter !== "all" ? stageFilter : undefined,
+  });
   const { data: industryPerformance = [] } = useIndustryPerformance();
   const { data: appointments = [], refetch: refetchAppointments } = useGHLAppointments();
 
@@ -249,14 +252,16 @@ export function SalesDashboard() {
   }, [leads, searchQuery, stageFilter, qualityFilter, industryFilter]);
 
   // Telemetry Calculations
-  const wonLeads = leads.filter((l) => l.stage === "Won");
-  const lostLeads = leads.filter((l) => l.stage === "Lost");
+  const metricLeads = isConsultant ? leads : teamLeads;
+  const wonLeads = metricLeads.filter((l) => l.stage === "Won");
+  const handoverLeads = leads.filter((l) => l.stage === "Won");
+  const lostLeads = metricLeads.filter((l) => l.stage === "Lost");
   const wonValue = wonLeads.reduce((acc, l) => acc + (Number(l.estimatedValue) || 0), 0);
-  const activePipelineValue = leads
+  const activePipelineValue = metricLeads
     .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
     .reduce((acc, l) => acc + (Number(l.estimatedValue) || 0), 0);
   const totalPipelineValue = wonValue + activePipelineValue;
-  const conversionRate = leads.length > 0 ? Math.round((wonLeads.length / leads.length) * 100) : 0;
+  const conversionRate = metricLeads.length > 0 ? Math.round((wonLeads.length / metricLeads.length) * 100) : 0;
 
   // Active target for current view
   const currentConsultantTarget = useMemo(() => {
@@ -598,7 +603,7 @@ export function SalesDashboard() {
           </div>
           <p className="text-2xl font-semibold text-foreground mt-2">{formatZAR(activePipelineValue)}</p>
           <p className="text-[11px] text-muted-foreground mt-2">
-            {leads.filter((l) => l.stage !== "Won" && l.stage !== "Lost").length} qualified opportunities in progress
+            {metricLeads.filter((l) => l.stage !== "Won" && l.stage !== "Lost").length} qualified opportunities in progress
           </p>
         </Card>
 
@@ -612,7 +617,7 @@ export function SalesDashboard() {
           </div>
           <p className="text-2xl font-semibold text-foreground mt-2">{conversionRate}%</p>
           <p className="text-[11px] text-muted-foreground mt-2">
-            {wonLeads.length} won deals from {leads.length} total opportunities
+            {wonLeads.length} won deals from {metricLeads.length} total opportunities
           </p>
         </Card>
 
@@ -648,7 +653,7 @@ export function SalesDashboard() {
             Pipeline Board
           </TabsTrigger>
           <TabsTrigger value="targets" className="text-xs px-3 py-1.5 data-[state=active]:bg-card font-medium">
-            Targets & Leaderboard
+            Targets
           </TabsTrigger>
           <TabsTrigger value="industry" className="text-xs px-3 py-1.5 data-[state=active]:bg-card font-medium">
             Industry Performance
@@ -760,7 +765,7 @@ export function SalesDashboard() {
                   onClick={() => setActiveTab("targets")}
                   className="w-full text-xs"
                 >
-                  View Performance Rankings
+                  View Target Details
                 </Button>
               </Card>
 
@@ -991,7 +996,7 @@ export function SalesDashboard() {
 
         {/* ── TAB 4: TARGETS & PERFORMANCE RANKINGS ────────────────────────── */}
         <TabsContent value="targets" className="space-y-5">
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="max-w-xl">
             {/* Current Target Status Box */}
             <Card className="p-5 border-border space-y-4">
               <div>
@@ -1028,95 +1033,6 @@ export function SalesDashboard() {
                   <Target className="h-3.5 w-3.5 mr-1.5" /> Adjust Consultant Targets
                 </Button>
               )}
-            </Card>
-
-            {/* Monthly Sales Leaderboard Table */}
-            <Card className="p-5 border-border md:col-span-2 space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <div>
-                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-amber-500" />
-                    Monthly Sales Leaderboard & Performance Rankings
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Authoritative rankings calculated from actual closed-won database deal records.
-                  </p>
-                </div>
-                <Badge variant="outline" className="text-xs font-mono">
-                  {selectedMonth}
-                </Badge>
-              </div>
-
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
-                    <tr>
-                      <th className="p-3 w-16">Rank</th>
-                      <th className="p-3">Consultant</th>
-                      <th className="p-3">Target</th>
-                      <th className="p-3">Actual Won</th>
-                      <th className="p-3">Achievement</th>
-                      <th className="p-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {leaderboard.map((rank) => (
-                      <tr
-                        key={rank.consultantId}
-                        className={rank.rank === 1 ? "bg-amber-500/5 font-semibold" : "hover:bg-muted/20"}
-                      >
-                        <td className="p-3">
-                          {rank.rank === 1 ? (
-                            <div className="flex items-center gap-1 text-amber-500 font-semibold">
-                              <Crown className="h-4 w-4" /> #1
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground font-semibold">#{rank.rank}</span>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          <div className="font-semibold text-foreground">{rank.consultantName}</div>
-                          <div className="text-[10px] text-muted-foreground">{rank.consultantEmail}</div>
-                        </td>
-                        <td className="p-3 font-mono text-muted-foreground">{formatZAR(rank.targetAmount)}</td>
-                        <td className="p-3 font-semibold text-foreground tabular-nums">
-                          {formatZAR(rank.actualWonAmount)}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold font-mono">{rank.percentageAchieved}%</span>
-                            <div className="w-16 bg-secondary rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className={`h-1.5 rounded-full ${
-                                  rank.percentageAchieved >= 100 ? "bg-emerald-500" : "bg-primary"
-                                }`}
-                                style={{ width: `${Math.min(100, rank.percentageAchieved)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 text-right">
-                          <Badge
-                            className={`text-[10px] ${
-                              rank.status === "exceeded"
-                                ? "bg-primary/10 text-primary border-primary/30"
-                                : rank.status === "reached"
-                                ? "bg-emerald-500/15 text-emerald-600 border-emerald-300"
-                                : "bg-rose-500/15 text-rose-600 border-rose-300"
-                            }`}
-                          >
-                            {rank.status === "exceeded"
-                              ? "Exceeded Quota"
-                              : rank.status === "reached"
-                              ? "Target Reached"
-                              : "Below Quota"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </Card>
           </div>
         </TabsContent>
@@ -1310,7 +1226,7 @@ export function SalesDashboard() {
               Transfer verified closed-won deals to the 2-day onboarding pipeline.
             </p>
             <div className="space-y-3">
-              {wonLeads.map((lead) => (
+              {handoverLeads.map((lead) => (
                 <div
                   key={lead.id}
                   className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-4"

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { authenticateApiRequest } from "@/lib/api-auth.server";
+import { canViewSalesLeaderboard } from "@/lib/roles";
 import {
   Industry,
   MSP_INDUSTRIES,
@@ -30,6 +31,8 @@ interface AuthenticatedUser {
   /** CEO oversight: may read the Sales API but not change it. */
   readOnly: boolean;
   isManager: boolean;
+  /** Confidential consultant rankings: the CEO and the Root Administrator only. */
+  canViewLeaderboard: boolean;
 }
 
 // ── In-Memory Store backed by Supabase audit_logs ─────────────────────────────
@@ -207,6 +210,7 @@ async function verifyAuth(request: Request): Promise<AuthenticatedUser | null> {
     // Sales Manager rights: the sales manager role, the GM and administrators.
     // Other departments' managers are not sales managers.
     isManager: a.isAdmin || a.isGM || a.isSalesManager,
+    canViewLeaderboard: canViewSalesLeaderboard(a),
   };
 }
 
@@ -561,6 +565,14 @@ export async function handleSalesApi(request: Request): Promise<Response> {
 
     // Performance Rankings / Leaderboard: /api/sales/leaderboard
     if (pathname === "/api/sales/leaderboard") {
+      // Confidential: consultants' targets, results and ranks side by side. CEO (and Root
+      // Administrator oversight) only. Sales staff keep their own figures via /leads and /targets.
+      if (!auth.canViewLeaderboard) {
+        return new Response(
+          JSON.stringify({ error: "The sales leaderboard is restricted to the CEO." }),
+          { status: 403, headers: HEADERS },
+        );
+      }
       const monthParam =
         url.searchParams.get("month") ||
         `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
@@ -599,7 +611,7 @@ export async function handleSalesApi(request: Request): Promise<Response> {
             (t) =>
               t.consultantId === cId ||
               (t.consultantEmail && t.consultantEmail.toLowerCase() === consultant.email.toLowerCase())
-          )?.targetAmount || 100000;
+          )?.targetAmount || 0;
 
         const remaining = Math.max(0, assignedTarget - actualWon);
         const percentageAchieved = assignedTarget > 0 ? Math.round((actualWon / assignedTarget) * 100) : 0;

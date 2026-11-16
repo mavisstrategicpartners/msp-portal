@@ -186,15 +186,19 @@ export function useAssignSalesTarget() {
   });
 }
 
-export function useSalesLeaderboard(month?: string) {
+/** Confidential consultant rankings. The server answers 403 to everyone but the CEO (and Root Administrator). */
+export function useSalesLeaderboard(month?: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["sales", "leaderboard", month],
+    enabled: options?.enabled ?? true,
+    retry: false,
     queryFn: async (): Promise<ConsultantPerformanceRanking[]> => {
       const headers = await getAuthHeaders();
       const url = month ? `/api/sales/leaderboard?month=${month}` : "/api/sales/leaderboard";
       const res = await fetch(url, { headers });
       if (!res.ok) {
-        throw new Error("Failed to load leaderboard");
+        const err = await res.json().catch(() => ({}));
+        throw Object.assign(new Error(err.error || "Failed to load leaderboard"), { status: res.status });
       }
       const data = await res.json();
       return data.rankings || [];

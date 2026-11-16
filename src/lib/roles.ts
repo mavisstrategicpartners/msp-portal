@@ -246,6 +246,18 @@ export type AccessFlags = {
   isManagerOrAbove: boolean;
 };
 
+/**
+ * Confidential: the Monthly Sales Leaderboard & Performance Rankings (every consultant's target,
+ * closed-won revenue and rank side by side). Only the explicitly granted CEO, plus the Root
+ * Administrator under the existing oversight grant. Ordinary administrators, the General Manager,
+ * HR, department managers and the Sales team (including the Sales manager) are excluded.
+ * Enforced on the server (/api/sales/leaderboard), the route guard and the database policy on
+ * the sales ledger; the menu entry is only a convenience.
+ */
+export function canViewSalesLeaderboard(a: { isCEO?: boolean; isRootAdmin?: boolean } | null | undefined): boolean {
+  return Boolean(a?.isCEO || a?.isRootAdmin);
+}
+
 /** Single place that turns a profile + roles into permission flags. */
 export function computeAccess(
   profile: Profile | null,

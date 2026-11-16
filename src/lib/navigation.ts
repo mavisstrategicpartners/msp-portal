@@ -54,8 +54,10 @@ import {
   UserPlus,
   Users,
   Wrench,
+  Trophy,
 } from "lucide-react";
 import type { MspSystemRole } from "@/lib/use-profile";
+import { canViewSalesLeaderboard } from "@/lib/roles";
 
 export type NavIcon = typeof LayoutDashboard;
 
@@ -105,6 +107,8 @@ export type NavContext = {
   /** CEO or system administrator. */
   canViewCompany?: boolean;
   isAdmin: boolean;
+  /** Root Administrator (role tier root_admin). */
+  isRootAdmin?: boolean;
   isHR: boolean;
   isSales: boolean;
   isManagerOrAbove: boolean;
@@ -188,6 +192,12 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
           { to: "/ceo/sales", label: "Sales Pipeline", icon: Target },
+          {
+            to: "/ceo/sales-leaderboard",
+            label: "Sales Leaderboard",
+            icon: Trophy,
+            visible: (ctx) => canViewSalesLeaderboard(ctx),
+          },
         ],
       },
       {
@@ -689,6 +699,8 @@ export function homeWorkspace(ctx: NavContext): WorkspaceKey {
  * The Sales Playbook appears in both the Sales and Admin sidebars.
  */
 const RESTRICTED_SHARED_PAGES: { prefix: string; access: (ctx: NavContext) => boolean }[] = [
+  // Confidential sales rankings: the CEO (and the Root Administrator's oversight) only.
+  { prefix: "/ceo/sales-leaderboard", access: (ctx) => canViewSalesLeaderboard(ctx) },
   {
     prefix: "/admin/sales-playbook",
     access: (ctx) =>
@@ -820,6 +832,7 @@ export function navContextFromProfile(data: any): NavContext | null {
     isCEO: !!data.isCEO,
     canViewCompany: !!data.canViewCompany,
     isAdmin: !!data.isAdmin,
+    isRootAdmin: !!data.isRootAdmin,
     isHR: !!data.isHR,
     isSales: !!data.isSales,
     isManagerOrAbove: !!data.isManagerOrAbove,
