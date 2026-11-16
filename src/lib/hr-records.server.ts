@@ -228,7 +228,9 @@ export async function handleHrRecordsApi(request: Request, url: URL, actor: Acto
     ]);
     const count = (rows: any[] | null, key: string, id: string, pred: (x: any) => boolean = () => true) => (rows || []).filter((x) => x[key] === id && pred(x)).length;
     const t = today();
+    // Inactive (deactivated) accounts are left out of Employee Folders; their records are kept, not deleted.
     const employees = (profiles || [])
+      .filter((p: any) => p.is_active !== false)
       .map((p: any) => {
         const d = (details || []).find((x: any) => x.profile_id === p.id) || {};
         return {

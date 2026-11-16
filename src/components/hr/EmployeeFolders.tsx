@@ -10,7 +10,6 @@ import { Link } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, Copy, Download, Eye, FolderOpen, Loader2, Pencil, Plus, Search, Trash2, Upload, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -126,7 +125,7 @@ export function EmployeeFoldersPage() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          ["Employees", all.filter((e) => e.is_active !== false).length],
+          ["Employees", all.length],
           ["Documents on file", all.reduce((n, e) => n + e.documents, 0)],
           ["Open document requests", all.reduce((n, e) => n + e.open_requests, 0)],
           ["Leave awaiting HR", all.reduce((n, e) => n + e.pending_leave, 0)],
@@ -183,7 +182,6 @@ export function EmployeeFoldersPage() {
                     <td className="px-4 py-2.5 text-xs">
                       {e.employment_type ?? "—"}
                       {e.join_date ? <span className="text-muted-foreground"> · since {fmt(e.join_date)}</span> : null}
-                      {e.is_active === false && <Badge variant="outline" className="ml-2 text-[10px]">Inactive</Badge>}
                     </td>
                     <td className="px-4 py-2.5 text-right">{e.documents}</td>
                     <td className="px-4 py-2.5 text-right">
