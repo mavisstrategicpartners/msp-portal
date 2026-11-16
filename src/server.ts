@@ -61,6 +61,12 @@ export default {
         return await handleExecutiveApi(request);
       }
 
+      // Before "/api/sales": that prefix would also match "/api/sales-arena".
+      if (url.pathname.startsWith("/api/sales-arena")) {
+        const { handleSalesArenaApi } = await import("./lib/sales-arena.server");
+        return await handleSalesArenaApi(request);
+      }
+
       if (url.pathname.startsWith("/api/sales")) {
         const { handleSalesApi } = await import("./lib/sales-server");
         return await handleSalesApi(request);

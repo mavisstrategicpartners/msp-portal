@@ -247,15 +247,15 @@ export type AccessFlags = {
 };
 
 /**
- * Confidential: the Monthly Sales Leaderboard & Performance Rankings (every consultant's target,
- * closed-won revenue and rank side by side). Only the explicitly granted CEO, plus the Root
- * Administrator under the existing oversight grant. Ordinary administrators, the General Manager,
- * HR, department managers and the Sales team (including the Sales manager) are excluded.
- * Enforced on the server (/api/sales/leaderboard), the route guard and the database policy on
- * the sales ledger; the menu entry is only a convenience.
+ * Confidential: the Monthly Sales Leaderboard & Performance Rankings and every other comparison of
+ * salespeople's figures (Sales Arena company dashboard). The explicitly granted CEO ONLY.
+ * Administrators — including the Root Administrator — the General Manager, HR, Finance,
+ * Operations, department managers and the Sales team do not get it from any existing role.
+ * Enforced on the server (/api/sales-arena, /api/sales/leaderboard), the route guard and the
+ * database (no browser access to the sales tables); the menu entry is only a convenience.
  */
-export function canViewSalesLeaderboard(a: { isCEO?: boolean; isRootAdmin?: boolean } | null | undefined): boolean {
-  return Boolean(a?.isCEO || a?.isRootAdmin);
+export function canViewSalesLeaderboard(a: { isCEO?: boolean } | null | undefined): boolean {
+  return Boolean(a?.isCEO);
 }
 
 /** Single place that turns a profile + roles into permission flags. */

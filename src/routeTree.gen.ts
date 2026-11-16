@@ -46,6 +46,7 @@ import { Route as AuthenticatedCeoNotificationsRouteImport } from './routes/_aut
 import { Route as AuthenticatedCeoPerformanceRouteImport } from './routes/_authenticated/ceo/performance'
 import { Route as AuthenticatedCeoRevenueRouteImport } from './routes/_authenticated/ceo/revenue'
 import { Route as AuthenticatedCeoSalesRouteImport } from './routes/_authenticated/ceo/sales'
+import { Route as AuthenticatedCeoSalesArenaRouteImport } from './routes/_authenticated/ceo/sales-arena'
 import { Route as AuthenticatedCeoSalesLeaderboardRouteImport } from './routes/_authenticated/ceo/sales-leaderboard'
 import { Route as AuthenticatedCeoStructureRouteImport } from './routes/_authenticated/ceo/structure'
 import { Route as AuthenticatedCeoTeamRouteImport } from './routes/_authenticated/ceo/team'
@@ -89,8 +90,15 @@ import { Route as AuthenticatedOperationsOnboardingRouteImport } from './routes/
 import { Route as AuthenticatedOperationsRecoveryRouteImport } from './routes/_authenticated/operations/recovery'
 import { Route as AuthenticatedOperationsVerificationsRouteImport } from './routes/_authenticated/operations/verifications'
 import { Route as AuthenticatedOperationsWorkflowsRouteImport } from './routes/_authenticated/operations/workflows'
+import { Route as AuthenticatedSalesArenaIndexRouteImport } from './routes/_authenticated/sales-arena/index'
+import { Route as AuthenticatedSalesArenaActivityRouteImport } from './routes/_authenticated/sales-arena/activity'
+import { Route as AuthenticatedSalesArenaLeadMagnetsRouteImport } from './routes/_authenticated/sales-arena/lead-magnets'
+import { Route as AuthenticatedSalesArenaPaymentsRouteImport } from './routes/_authenticated/sales-arena/payments'
+import { Route as AuthenticatedSalesArenaPipelineRouteImport } from './routes/_authenticated/sales-arena/pipeline'
+import { Route as AuthenticatedSalesArenaTargetsRouteImport } from './routes/_authenticated/sales-arena/targets'
 import { Route as AuthenticatedWorkIndexRouteImport } from './routes/_authenticated/work/index'
 import { Route as AuthenticatedWorkSlugRouteImport } from './routes/_authenticated/work/$slug'
+import { Route as AuthenticatedSalesArenaDealDealIdRouteImport } from './routes/_authenticated/sales-arena/deal/$dealId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -288,6 +296,12 @@ const AuthenticatedCeoSalesRoute = AuthenticatedCeoSalesRouteImport.update({
   path: '/ceo/sales',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCeoSalesArenaRoute =
+  AuthenticatedCeoSalesArenaRouteImport.update({
+    id: '/ceo/sales-arena',
+    path: '/ceo/sales-arena',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCeoSalesLeaderboardRoute =
   AuthenticatedCeoSalesLeaderboardRouteImport.update({
     id: '/ceo/sales-leaderboard',
@@ -535,6 +549,42 @@ const AuthenticatedOperationsWorkflowsRoute =
     path: '/operations/workflows',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSalesArenaIndexRoute =
+  AuthenticatedSalesArenaIndexRouteImport.update({
+    id: '/sales-arena/',
+    path: '/sales-arena/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesArenaActivityRoute =
+  AuthenticatedSalesArenaActivityRouteImport.update({
+    id: '/sales-arena/activity',
+    path: '/sales-arena/activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesArenaLeadMagnetsRoute =
+  AuthenticatedSalesArenaLeadMagnetsRouteImport.update({
+    id: '/sales-arena/lead-magnets',
+    path: '/sales-arena/lead-magnets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesArenaPaymentsRoute =
+  AuthenticatedSalesArenaPaymentsRouteImport.update({
+    id: '/sales-arena/payments',
+    path: '/sales-arena/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesArenaPipelineRoute =
+  AuthenticatedSalesArenaPipelineRouteImport.update({
+    id: '/sales-arena/pipeline',
+    path: '/sales-arena/pipeline',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesArenaTargetsRoute =
+  AuthenticatedSalesArenaTargetsRouteImport.update({
+    id: '/sales-arena/targets',
+    path: '/sales-arena/targets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedWorkIndexRoute = AuthenticatedWorkIndexRouteImport.update({
   id: '/work/',
   path: '/work/',
@@ -545,6 +595,12 @@ const AuthenticatedWorkSlugRoute = AuthenticatedWorkSlugRouteImport.update({
   path: '/work/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalesArenaDealDealIdRoute =
+  AuthenticatedSalesArenaDealDealIdRouteImport.update({
+    id: '/sales-arena/deal/$dealId',
+    path: '/sales-arena/deal/$dealId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -582,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/ceo/sales-arena': typeof AuthenticatedCeoSalesArenaRoute
   '/ceo/sales-leaderboard': typeof AuthenticatedCeoSalesLeaderboardRoute
   '/ceo/structure': typeof AuthenticatedCeoStructureRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -620,6 +677,11 @@ export interface FileRoutesByFullPath {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/sales-arena/activity': typeof AuthenticatedSalesArenaActivityRoute
+  '/sales-arena/lead-magnets': typeof AuthenticatedSalesArenaLeadMagnetsRoute
+  '/sales-arena/payments': typeof AuthenticatedSalesArenaPaymentsRoute
+  '/sales-arena/pipeline': typeof AuthenticatedSalesArenaPipelineRoute
+  '/sales-arena/targets': typeof AuthenticatedSalesArenaTargetsRoute
   '/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/ceo/': typeof AuthenticatedCeoIndexRoute
   '/department/': typeof AuthenticatedDepartmentIndexRoute
@@ -627,7 +689,9 @@ export interface FileRoutesByFullPath {
   '/host/': typeof AuthenticatedHostIndexRoute
   '/hr/': typeof AuthenticatedHrIndexRoute
   '/operations/': typeof AuthenticatedOperationsIndexRoute
+  '/sales-arena/': typeof AuthenticatedSalesArenaIndexRoute
   '/work/': typeof AuthenticatedWorkIndexRoute
+  '/sales-arena/deal/$dealId': typeof AuthenticatedSalesArenaDealDealIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -665,6 +729,7 @@ export interface FileRoutesByTo {
   '/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/ceo/sales-arena': typeof AuthenticatedCeoSalesArenaRoute
   '/ceo/sales-leaderboard': typeof AuthenticatedCeoSalesLeaderboardRoute
   '/ceo/structure': typeof AuthenticatedCeoStructureRoute
   '/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -703,6 +768,11 @@ export interface FileRoutesByTo {
   '/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/sales-arena/activity': typeof AuthenticatedSalesArenaActivityRoute
+  '/sales-arena/lead-magnets': typeof AuthenticatedSalesArenaLeadMagnetsRoute
+  '/sales-arena/payments': typeof AuthenticatedSalesArenaPaymentsRoute
+  '/sales-arena/pipeline': typeof AuthenticatedSalesArenaPipelineRoute
+  '/sales-arena/targets': typeof AuthenticatedSalesArenaTargetsRoute
   '/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/ceo': typeof AuthenticatedCeoIndexRoute
   '/department': typeof AuthenticatedDepartmentIndexRoute
@@ -710,7 +780,9 @@ export interface FileRoutesByTo {
   '/host': typeof AuthenticatedHostIndexRoute
   '/hr': typeof AuthenticatedHrIndexRoute
   '/operations': typeof AuthenticatedOperationsIndexRoute
+  '/sales-arena': typeof AuthenticatedSalesArenaIndexRoute
   '/work': typeof AuthenticatedWorkIndexRoute
+  '/sales-arena/deal/$dealId': typeof AuthenticatedSalesArenaDealDealIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -750,6 +822,7 @@ export interface FileRoutesById {
   '/_authenticated/ceo/performance': typeof AuthenticatedCeoPerformanceRoute
   '/_authenticated/ceo/revenue': typeof AuthenticatedCeoRevenueRoute
   '/_authenticated/ceo/sales': typeof AuthenticatedCeoSalesRoute
+  '/_authenticated/ceo/sales-arena': typeof AuthenticatedCeoSalesArenaRoute
   '/_authenticated/ceo/sales-leaderboard': typeof AuthenticatedCeoSalesLeaderboardRoute
   '/_authenticated/ceo/structure': typeof AuthenticatedCeoStructureRoute
   '/_authenticated/ceo/team': typeof AuthenticatedCeoTeamRoute
@@ -788,6 +861,11 @@ export interface FileRoutesById {
   '/_authenticated/operations/recovery': typeof AuthenticatedOperationsRecoveryRoute
   '/_authenticated/operations/verifications': typeof AuthenticatedOperationsVerificationsRoute
   '/_authenticated/operations/workflows': typeof AuthenticatedOperationsWorkflowsRoute
+  '/_authenticated/sales-arena/activity': typeof AuthenticatedSalesArenaActivityRoute
+  '/_authenticated/sales-arena/lead-magnets': typeof AuthenticatedSalesArenaLeadMagnetsRoute
+  '/_authenticated/sales-arena/payments': typeof AuthenticatedSalesArenaPaymentsRoute
+  '/_authenticated/sales-arena/pipeline': typeof AuthenticatedSalesArenaPipelineRoute
+  '/_authenticated/sales-arena/targets': typeof AuthenticatedSalesArenaTargetsRoute
   '/_authenticated/work/$slug': typeof AuthenticatedWorkSlugRoute
   '/_authenticated/ceo/': typeof AuthenticatedCeoIndexRoute
   '/_authenticated/department/': typeof AuthenticatedDepartmentIndexRoute
@@ -795,7 +873,9 @@ export interface FileRoutesById {
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/hr/': typeof AuthenticatedHrIndexRoute
   '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
+  '/_authenticated/sales-arena/': typeof AuthenticatedSalesArenaIndexRoute
   '/_authenticated/work/': typeof AuthenticatedWorkIndexRoute
+  '/_authenticated/sales-arena/deal/$dealId': typeof AuthenticatedSalesArenaDealDealIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -835,6 +915,7 @@ export interface FileRouteTypes {
     | '/ceo/performance'
     | '/ceo/revenue'
     | '/ceo/sales'
+    | '/ceo/sales-arena'
     | '/ceo/sales-leaderboard'
     | '/ceo/structure'
     | '/ceo/team'
@@ -873,6 +954,11 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
+    | '/sales-arena/activity'
+    | '/sales-arena/lead-magnets'
+    | '/sales-arena/payments'
+    | '/sales-arena/pipeline'
+    | '/sales-arena/targets'
     | '/work/$slug'
     | '/ceo/'
     | '/department/'
@@ -880,7 +966,9 @@ export interface FileRouteTypes {
     | '/host/'
     | '/hr/'
     | '/operations/'
+    | '/sales-arena/'
     | '/work/'
+    | '/sales-arena/deal/$dealId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -918,6 +1006,7 @@ export interface FileRouteTypes {
     | '/ceo/performance'
     | '/ceo/revenue'
     | '/ceo/sales'
+    | '/ceo/sales-arena'
     | '/ceo/sales-leaderboard'
     | '/ceo/structure'
     | '/ceo/team'
@@ -956,6 +1045,11 @@ export interface FileRouteTypes {
     | '/operations/recovery'
     | '/operations/verifications'
     | '/operations/workflows'
+    | '/sales-arena/activity'
+    | '/sales-arena/lead-magnets'
+    | '/sales-arena/payments'
+    | '/sales-arena/pipeline'
+    | '/sales-arena/targets'
     | '/work/$slug'
     | '/ceo'
     | '/department'
@@ -963,7 +1057,9 @@ export interface FileRouteTypes {
     | '/host'
     | '/hr'
     | '/operations'
+    | '/sales-arena'
     | '/work'
+    | '/sales-arena/deal/$dealId'
   id:
     | '__root__'
     | '/'
@@ -1002,6 +1098,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ceo/performance'
     | '/_authenticated/ceo/revenue'
     | '/_authenticated/ceo/sales'
+    | '/_authenticated/ceo/sales-arena'
     | '/_authenticated/ceo/sales-leaderboard'
     | '/_authenticated/ceo/structure'
     | '/_authenticated/ceo/team'
@@ -1040,6 +1137,11 @@ export interface FileRouteTypes {
     | '/_authenticated/operations/recovery'
     | '/_authenticated/operations/verifications'
     | '/_authenticated/operations/workflows'
+    | '/_authenticated/sales-arena/activity'
+    | '/_authenticated/sales-arena/lead-magnets'
+    | '/_authenticated/sales-arena/payments'
+    | '/_authenticated/sales-arena/pipeline'
+    | '/_authenticated/sales-arena/targets'
     | '/_authenticated/work/$slug'
     | '/_authenticated/ceo/'
     | '/_authenticated/department/'
@@ -1047,7 +1149,9 @@ export interface FileRouteTypes {
     | '/_authenticated/host/'
     | '/_authenticated/hr/'
     | '/_authenticated/operations/'
+    | '/_authenticated/sales-arena/'
     | '/_authenticated/work/'
+    | '/_authenticated/sales-arena/deal/$dealId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1317,6 +1421,13 @@ declare module '@tanstack/react-router' {
       path: '/ceo/sales'
       fullPath: '/ceo/sales'
       preLoaderRoute: typeof AuthenticatedCeoSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ceo/sales-arena': {
+      id: '/_authenticated/ceo/sales-arena'
+      path: '/ceo/sales-arena'
+      fullPath: '/ceo/sales-arena'
+      preLoaderRoute: typeof AuthenticatedCeoSalesArenaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ceo/sales-leaderboard': {
@@ -1620,6 +1731,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperationsWorkflowsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales-arena/': {
+      id: '/_authenticated/sales-arena/'
+      path: '/sales-arena'
+      fullPath: '/sales-arena/'
+      preLoaderRoute: typeof AuthenticatedSalesArenaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/activity': {
+      id: '/_authenticated/sales-arena/activity'
+      path: '/sales-arena/activity'
+      fullPath: '/sales-arena/activity'
+      preLoaderRoute: typeof AuthenticatedSalesArenaActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/lead-magnets': {
+      id: '/_authenticated/sales-arena/lead-magnets'
+      path: '/sales-arena/lead-magnets'
+      fullPath: '/sales-arena/lead-magnets'
+      preLoaderRoute: typeof AuthenticatedSalesArenaLeadMagnetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/payments': {
+      id: '/_authenticated/sales-arena/payments'
+      path: '/sales-arena/payments'
+      fullPath: '/sales-arena/payments'
+      preLoaderRoute: typeof AuthenticatedSalesArenaPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/pipeline': {
+      id: '/_authenticated/sales-arena/pipeline'
+      path: '/sales-arena/pipeline'
+      fullPath: '/sales-arena/pipeline'
+      preLoaderRoute: typeof AuthenticatedSalesArenaPipelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/targets': {
+      id: '/_authenticated/sales-arena/targets'
+      path: '/sales-arena/targets'
+      fullPath: '/sales-arena/targets'
+      preLoaderRoute: typeof AuthenticatedSalesArenaTargetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/work/': {
       id: '/_authenticated/work/'
       path: '/work'
@@ -1632,6 +1785,13 @@ declare module '@tanstack/react-router' {
       path: '/work/$slug'
       fullPath: '/work/$slug'
       preLoaderRoute: typeof AuthenticatedWorkSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales-arena/deal/$dealId': {
+      id: '/_authenticated/sales-arena/deal/$dealId'
+      path: '/sales-arena/deal/$dealId'
+      fullPath: '/sales-arena/deal/$dealId'
+      preLoaderRoute: typeof AuthenticatedSalesArenaDealDealIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -1669,6 +1829,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCeoPerformanceRoute: typeof AuthenticatedCeoPerformanceRoute
   AuthenticatedCeoRevenueRoute: typeof AuthenticatedCeoRevenueRoute
   AuthenticatedCeoSalesRoute: typeof AuthenticatedCeoSalesRoute
+  AuthenticatedCeoSalesArenaRoute: typeof AuthenticatedCeoSalesArenaRoute
   AuthenticatedCeoSalesLeaderboardRoute: typeof AuthenticatedCeoSalesLeaderboardRoute
   AuthenticatedCeoStructureRoute: typeof AuthenticatedCeoStructureRoute
   AuthenticatedCeoTeamRoute: typeof AuthenticatedCeoTeamRoute
@@ -1707,6 +1868,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperationsRecoveryRoute: typeof AuthenticatedOperationsRecoveryRoute
   AuthenticatedOperationsVerificationsRoute: typeof AuthenticatedOperationsVerificationsRoute
   AuthenticatedOperationsWorkflowsRoute: typeof AuthenticatedOperationsWorkflowsRoute
+  AuthenticatedSalesArenaActivityRoute: typeof AuthenticatedSalesArenaActivityRoute
+  AuthenticatedSalesArenaLeadMagnetsRoute: typeof AuthenticatedSalesArenaLeadMagnetsRoute
+  AuthenticatedSalesArenaPaymentsRoute: typeof AuthenticatedSalesArenaPaymentsRoute
+  AuthenticatedSalesArenaPipelineRoute: typeof AuthenticatedSalesArenaPipelineRoute
+  AuthenticatedSalesArenaTargetsRoute: typeof AuthenticatedSalesArenaTargetsRoute
   AuthenticatedWorkSlugRoute: typeof AuthenticatedWorkSlugRoute
   AuthenticatedCeoIndexRoute: typeof AuthenticatedCeoIndexRoute
   AuthenticatedDepartmentIndexRoute: typeof AuthenticatedDepartmentIndexRoute
@@ -1714,7 +1880,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
   AuthenticatedHrIndexRoute: typeof AuthenticatedHrIndexRoute
   AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
+  AuthenticatedSalesArenaIndexRoute: typeof AuthenticatedSalesArenaIndexRoute
   AuthenticatedWorkIndexRoute: typeof AuthenticatedWorkIndexRoute
+  AuthenticatedSalesArenaDealDealIdRoute: typeof AuthenticatedSalesArenaDealDealIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1749,6 +1917,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCeoPerformanceRoute: AuthenticatedCeoPerformanceRoute,
   AuthenticatedCeoRevenueRoute: AuthenticatedCeoRevenueRoute,
   AuthenticatedCeoSalesRoute: AuthenticatedCeoSalesRoute,
+  AuthenticatedCeoSalesArenaRoute: AuthenticatedCeoSalesArenaRoute,
   AuthenticatedCeoSalesLeaderboardRoute: AuthenticatedCeoSalesLeaderboardRoute,
   AuthenticatedCeoStructureRoute: AuthenticatedCeoStructureRoute,
   AuthenticatedCeoTeamRoute: AuthenticatedCeoTeamRoute,
@@ -1792,6 +1961,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperationsVerificationsRoute:
     AuthenticatedOperationsVerificationsRoute,
   AuthenticatedOperationsWorkflowsRoute: AuthenticatedOperationsWorkflowsRoute,
+  AuthenticatedSalesArenaActivityRoute: AuthenticatedSalesArenaActivityRoute,
+  AuthenticatedSalesArenaLeadMagnetsRoute:
+    AuthenticatedSalesArenaLeadMagnetsRoute,
+  AuthenticatedSalesArenaPaymentsRoute: AuthenticatedSalesArenaPaymentsRoute,
+  AuthenticatedSalesArenaPipelineRoute: AuthenticatedSalesArenaPipelineRoute,
+  AuthenticatedSalesArenaTargetsRoute: AuthenticatedSalesArenaTargetsRoute,
   AuthenticatedWorkSlugRoute: AuthenticatedWorkSlugRoute,
   AuthenticatedCeoIndexRoute: AuthenticatedCeoIndexRoute,
   AuthenticatedDepartmentIndexRoute: AuthenticatedDepartmentIndexRoute,
@@ -1799,7 +1974,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
   AuthenticatedHrIndexRoute: AuthenticatedHrIndexRoute,
   AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
+  AuthenticatedSalesArenaIndexRoute: AuthenticatedSalesArenaIndexRoute,
   AuthenticatedWorkIndexRoute: AuthenticatedWorkIndexRoute,
+  AuthenticatedSalesArenaDealDealIdRoute:
+    AuthenticatedSalesArenaDealDealIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

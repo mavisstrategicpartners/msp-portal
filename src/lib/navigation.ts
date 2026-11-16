@@ -55,6 +55,9 @@ import {
   Users,
   Wrench,
   Trophy,
+  PhoneCall,
+  FileSearch,
+  Goal,
 } from "lucide-react";
 import type { MspSystemRole } from "@/lib/use-profile";
 import { canViewSalesLeaderboard } from "@/lib/roles";
@@ -109,6 +112,8 @@ export type NavContext = {
   isAdmin: boolean;
   /** Root Administrator (role tier root_admin). */
   isRootAdmin?: boolean;
+  /** Linked to an active Sales Arena salesperson record (or preparing a lead-magnet report). */
+  isSalesperson?: boolean;
   isHR: boolean;
   isSales: boolean;
   isManagerOrAbove: boolean;
@@ -192,12 +197,19 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/ceo/clients", label: "Clients & Onboarding", icon: Briefcase },
           { to: "/ceo/sales", label: "Sales Pipeline", icon: Target },
-          {
-            to: "/ceo/sales-leaderboard",
-            label: "Sales Leaderboard",
-            icon: Trophy,
-            visible: (ctx) => canViewSalesLeaderboard(ctx),
-          },
+        ],
+      },
+      {
+        id: "ceo-sales-arena",
+        label: "Sales Arena",
+        visible: (ctx) => canViewSalesLeaderboard(ctx),
+        items: [
+          { to: "/ceo/sales-arena", label: "Sales Arena Dashboard", icon: Trophy, alsoActive: ["/ceo/sales-leaderboard"] },
+          { to: "/sales-arena/pipeline", label: "Lead Pipeline", icon: Target, alsoActive: ["/sales-arena/deal"] },
+          { to: "/sales-arena/activity", label: "Setter Activity", icon: PhoneCall },
+          { to: "/sales-arena/lead-magnets", label: "Lead Magnets", icon: FileSearch },
+          { to: "/sales-arena/payments", label: "Payments Received", icon: Banknote },
+          { to: "/sales-arena/targets", label: "Team Targets", icon: Goal },
         ],
       },
       {
@@ -382,6 +394,20 @@ export const WORKSPACES: Record<WorkspaceKey, Workspace> = {
         items: [
           { to: "/sales", label: "Sales Dashboard", icon: LayoutDashboard, exact: true },
           { to: "/admin/sales-playbook", label: "Sales Playbook", icon: ClipboardList },
+        ],
+      },
+      {
+        // Own figures only; the comparative leaderboard is on the CEO dashboard.
+        id: "sales-arena",
+        label: "Sales Arena",
+        visible: (ctx) => ctx.isSales && !ctx.isCEO,
+        items: [
+          { to: "/sales-arena", label: "My Performance", icon: Trophy, exact: true },
+          { to: "/sales-arena/pipeline", label: "Lead Pipeline", icon: Target, alsoActive: ["/sales-arena/deal"] },
+          { to: "/sales-arena/activity", label: "Setter Activity", icon: PhoneCall },
+          { to: "/sales-arena/lead-magnets", label: "Lead Magnets", icon: FileSearch },
+          { to: "/sales-arena/payments", label: "My Payments", icon: Banknote },
+          { to: "/sales-arena/targets", label: "My Targets", icon: Goal },
         ],
       },
     ],
@@ -606,6 +632,9 @@ export const PERSONAL_GROUP: NavGroup = {
     // Each department's monthly report (written by the department, read by management), plus
     // the client report library.
     { to: "/reports", label: "Monthly Reports", icon: FileBarChart2 },
+    // People outside the Sales department who are linked salespeople (or report preparers)
+    // reach their own Sales Arena pages here. Sales staff have the Sales Arena group instead.
+    { to: "/sales-arena", label: "My Sales Arena", icon: Trophy, visible: (ctx) => Boolean(ctx.isSalesperson) && !ctx.isSales },
   ],
 };
 
@@ -701,6 +730,7 @@ export function homeWorkspace(ctx: NavContext): WorkspaceKey {
 const RESTRICTED_SHARED_PAGES: { prefix: string; access: (ctx: NavContext) => boolean }[] = [
   // Confidential sales rankings: the CEO (and the Root Administrator's oversight) only.
   { prefix: "/ceo/sales-leaderboard", access: (ctx) => canViewSalesLeaderboard(ctx) },
+  { prefix: "/ceo/sales-arena", access: (ctx) => canViewSalesLeaderboard(ctx) },
   {
     prefix: "/admin/sales-playbook",
     access: (ctx) =>
@@ -833,6 +863,7 @@ export function navContextFromProfile(data: any): NavContext | null {
     canViewCompany: !!data.canViewCompany,
     isAdmin: !!data.isAdmin,
     isRootAdmin: !!data.isRootAdmin,
+    isSalesperson: !!data.isSalesperson,
     isHR: !!data.isHR,
     isSales: !!data.isSales,
     isManagerOrAbove: !!data.isManagerOrAbove,

@@ -29,6 +29,7 @@ export function useProfile() {
       let roles: any[] = [];
       let leadDepartments: string[] = [];
       let memberDepartments: { department_key: string; is_primary: boolean }[] = [];
+      let isSalesperson = false;
       try {
         const [{ data: p }, { data: r }] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
@@ -41,6 +42,10 @@ export function useProfile() {
           (supabase as any).from("department_members").select("department_key, is_primary").eq("user_id", user.id),
         ]);
         leadDepartments = ((l as any[]) ?? []).map((x) => x.department_key);
+        // Own Sales Arena link only (row-level security returns no other rows). Menu hint only:
+        // the server decides what Sales Arena data anyone may see.
+        const { data: sp } = await (supabase as any).from("sales_people").select("id, is_active").eq("profile_id", user.id).maybeSingle();
+        isSalesperson = Boolean(sp && sp.is_active !== false);
         memberDepartments = (m as any[]) ?? [];
 
         // If the user is authenticated in Supabase but doesn't have a profile row yet, initialize it
@@ -93,6 +98,7 @@ export function useProfile() {
         defaultDashboard: landingPath(access, leadDepartments),
         leadDepartments,
         isDepartmentLead: leadDepartments.length > 0,
+        isSalesperson,
         departmentKey: memberDepartments.find((d) => d.is_primary)?.department_key ?? null,
         // Workspace title: the department this person manages, else the one they belong to.
         departmentName:
