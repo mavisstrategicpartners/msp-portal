@@ -1,3 +1,5 @@
+-- Applied to production on 16 Nov 2026 in two steps (table, then storage bucket); no drop
+-- statements are needed because the table is new.
 -- Documents HR asks employees to sign, complete or upload. One row per employee per request.
 -- Written only by the server API (service role); employees read their own rows, HR and
 -- administrators read all, the CEO reads all (oversight). Files live in the private
@@ -33,9 +35,7 @@ create table if not exists public.hr_document_requests (
 create index if not exists hr_document_requests_employee_idx on public.hr_document_requests (employee_id, status);
 create index if not exists hr_document_requests_batch_idx on public.hr_document_requests (batch_id);
 alter table public.hr_document_requests enable row level security;
-drop policy if exists hr_doc_requests_own on public.hr_document_requests;
 create policy hr_doc_requests_own on public.hr_document_requests for select to authenticated using (employee_id = auth.uid());
-drop policy if exists hr_doc_requests_hr on public.hr_document_requests;
 create policy hr_doc_requests_hr on public.hr_document_requests for select to authenticated using (public.msp_is_hr(auth.uid()) or public.msp_is_admin(auth.uid()) or public.msp_is_ceo(auth.uid()));
 
 insert into storage.buckets (id, name, public, file_size_limit)
