@@ -136,6 +136,7 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
     }
     if (method === "POST" && action === "submit") {
       const body = await request.json().catch(() => ({}));
+      const previousFiles: string[] = (row.submission || []).map((f: any) => f?.path).filter(Boolean);
       const now = new Date().toISOString();
       const patch: Record<string, any> = { submitted_at: now, updated_at: now, response: text(body.response, 2000) || null };
       if (row.kind === "sign") {
@@ -179,6 +180,12 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
       }
       const { data, error } = await db().from("hr_document_requests").update(patch).eq("id", row.id).select().maybeSingle();
       if (error) return json({ error: error.message }, 500);
+      // A resubmission replaces the earlier files: remove the ones no longer attached.
+      if (patch.submission) {
+        const keep = new Set(patch.submission.map((f: any) => f.path));
+        const old = previousFiles.filter((p) => !keep.has(p));
+        if (old.length) await store().remove(old);
+      }
       for (const uid of await hrRecipients())
         if (uid !== actor.userId) await notify(uid, `HR document ${patch.status === "Signed" ? "signed" : "submitted"}`, `${actor.fullName} ${patch.status === "Signed" ? "signed" : "submitted"} "${row.title}".`);
       return json({ request: data ?? { ...row, ...patch } });
@@ -205,6 +212,35 @@ export async function handleHrDocumentsApi(request: Request, url: URL, actor: Ac
   }
 
   if (!r.manage) return json({ error: "Only HR can change document requests." }, 403);
+
+  // POST /requests/cleanup (administrators): remove stored files that no request uses any more
+  // (uploads abandoned before submitting, files replaced earlier). Files under an hour old are
+  // left alone so uploads in progress are never touched.
+  if (method === "POST" && pathname === "/api/staff/hr-documents/requests/cleanup") {
+    if (!actor.access.isAdmin) return json({ error: "Only administrators can tidy up stored files." }, 403);
+    const { data: rows, error } = await db().from("hr_document_requests").select("template, submission");
+    if (error) return json({ error: error.message }, 500);
+    const used = new Set<string>();
+    for (const r of rows || []) {
+      if (r.template?.path) used.add(r.template.path);
+      for (const f of r.submission || []) if (f?.path) used.add(f.path);
+    }
+    const cutoff = Date.now() - 60 * 60 * 1000;
+    const unused: string[] = [];
+    const walk = async (prefix: string, depth: number): Promise<void> => {
+      const { data } = await store().list(prefix, { limit: 1000 });
+      for (const o of data || []) {
+        const path = prefix ? `${prefix}/${o.name}` : o.name;
+        if (!o.id) {
+          if (depth < 4) await walk(path, depth + 1);
+        } else if (!used.has(path) && new Date(o.created_at ?? 0).getTime() < cutoff) unused.push(path);
+      }
+    };
+    await walk("templates", 0);
+    await walk("submissions", 0);
+    if (unused.length) await store().remove(unused);
+    return json({ removed: unused.length, files: unused });
+  }
 
   if (method === "POST" && pathname === "/api/staff/hr-documents/requests/upload-url")
     return slot(`templates/${actor.userId}`, await request.json().catch(() => ({})));
