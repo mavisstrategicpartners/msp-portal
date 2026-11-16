@@ -125,13 +125,8 @@ const initialIntegrations = [
   }
 ]
 
-const recentLogs = [
-  { id: 'LOG-1', time: '15:45:12', service: 'ZKTeco Biometric Bridge', event: 'Punch ingest batch #408', status: '200 OK', records: 14 },
-  { id: 'LOG-2', time: '15:00:03', service: 'Microsoft Entra ID', event: 'SCIM user directory sync', status: '200 OK', records: 56 },
-  { id: 'LOG-3', time: '14:30:19', service: 'Sage Pastel Payroll', event: 'Monthly remuneration batch export', status: '200 OK', records: 54 },
-  { id: 'LOG-4', time: '12:15:44', service: 'SimplePay SA', event: 'Leave balance reconciliation', status: '200 OK', records: 54 },
-  { id: 'LOG-5', time: '09:00:22', service: 'LinkedIn Talent Solutions', event: 'Applicant profile ingest', status: '200 OK', records: 6 }
-]
+// No connector logs are recorded in the portal yet; the table shows an empty state until they are.
+const recentLogs = []
 
 export default function HRIntegrations() {
   const [integrations, setIntegrations] = useSupabaseTable('hr_integrations', initialIntegrations)
@@ -205,34 +200,34 @@ export default function HRIntegrations() {
               <Zap className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="mt-2 text-2xl font-semibold text-foreground">{connectedCount} <span className="text-sm font-normal text-muted-foreground">/ {integrations.length}</span></div>
-            <div className="mt-1 text-xs text-emerald-600 font-medium">All live connectors operational</div>
+            <div className="mt-1 text-xs text-muted-foreground">{integrations.length ? 'Connected of all recorded connectors' : 'No connectors recorded yet'}</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Sync Health</span>
+              <span className="text-xs font-semibold text-muted-foreground">Connectors with problems</span>
               <ShieldCheck className="h-4 w-4 text-primary" />
             </div>
-            <div className="mt-2 text-2xl font-semibold text-foreground">100%</div>
-            <div className="mt-1 text-xs text-muted-foreground">Zero sync latency or auth errors</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{integrations.length ? integrations.filter(i => i.status && i.status !== 'Connected' && i.status !== 'Disconnected').length : '—'}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Connectors reporting an error or warning</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Biometrics Terminal</span>
+              <span className="text-xs font-semibold text-muted-foreground">Attendance connectors</span>
               <Clock className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-semibold text-foreground">Active</div>
-            <div className="mt-1 text-xs text-muted-foreground">Real-time attendance ingestion</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{integrations.filter(i => i.category === 'Biometrics & Attendance' && i.status === 'Connected').length}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Connected biometric / clock-in sources</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Daily Sync Operations</span>
+              <span className="text-xs font-semibold text-muted-foreground">Last sync</span>
               <Database className="h-4 w-4 text-blue-500" />
             </div>
-            <div className="mt-2 text-2xl font-semibold text-foreground">428</div>
-            <div className="mt-1 text-xs text-muted-foreground">API events logged in last 24h</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{integrations.map(i => i.last_sync).filter(Boolean).sort().slice(-1)[0] || '—'}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Most recent recorded sync</div>
           </div>
         </div>
 
@@ -374,6 +369,9 @@ export default function HRIntegrations() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border font-mono text-xs">
+                  {recentLogs.length === 0 && (
+                    <tr><td colSpan={5} className="py-10 text-center font-sans text-sm text-muted-foreground">No sync activity recorded yet.</td></tr>
+                  )}
                   {recentLogs.map(l => (
                     <tr key={l.id} className="transition-colors hover:bg-muted/20">
                       <td className="py-3 px-4 text-muted-foreground">{l.time}</td>

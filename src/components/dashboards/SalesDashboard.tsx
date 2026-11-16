@@ -71,6 +71,7 @@ import {
   useSalesTargets,
   useAssignSalesTarget,
   useSalesLeaderboard,
+  useSalesTeam,
   useIndustryPerformance,
   useGHLAppointments,
   useSyncGHL,
@@ -123,26 +124,7 @@ export function SalesDashboard() {
   const syncGhlMutation = useSyncGHL();
 
   // Activities state (in-memory for touchpoint log)
-  const [activities, setActivities] = useState<SalesActivityItem[]>([
-    {
-      id: "act-1",
-      leadId: "lead-init-103",
-      businessName: "Apex Capital Advisors",
-      type: "Meeting",
-      notes: "Executive contract review completed on Zoom. Deposit confirmed.",
-      activityDate: "2026-11-08 14:00",
-      performedBy: "Sales Consultant 2",
-    },
-    {
-      id: "act-2",
-      leadId: "lead-init-101",
-      businessName: "First National Logistics SA",
-      type: "WhatsApp",
-      notes: "Commercial schedule transmitted to operations dispatch team.",
-      activityDate: "2026-11-07 10:30",
-      performedBy: "Sales Consultant 1",
-    },
-  ]);
+  const [activities, setActivities] = useState<SalesActivityItem[]>([]);
 
   // ── Modals State ───────────────────────────────────────────────────────────
   // Add Lead Modal State
@@ -153,9 +135,9 @@ export function SalesDashboard() {
   const [phone, setPhone] = useState("");
   const [industry, setIndustry] = useState<Industry>("Financial Services");
   const [source, setSource] = useState<LeadItem["source"]>("Inbound Meta Ads");
-  const [estimatedValue, setEstimatedValue] = useState("45000");
+  const [estimatedValue, setEstimatedValue] = useState("");
   const [leadQuality, setLeadQuality] = useState<LeadItem["leadQuality"]>("Hot");
-  const [packageInterest, setPackageInterest] = useState("Performance Ads + GHL WhatsApp CRM");
+  const [packageInterest, setPackageInterest] = useState("");
   const [notes, setNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [assignedConsultantId, setAssignedConsultantId] = useState("");
@@ -181,9 +163,10 @@ export function SalesDashboard() {
 
   // Assign Target Modal State (Manager)
   const [targetModalOpen, setTargetModalOpen] = useState(false);
-  const [targetConsultantId, setTargetConsultantId] = useState("cons-1-uuid-001");
-  const [targetConsultantName, setTargetConsultantName] = useState("Sales Consultant 1");
-  const [targetAmountInput, setTargetAmountInput] = useState("120000");
+  const { data: salesTeamList = [] } = useSalesTeam();
+  const [targetConsultantId, setTargetConsultantId] = useState("");
+  const [targetConsultantName, setTargetConsultantName] = useState("");
+  const [targetAmountInput, setTargetAmountInput] = useState("");
 
   // Log Activity Modal State
   const [logActivityOpen, setLogActivityOpen] = useState(false);
@@ -284,13 +267,14 @@ export function SalesDashboard() {
             t.consultantId === currentUserId ||
             (t.consultantEmail && t.consultantEmail.toLowerCase() === currentUserEmail.toLowerCase())
         ) || {
-          targetAmount: 100000,
+          // No target has been set for this month.
+          targetAmount: 0,
           consultantName: currentUserName,
         }
       );
     }
     // Team aggregated target
-    const totalTarget = targets.reduce((acc, t) => acc + t.targetAmount, 0) || 300000;
+    const totalTarget = targets.reduce((acc, t) => acc + t.targetAmount, 0);
     return {
       targetAmount: totalTarget,
       consultantName: "Consolidated Sales Team",
@@ -299,7 +283,7 @@ export function SalesDashboard() {
 
   const targetPercentage = Math.min(
     150,
-    Math.round((wonValue / (currentConsultantTarget.targetAmount || 1)) * 100)
+    currentConsultantTarget.targetAmount ? Math.round((wonValue / currentConsultantTarget.targetAmount) * 100) : 0
   );
 
   const todayStr = new Date().toISOString().split("T")[0];
@@ -420,12 +404,16 @@ export function SalesDashboard() {
   // Handlers: Assign Target
   const handleSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!targetConsultantId || !(Number(targetAmountInput) > 0)) {
+      toast.error("Choose a team member and enter a target amount.");
+      return;
+    }
     try {
       await assignTargetMutation.mutateAsync({
         consultantId: targetConsultantId,
         consultantName: targetConsultantName,
         month: selectedMonth,
-        targetAmount: Number(targetAmountInput) || 100000,
+        targetAmount: Number(targetAmountInput),
       });
       toast.success("Target Assigned", {
         description: `${targetConsultantName} target set to ${formatZAR(Number(targetAmountInput))} for ${selectedMonth}.`,
@@ -518,10 +506,9 @@ export function SalesDashboard() {
                 className="bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer"
               >
                 <option value="all">Team View (All Consultants)</option>
-                <option value="cons-1-uuid-001">Consultant 1 (Senior)</option>
-                <option value="cons-2-uuid-002">Consultant 2 (Mid-Level)</option>
-                <option value="cons-3-uuid-003">Consultant 3 (Junior)</option>
-                <option value="mgr-sales-uuid-001">Sales Manager</option>
+                {salesTeamList.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}{m.isManager ? " (Sales Manager)" : ""}</option>
+                ))}
               </select>
             </div>
           )}
@@ -534,9 +521,17 @@ export function SalesDashboard() {
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer"
             >
-              <option value="2026-11">November 2026</option>
-              <option value="2026-10">October 2026</option>
-              <option value="2026-12">December 2026</option>
+              {Array.from({ length: 13 }, (_, i) => {
+                const d = new Date();
+                d.setDate(1);
+                d.setMonth(d.getMonth() + 1 - i);
+                const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                return (
+                  <option key={v} value={v}>
+                    {d.toLocaleDateString("en-ZA", { month: "long", year: "numeric" })}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -574,7 +569,7 @@ export function SalesDashboard() {
         <Card className="p-4 border-border bg-card shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Monthly Won Revenue</span>
-            <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-500">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
               <Banknote className="h-4 w-4" />
             </div>
           </div>
@@ -582,13 +577,13 @@ export function SalesDashboard() {
           <div className="mt-2 space-y-1">
             <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
               <div
-                className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                className="bg-primary h-1.5 rounded-full transition-all"
                 style={{ width: `${Math.min(100, targetPercentage)}%` }}
               />
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
               <span>{targetPercentage}% of quota</span>
-              <span>Target: {formatZAR(currentConsultantTarget.targetAmount, { compact: true })}</span>
+              <span>{currentConsultantTarget.targetAmount ? `Target: ${formatZAR(currentConsultantTarget.targetAmount, { compact: true })}` : "No target set"}</span>
             </div>
           </div>
         </Card>
@@ -597,7 +592,7 @@ export function SalesDashboard() {
         <Card className="p-4 border-border bg-card shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Active Pipeline</span>
-            <div className="p-1.5 rounded-md bg-purple-500/10 text-purple-500">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
@@ -611,7 +606,7 @@ export function SalesDashboard() {
         <Card className="p-4 border-border bg-card shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Conversion Win Rate</span>
-            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-500">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
               <Zap className="h-4 w-4" />
             </div>
           </div>
@@ -728,7 +723,7 @@ export function SalesDashboard() {
                           {ind.wonDeals} deals won ({ind.conversionRate}% win rate)
                         </Badge>
                       </div>
-                      <span className="font-semibold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
+                      <span className="font-semibold text-foreground tabular-nums">{formatZAR(ind.totalRevenue)}</span>
                     </div>
                   ))}
                 </div>
@@ -746,17 +741,17 @@ export function SalesDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground font-medium">Achieved this month:</span>
-                    <span className="font-semibold text-emerald-500">{formatZAR(wonValue)}</span>
+                    <span className="font-semibold text-foreground">{formatZAR(wonValue)}</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
                     <div
-                      className="bg-emerald-500 h-2.5 rounded-full"
+                      className="bg-primary h-2.5 rounded-full"
                       style={{ width: `${Math.min(100, targetPercentage)}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-muted-foreground">
                     <span>{targetPercentage}% of quota</span>
-                    <span>{formatZAR(Math.max(0, currentConsultantTarget.targetAmount - wonValue))} remaining</span>
+                    <span>{currentConsultantTarget.targetAmount ? `${formatZAR(Math.max(0, currentConsultantTarget.targetAmount - wonValue))} remaining` : "No target set for this month"}</span>
                   </div>
                 </div>
                 <Button
@@ -773,7 +768,7 @@ export function SalesDashboard() {
               <Card className="p-5 border-border space-y-3">
                 <div className="flex items-center justify-between border-b border-border pb-2.5">
                   <h3 className="text-sm font-semibold text-foreground">Upcoming Client Meetings</h3>
-                  <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 border-purple-300">
+                  <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
                     GHL Synced
                   </Badge>
                 </div>
@@ -894,10 +889,10 @@ export function SalesDashboard() {
                               lead.stage === "Won"
                                 ? "bg-emerald-500/15 text-emerald-600 border-emerald-300"
                                 : lead.stage === "Proposal Sent"
-                                ? "bg-purple-500/15 text-purple-600 border-purple-300"
+                                ? "bg-primary/10 text-primary border-primary/30"
                                 : lead.stage === "Lost"
                                 ? "bg-rose-500/15 text-rose-600 border-rose-300"
-                                : "bg-blue-500/15 text-blue-600 border-blue-300"
+                                : "bg-muted text-foreground border-border"
                             }`}
                           >
                             {lead.stage}
@@ -977,7 +972,7 @@ export function SalesDashboard() {
                         </div>
                         <p className="text-[11px] text-muted-foreground">{l.contactPerson}</p>
                         <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[10px]">
-                          <span className="font-semibold text-emerald-500 font-mono">{formatZAR(l.estimatedValue)}</span>
+                          <span className="font-semibold text-foreground tabular-nums">{formatZAR(l.estimatedValue)}</span>
                           <span className="text-muted-foreground">{l.assignedSalesperson.split(" ")[0]}</span>
                         </div>
                       </div>
@@ -1011,17 +1006,17 @@ export function SalesDashboard() {
               <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="font-semibold text-foreground">Won Revenue to Date:</span>
-                  <span className="font-semibold text-emerald-500">{formatZAR(wonValue)}</span>
+                  <span className="font-semibold text-foreground">{formatZAR(wonValue)}</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-emerald-500 h-3 rounded-full transition-all"
+                    className="bg-primary h-3 rounded-full transition-all"
                     style={{ width: `${Math.min(100, targetPercentage)}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-[11px] text-muted-foreground font-mono">
                   <span>{targetPercentage}% of quota</span>
-                  <span>{formatZAR(Math.max(0, currentConsultantTarget.targetAmount - wonValue))} remaining</span>
+                  <span>{currentConsultantTarget.targetAmount ? `${formatZAR(Math.max(0, currentConsultantTarget.targetAmount - wonValue))} remaining` : "No target set for this month"}</span>
                 </div>
               </div>
 
@@ -1084,7 +1079,7 @@ export function SalesDashboard() {
                           <div className="text-[10px] text-muted-foreground">{rank.consultantEmail}</div>
                         </td>
                         <td className="p-3 font-mono text-muted-foreground">{formatZAR(rank.targetAmount)}</td>
-                        <td className="p-3 font-mono font-semibold text-emerald-500">
+                        <td className="p-3 font-semibold text-foreground tabular-nums">
                           {formatZAR(rank.actualWonAmount)}
                         </td>
                         <td className="p-3">
@@ -1093,7 +1088,7 @@ export function SalesDashboard() {
                             <div className="w-16 bg-secondary rounded-full h-1.5 overflow-hidden">
                               <div
                                 className={`h-1.5 rounded-full ${
-                                  rank.percentageAchieved >= 100 ? "bg-emerald-500" : "bg-amber-500"
+                                  rank.percentageAchieved >= 100 ? "bg-emerald-500" : "bg-primary"
                                 }`}
                                 style={{ width: `${Math.min(100, rank.percentageAchieved)}%` }}
                               />
@@ -1104,7 +1099,7 @@ export function SalesDashboard() {
                           <Badge
                             className={`text-[10px] ${
                               rank.status === "exceeded"
-                                ? "bg-purple-500/15 text-purple-600 border-purple-300"
+                                ? "bg-primary/10 text-primary border-primary/30"
                                 : rank.status === "reached"
                                 ? "bg-emerald-500/15 text-emerald-600 border-emerald-300"
                                 : "bg-rose-500/15 text-rose-600 border-rose-300"
@@ -1156,7 +1151,7 @@ export function SalesDashboard() {
 
                   <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Won Deals: {ind.wonDeals}</span>
-                    <span className="font-semibold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
+                    <span className="font-semibold text-foreground tabular-nums">{formatZAR(ind.totalRevenue)}</span>
                   </div>
                 </div>
               ))}
@@ -1171,7 +1166,7 @@ export function SalesDashboard() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-foreground">GoHighLevel Calendar & Appointments</h3>
-                  <Badge className="bg-purple-500/15 text-purple-600 border-purple-300 text-[10px]">
+                  <Badge className="bg-primary/10 text-primary border-primary/30 text-[10px]">
                     GHL API Connected
                   </Badge>
                 </div>
@@ -1244,7 +1239,7 @@ export function SalesDashboard() {
                               app.status === "completed"
                                 ? "bg-emerald-500/15 text-emerald-600 border-emerald-300"
                                 : app.status === "confirmed"
-                                ? "bg-blue-500/15 text-blue-600 border-blue-300"
+                                ? "bg-muted text-foreground border-border"
                                 : "bg-amber-500/15 text-amber-600 border-amber-300"
                             }`}
                           >
@@ -1341,7 +1336,7 @@ export function SalesDashboard() {
                   {!lead.handoverCompleted && (
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs h-8"
+                      className="text-xs h-8"
                       onClick={() => handleOpenHandover(lead)}
                     >
                       <Share2 className="h-3.5 w-3.5 mr-1.5" /> Dispatch Handover
@@ -1407,7 +1402,7 @@ export function SalesDashboard() {
                 <Input
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
-                  placeholder="e.g. Sipho Dlamini"
+                  placeholder="Contact person's full name"
                   required
                   className="text-xs h-8"
                 />
@@ -1418,7 +1413,7 @@ export function SalesDashboard() {
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value as Industry)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
                 >
                   {MSP_INDUSTRIES.map((ind) => (
                     <option key={ind} value={ind}>
@@ -1468,7 +1463,7 @@ export function SalesDashboard() {
                 <select
                   value={leadQuality}
                   onChange={(e) => setLeadQuality(e.target.value as any)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
                 >
                   <option value="Hot">Hot (Ready to buy)</option>
                   <option value="Warm">Warm (Discovery)</option>
@@ -1550,7 +1545,7 @@ export function SalesDashboard() {
                 <select
                   value={editIndustry}
                   onChange={(e) => setEditIndustry(e.target.value as Industry)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
                 >
                   {MSP_INDUSTRIES.map((ind) => (
                     <option key={ind} value={ind}>
@@ -1567,7 +1562,7 @@ export function SalesDashboard() {
                 <select
                   value={editStage}
                   onChange={(e) => setEditStage(e.target.value as any)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
                 >
                   <option value="New">New</option>
                   <option value="Contacted">Contacted</option>
@@ -1642,19 +1637,15 @@ export function SalesDashboard() {
                 value={targetConsultantId}
                 onChange={(e) => {
                   setTargetConsultantId(e.target.value);
-                  const name =
-                    e.target.value === "cons-1-uuid-001"
-                      ? "Sales Consultant 1"
-                      : e.target.value === "cons-2-uuid-002"
-                      ? "Sales Consultant 2"
-                      : "Sales Consultant 3";
-                  setTargetConsultantName(name);
+                  setTargetConsultantName(salesTeamList.find((m) => m.id === e.target.value)?.name ?? "");
                 }}
-                className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                required
+                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
               >
-                <option value="cons-1-uuid-001">Sales Consultant 1 (consultant1@mavisstrateegicpartners.co.za)</option>
-                <option value="cons-2-uuid-002">Sales Consultant 2 (consultant2@mavisstrateegicpartners.co.za)</option>
-                <option value="cons-3-uuid-003">Sales Consultant 3 (consultant3@mavisstrateegicpartners.co.za)</option>
+                <option value="">{salesTeamList.length ? "Choose a team member" : "No one is placed in the Sales department yet"}</option>
+                {salesTeamList.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}{m.email ? ` (${m.email})` : ""}</option>
+                ))}
               </select>
             </div>
 
@@ -1697,7 +1688,7 @@ export function SalesDashboard() {
               <select
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value as any)}
-                className="w-full h-8 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
               >
                 <option value="Call">Phone Call</option>
                 <option value="Meeting">Discovery / Zoom Meeting</option>
@@ -1782,7 +1773,7 @@ export function SalesDashboard() {
               <Button type="button" variant="ghost" size="sm" onClick={() => setHandoverOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white font-semibold">
+              <Button type="submit" size="sm">
                 Confirm Handover to Operations
               </Button>
             </DialogFooter>

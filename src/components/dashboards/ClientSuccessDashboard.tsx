@@ -125,7 +125,7 @@ export function ClientSuccessDashboard() {
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Total Client Portfolio</span>
           <p className="text-2xl font-semibold text-foreground mt-1">{accounts.length} Accounts</p>
-          <p className="text-[11px] text-muted-foreground mt-1">100% Retainer contracts</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Month-to-month retainers</p>
         </Card>
 
         <Card className="p-4 border-border">
@@ -137,7 +137,7 @@ export function ClientSuccessDashboard() {
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">At-Risk Clients</span>
           <p className="text-2xl font-semibold text-rose-500 mt-1">{atRiskCount}</p>
-          <p className="text-[11px] text-muted-foreground mt-1">1 Red &bull; 1 Amber account</p>
+          <p className="text-[11px] text-muted-foreground mt-1">{accounts.filter((a) => a.health === "Red").length} Red &bull; {accounts.filter((a) => a.health === "Amber").length} Amber</p>
         </Card>
 
         <Card className="p-4 border-border">

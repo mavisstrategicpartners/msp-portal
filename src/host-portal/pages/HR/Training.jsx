@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTraining, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
+import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { toast } from 'sonner'
 import {
@@ -85,17 +86,12 @@ const initialCourses = [
   }
 ]
 
-const initialEnrollments = [
-  { id: 'EN-1', employee: 'Thandi Mokoena', course: 'MSP Security & POPIA Compliance 2026', progress: 100, score: 96, status: 'Completed', certified: true, date: '2026-09-12' },
-  { id: 'EN-2', employee: 'Sipho Dlamini', course: 'Cloud Infrastructure & High Availability SRE', progress: 85, score: 88, status: 'In Progress', certified: false, date: '2026-09-15' },
-  { id: 'EN-3', employee: 'Naledi Sithole', course: 'Executive Client Communication & Escalations', progress: 100, score: 94, status: 'Completed', certified: true, date: '2026-09-20' },
-  { id: 'EN-4', employee: 'Bongani Nkosi', course: 'Workplace Ethics & BCEA Labor Standards', progress: 100, score: 90, status: 'Completed', certified: true, date: '2026-09-18' },
-  { id: 'EN-5', employee: 'Karabo Mthembu', course: 'MSP Security & POPIA Compliance 2026', progress: 40, score: 62, status: 'In Progress', certified: false, date: '2026-09-22' }
-]
 
 export default function Training() {
+  const companyEmployees = useCompanyEmployees()
   const [courses, setCourses] = useSupabaseTable('hr_training', initialCourses)
-  const [enrollments, setEnrollments] = useState(initialEnrollments)
+  // Enrolments are kept like the other HR tables; nothing is shown until HR records one.
+  const [enrollments, setEnrollments] = useSupabaseTable('hr_training_enrollments', [])
   const [tab, setTab] = useState('courses') // 'courses' | 'enrollments'
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('All')
@@ -229,8 +225,8 @@ export default function Training() {
               <span className="text-xs font-semibold text-muted-foreground">Completion Rate</span>
               <CheckCircle2 className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-semibold text-foreground">{overallRate}%</div>
-            <div className="mt-1 text-xs text-emerald-600 font-medium">Above enterprise benchmark (75%)</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{totalEnrolled ? `${overallRate}%` : '—'}</div>
+            <div className="mt-1 text-xs text-muted-foreground">{totalEnrolled ? 'Completed of all enrolments' : 'No enrolments yet'}</div>
           </div>
         </div>
 
@@ -259,7 +255,7 @@ export default function Training() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setEnrollModal({ employee: seedEmployees[0]?.full_name || '', course: courses[0]?.title || '' })}
+              onClick={() => setEnrollModal({ employee: companyEmployees[0]?.full_name || '', course: courses[0]?.title || '' })}
               className="btn btn-ghost inline-flex items-center gap-1.5"
             >
               <UserCheck className="h-4 w-4" />
@@ -362,7 +358,7 @@ export default function Training() {
                       <div className="flex items-center justify-between pt-2">
                         <button
                           type="button"
-                          onClick={() => setEnrollModal({ employee: seedEmployees[0]?.full_name || '', course: c.title })}
+                          onClick={() => setEnrollModal({ employee: companyEmployees[0]?.full_name || '', course: c.title })}
                           className="btn btn-ghost text-xs py-1 px-2.5"
                         >
                           Enroll
@@ -588,7 +584,7 @@ export default function Training() {
                 onChange={e => setEnrollModal({ ...enrollModal, employee: e.target.value })}
                 className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                {seedEmployees.map(e => (
+                {companyEmployees.map(e => (
                   <option key={e.id} value={e.full_name}>{e.full_name} ({e.department})</option>
                 ))}
               </select>

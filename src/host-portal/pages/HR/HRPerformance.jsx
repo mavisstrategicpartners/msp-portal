@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
+import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { BarChart, Donut, StatCard } from '../../components/Chart.jsx'
 import { toast } from 'sonner'
@@ -119,6 +120,7 @@ const initialReviews = [
 ]
 
 export default function HRPerformance() {
+  const companyEmployees = useCompanyEmployees()
   const [reviews, setReviews] = useSupabaseTable('hr_reviews', initialReviews)
   const [cycle, setCycle] = useState('Q2 2026')
   const [search, setSearch] = useState('')
@@ -156,8 +158,8 @@ export default function HRPerformance() {
 
   const openAdd = () => {
     setForm({
-      employee: seedEmployees[0]?.full_name || '',
-      department: seedEmployees[0]?.department || 'Operations',
+      employee: companyEmployees[0]?.full_name || '',
+      department: companyEmployees[0]?.department || 'Operations',
       period: cycle,
       technical: 4.0,
       leadership: 4.0,
@@ -231,7 +233,7 @@ export default function HRPerformance() {
               <Award className="h-4 w-4 text-purple-500" />
             </div>
             <div className="mt-2 text-2xl font-semibold text-foreground">{avgScore} <span className="text-sm font-normal text-muted-foreground">/ 5.0</span></div>
-            <div className="mt-1 text-xs text-emerald-600 font-medium">+0.3 vs last cycle</div>
+            <div className="mt-1 text-xs text-muted-foreground">Average of recorded evaluations</div>
           </div>
 
           <div className="card p-4">
@@ -461,76 +463,44 @@ export default function HRPerformance() {
           </div>
         )}
 
-        {/* TAB 2: 9-BOX MATRIX */}
+        {/* TAB 2: 9-BOX MATRIX — placed from the evaluations recorded on the Evaluations tab */}
         {tab === 'matrix' && (
           <div className="space-y-4">
             <div className="card p-5">
               <div className="mb-4">
                 <h3 className="text-base font-semibold text-foreground">9-Box Performance vs Potential Grid</h3>
-                <p className="text-xs text-muted-foreground">Evaluate workforce talent placement, succession readiness, and retention priorities.</p>
+                <p className="text-xs text-muted-foreground">Placed from recorded evaluations: performance from the overall rating, potential from the promotion and improvement-plan flags.</p>
               </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {/* Row 1: High Potential */}
-                <div className="rounded-lg border border-purple-200 bg-purple-50/50 dark:bg-purple-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-purple-700 dark:text-purple-300">Enigma / Rough Diamond</div>
-                  <div className="text-[10px] text-muted-foreground">Low Perf, High Potential</div>
-                  <div className="mt-2 text-xs text-foreground">1 candidate identified</div>
+              {reviews.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground">No evaluations recorded yet.</div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    ['high', 'low', 'Enigma / Rough Diamond'], ['high', 'medium', 'Future Leader / Growth Star'], ['high', 'high', 'Consistent Star'],
+                    ['medium', 'low', 'Inconsistent Contributor'], ['medium', 'medium', 'Core Player'], ['medium', 'high', 'High Performer'],
+                    ['low', 'low', 'Underperformer'], ['low', 'medium', 'Effective Specialist'], ['low', 'high', 'Trusted Professional'],
+                  ].map(([pot, perf, label]) => {
+                    const people = reviews.filter((r) => {
+                      const o = Number(r.overall || 0)
+                      const pf = o >= 4.3 ? 'high' : o >= 3.3 ? 'medium' : 'low'
+                      const pt = r.promotion ? 'high' : r.pip ? 'low' : 'medium'
+                      return pf === perf && pt === pot
+                    })
+                    return (
+                      <div key={label} className="min-h-[110px] rounded-lg border border-border bg-muted/20 p-3">
+                        <div className="text-xs font-semibold text-foreground">{label}</div>
+                        <div className="text-[11px] text-muted-foreground">{perf} performance · {pot} potential</div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {people.length === 0 && <span className="text-[11px] text-muted-foreground">—</span>}
+                          {people.map((r) => (
+                            <span key={r.id} className="inline-block rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">{r.employee}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Future Leader / Growth Star</div>
-                  <div className="text-[10px] text-muted-foreground">Med Perf, High Potential</div>
-                  <div className="mt-2 space-y-1">
-                    <span className="inline-block rounded bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.5 text-[11px] font-medium text-indigo-800 dark:text-indigo-200">Sipho Dlamini</span>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Consistent Star (HiPo)</div>
-                  <div className="text-[10px] text-muted-foreground">High Perf, High Potential</div>
-                  <div className="mt-2 space-y-1">
-                    <span className="inline-block rounded bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:text-emerald-200">Thandi Mokoena</span>
-                    <span className="inline-block rounded bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:text-emerald-200 ml-1">Naledi Sithole</span>
-                  </div>
-                </div>
-
-                {/* Row 2: Medium Potential */}
-                <div className="rounded-lg border border-border bg-muted/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-foreground">Inconsistent Contributor</div>
-                  <div className="text-[10px] text-muted-foreground">Low Perf, Med Potential</div>
-                  <div className="mt-2 text-xs text-muted-foreground">Needs regular check-ins</div>
-                </div>
-                <div className="rounded-lg border border-blue-200 bg-blue-50/40 dark:bg-blue-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">Core Contributor / Backbone</div>
-                  <div className="text-[10px] text-muted-foreground">Med Perf, Med Potential</div>
-                  <div className="mt-2">
-                    <span className="inline-block rounded bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.5 text-[11px] font-medium text-blue-800 dark:text-blue-200">Bongani Nkosi</span>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-indigo-200 bg-indigo-50/40 dark:bg-indigo-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">High Impact Specialist</div>
-                  <div className="text-[10px] text-muted-foreground">High Perf, Med Potential</div>
-                  <div className="mt-2 text-xs text-muted-foreground">Deep domain mastery</div>
-                </div>
-
-                {/* Row 3: Low Potential */}
-                <div className="rounded-lg border border-rose-300 bg-rose-50/50 dark:bg-rose-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-rose-700 dark:text-rose-300">Underperformer / PIP</div>
-                  <div className="text-[10px] text-muted-foreground">Low Perf, Low Potential</div>
-                  <div className="mt-2">
-                    <span className="inline-block rounded bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 text-[11px] font-medium text-rose-800 dark:text-rose-200">Karabo Mthembu</span>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-border bg-muted/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-foreground">Solid Professional</div>
-                  <div className="text-[10px] text-muted-foreground">Med Perf, Low Potential</div>
-                  <div className="mt-2 text-xs text-muted-foreground">Predictable execution</div>
-                </div>
-                <div className="rounded-lg border border-teal-200 bg-teal-50/40 dark:bg-teal-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-semibold text-teal-700 dark:text-teal-300">Trusted Expert</div>
-                  <div className="text-[10px] text-muted-foreground">High Perf, Low Potential</div>
-                  <div className="mt-2 text-xs text-muted-foreground">SME role ideal</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -540,24 +510,9 @@ export default function HRPerformance() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="card p-5 space-y-4">
               <h3 className="text-base font-semibold text-foreground">Departmental OKR Progress</h3>
-              <div className="space-y-3">
-                {[
-                  { dept: 'People & Culture', progress: 92, target: 'Roll out automated biometric clock-in' },
-                  { dept: 'Technical Delivery', progress: 85, target: '99.9% uptime across managed host instances' },
-                  { dept: 'Client Operations', progress: 78, target: 'Sub-4-hour SLA response on tickets' },
-                  { dept: 'Sales & Growth', progress: 104, target: 'Achieve Q2 expansion MRR targets' }
-                ].map(o => (
-                  <div key={o.dept} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span>{o.dept}</span>
-                      <span className={o.progress >= 100 ? 'text-emerald-600 font-bold' : 'text-foreground'}>{o.progress}%</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, o.progress)}%` }} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">{o.target}</div>
-                  </div>
-                ))}
+              <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
+                <p className="text-sm font-medium text-foreground">No departmental objectives recorded</p>
+                <p className="mt-1 text-xs text-muted-foreground">Department objectives and their progress will appear here once they are captured in the portal.</p>
               </div>
             </div>
 
@@ -601,7 +556,7 @@ export default function HRPerformance() {
                   className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <datalist id="perf-emp-list">
-                  {seedEmployees.map(e => (
+                  {companyEmployees.map(e => (
                     <option key={e.id} value={e.full_name}>{e.department} - {e.role}</option>
                   ))}
                 </datalist>

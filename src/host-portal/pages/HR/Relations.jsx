@@ -3,13 +3,15 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedRelations, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
+import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 
 export default function Relations() {
+  const companyEmployees = useCompanyEmployees()
   const [relations, setRelations] = useSupabaseTable('hr_relations', seedRelations)
   const [form, setForm] = useState(null)
 
-  const openAdd = () => setForm({ employee: seedEmployees[0]?.full_name || '', type: 'Grievance', severity: 'Low', date: new Date().toISOString().slice(0, 10), status: 'Open', description: '' })
+  const openAdd = () => setForm({ employee: companyEmployees[0]?.full_name || '', type: 'Grievance', severity: 'Low', date: new Date().toISOString().slice(0, 10), status: 'Open', description: '' })
   
   const submit = () => {
     if (form.id) {
@@ -56,7 +58,7 @@ export default function Relations() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Employee</label>
               <select style={field} value={form.employee} onChange={e => setForm({ ...form, employee: e.target.value })}>
-                {seedEmployees.map(e => <option key={e.id} value={e.full_name}>{e.full_name}</option>)}
+                {companyEmployees.map(e => <option key={e.id} value={e.full_name}>{e.full_name}</option>)}
               </select>
             </div>
             <div><label style={labelStyle}>Type</label>

@@ -257,3 +257,16 @@ export function useSyncGHL() {
   });
 }
 
+
+// ── Sales team (real people in the Sales department) ─────────────────────────
+export function useSalesTeam() {
+  return useQuery({
+    queryKey: ["sales", "team"],
+    queryFn: async (): Promise<{ id: string; name: string; email: string; isManager: boolean }[]> => {
+      const res = await fetch("/api/sales/team", { headers: await getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to load the Sales team");
+      return (await res.json()).team || [];
+    },
+    staleTime: 60_000,
+  });
+}

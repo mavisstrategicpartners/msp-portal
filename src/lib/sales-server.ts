@@ -39,29 +39,25 @@ let targetsStore: Map<string, SalesTarget> = new Map();
 let appointmentsStore: Map<string, GHLAppointment> = new Map();
 let activitiesStore: Map<string, SalesActivityItem> = new Map();
 
-// Known consultants list for ranking & attribution
-export const KNOWN_CONSULTANTS = [
-  {
-    id: "6de3785e-8bb4-4f22-8acb-b13d6092988c",
-    name: "Sales Consultant 1",
-    email: "consultant1@mavisstrateegicpartners.co.za",
-  },
-  {
-    id: "f086b7ce-a475-4b96-9ed3-8359afa17628",
-    name: "Sales Consultant 2",
-    email: "consultant2@mavisstrateegicpartners.co.za",
-  },
-  {
-    id: "584a365e-0a03-4283-865e-38b6037b060b",
-    name: "Sales Consultant 3",
-    email: "consultant3@mavisstrateegicpartners.co.za",
-  },
-  {
-    id: "4e06b099-0acf-43ae-861e-abc3c1acf8e6",
-    name: "Sales Manager",
-    email: "manager@mavisstrateegicpartners.co.za",
-  },
-];
+/**
+ * The real Sales team: active people placed in the Sales department and its appointed manager
+ * (Department Structure). Used for rankings, target assignment and the consultant filter.
+ */
+export async function salesTeam(): Promise<{ id: string; name: string; email: string; isManager: boolean }[]> {
+  const db = supabaseAdmin as any;
+  const [{ data: members }, { data: leads }] = await Promise.all([
+    db.from("department_members").select("user_id").eq("department_key", "sales"),
+    db.from("department_leads").select("user_id").eq("department_key", "sales"),
+  ]);
+  const leadIds = new Set((leads || []).map((l: any) => l.user_id));
+  const ids = [...new Set([...(members || []).map((m: any) => m.user_id), ...leadIds])];
+  if (!ids.length) return [];
+  const { data: people } = await db.from("profiles").select("id, full_name, email, is_active").in("id", ids);
+  return (people || [])
+    .filter((p: any) => p.is_active !== false)
+    .map((p: any) => ({ id: p.id, name: p.full_name || p.email, email: p.email || "", isManager: leadIds.has(p.id) }))
+    .sort((x: any, y: any) => Number(y.isManager) - Number(x.isManager) || x.name.localeCompare(y.name));
+}
 
 async function logLedgerEntry(action: string, targetId: string, details: any) {
   try {
@@ -558,6 +554,11 @@ export async function handleSalesApi(request: Request): Promise<Response> {
       }
     }
 
+    // The Sales team (for filters and target assignment): /api/sales/team
+    if (pathname === "/api/sales/team" && method === "GET") {
+      return new Response(JSON.stringify({ team: await salesTeam() }), { status: 200, headers: HEADERS });
+    }
+
     // Performance Rankings / Leaderboard: /api/sales/leaderboard
     if (pathname === "/api/sales/leaderboard") {
       const monthParam =
@@ -569,7 +570,7 @@ export async function handleSalesApi(request: Request): Promise<Response> {
 
       // Aggregate all active consultants
       const consultantMap = new Map<string, { id: string; name: string; email: string }>();
-      KNOWN_CONSULTANTS.forEach((c) => consultantMap.set(c.id, c));
+      (await salesTeam()).forEach((c) => consultantMap.set(c.id, { id: c.id, name: c.name, email: c.email }));
       allLeads.forEach((l) => {
         if (l.assignedConsultantId && !consultantMap.has(l.assignedConsultantId)) {
           consultantMap.set(l.assignedConsultantId, {
@@ -789,8 +790,9 @@ async function handleGhlWebhook(request: Request): Promise<Response> {
       clientName,
       contactEmail: email,
       contactPhone: phone,
-      consultantId: "cons-1-uuid-001",
-      consultantName: "Sales Consultant 1",
+      // Appointments arriving from GoHighLevel go to the Sales manager until reassigned.
+      consultantId: (await salesTeam()).find((m) => m.isManager)?.id ?? "",
+      consultantName: (await salesTeam()).find((m) => m.isManager)?.name ?? "Unassigned",
       appointmentDate: startTime,
       status: "scheduled",
       notes: payload?.notes || "Scheduled via GoHighLevel Calendar",

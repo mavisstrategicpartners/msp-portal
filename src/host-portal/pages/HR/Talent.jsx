@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedTalent, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
+import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { toast } from 'sonner'
 import {
@@ -90,42 +91,8 @@ const initialTalent = [
   }
 ]
 
-const criticalRoles = [
-  {
-    title: 'Director of People & Culture',
-    department: 'Executive Leadership',
-    vacancyRisk: 'High',
-    benchCount: 2,
-    leadSuccessor: 'Thandi Mokoena',
-    readiness: 'Ready now'
-  },
-  {
-    title: 'Lead Technical Architect',
-    department: 'Technology',
-    vacancyRisk: 'Critical',
-    benchCount: 1,
-    leadSuccessor: 'Sipho Dlamini',
-    readiness: '1-2 years'
-  },
-  {
-    title: 'Head of Growth & Client Acquisition',
-    department: 'Commercial',
-    vacancyRisk: 'Medium',
-    benchCount: 1,
-    leadSuccessor: 'Naledi Sithole',
-    readiness: 'Ready now'
-  },
-  {
-    title: 'Operations Delivery Manager',
-    department: 'Client Operations',
-    vacancyRisk: 'Medium',
-    benchCount: 2,
-    leadSuccessor: 'Bongani Nkosi',
-    readiness: '2-3 years'
-  }
-]
-
 export default function Talent() {
+  const companyEmployees = useCompanyEmployees()
   const [talent, setTalent] = useSupabaseTable('hr_talent', initialTalent)
   const [tab, setTab] = useState('pipeline') // 'pipeline' | 'directory' | 'hipo'
   const [search, setSearch] = useState('')
@@ -145,6 +112,30 @@ export default function Talent() {
     })
   }, [talent, search, potentialFilter])
 
+  // Succession bench built from the talent records HR has entered (each record names the role it
+  // is a successor for). Nothing is shown until such records exist.
+  const criticalRoles = useMemo(() => {
+    const byRole = new Map()
+    for (const t of talent) {
+      const role = (t.successor_for || '').trim()
+      if (!role) continue
+      byRole.set(role, [...(byRole.get(role) || []), t])
+    }
+    const order = { 'Ready now': 0, '1-2 years': 1, '2-3 years': 2 }
+    return [...byRole.entries()].map(([title, list]) => {
+      const sorted = [...list].sort((a, b) => (order[a.readiness] ?? 9) - (order[b.readiness] ?? 9))
+      const ready = sorted.some((x) => x.readiness === 'Ready now')
+      return {
+        title,
+        department: sorted[0].department || '',
+        vacancyRisk: ready ? (list.length > 1 ? 'Low' : 'Medium') : 'High',
+        benchCount: list.length,
+        leadSuccessor: sorted[0].employee,
+        readiness: sorted[0].readiness || 'Not assessed',
+      }
+    })
+  }, [talent])
+
   const hipoList = talent.filter(t => t.potential === 'High')
   const avgIdp = Math.round(
     talent.reduce((s, t) => s + Number(t.idp_progress || 0), 0) / (talent.length || 1)
@@ -154,9 +145,9 @@ export default function Talent() {
 
   const openAdd = () => {
     setForm({
-      employee: seedEmployees[0]?.full_name || '',
-      department: seedEmployees[0]?.department || 'Operations',
-      role: seedEmployees[0]?.role || '',
+      employee: companyEmployees[0]?.full_name || '',
+      department: companyEmployees[0]?.department || 'Operations',
+      role: companyEmployees[0]?.role || '',
       potential: 'High',
       readiness: '1-2 years',
       successor_for: '',
@@ -285,9 +276,15 @@ export default function Talent() {
             <div className="card p-4">
               <div className="mb-3">
                 <h3 className="text-base font-semibold text-foreground">Critical Leadership Succession Bench</h3>
-                <p className="text-xs text-muted-foreground">Identified successors for core operational roles to mitigate key-person dependency.</p>
+                <p className="text-xs text-muted-foreground">Successors HR has identified for key roles, from the talent records below.</p>
               </div>
 
+              {criticalRoles.length === 0 && (
+                <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">No succession records yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Add a talent record and name the role the person is a successor for. The bench is built from those records.</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {criticalRoles.map((role) => (
                   <div key={role.title} className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
@@ -518,7 +515,7 @@ export default function Talent() {
                   list="talent-emp-list"
                   value={form.employee}
                   onChange={e => {
-                    const emp = seedEmployees.find(x => x.full_name === e.target.value)
+                    const emp = companyEmployees.find(x => x.full_name === e.target.value)
                     setForm({
                       ...form,
                       employee: e.target.value,
@@ -529,7 +526,7 @@ export default function Talent() {
                   className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <datalist id="talent-emp-list">
-                  {seedEmployees.map(e => (
+                  {companyEmployees.map(e => (
                     <option key={e.id} value={e.full_name}>{e.role} ({e.department})</option>
                   ))}
                 </datalist>

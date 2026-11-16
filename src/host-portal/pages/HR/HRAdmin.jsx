@@ -4,6 +4,7 @@ import Modal, { field, labelStyle } from '../../components/Modal.jsx'
 import { seedEmployees, seedAnnouncements, seedLetters, seedAudit } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
+import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { toast } from 'sonner'
 import {
   Users,
@@ -28,6 +29,9 @@ import {
 export default function HRAdmin() {
   const [tab, setTab] = useState('employees') // 'employees' | 'announcements' | 'letters' | 'popia' | 'audit'
   const [employees, setEmployees] = useSupabaseTable('hr_employees', seedEmployees)
+  const companyEmployees = useCompanyEmployees()
+  // Letters can be prepared for anyone on the HR register or with an active portal account.
+  const letterPeople = employees.length > 0 ? employees : companyEmployees
   const [announcements, setAnnouncements] = useSupabaseTable('hr_announcements', seedAnnouncements)
   const [letters, setLetters] = useSupabaseTable('hr_letters', seedLetters)
   const [audit] = useSupabaseTable('hr_audit', seedAudit)
@@ -62,9 +66,9 @@ export default function HRAdmin() {
       phone: '',
       employment_type: 'Permanent',
       join_date: new Date().toISOString().slice(0, 10),
-      manager: 'Thandi Mokoena',
-      gender: 'Female',
-      age_band: '30-39'
+      manager: '',
+      gender: '',
+      age_band: ''
     })
   }
 
@@ -128,11 +132,11 @@ export default function HRAdmin() {
   }
 
   const openLetterGenerator = () => {
-    const selected = employees[0]
+    const selected = letterPeople[0]
     setLetterModal({
       employee: selected?.full_name || '',
       type: 'Employment Verification',
-      salary: 'R 38,500.00 / month',
+      salary: '',
       date: new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' }),
       recipient: 'To Whom It May Concern',
       notes: ''
@@ -158,17 +162,17 @@ export default function HRAdmin() {
   }
 
   const copyLetterText = () => {
-    const selectedEmp = employees.find(x => x.full_name === letterModal?.employee) || employees[0]
+    const selectedEmp = letterPeople.find(x => x.full_name === letterModal?.employee)
     const text = `MAVIS STRATEGIC PARTNERS (PTY) LTD
 Date: ${letterModal?.date}
 Subject: ${letterModal?.type} — ${letterModal?.employee}
 
 ${letterModal?.recipient},
 
-This letter serves to confirm that ${letterModal?.employee} is currently employed on a full-time permanent basis at Mavis Strategic Partners in the capacity of ${selectedEmp?.role || 'Staff Specialist'}, within the ${selectedEmp?.department || 'Operations'} Department.
+This letter serves to confirm that ${letterModal?.employee} is currently employed on a full-time permanent basis at Mavis Strategic Partners in the capacity of ${selectedEmp?.role || 'their current role'}, within the ${selectedEmp?.department || 'company'} department.
 
-Employment Start Date: ${selectedEmp?.join_date || '2024-01-15'}
-Current Remuneration: ${letterModal?.salary}
+Employment Start Date: ${selectedEmp?.join_date || 'Not recorded'}
+Current Remuneration: ${letterModal?.salary || 'Not stated'}
 Status: Active and in Good Standing
 
 Please do not hesitate to contact the HR Department at hr@mavisstrategic.com should you require any further verification.
@@ -218,8 +222,8 @@ Mavis Strategic Partners`
               <span className="text-xs font-semibold text-muted-foreground">POPIA Compliance</span>
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">96%</div>
-            <div className="mt-1 text-xs text-muted-foreground">Audited data protection rating</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">—</div>
+            <div className="mt-1 text-xs text-muted-foreground">No compliance assessment recorded</div>
           </div>
 
           <div className="card p-4">
@@ -239,7 +243,7 @@ Mavis Strategic Partners`
               ['employees', 'Employee Directory', employees.length],
               ['announcements', 'Announcements', announcements.length],
               ['letters', 'HR Letters', letters.length],
-              ['popia', 'POPIA Compliance', '96%'],
+              ['popia', 'Compliance', 4],
               ['audit', 'Audit Logs', audit.length]
             ].map(([k, label, count]) => (
               <button
@@ -453,7 +457,7 @@ Mavis Strategic Partners`
                             setLetterModal({
                               employee: l.employee,
                               type: l.type,
-                              salary: 'R 38,500.00 / month',
+                              salary: '',
                               date: l.generated,
                               recipient: 'To Whom It May Concern'
                             })
@@ -477,10 +481,11 @@ Mavis Strategic Partners`
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { title: 'Protection of Personal Information (POPIA)', status: '96% Compliant', color: 'text-emerald-600', notes: 'Information Officer registered with SA Information Regulator.' },
-                { title: 'Basic Conditions of Employment Act (BCEA)', status: 'Fully Compliant', color: 'text-emerald-600', notes: 'Working hours, leave entitlements, and overtime align with statutory guidelines.' },
-                { title: 'Employment Equity (EE) Statutory Reporting', status: 'Submitted', color: 'text-blue-600', notes: 'Annual EEA2 & EEA4 submitted to Department of Employment and Labour.' },
-                { title: 'Skills Development Levies & WSP/ATR', status: 'Drafting 2026 Submission', color: 'text-amber-600', notes: 'Mandatory grant submission window closes 30 April.' }
+                // Statutory obligations HR tracks. No status is claimed until HR records one.
+                { title: 'Protection of Personal Information (POPIA)', status: 'Not recorded', color: 'text-muted-foreground', notes: 'Information Officer registration and handling of employee personal information.' },
+                { title: 'Basic Conditions of Employment Act (BCEA)', status: 'Not recorded', color: 'text-muted-foreground', notes: 'Working hours, leave entitlements and overtime.' },
+                { title: 'Employment Equity (EE) Statutory Reporting', status: 'Not recorded', color: 'text-muted-foreground', notes: 'Annual EEA2 and EEA4 reports to the Department of Employment and Labour.' },
+                { title: 'Skills Development Levies & WSP/ATR', status: 'Not recorded', color: 'text-muted-foreground', notes: 'Workplace Skills Plan and Annual Training Report submission.' }
               ].map(item => (
                 <div key={item.title} className="card p-5 space-y-2">
                   <div className="flex items-center justify-between">
@@ -743,10 +748,21 @@ Mavis Strategic Partners`
                   onChange={e => setLetterModal({ ...letterModal, employee: e.target.value })}
                   className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  {employees.map(e => (
-                    <option key={e.id} value={e.full_name}>{e.full_name} ({e.department})</option>
+                  {letterPeople.length === 0 && <option value="">No employees found</option>}
+                  {letterPeople.map(e => (
+                    <option key={e.id} value={e.full_name}>{e.full_name}{e.department ? ` (${e.department})` : ''}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">Remuneration (optional)</label>
+                <input
+                  value={letterModal.salary || ''}
+                  onChange={e => setLetterModal({ ...letterModal, salary: e.target.value })}
+                  placeholder="As per the employment contract"
+                  className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
               </div>
 
               <div>
@@ -786,8 +802,8 @@ Mavis Strategic Partners`
               </p>
 
               <div className="font-sans text-xs bg-muted/30 p-3 rounded space-y-1">
-                <div>Position: <b>Staff Member / Specialist</b></div>
-                <div>Remuneration: <b>{letterModal.salary}</b></div>
+                <div>Position: <b>{letterPeople.find(x => x.full_name === letterModal.employee)?.role || 'Not recorded'}</b></div>
+                <div>Remuneration: <b>{letterModal.salary || 'Not stated'}</b></div>
                 <div>Standing: <b>Active and in Good Standing</b></div>
               </div>
 

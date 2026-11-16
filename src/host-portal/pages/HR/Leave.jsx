@@ -13,6 +13,15 @@ import { Lightbulb, Paperclip, XCircle, CheckCircle } from 'lucide-react'
 const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review' ? 'badge-warning' : 'badge-danger'
 
 export default function Leave() {
+  const [deciderName, setDeciderName] = useState('')
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data?.user
+      if (!u) return
+      supabase.from('profiles').select('full_name').eq('id', u.id).maybeSingle()
+        .then(({ data: p }) => setDeciderName(p?.full_name || u.email || ''))
+    })
+  }, [])
   const [tab, setTab] = useState('user_requests')
   const [learnerLeave, setLearnerLeave] = useSupabaseTable('hr_learner_leave', seedLearnerLeaveRequests)
   const [staffLeave, setStaffLeave] = useSupabaseTable('hr_leave', seedLeave)
@@ -62,7 +71,7 @@ export default function Leave() {
     } else {
       setLearnerLeave(prev => prev.map(r => r.id === id ? {
         ...r, status: 'Approved',
-        decided_by: 'Thandi Mokoena', decided_at: new Date().toISOString().slice(0, 10),
+        decided_by: deciderName || 'HR', decided_at: new Date().toISOString().slice(0, 10),
       } : r))
       toast.success('Leave Approved', { description: `${learnerName}'s leave request was approved.` })
     }
@@ -93,7 +102,7 @@ export default function Leave() {
     } else {
       setLearnerLeave(prev => prev.map(r => r.id === id ? {
         ...r, status: 'Rejected',
-        decided_by: 'Thandi Mokoena', decided_at: new Date().toISOString().slice(0, 10),
+        decided_by: deciderName || 'HR', decided_at: new Date().toISOString().slice(0, 10),
         decision_note: rejectNote.trim() || undefined,
       } : r))
       toast.error('Leave Rejected', { description: `${learnerName}'s leave request was rejected.` })
@@ -141,7 +150,7 @@ export default function Leave() {
           ['user_requests', 'Employee Portal Requests', portalLeaveRequests.length],
           ['learner', 'Intern Requests', learnerLeave.length],
           ['staff', 'Staff Leave', staffLeave.length],
-          ['balances', 'Leave Balances', seedLeaveBalances.length],
+          ['balances', 'Leave Balances', 0],
           ['calendar', 'Calendar & Holidays', ZA_PUBLIC_HOLIDAYS.length]
         ].map(([k, l, n]) => (
           <button key={k} className={'btn ' + (tab === k ? 'btn-primary' : 'btn-ghost')} onClick={() => setTab(k)}>{l} ({n})</button>
@@ -289,7 +298,7 @@ export default function Leave() {
               {LEAVE_TYPES.filter(t => !['Maternity','Paternity'].includes(t)).map(t => <th key={t}>{t}</th>)}
             </tr></thead>
             <tbody>
-              {seedLeaveBalances.map(b => (
+              {[].map(b => (
                 <tr key={b.employee_id} style={{ borderTop: '1px solid var(--border-color)', fontSize: 13 }}>
                   <td style={{ padding: '10px 0', fontWeight: 500 }}>{b.employee}</td>
                   {LEAVE_TYPES.filter(t => !['Maternity','Paternity'].includes(t)).map(t => <td key={t}>{b[t] ?? '—'}</td>)}

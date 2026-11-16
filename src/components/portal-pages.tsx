@@ -14,6 +14,7 @@ import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
 import { changeMyPassword } from "@/lib/account.functions";
+import { useExecutiveOverview } from "@/lib/executive.service";
 import { PASSWORD_REQUIREMENTS } from "@/lib/password-rules";
 import { useMyHrDocuments } from "@/components/hr/MyHrDocuments";
 import { useProfile } from "@/lib/use-profile";
@@ -1731,18 +1732,39 @@ export function SalesPlaybookPage() {
 
 // ============ KPIS ============
 export function KpisPage() {
-  const metrics = [
-    ["Client retention", 90, "Target 90%+"],
-    ["On-time reports", 100, "Due by 7th"],
-    ["Lead response", 86, "Under 10 min"],
-    ["SOP compliance", 94, "Weekly audit"],
-  ] as const;
+  // Live company figures from the same records as the CEO dashboard (/api/executive/overview).
+  // Nothing is estimated: a measure with no records shows "—".
+  const q = useExecutiveOverview();
+  const d = q.data;
+  const done = (d?.tasks ?? []).filter((t: any) => t.status === "Completed" && t.dueDate && t.completionDate);
+  const onTime = done.length ? Math.round((done.filter((t: any) => t.completionDate.slice(0, 10) <= t.dueDate).length / done.length) * 100) : null;
+  const b = d?.business;
+  const retention = b && b.activeClients ? Math.round(((b.activeClients - b.atRiskClients) / b.activeClients) * 100) : null;
+  const metrics: { name: string; value: number | null; suffix: string; note: string; progress?: boolean }[] = [
+    { name: "Active clients", value: b ? b.activeClients : null, suffix: "", note: b ? `${b.clientsAddedLast30} added in the last 30 days` : "" },
+    { name: "Clients not at risk", value: retention, suffix: "%", note: b ? `${b.atRiskClients} client(s) currently at risk` : "", progress: true },
+    { name: "On-time delivery", value: onTime, suffix: "%", note: done.length ? `of ${done.length} completed tasks with a due date` : "No completed tasks with due dates yet", progress: true },
+    { name: "Overdue tasks", value: b ? b.overdueTasks : null, suffix: "", note: b ? `${b.openTasks} open · ${b.awaitingReview} awaiting review` : "" },
+  ];
   return (
     <div>
-      {pageTitle(BarChart3, "Admin", "KPI Dashboards", "A lightweight operating scorecard until live BI dashboards are connected.")}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map(([name, value, note]) => <Card key={name} className="p-5"><Gauge className="h-5 w-5 text-primary" /><p className="mt-4 text-sm text-muted-foreground">{name}</p><p className="text-2xl font-semibold">{value}%</p><Progress className="mt-3" value={value} /><p className="mt-2 text-xs text-muted-foreground">{note}</p></Card>)}
-      </div>
+      {pageTitle(BarChart3, "Admin", "KPI Dashboards", "Live company measures calculated from portal records: clients, tasks and delivery.")}
+      {q.isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading company figures…</p>
+      ) : q.error ? (
+        <Card className="p-6 text-sm text-muted-foreground">No data available. {(q.error as Error).message}</Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((m) => (
+            <Card key={m.name} className="p-4">
+              <p className="text-xs font-medium text-muted-foreground">{m.name}</p>
+              <p className="mt-1.5 text-2xl font-semibold tabular-nums">{m.value === null ? "—" : `${m.value}${m.suffix}`}</p>
+              {m.progress && m.value !== null && <Progress className="mt-2 h-1.5" value={m.value} />}
+              <p className="mt-1 text-xs text-muted-foreground">{m.value === null && !m.note ? "No data available" : m.note}</p>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

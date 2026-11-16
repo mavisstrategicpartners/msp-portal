@@ -150,6 +150,20 @@ export default function Payroll() {
     return `${y}-${m}`
   }, [])
   const [selectedPeriod, setSelectedPeriod] = useState(defaultPeriod)
+  // The current month and the eleven before it, plus any older period that already has records.
+  const periodOptions = useMemo(() => {
+    const set = new Set()
+    const d = new Date()
+    for (let i = 0; i < 12; i++) {
+      const x = new Date(d.getFullYear(), d.getMonth() - i, 1)
+      set.add(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`)
+    }
+    for (const r of records) if (r?.period) set.add(r.period)
+    return [...set].sort().reverse().map(v => {
+      const [y, m] = v.split('-').map(Number)
+      return { value: v, label: new Date(y, m - 1, 1).toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' }) }
+    })
+  }, [records])
 
   // Clear any legacy synthetic records if stored previously
   useEffect(() => {
@@ -395,12 +409,9 @@ export default function Payroll() {
                   outline: 'none'
                 }}
               >
-                <option value="2026-10">October 2026</option>
-                <option value="2026-09">September 2026</option>
-                <option value="2026-08">August 2026</option>
-                <option value="2026-07">July 2026</option>
-                <option value="2026-06">June 2026</option>
-                <option value="2026-05">May 2026</option>
+                {periodOptions.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -451,7 +462,7 @@ export default function Payroll() {
         </div>
 
         {/* Aggregate Metrics Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
           <div className="card" style={{ padding: 14 }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Total Basic Pay</div>
             <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4 }}>{money(periodStats.totalBasic)}</div>
@@ -459,30 +470,30 @@ export default function Payroll() {
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: '#2563eb', fontWeight: 600 }}>Sales Commission</div>
-            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: '#2563eb' }}>{money(periodStats.totalSalesCommission)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Sales Commission</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4 }}>{money(periodStats.totalSalesCommission)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Achieved sales % rates</div>
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>Incentives & Gifts</div>
-            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: '#059669' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Incentives & Gifts</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4 }}>
               {money(periodStats.totalIncentives + periodStats.totalGifts)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Performance rewards</div>
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--danger)', fontWeight: 600 }}>Total Deductions</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Total Deductions</div>
             <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: 'var(--danger)' }}>
               - {money(periodStats.totalUif + periodStats.totalLoan + periodStats.totalAdvance)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>UIF, Loans, Advances</div>
           </div>
 
-          <div className="card" style={{ padding: 14, background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
-            <div style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>Total Net Pay</div>
-            <div style={{ fontSize: 20, fontWeight: 600, marginTop: 4, color: 'var(--brand)' }}>{money(periodStats.totalNet)}</div>
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Total Net Pay</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4 }}>{money(periodStats.totalNet)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{periodStats.processedCount} staff processed</div>
           </div>
         </div>
@@ -491,7 +502,7 @@ export default function Payroll() {
       {/* Main Content Area */}
       {viewMode === 'worksheet' ? (
         /* View 1: Interactive Calculator Worksheet */
-        <div style={{ display: 'grid', gridTemplateColumns: '290px minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
+        <div className="grid items-start gap-4 lg:grid-cols-[290px_minmax(0,1fr)]">
           
           {/* Left Column: Staff Directory */}
           <div
@@ -567,7 +578,7 @@ export default function Payroll() {
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: isSelected ? 800 : 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 13, fontWeight: isSelected ? 600 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {staff.full_name}
                       </div>
                       <div style={{ fontSize: 10.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -580,7 +591,7 @@ export default function Payroll() {
                         <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--brand)' }}>
                           {money(calc.net)}
                         </div>
-                        <span style={{ fontSize: 9.5, color: rec.status === 'Paid' ? '#16a34a' : '#d97706', fontWeight: 600 }}>
+                        <span style={{ fontSize: 9.5, color: rec.status === 'Paid' ? 'var(--success)' : 'var(--warning)', fontWeight: 600 }}>
                           {rec.status || 'Draft'}
                         </span>
                       </div>
@@ -623,7 +634,7 @@ export default function Payroll() {
                     }}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
-                    <Award size={14} color="#10b981" /> Add Incentive
+                    <Award size={14} /> Add Incentive
                   </button>
                   <button
                     className="btn btn-secondary btn-sm"
@@ -633,7 +644,7 @@ export default function Payroll() {
                     }}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
-                    <Gift size={14} color="#f59e0b" /> Add Gift
+                    <Gift size={14} /> Add Gift
                   </button>
                   <button
                     className="btn btn-primary btn-sm"
@@ -687,17 +698,17 @@ export default function Payroll() {
                 </div>
 
                 {/* 2. Sales Commission % Calculator */}
-                <div style={{ padding: 14, borderRadius: 10, background: 'rgba(59, 130, 246, 0.04)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                <div style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#2563eb' }}>
+                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                       2. Calculate Sales Commission (% Rate)
                     </label>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#2563eb' }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                       {money(activeCalc.salesCommission)}
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <div>
                       <label style={labelStyle}>Total Sales Achieved (R)</label>
                       <input
@@ -733,7 +744,7 @@ export default function Payroll() {
                   </div>
 
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Percent size={13} color="#2563eb" />
+                    <Percent size={13} />
                     <span>
                       Formula: <b>{money(activeRecord.sales_amount || 0)}</b> × <b>{activeRecord.sales_percent || 0}%</b> = <b>{money(activeCalc.salesCommission)}</b>
                     </span>
@@ -741,14 +752,14 @@ export default function Payroll() {
                 </div>
 
                 {/* 3. Add Incentive & Add Gift */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="grid gap-3 sm:grid-cols-2">
                   {/* Incentive Box */}
-                  <div style={{ padding: 14, borderRadius: 10, background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                  <div style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#059669' }}>
+                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         3. Add Incentive
                       </label>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: '#059669' }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {money(activeCalc.incentive)}
                       </span>
                     </div>
@@ -783,12 +794,12 @@ export default function Payroll() {
                   </div>
 
                   {/* Gift Box */}
-                  <div style={{ padding: 14, borderRadius: 10, background: 'rgba(245, 158, 11, 0.04)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                  <div style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#d97706' }}>
+                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         4. Add Gift
                       </label>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: '#d97706' }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {money(activeCalc.gift)}
                       </span>
                     </div>
@@ -928,7 +939,7 @@ export default function Payroll() {
                   style={{
                     padding: '16px 20px',
                     borderRadius: 12,
-                    background: 'linear-gradient(135deg, var(--brand-soft), rgba(16, 185, 129, 0.12))',
+                    background: 'var(--brand-soft)',
                     border: '1.5px solid var(--brand)',
                     display: 'grid',
                     gap: 10
@@ -1056,7 +1067,7 @@ export default function Payroll() {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11 }}>
                   <th style={{ padding: '10px 8px' }}>Employee</th>
@@ -1078,11 +1089,14 @@ export default function Payroll() {
               <tbody>
                 {periodRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={14} style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                      <Calculator size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>No payroll entries for {selectedPeriod} yet</div>
-                      <div style={{ fontSize: 11.5, marginTop: 4 }}>
-                        Switch to the Calculator Worksheet to calculate and save pay runs for your team.
+                    <td colSpan={14} style={{ padding: '40px 0', color: 'var(--text-muted)' }}>
+                      {/* Kept in view on narrow screens, where the register scrolls sideways */}
+                      <div style={{ position: 'sticky', left: 0, width: 'min(100%, calc(100vw - 72px))', textAlign: 'center', padding: '0 16px' }}>
+                        <Calculator size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>No payroll entries for {selectedPeriod} yet</div>
+                        <div style={{ fontSize: 11.5, marginTop: 4 }}>
+                          Switch to the Calculator Worksheet to calculate and save pay runs for your team.
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1096,11 +1110,11 @@ export default function Payroll() {
                         <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{r.department}</div>
                       </td>
                       <td style={{ padding: '10px 8px' }}>{money(calc.basic)}</td>
-                      <td style={{ padding: '10px 8px', color: '#2563eb' }}>{money(calc.salesAmt)}</td>
-                      <td style={{ padding: '10px 8px', color: '#2563eb' }}>{calc.salesPct}%</td>
-                      <td style={{ padding: '10px 8px', fontWeight: 600, color: '#2563eb' }}>{money(calc.salesCommission)}</td>
-                      <td style={{ padding: '10px 8px', color: '#059669' }}>{money(calc.incentive)}</td>
-                      <td style={{ padding: '10px 8px', color: '#d97706' }}>{money(calc.gift)}</td>
+                      <td style={{ padding: '10px 8px' }}>{money(calc.salesAmt)}</td>
+                      <td style={{ padding: '10px 8px' }}>{calc.salesPct}%</td>
+                      <td style={{ padding: '10px 8px', fontWeight: 600 }}>{money(calc.salesCommission)}</td>
+                      <td style={{ padding: '10px 8px' }}>{money(calc.incentive)}</td>
+                      <td style={{ padding: '10px 8px' }}>{money(calc.gift)}</td>
                       <td style={{ padding: '10px 8px', fontWeight: 600 }}>{money(calc.gross)}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--danger)' }}>- {money(calc.uif)}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--danger)' }}>{calc.loan > 0 ? `- ${money(calc.loan)}` : '—'}</td>
