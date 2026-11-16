@@ -88,7 +88,8 @@ export function DepartmentWorkloadPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             {profileData?.departmentName ?? "Department"} Team Workload & Capacity
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -115,7 +116,7 @@ export function DepartmentWorkloadPage() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div className="text-xs space-y-1">
-                <strong className="text-amber-950 dark:text-amber-300 font-bold">Unassigned Responsibility Detected:</strong>
+                <strong className="text-amber-950 dark:text-amber-300 font-semibold">Unassigned Responsibility Detected:</strong>
                 <p className="text-foreground leading-relaxed">
                   There is <strong>{unassignedTasks.length} unassigned task</strong> ({unassignedTasks[0].title}) due on {unassignedTasks[0].dueDate} for {unassignedTasks[0].clientName}. Reallocate this task to an optimal team member to prevent deadline slippage.
                 </p>
@@ -147,7 +148,7 @@ export function DepartmentWorkloadPage() {
               <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-base font-bold text-foreground">{member.name}</CardTitle>
+                    <CardTitle className="text-base font-semibold text-foreground">{member.name}</CardTitle>
                     <CardDescription className="text-xs font-medium text-muted-foreground mt-0.5">
                       {member.role}
                     </CardDescription>
@@ -190,18 +191,18 @@ export function DepartmentWorkloadPage() {
                 {/* Key Metrics */}
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                   <div className="p-2 rounded-lg border border-border bg-muted/30">
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Active Tasks</span>
-                    <div className="text-lg font-bold text-foreground mt-0.5">{memberTasks.length}</div>
+                    <span className="text-xs text-muted-foreground font-medium">Active Tasks</span>
+                    <div className="text-lg font-semibold text-foreground mt-0.5">{memberTasks.length}</div>
                   </div>
                   <div className="p-2 rounded-lg border border-border bg-muted/30">
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase">On-Time SLA</span>
-                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{member.onTimeDeliveryRate === null ? "—" : `${member.onTimeDeliveryRate}%`}</div>
+                    <span className="text-xs text-muted-foreground font-medium">On-Time SLA</span>
+                    <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{member.onTimeDeliveryRate === null ? "—" : `${member.onTimeDeliveryRate}%`}</div>
                   </div>
                 </div>
 
                 {/* Active Deliverable List */}
                 <div className="space-y-2 pt-2 border-t border-border">
-                  <div className="font-semibold text-foreground text-xs uppercase text-[10px]">
+                  <div className="font-semibold text-foreground text-xs">
                     Current Deliverables ({memberTasks.length})
                   </div>
                   {memberTasks.length === 0 ? (
@@ -212,7 +213,7 @@ export function DepartmentWorkloadPage() {
                     memberTasks.map((t) => (
                     <div key={t.id} className="p-2.5 rounded-lg border border-border bg-muted/20 space-y-1">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-foreground truncate max-w-[170px]">{t.title}</span>
+                        <span className="font-semibold text-foreground truncate max-w-[170px]">{t.title}</span>
                         <Badge
                           variant="outline"
                           className={`text-[9px] rounded-full px-1.5 py-0.2 shadow-none font-semibold ${
@@ -265,7 +266,7 @@ export function DepartmentWorkloadPage() {
           {selectedTask && (
             <div className="space-y-4 py-2 text-xs">
               <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-                <div className="font-bold text-foreground text-sm">{selectedTask.title}</div>
+                <div className="font-semibold text-foreground text-sm">{selectedTask.title}</div>
                 <div className="text-muted-foreground">Client: {selectedTask.clientName} &bull; Due: {selectedTask.dueDate}</div>
                 <div className="text-muted-foreground">Current Owner: {selectedTask.assignedToName}</div>
               </div>

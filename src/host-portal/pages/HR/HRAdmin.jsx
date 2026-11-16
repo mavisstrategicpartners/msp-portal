@@ -188,46 +188,46 @@ Mavis Strategic Partners`
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Staff Headcount</span>
+              <span className="text-xs font-semibold text-muted-foreground">Staff Headcount</span>
               <Users className="h-4 w-4 text-primary" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{employees.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{employees.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">Active personnel on register</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Announcements</span>
+              <span className="text-xs font-semibold text-muted-foreground">Announcements</span>
               <Bell className="h-4 w-4 text-blue-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{announcements.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{announcements.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">Published staff bulletins</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Issued HR Letters</span>
+              <span className="text-xs font-semibold text-muted-foreground">Issued HR Letters</span>
               <FileText className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{letters.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{letters.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">Verification & confirmation docs</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">POPIA Compliance</span>
+              <span className="text-xs font-semibold text-muted-foreground">POPIA Compliance</span>
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">96%</div>
+            <div className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">96%</div>
             <div className="mt-1 text-xs text-muted-foreground">Audited data protection rating</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Audit Log Events</span>
+              <span className="text-xs font-semibold text-muted-foreground">Audit Log Events</span>
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{audit.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{audit.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">Recorded compliance events</div>
           </div>
         </div>
@@ -398,7 +398,7 @@ Mavis Strategic Partners`
                       <span className="badge badge-info">{a.priority || 'General Notice'}</span>
                       <span className="text-xs text-muted-foreground">{a.posted}</span>
                     </div>
-                    <h4 className="font-bold text-base text-foreground">{a.title}</h4>
+                    <h4 className="font-semibold text-base text-foreground">{a.title}</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">{a.body}</p>
                   </div>
 
@@ -484,8 +484,8 @@ Mavis Strategic Partners`
               ].map(item => (
                 <div key={item.title} className="card p-5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm text-foreground">{item.title}</h4>
-                    <span className={`text-xs font-bold ${item.color}`}>{item.status}</span>
+                    <h4 className="font-semibold text-sm text-foreground">{item.title}</h4>
+                    <span className={`text-xs font-semibold ${item.color}`}>{item.status}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{item.notes}</p>
                 </div>
@@ -544,7 +544,7 @@ Mavis Strategic Partners`
           <form onSubmit={submitEmployee} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Full Name *</label>
+                <label className="text-xs font-semibold text-muted-foreground">Full Name *</label>
                 <input
                   required
                   value={empForm.full_name}
@@ -555,7 +555,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Role / Job Title</label>
+                <label className="text-xs font-semibold text-muted-foreground">Role / Job Title</label>
                 <input
                   value={empForm.role}
                   onChange={e => setEmpForm({ ...empForm, role: e.target.value })}
@@ -565,7 +565,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Department</label>
+                <label className="text-xs font-semibold text-muted-foreground">Department</label>
                 <input
                   value={empForm.department}
                   onChange={e => setEmpForm({ ...empForm, department: e.target.value })}
@@ -574,7 +574,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Work Email</label>
+                <label className="text-xs font-semibold text-muted-foreground">Work Email</label>
                 <input
                   type="email"
                   value={empForm.email}
@@ -585,7 +585,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Phone Number</label>
+                <label className="text-xs font-semibold text-muted-foreground">Phone Number</label>
                 <input
                   value={empForm.phone}
                   onChange={e => setEmpForm({ ...empForm, phone: e.target.value })}
@@ -595,7 +595,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Employment Type</label>
+                <label className="text-xs font-semibold text-muted-foreground">Employment Type</label>
                 <select
                   value={empForm.employment_type}
                   onChange={e => setEmpForm({ ...empForm, employment_type: e.target.value })}
@@ -609,7 +609,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Direct Manager</label>
+                <label className="text-xs font-semibold text-muted-foreground">Direct Manager</label>
                 <input
                   value={empForm.manager}
                   onChange={e => setEmpForm({ ...empForm, manager: e.target.value })}
@@ -618,7 +618,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Join Date</label>
+                <label className="text-xs font-semibold text-muted-foreground">Join Date</label>
                 <input
                   type="date"
                   value={empForm.join_date}
@@ -628,7 +628,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Gender</label>
+                <label className="text-xs font-semibold text-muted-foreground">Gender</label>
                 <select
                   value={empForm.gender}
                   onChange={e => setEmpForm({ ...empForm, gender: e.target.value })}
@@ -664,7 +664,7 @@ Mavis Strategic Partners`
         >
           <form onSubmit={submitAnnouncement} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Title *</label>
+              <label className="text-xs font-semibold text-muted-foreground">Title *</label>
               <input
                 required
                 value={annForm.title}
@@ -676,7 +676,7 @@ Mavis Strategic Partners`
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Priority</label>
+                <label className="text-xs font-semibold text-muted-foreground">Priority</label>
                 <select
                   value={annForm.priority}
                   onChange={e => setAnnForm({ ...annForm, priority: e.target.value })}
@@ -691,7 +691,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Author</label>
+                <label className="text-xs font-semibold text-muted-foreground">Author</label>
                 <input
                   value={annForm.author}
                   onChange={e => setAnnForm({ ...annForm, author: e.target.value })}
@@ -701,7 +701,7 @@ Mavis Strategic Partners`
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Announcement Body *</label>
+              <label className="text-xs font-semibold text-muted-foreground">Announcement Body *</label>
               <textarea
                 required
                 rows={4}
@@ -737,7 +737,7 @@ Mavis Strategic Partners`
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Employee</label>
+                <label className="text-xs font-semibold text-muted-foreground">Employee</label>
                 <select
                   value={letterModal.employee}
                   onChange={e => setLetterModal({ ...letterModal, employee: e.target.value })}
@@ -750,7 +750,7 @@ Mavis Strategic Partners`
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Letter Type</label>
+                <label className="text-xs font-semibold text-muted-foreground">Letter Type</label>
                 <select
                   value={letterModal.type}
                   onChange={e => setLetterModal({ ...letterModal, type: e.target.value })}
@@ -769,13 +769,13 @@ Mavis Strategic Partners`
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4 font-serif text-sm text-foreground leading-relaxed">
               <div className="border-b border-border pb-3 flex justify-between items-end">
                 <div>
-                  <div className="font-sans font-bold text-base tracking-wider text-primary">MAVIS STRATEGIC PARTNERS</div>
+                  <div className="font-sans font-semibold text-base tracking-wider text-primary">MAVIS STRATEGIC PARTNERS</div>
                   <div className="font-sans text-[10px] text-muted-foreground">Internal People & Culture Division</div>
                 </div>
                 <div className="font-sans text-xs text-muted-foreground">{letterModal.date}</div>
               </div>
 
-              <div className="font-sans text-xs font-bold uppercase text-foreground">
+              <div className="font-sans text-xs font-semibold text-foreground">
                 Subject: {letterModal.type} — {letterModal.employee}
               </div>
 
@@ -796,7 +796,7 @@ Mavis Strategic Partners`
               </p>
 
               <div className="pt-4 font-sans text-xs text-muted-foreground">
-                <div className="font-bold text-foreground">Human Resources Directorate</div>
+                <div className="font-semibold text-foreground">Human Resources Directorate</div>
                 <div>Mavis Strategic Partners (Pty) Ltd</div>
               </div>
             </div>

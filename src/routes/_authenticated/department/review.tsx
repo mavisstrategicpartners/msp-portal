@@ -73,7 +73,8 @@ function DepartmentReviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
           Department Review
         </h1>
         <p className="mt-1 text-sm text-muted-foreground max-w-3xl">

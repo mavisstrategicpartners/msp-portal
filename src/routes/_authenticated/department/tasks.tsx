@@ -365,7 +365,8 @@ export function DepartmentTasksPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             My Department Tasks & Deliverables
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -505,7 +506,7 @@ export function DepartmentTasksPage() {
                     <tr>
                       <td colSpan={8} className="py-14 text-center">
                         <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
-                        <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+                        <p className="text-sm font-semibold text-foreground">No tasks have been assigned yet.</p>
                         <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
                         <Button
@@ -527,7 +528,7 @@ export function DepartmentTasksPage() {
                     filteredTasks.map((task) => (
                       <tr key={task.id} className="hover:bg-muted/30 transition">
                         <td className="py-3 px-4">
-                          <div className="font-bold text-foreground text-sm">{task.title}</div>
+                          <div className="font-semibold text-foreground text-sm">{task.title}</div>
                           {task.blocker && (
                             <span className="inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">
                               <AlertTriangle className="h-3 w-3" /> Blocker: {task.blocker}
@@ -557,7 +558,7 @@ export function DepartmentTasksPage() {
 
                         <td className="py-3 px-3">
                           {task.status === "Unassigned" ? (
-                            <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1 text-xs">
+                            <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1 text-xs">
                               <AlertCircle className="h-3.5 w-3.5" /> Unassigned
                             </span>
                           ) : (
@@ -609,7 +610,7 @@ export function DepartmentTasksPage() {
                         </td>
 
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className={task.workingHoursLate > 0 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-foreground font-medium"}>
+                          <span className={task.workingHoursLate > 0 ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-foreground font-medium"}>
                             {task.dueDate}
                           </span>
                           {task.approvedDeadlineChangesCount > 0 && (
@@ -703,7 +704,7 @@ export function DepartmentTasksPage() {
         tasks.length === 0 ? (
           <Card className="p-12 text-center border-border shadow-xs">
             <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
-            <h4 className="text-sm font-bold text-foreground">No tasks have been assigned yet.</h4>
+            <h4 className="text-sm font-semibold text-foreground">No tasks have been assigned yet.</h4>
             <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
             <Button
@@ -727,7 +728,7 @@ export function DepartmentTasksPage() {
             return (
               <div key={col.key} className="space-y-3 bg-muted/20 p-3 rounded-xl border border-border">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{col.label}</h3>
+                  <h3 className="text-xs font-semibold text-foreground">{col.label}</h3>
                   <Badge variant="outline" className="rounded-full px-2 py-0.2 text-[10px] font-semibold">
                     {colTasks.length}
                   </Badge>
@@ -761,7 +762,7 @@ export function DepartmentTasksPage() {
                         </Badge>
                       </div>
 
-                      <h4 className="text-xs font-bold text-foreground leading-snug">{t.title}</h4>
+                      <h4 className="text-xs font-semibold text-foreground leading-snug">{t.title}</h4>
 
                       {t.blocker && (
                         <p className="text-[10px] text-rose-700 dark:text-rose-300 bg-rose-50/70 dark:bg-rose-950/30 p-1.5 rounded border border-rose-200 font-medium">
@@ -771,7 +772,7 @@ export function DepartmentTasksPage() {
 
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border">
                         <span className="font-semibold text-foreground truncate max-w-[90px]">{t.assignedToName}</span>
-                        <span className={t.workingHoursLate > 0 ? "text-rose-600 font-bold" : ""}>{t.dueDate}</span>
+                        <span className={t.workingHoursLate > 0 ? "text-rose-600 font-semibold" : ""}>{t.dueDate}</span>
                       </div>
 
                       <div className="flex items-center justify-end gap-1 pt-1">
@@ -820,7 +821,7 @@ export function DepartmentTasksPage() {
                 <CardHeader className="pb-3 border-b border-border">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-base font-bold text-foreground">{member.name}</CardTitle>
+                      <CardTitle className="text-base font-semibold text-foreground">{member.name}</CardTitle>
                       <CardDescription className="text-xs font-medium">{member.role}</CardDescription>
                     </div>
                     <Badge
@@ -836,7 +837,7 @@ export function DepartmentTasksPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
-                  <div className="text-xs font-semibold text-muted-foreground uppercase text-[10px]">
+                  <div className="text-xs font-semibold text-muted-foreground">
                     Assigned Deliverables ({memberTasks.length})
                   </div>
                   {memberTasks.length === 0 ? (
@@ -854,7 +855,7 @@ export function DepartmentTasksPage() {
                           )}
                           <span className="text-muted-foreground">{t.dueDate}</span>
                         </div>
-                        <div className="text-xs font-bold text-foreground">{t.title}</div>
+                        <div className="text-xs font-semibold text-foreground">{t.title}</div>
                         <div className="flex items-center justify-between pt-1">
                           <Badge variant="outline" className="text-[9px] rounded-full px-1.5 py-0.2">
                             {t.status}
@@ -911,7 +912,7 @@ export function DepartmentTasksPage() {
           {selectedTask && (
             <div className="space-y-4 py-2 text-xs">
               <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-                <div className="font-bold text-foreground text-sm">{selectedTask.title}</div>
+                <div className="font-semibold text-foreground text-sm">{selectedTask.title}</div>
                 <div className="text-muted-foreground">Client: {selectedTask.clientName} &bull; Due: {selectedTask.dueDate}</div>
                 <div className="text-muted-foreground">Current Owner: {selectedTask.assignedToName}</div>
               </div>
@@ -1319,7 +1320,7 @@ export function DepartmentTasksPage() {
           {taskToDelete && (
             <div className="space-y-3 py-2 text-xs">
               <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-1.5">
-                <div className="font-bold text-foreground text-sm">{taskToDelete.title}</div>
+                <div className="font-semibold text-foreground text-sm">{taskToDelete.title}</div>
                 <div className="text-muted-foreground">
                   Assigned to: <strong className="text-foreground">{taskToDelete.assignedToName}</strong>
                 </div>

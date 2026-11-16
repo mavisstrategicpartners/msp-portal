@@ -76,11 +76,11 @@ export default function Recruitment() {
             {filtered.map(v => (
               <div key={v.id} className="card" style={{ padding: 18, borderLeft: `4px solid ${typeColor(v.type)}` }}>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--purple-soft)', color: 'var(--purple)', display: 'grid', placeItems: 'center', fontSize: 20, fontWeight: 700 }}>{HOST_COMPANY[0]}</div>
+                  <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--purple-soft)', color: 'var(--purple)', display: 'grid', placeItems: 'center', fontSize: 20, fontWeight: 600 }}>{HOST_COMPANY[0]}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                       <div>
-                        <div style={{ fontSize: 16, fontWeight: 800 }}>{v.title}</div>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>{v.title}</div>
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{HOST_COMPANY} · {v.department}</div>
                       </div>
                       <span className={'badge ' + (v.status === 'Open' ? 'badge-success' : v.status === 'Closed' ? 'badge-danger' : 'badge-warning')}>{v.status}</span>

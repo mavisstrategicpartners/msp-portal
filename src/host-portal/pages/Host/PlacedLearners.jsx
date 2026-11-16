@@ -89,7 +89,7 @@ export default function PlacedLearners() {
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '10px 0' }}>Intern</th><th>Program</th><th>Company</th><th>Start</th><th>Status</th><th>Performance</th><th></th>
               </tr>
             </thead>

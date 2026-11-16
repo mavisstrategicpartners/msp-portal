@@ -27,7 +27,8 @@ function RequestsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Requests to departments</h1>
+        <p className="text-xs font-medium text-muted-foreground">My workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Requests to departments</h1>
         <p className="text-sm text-muted-foreground">
           Ask another department for help. Your request goes to that department's manager, and you are notified as it progresses.
         </p>
@@ -40,7 +41,7 @@ function RequestsPage() {
             to={`/work/${t.slug}` as any}
             className="group rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
           >
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{deptName(t.department)}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{deptName(t.department)}</p>
             <p className="mt-1 text-sm font-semibold text-foreground">{t.openToAll!.action}</p>
             <p className="mt-1 text-xs text-muted-foreground">{t.description}</p>
             <p className="mt-2 text-xs font-medium text-primary">

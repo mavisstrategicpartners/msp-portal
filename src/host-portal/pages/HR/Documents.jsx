@@ -421,7 +421,7 @@ export default function HRDocuments() {
               justifyContent: 'center',
               gap: 8,
               fontSize: 12.5,
-              fontWeight: 700,
+              fontWeight: 600,
               padding: '9px 14px',
               borderRadius: 8,
               boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)'
@@ -541,7 +541,7 @@ export default function HRDocuments() {
                     <span
                       style={{
                         fontSize: 10,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         padding: '2px 6px',
                         borderRadius: 12,
                         background: isSelected ? 'var(--brand)' : 'var(--bg-secondary)',
@@ -587,7 +587,7 @@ export default function HRDocuments() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     fontSize: 15,
                     flexShrink: 0
                   }}
@@ -597,7 +597,7 @@ export default function HRDocuments() {
 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 17, fontWeight: 800 }}>{activeStaff.full_name}</span>
+                    <span style={{ fontSize: 17, fontWeight: 600 }}>{activeStaff.full_name}</span>
                     <span className="badge badge-neutral" style={{ fontSize: 10 }}>{activeStaff.type}</span>
                     
                     {/* Interactive Access Restriction Pill */}
@@ -714,7 +714,7 @@ export default function HRDocuments() {
                 }}
               >
                 <CloudUpload size={42} color={isDragging ? 'var(--brand)' : 'var(--text-muted)'} style={{ margin: '0 auto 12px', opacity: 0.6 }} />
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Folder is empty</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>Folder is empty</div>
                 <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 4, maxWidth: 380, margin: '6px auto 16px' }}>
                   Add documents for <b>{activeStaff.full_name}</b> such as employment contracts, ID copies, qualifications, or tax certificates.
                 </div>
@@ -763,7 +763,7 @@ export default function HRDocuments() {
                         <span
                           style={{
                             fontSize: 10,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             padding: '2px 7px',
                             borderRadius: 6,
                             background: badgeStyle.bg,
@@ -799,7 +799,7 @@ export default function HRDocuments() {
                           <div
                             style={{
                               fontSize: 12.5,
-                              fontWeight: 700,
+                              fontWeight: 600,
                               lineHeight: 1.35,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -1059,7 +1059,7 @@ export default function HRDocuments() {
 
             <div style={{ padding: 24, textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: 8 }}>
               <FileCheck size={32} color="var(--brand)" style={{ margin: '0 auto 8px' }} />
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Confidential Personnel Record</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Confidential Personnel Record</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 Compliant with MSP POPIA and Information Security Policy.
               </div>
@@ -1375,7 +1375,7 @@ function FolderPermissionsModal({ staff, setting, onClose, onSave }) {
         </div>
 
         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 10, background: 'var(--brand-soft)', padding: 12, borderRadius: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 700, color: 'var(--brand)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--brand)' }}>
             <Lock size={14} />
             <span>Human Resources Access Restriction Policy</span>
           </div>

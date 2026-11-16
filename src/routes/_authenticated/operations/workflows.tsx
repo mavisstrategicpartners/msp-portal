@@ -114,7 +114,8 @@ export function ClientWorkflowsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Client Lifecycle Workflows
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -129,7 +130,7 @@ export function ClientWorkflowsPage() {
 
       {/* Lifecycle Flow Visualization */}
       <Card className="border-border bg-card p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        <p className="text-xs font-semibold text-muted-foreground mb-3">
           Configured MSP Client Lifecycle Stages
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -202,7 +203,7 @@ export function ClientWorkflowsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary" />
-                        <CardTitle className="text-base font-bold text-foreground">
+                        <CardTitle className="text-base font-semibold text-foreground">
                           {wf.clientName}
                         </CardTitle>
                         <Badge className="bg-purple-100 dark:bg-primary/20 text-purple-900 dark:text-purple-300 border-primary/30 text-[10px]">
@@ -246,19 +247,19 @@ export function ClientWorkflowsPage() {
                 <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs bg-muted/40 p-3 rounded-lg border border-border">
                     <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Current Stage</span>
+                      <span className="text-muted-foreground block text-xs font-semibold">Current Stage</span>
                       <span className="font-semibold text-foreground text-sm">{wf.currentStage}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Accountable Owner</span>
+                      <span className="text-muted-foreground block text-xs font-semibold">Accountable Owner</span>
                       <span className="font-medium text-foreground">{wf.stageOwner}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Dependencies</span>
+                      <span className="text-muted-foreground block text-xs font-semibold">Dependencies</span>
                       <span className="text-foreground/80 truncate block" title={wf.dependencies}>{wf.dependencies}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Required Evidence</span>
+                      <span className="text-muted-foreground block text-xs font-semibold">Required Evidence</span>
                       <span className="text-foreground/80 truncate block" title={wf.requiredEvidence}>{wf.requiredEvidence}</span>
                     </div>
                   </div>

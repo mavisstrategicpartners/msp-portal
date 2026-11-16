@@ -473,7 +473,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
             <TabsTrigger value="deadlines" className="gap-1.5 px-3 text-xs">
               <Clock className="h-3.5 w-3.5" /> Deadlines
               {deadlineCategories.overdue.length > 0 && (
-                <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
+                <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-semibold">
                   {deadlineCategories.overdue.length}
                 </span>
               )}
@@ -531,7 +531,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <div className="flex items-start gap-2.5">
                 <ShieldAlert className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="font-bold">Active Roadblock Detected:</strong> You have {tasks.filter((t) => t.status === "Blocked").length} task(s) currently marked as blocked.
+                  <strong className="font-semibold">Active Roadblock Detected:</strong> You have {tasks.filter((t) => t.status === "Blocked").length} task(s) currently marked as blocked.
                   <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5">
                     Dependency requests have been filed with corresponding departments.
                   </p>
@@ -555,7 +555,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Card className="border-border p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                       <Flame className="h-4 w-4 text-primary" /> Active Urgent & High Priority Deliverables
                     </h3>
                     <p className="text-xs text-muted-foreground">
@@ -576,7 +576,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                   {tasks.filter((t) => t.status !== "Completed").length === 0 ? (
                     <div className="p-8 text-center border border-dashed border-border rounded-xl">
                       <CheckSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
-                      <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+                      <p className="text-sm font-semibold text-foreground">No tasks have been assigned yet.</p>
                       <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
                     </div>
@@ -616,7 +616,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                                   {task.status}
                                 </Badge>
                               </div>
-                              <h4 className="text-sm font-bold text-foreground mt-1">{task.title}</h4>
+                              <h4 className="text-sm font-semibold text-foreground mt-1">{task.title}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
                             </div>
 
@@ -636,7 +636,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                             <div className="flex items-center gap-2 flex-1 max-w-xs">
                               <span className="text-[10px] text-muted-foreground">Progress:</span>
                               <Progress value={task.progress} className="h-1.5 flex-1" />
-                              <span className="text-[10px] font-bold text-foreground">{task.progress}%</span>
+                              <span className="text-[10px] font-semibold text-foreground">{task.progress}%</span>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -669,7 +669,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <StaffAttendanceWidget />
 
               <Card className="p-4 border-border space-y-3 shadow-xs">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                   <Award className="h-4 w-4 text-primary" /> Delivery Standards
                 </h4>
                 <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
@@ -755,7 +755,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
             {filteredTasks.length === 0 ? (
               <Card className="p-12 text-center border-border shadow-xs">
                 <CheckSquare className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                <h4 className="text-sm font-bold text-foreground">No tasks have been assigned yet.</h4>
+                <h4 className="text-sm font-semibold text-foreground">No tasks have been assigned yet.</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Tasks assigned to employees will appear here.
                 </p>
@@ -806,7 +806,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                           </span>
                         </div>
 
-                        <h3 className="text-base font-bold text-foreground">{task.title}</h3>
+                        <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
                         <p className="text-xs text-muted-foreground leading-relaxed">{task.description}</p>
                       </div>
 
@@ -848,7 +848,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     <div className="space-y-1">
                       <div className="flex justify-between text-[11px]">
                         <span className="text-muted-foreground">Delivery Progress</span>
-                        <span className="font-bold text-foreground">{task.progress}%</span>
+                        <span className="font-semibold text-foreground">{task.progress}%</span>
                       </div>
                       <Progress value={task.progress} className="h-2" />
                     </div>
@@ -895,7 +895,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                         )}
 
                         {task.status === "Completed" && (
-                          <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
+                          <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5" /> Verified Complete
                           </span>
                         )}
@@ -914,7 +914,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
           {tasks.length === 0 ? (
             <Card className="p-12 text-center border-border shadow-xs">
               <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <h4 className="text-sm font-bold text-foreground">No upcoming deadlines.</h4>
+              <h4 className="text-sm font-semibold text-foreground">No upcoming deadlines.</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 Deadlines and milestone schedules will appear here once official tasks are assigned.
               </p>
@@ -929,7 +929,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                 <Card className="border-rose-300 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20 p-5 shadow-xs space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="h-5 w-5 text-rose-600" />
-                    <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
+                    <h3 className="text-sm font-semibold text-rose-900 dark:text-rose-200">
                       Overdue Deliverables ({deadlineCategories.overdue.length})
                     </h3>
                   </div>
@@ -938,7 +938,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-rose-200 dark:border-rose-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-foreground text-xs">{t.title}</span>
+                            <span className="font-semibold text-foreground text-xs">{t.title}</span>
                             <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -963,7 +963,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Card className="border-border p-5 shadow-xs space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-500" />
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Due Today ({deadlineCategories.dueToday.length})
                   </h3>
                 </div>
@@ -974,7 +974,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     {deadlineCategories.dueToday.map((t) => (
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
                         <div>
-                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <div className="font-semibold text-foreground text-xs">{t.title}</div>
                           <p className="text-[11px] text-muted-foreground">Client: {t.clientName || "Internal"} &bull; Priority: {t.priority}</p>
                         </div>
                         <Button size="sm" onClick={() => handleOpenEvidenceModal(t)} className="h-7 text-xs bg-primary text-white">
@@ -990,7 +990,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Card className="border-border p-5 shadow-xs space-y-3">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Due This Week ({deadlineCategories.dueThisWeek.length})
                   </h3>
                 </div>
@@ -1001,7 +1001,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     {deadlineCategories.dueThisWeek.map((t) => (
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
                         <div>
-                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <div className="font-semibold text-foreground text-xs">{t.title}</div>
                           <p className="text-[11px] text-muted-foreground">Due: {t.dueDate?.split("T")[0]} &bull; Assigner: {t.assignedByName}</p>
                         </div>
                         <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
@@ -1015,7 +1015,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Card className="border-border p-5 shadow-xs space-y-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Upcoming Deadlines ({deadlineCategories.upcoming.length})
                   </h3>
                 </div>
@@ -1026,7 +1026,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     {deadlineCategories.upcoming.map((t) => (
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
                         <div>
-                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <div className="font-semibold text-foreground text-xs">{t.title}</div>
                           <p className="text-[11px] text-muted-foreground">Scheduled Due: {t.dueDate?.split("T")[0]}</p>
                         </div>
                         <Badge variant="outline" className="text-[10px]">{t.priority}</Badge>
@@ -1041,7 +1041,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                 <Card className="border-border p-5 shadow-xs space-y-3">
                   <div className="flex items-center gap-2">
                     <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                    <h3 className="text-sm font-semibold text-foreground">
                       No Due Date Set ({deadlineCategories.noDueDate.length})
                     </h3>
                   </div>
@@ -1049,7 +1049,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     {deadlineCategories.noDueDate.map((t) => (
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2">
                         <div>
-                          <div className="font-bold text-foreground text-xs">{t.title}</div>
+                          <div className="font-semibold text-foreground text-xs">{t.title}</div>
                           <p className="text-[11px] text-muted-foreground">Awaiting authorized date scheduling by {t.assignedByName}</p>
                         </div>
                         <Badge variant="outline" className="text-[10px]">No due date set</Badge>
@@ -1063,7 +1063,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Card className="border-border p-5 shadow-xs space-y-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Completed Deliverables ({deadlineCategories.completed.length})
                   </h3>
                 </div>
@@ -1074,7 +1074,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                     {deadlineCategories.completed.map((t) => (
                       <div key={t.id} className="p-3 rounded-lg bg-card border border-border flex items-center justify-between gap-2 opacity-80">
                         <div>
-                          <div className="font-bold text-foreground text-xs line-through">{t.title}</div>
+                          <div className="font-semibold text-foreground text-xs line-through">{t.title}</div>
                           <p className="text-[11px] text-muted-foreground">Completed on {t.completionDate?.split("T")[0] || "verified date"}</p>
                         </div>
                         <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
@@ -1095,7 +1095,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
         <TabsContent value="dependencies" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-foreground">Dependency Requests & Roadblock Handlers</h3>
+              <h3 className="text-base font-semibold text-foreground">Dependency Requests & Roadblock Handlers</h3>
               <p className="text-xs text-muted-foreground">
                 Request resources, access, or approvals from other teams when work is halted.
               </p>
@@ -1113,7 +1113,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
             {dependencies.length === 0 ? (
               <Card className="p-12 text-center border-border shadow-xs">
                 <GitBranch className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                <h4 className="text-sm font-bold text-foreground">No active dependency requests</h4>
+                <h4 className="text-sm font-semibold text-foreground">No active dependency requests</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   When a task is blocked on external resources or approvals, create a dependency request here.
                 </p>
@@ -1146,7 +1146,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                           {dep.urgency}
                         </Badge>
                       </div>
-                      <h4 className="text-sm font-bold text-foreground mt-1">
+                      <h4 className="text-sm font-semibold text-foreground mt-1">
                         Task: {dep.taskTitle}
                       </h4>
                       <p className="text-xs text-foreground font-medium mt-1">
@@ -1225,7 +1225,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
         <TabsContent value="evidence" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-foreground">Deliverable Evidence Submissions</h3>
+              <h3 className="text-base font-semibold text-foreground">Deliverable Evidence Submissions</h3>
               <p className="text-xs text-muted-foreground">
                 Documented proof, upload files, URLs, and manager QA sign-offs.
               </p>
@@ -1243,7 +1243,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
             {evidenceList.length === 0 ? (
               <Card className="p-12 text-center border-border shadow-xs">
                 <FileCheck className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                <h4 className="text-sm font-bold text-foreground">No evidence submissions recorded</h4>
+                <h4 className="text-sm font-semibold text-foreground">No evidence submissions recorded</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Submit proof URLs or upload files for completed work to initiate manager QA review.
                 </p>
@@ -1270,7 +1270,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                           Submission #{ev.submissionNumber}
                         </Badge>
                       </div>
-                      <h4 className="text-sm font-bold text-foreground mt-1">Task: {ev.taskTitle}</h4>
+                      <h4 className="text-sm font-semibold text-foreground mt-1">Task: {ev.taskTitle}</h4>
                       <p className="text-xs text-muted-foreground">Submitted by {ev.submittingStaffName}</p>
                     </div>
 
@@ -1328,7 +1328,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                   {/* Reviewer feedback if reviewed */}
                   {ev.reviewerFeedback && (
                     <div className={`rounded-lg p-3 text-xs space-y-1 ${ev.status === "Approved" ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300" : "bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300"}`}>
-                      <div className="font-bold flex items-center justify-between">
+                      <div className="font-semibold flex items-center justify-between">
                         <span>Reviewer Feedback from {ev.reviewedByName}:</span>
                         <span className="text-[10px] opacity-75">{ev.reviewedAt?.split("T")[0]}</span>
                       </div>
@@ -1360,7 +1360,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
         <TabsContent value="scorecard" className="space-y-6">
           <Card className="p-6 border-border shadow-xs space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Award className="h-5 w-5 text-primary" /> Personal Performance Scorecard
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -1372,13 +1372,13 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="p-4 rounded-xl border border-border bg-card">
                 <span className="text-xs text-muted-foreground font-semibold">Total Assigned Work</span>
-                <p className="text-2xl font-bold text-foreground mt-1">{scorecard?.totalAssigned ?? 0}</p>
+                <p className="text-2xl font-semibold text-foreground mt-1">{scorecard?.totalAssigned ?? 0}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">All tracked task assignments</p>
               </div>
 
               <div className="p-4 rounded-xl border border-border bg-card">
                 <span className="text-xs text-muted-foreground font-semibold">Overall Completion Rate</span>
-                <p className="text-2xl font-bold text-primary mt-1">
+                <p className="text-2xl font-semibold text-primary mt-1">
                   {typeof scorecard?.completionRate === "number"
                     ? `${scorecard.completionRate}%`
                     : "Insufficient data"}
@@ -1388,7 +1388,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
 
               <div className="p-4 rounded-xl border border-border bg-card">
                 <span className="text-xs text-muted-foreground font-semibold">On-Time SLA Delivery</span>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                   {typeof scorecard?.onTimeCompletionRate === "number"
                     ? `${scorecard.onTimeCompletionRate}%`
                     : "Insufficient data"}
@@ -1398,7 +1398,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
 
               <div className="p-4 rounded-xl border border-border bg-card">
                 <span className="text-xs text-muted-foreground font-semibold">QA First-Pass Approvals</span>
-                <p className="text-2xl font-bold text-foreground mt-1">{scorecard?.evidenceApprovedCount ?? 0}</p>
+                <p className="text-2xl font-semibold text-foreground mt-1">{scorecard?.evidenceApprovedCount ?? 0}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Evidence verified without rework</p>
               </div>
             </div>
@@ -1425,7 +1425,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
                   ) : (
                     (scorecard?.trends ?? []).map((tr, i) => (
                       <tr key={i} className="hover:bg-muted/30">
-                        <td className="py-3 px-4 font-bold text-foreground">{tr.period}</td>
+                        <td className="py-3 px-4 font-semibold text-foreground">{tr.period}</td>
                         <td className="py-3 px-3">{tr.assigned}</td>
                         <td className="py-3 px-3 font-semibold text-emerald-600">{tr.completed}</td>
                         <td className="py-3 px-3 font-semibold text-primary">{tr.onTime}</td>
@@ -1453,7 +1453,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
               <Badge variant="outline" className="text-[10px]">{selectedTask?.status}</Badge>
               <span className="text-xs text-muted-foreground">{selectedTask?.department}</span>
             </div>
-            <DialogTitle className="text-lg font-bold">{selectedTask?.title}</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">{selectedTask?.title}</DialogTitle>
             <DialogDescription className="text-xs">
               Assigned by {selectedTask?.assignedByName} ({selectedTask?.assignedByRole}) &bull; Due: {selectedTask?.dueDate?.split("T")[0] || "No due date set"}
             </DialogDescription>
@@ -1593,7 +1593,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
       <Dialog open={depModalOpen} onOpenChange={setDepModalOpen}>
         <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-rose-600 flex items-center gap-2">
+            <DialogTitle className="text-base font-semibold text-rose-600 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5" /> Request Task Dependency
             </DialogTitle>
             <DialogDescription className="text-xs">
@@ -1699,7 +1699,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
       <Dialog open={evidenceModalOpen} onOpenChange={setEvidenceModalOpen}>
         <DialogContent className="max-w-lg w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
+            <DialogTitle className="text-base font-semibold flex items-center gap-2">
               <FileUp className="h-5 w-5 text-primary" /> Submit Deliverable Evidence
             </DialogTitle>
             <DialogDescription className="text-xs">
@@ -1795,7 +1795,7 @@ export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { ey
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
         <DialogContent className="max-w-md w-full bg-card border-border text-foreground overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">QA Deliverable Inspection</DialogTitle>
+            <DialogTitle className="text-base font-semibold">QA Deliverable Inspection</DialogTitle>
             <DialogDescription className="text-xs">
               Review submitted evidence for {selectedEvidence?.taskTitle}
             </DialogDescription>

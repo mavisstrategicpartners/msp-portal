@@ -87,24 +87,24 @@ function CapacityWorkloadPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Total Employees</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{profiles.length}</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{profiles.length}</p>
           <p className="text-[11px] text-muted-foreground mt-1">Active workforce</p>
         </Card>
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Departments</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{departments.length}</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{departments.length}</p>
           <p className="text-[11px] text-muted-foreground mt-1">Active departments</p>
         </Card>
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Active Tasks</p>
-          <p className="text-2xl font-bold text-foreground mt-1">
+          <p className="text-2xl font-semibold text-foreground mt-1">
             {tasks.filter((t: any) => t.status !== "completed" && t.status !== "done").length}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">Across all departments</p>
         </Card>
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Unassigned Tasks</p>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+          <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">
             {tasks.filter((t: any) => !t.assigned_to && t.status !== "completed" && t.status !== "done").length}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">Need allocation</p>
@@ -114,7 +114,7 @@ function CapacityWorkloadPage() {
       {/* Department Capacity Table */}
       {departments.length > 0 && (
         <Card className="p-5 border-border">
-          <h3 className="text-base font-bold text-foreground mb-4">Department Capacity Overview</h3>
+          <h3 className="text-base font-semibold text-foreground mb-4">Department Capacity Overview</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
@@ -133,13 +133,13 @@ function CapacityWorkloadPage() {
                   const load = d.employees === 0 ? "No Staff" : Number(ratio) > 8 ? "Overloaded" : Number(ratio) > 5 ? "High" : "Healthy";
                   return (
                     <tr key={d.dept} className="hover:bg-muted/30">
-                      <td className="p-2.5 font-bold text-foreground">{d.dept}</td>
+                      <td className="p-2.5 font-semibold text-foreground">{d.dept}</td>
                       <td className="p-2.5 font-medium">{d.employees}</td>
                       <td className="p-2.5">{d.activeTasks}</td>
                       <td className="p-2.5">{ratio}</td>
                       <td className="p-2.5">
                         {d.overdue > 0 ? (
-                          <span className="font-bold text-rose-600">{d.overdue}</span>
+                          <span className="font-semibold text-rose-600">{d.overdue}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
@@ -166,7 +166,7 @@ function CapacityWorkloadPage() {
       {/* Employee Directory */}
       <Card className="p-5 border-border">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-base font-bold text-foreground">Employee Directory ({filtered.length})</h3>
+          <h3 className="text-base font-semibold text-foreground">Employee Directory ({filtered.length})</h3>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -195,7 +195,7 @@ function CapacityWorkloadPage() {
                 const empTasks = tasks.filter((t: any) => t.assigned_to === p.id && t.status !== "completed" && t.status !== "done");
                 return (
                   <tr key={p.id} className="hover:bg-muted/30">
-                    <td className="p-2.5 font-bold text-foreground">{p.full_name || "—"}</td>
+                    <td className="p-2.5 font-semibold text-foreground">{p.full_name || "—"}</td>
                     <td className="p-2.5">{p.job_title || "—"}</td>
                     <td className="p-2.5">{p.department || "Unassigned"}</td>
                     <td className="p-2.5 text-muted-foreground">{p.email || "—"}</td>

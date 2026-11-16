@@ -110,7 +110,7 @@ export function Donut({ data, size = 180, thickness = 22 }) {
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
             <span style={{ width: 10, height: 10, borderRadius: 3, background: d.color }} />
             <span style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
-            <span style={{ marginLeft: 'auto', fontWeight: 700 }}>{d.value}</span>
+            <span style={{ marginLeft: 'auto', fontWeight: 600 }}>{d.value}</span>
           </div>
         ))}
       </div>
@@ -121,8 +121,8 @@ export function Donut({ data, size = 180, thickness = 22 }) {
 export function StatCard({ label, value, sub, color, trend }) {
   return (
     <div className="card">
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, margin: '6px 0 2px', color: color || 'var(--text-primary)' }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 600, margin: '6px 0 2px', color: color || 'var(--text-primary)' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{sub}</div>}
       {trend !== undefined && (
         <div style={{ fontSize: 11, marginTop: 4, color: trend >= 0 ? 'var(--success)' : 'var(--danger)' }}>

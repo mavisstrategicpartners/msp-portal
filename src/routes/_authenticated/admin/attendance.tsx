@@ -1,3 +1,4 @@
+import { StatCard, StatGrid } from "@/components/layout/page";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -387,7 +388,7 @@ export function AdminAttendanceCommandCenter() {
         >
           <Clock className="h-4 w-4" />
           Live Presence Board
-          <span className="ml-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="ml-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
             {stats.active} Active
           </span>
         </button>
@@ -409,91 +410,12 @@ export function AdminAttendanceCommandCenter() {
       {activeTab === "live" && (
         <div className="space-y-6">
           {/* KPI Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Card className="p-4 border-border/70 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Total Workforce
-                </p>
-                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                  <Users className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-foreground">
-                  {stats.total}
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">
-                  ({stats.interns} interns)
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                All permanent staff & interns
-              </p>
-            </Card>
-
-            <Card className="p-4 border-border/70 border-l-4 border-l-emerald-500 bg-emerald-500/[0.03] shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Clocked In (Working)
-                </p>
-                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
-                  {stats.active}
-                </span>
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  {activeRate}%
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Continuous real-time calculation
-              </p>
-            </Card>
-
-            <Card className="p-4 border-border/70 border-l-4 border-l-amber-500 bg-amber-500/[0.03] shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  On Break
-                </p>
-                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Coffee className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-foreground">
-                  {stats.break}
-                </span>
-                <span className="text-xs text-muted-foreground">paused</span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Timer temporarily paused
-              </p>
-            </Card>
-
-            <Card className="p-4 border-border/70 border-l-4 border-l-slate-400 bg-slate-400/[0.03] shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Clocked Out / Off
-                </p>
-                <div className="p-1.5 rounded-lg bg-muted text-muted-foreground">
-                  <XCircle className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-foreground">
-                  {stats.out}
-                </span>
-                <span className="text-xs text-muted-foreground">inactive</span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Off-duty or yet to clock in
-              </p>
-            </Card>
-          </div>
+          <StatGrid>
+            <StatCard label="Total workforce" value={stats.total} icon={Users} hint={`${stats.interns} intern${stats.interns === 1 ? "" : "s"} · all permanent staff and interns`} />
+            <StatCard label="Clocked in" value={stats.active} icon={CheckCircle2} tone={stats.active ? "success" : "default"} hint={`${activeRate}% of the workforce`} />
+            <StatCard label="On break" value={stats.break} icon={Coffee} tone={stats.break ? "warning" : "default"} hint="Timer paused" />
+            <StatCard label="Clocked out / off" value={stats.out} icon={XCircle} hint="Off duty or not yet clocked in" />
+          </StatGrid>
 
           {/* Filters & Search */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-card p-3 rounded-lg border border-border/70">
@@ -574,7 +496,7 @@ export function AdminAttendanceCommandCenter() {
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8 text-xs">
                               {staff.avatar && <AvatarImage src={staff.avatar} />}
-                              <AvatarFallback className="text-[11px] font-semibold uppercase bg-primary/10 text-primary">
+                              <AvatarFallback className="text-[11px] font-semibold bg-primary/10 text-primary">
                                 {staff.name.slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
@@ -651,7 +573,7 @@ export function AdminAttendanceCommandCenter() {
 
                         <td className="py-3 px-4 text-right">
                           <span
-                            className={`font-mono text-sm font-bold ${
+                            className={`font-mono text-sm font-semibold ${
                               staff.status === "Clocked In"
                                 ? "text-emerald-600 dark:text-emerald-400"
                                 : "text-foreground"
@@ -680,7 +602,7 @@ export function AdminAttendanceCommandCenter() {
                 <CalendarDays className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-sm font-semibold text-foreground">
                   Official Shift: Monday to Friday | 08:00 – 17:00 (SAST)
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -730,10 +652,10 @@ export function AdminAttendanceCommandCenter() {
           {registerData && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <Card className="p-4 border-border/70 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+                <p className="text-[11px] font-semibold text-muted-foreground">
                   Workforce Tracked
                 </p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
+                <p className="text-2xl font-semibold mt-1 text-foreground">
                   {registerData.stats.totalStaff} Members
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -741,11 +663,11 @@ export function AdminAttendanceCommandCenter() {
                 </p>
               </Card>
 
-              <Card className="p-4 border-border/70 border-l-4 border-l-emerald-500 bg-emerald-500/[0.03]">
-                <p className="text-[11px] font-semibold uppercase text-emerald-600 dark:text-emerald-400">
+              <Card className="p-4 border-border/70 bg-emerald-500/[0.03]">
+                <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                   Attendance & Leave Rate
                 </p>
-                <p className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">
+                <p className="text-2xl font-semibold mt-1 text-emerald-600 dark:text-emerald-400">
                   {registerData.stats.avgAttendanceRate}%
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -753,11 +675,11 @@ export function AdminAttendanceCommandCenter() {
                 </p>
               </Card>
 
-              <Card className="p-4 border-border/70 border-l-4 border-l-primary">
-                <p className="text-[11px] font-semibold uppercase text-primary">
+              <Card className="p-4 border-border/70">
+                <p className="text-[11px] font-semibold text-primary">
                   Total Logged Hours
                 </p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
+                <p className="text-2xl font-semibold mt-1 text-foreground">
                   {registerData.stats.totalHoursLogged}
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -765,11 +687,11 @@ export function AdminAttendanceCommandCenter() {
                 </p>
               </Card>
 
-              <Card className="p-4 border-border/70 border-l-4 border-l-amber-500 bg-amber-500/[0.03]">
-                <p className="text-[11px] font-semibold uppercase text-amber-600 dark:text-amber-400">
+              <Card className="p-4 border-border/70 bg-amber-500/[0.03]">
+                <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
                   Approved HR Leave
                 </p>
-                <p className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">
+                <p className="text-2xl font-semibold mt-1 text-amber-600 dark:text-amber-400">
                   {registerData.stats.totalLeaveDays} Days
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -936,7 +858,7 @@ export function AdminAttendanceCommandCenter() {
 
                         {/* Total Hours */}
                         <td className="py-3 px-3 text-right">
-                          <div className="font-mono text-sm font-bold text-foreground">
+                          <div className="font-mono text-sm font-semibold text-foreground">
                             {row.totalHoursWorked}
                           </div>
                           <div className="text-[10px] text-muted-foreground font-medium">

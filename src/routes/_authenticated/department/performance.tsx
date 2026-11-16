@@ -69,7 +69,8 @@ function DepartmentPerformancePage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Department Performance
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -176,8 +177,8 @@ function DepartmentPerformancePage() {
 function Metric({ label, value, hint, bad }: { label: string; value: string; hint?: string; bad?: boolean }) {
   return (
     <Card className="p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1.5 text-2xl font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{value}</p>
+      <p className="text-[11px] font-semibold text-muted-foreground">{label}</p>
+      <p className={`mt-1.5 text-2xl font-semibold ${bad ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{value}</p>
       {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
     </Card>
   );

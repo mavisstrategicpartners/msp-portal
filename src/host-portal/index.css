@@ -55,8 +55,8 @@
 .host-portal-root .btn-success { background: var(--success); color: white; }
 
 .host-portal-root .badge {
-  display: inline-flex; align-items: center; padding: 3px 9px;
-  border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 999px; font-size: 11px; font-weight: 600;
 }
 .host-portal-root .badge-success { background: var(--success-soft); color: var(--success); }
 .host-portal-root .badge-warning { background: var(--warning-soft); color: var(--warning); }

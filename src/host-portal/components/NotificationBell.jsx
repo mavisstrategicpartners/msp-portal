@@ -27,7 +27,7 @@ export default function NotificationBell() {
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute', top: 2, right: 2, background: 'var(--danger)', color: 'white',
-            fontSize: 10, fontWeight: 700, borderRadius: 999, minWidth: 16, height: 16, padding: '0 4px',
+            fontSize: 10, fontWeight: 600, borderRadius: 999, minWidth: 16, height: 16, padding: '0 4px',
             display: 'grid', placeItems: 'center',
           }}>{unreadCount}</span>
         )}
@@ -38,7 +38,7 @@ export default function NotificationBell() {
           boxShadow: 'var(--shadow-md)', maxHeight: 480, display: 'flex', flexDirection: 'column',
         }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Notifications</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>Notifications</div>
             <button className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: 11 }} onClick={markAllRead}>Mark all read</button>
           </div>
           <div style={{ overflowY: 'auto', flex: 1 }}>

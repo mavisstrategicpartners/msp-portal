@@ -59,7 +59,7 @@ export default function KPI() {
         {stats.map(s => (
           <div key={s.label} className="card">
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -74,7 +74,7 @@ export default function KPI() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{k.quarter}</div>
-                <div style={{ fontWeight: 700 }}>{k.learner_name}</div>
+                <div style={{ fontWeight: 600 }}>{k.learner_name}</div>
               </div>
               <span className={'badge ' + (k.status === 'On Track' ? 'badge-info' : k.status === 'At Risk' ? 'badge-danger' : k.status === 'Completed' ? 'badge-success' : 'badge-warning')}>{k.status}</span>
             </div>

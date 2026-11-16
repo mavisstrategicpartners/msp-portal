@@ -118,7 +118,8 @@ export function ExecHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        <p className="text-xs font-medium text-muted-foreground">CEO workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{subtitle}</p>
         {source && (
           <p className="mt-1 text-[11px] text-muted-foreground/80 max-w-3xl">
@@ -415,7 +416,7 @@ function Stat({ label, value, bad, warn }: { label: string; value: ReactNode; ba
   return (
     <div className="rounded-md bg-muted/40 py-1.5">
       <p
-        className={`text-sm font-bold ${
+        className={`text-sm font-semibold ${
           bad ? "text-rose-600 dark:text-rose-400" : warn ? "text-amber-600 dark:text-amber-400" : "text-foreground"
         }`}
       >
@@ -809,7 +810,7 @@ export function FollowUpList({
           </div>
           {f.note && <p className="mt-1.5 text-xs text-foreground whitespace-pre-wrap">{f.note}</p>}
           {f.response && (
-            <p className="mt-1.5 text-xs text-muted-foreground border-l-2 border-primary/40 pl-2">
+            <p className="mt-1.5 text-xs text-muted-foreground border-primary/40 pl-2">
               Response: {f.response}
             </p>
           )}

@@ -358,7 +358,8 @@ export function ClientOnboardingPage() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Client Onboarding Pipeline
           </h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
@@ -397,7 +398,7 @@ export function ClientOnboardingPage() {
             <span className="text-xs font-semibold text-muted-foreground">Total Accounts</span>
             <Building2 className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{totalClients}</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{totalClients}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">Persistent database records</p>
         </Card>
 
@@ -406,7 +407,7 @@ export function ClientOnboardingPage() {
             <span className="text-xs font-semibold text-muted-foreground">Active Onboarding</span>
             <Clock className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold text-primary mt-2">{inPipelineCount}</p>
+          <p className="text-2xl font-semibold text-primary mt-2">{inPipelineCount}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">In onboarding pipeline</p>
         </Card>
 
@@ -415,7 +416,7 @@ export function ClientOnboardingPage() {
             <span className="text-xs font-semibold text-muted-foreground">Active Roadblocks</span>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </div>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">{blockersCount}</p>
+          <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-2">{blockersCount}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">Requiring intervention</p>
         </Card>
 
@@ -424,7 +425,7 @@ export function ClientOnboardingPage() {
             <span className="text-xs font-semibold text-muted-foreground">Live & Handed Over</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{completedCount}</p>
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-2">{completedCount}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">Completed onboarding</p>
         </Card>
       </div>
@@ -513,7 +514,7 @@ export function ClientOnboardingPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary shrink-0" />
-                        <CardTitle className="text-base font-bold text-foreground">
+                        <CardTitle className="text-base font-semibold text-foreground">
                           {client.name}
                         </CardTitle>
                         <Badge
@@ -598,7 +599,7 @@ export function ClientOnboardingPage() {
                     <div className="flex items-start gap-2 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/20 p-2.5 text-xs text-amber-950 dark:text-amber-200">
                       <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                       <div>
-                        <strong className="text-amber-950 dark:text-amber-300 font-bold">Active Roadblock:</strong> {client.blocker}
+                        <strong className="text-amber-950 dark:text-amber-300 font-semibold">Active Roadblock:</strong> {client.blocker}
                       </div>
                     </div>
                   )}
@@ -619,7 +620,7 @@ export function ClientOnboardingPage() {
                         title={st.blocker ? `Blocked: ${st.blocker}` : st.completed ? "Verified" : "Pending step"}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] uppercase font-semibold">Step {idx + 1}</span>
+                          <span className="text-xs font-semibold">Step {idx + 1}</span>
                           {st.completed ? (
                             <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                           ) : st.blocker ? (
@@ -656,7 +657,7 @@ export function ClientOnboardingPage() {
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
-              <DialogTitle className="text-lg font-bold">Register New Client Account</DialogTitle>
+              <DialogTitle className="text-lg font-semibold">Register New Client Account</DialogTitle>
             </div>
             <DialogDescription className="text-xs">
               Add a persistent client to the Mavis Strategic Partners database. This client will immediately become available in the Onboarding Pipeline and Operations telemetry.
@@ -666,7 +667,7 @@ export function ClientOnboardingPage() {
           <div className="space-y-4 py-2 text-xs">
             {/* Section 1: Entity Details */}
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-              <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+              <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                 <Building2 className="h-4 w-4 text-primary" /> 1. Entity & Company Information
               </h4>
 
@@ -714,7 +715,7 @@ export function ClientOnboardingPage() {
 
             {/* Section 2: Contact Information */}
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-              <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+              <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                 <User className="h-4 w-4 text-primary" /> 2. Primary Contact & Location
               </h4>
 
@@ -772,7 +773,7 @@ export function ClientOnboardingPage() {
 
             {/* Section 3: Engagement Scope & Assignment */}
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-              <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+              <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                 <Briefcase className="h-4 w-4 text-primary" /> 3. Services & Operations Ownership
               </h4>
 
@@ -846,7 +847,7 @@ export function ClientOnboardingPage() {
 
             {/* Section 4: Operational Notes */}
             <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-              <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+              <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                 <FileText className="h-4 w-4 text-primary" /> 4. Notes & Special Requirements
               </h4>
 
@@ -917,7 +918,7 @@ export function ClientOnboardingPage() {
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
-                <DialogTitle className="text-lg font-bold">{activeClient.name}</DialogTitle>
+                <DialogTitle className="text-lg font-semibold">{activeClient.name}</DialogTitle>
                 <Badge variant="outline" className="text-xs font-semibold">
                   {activeClient.clientType}
                 </Badge>
@@ -1076,7 +1077,7 @@ export function ClientOnboardingPage() {
                           </div>
                           {step.blocker && (
                             <p className="text-rose-900 dark:text-rose-300 text-xs mt-1 font-medium">
-                              <strong className="font-bold">Reason:</strong> {step.blocker}
+                              <strong className="font-semibold">Reason:</strong> {step.blocker}
                             </p>
                           )}
                         </div>
@@ -1104,7 +1105,7 @@ export function ClientOnboardingPage() {
               <TabsContent value="comms" className="space-y-4 text-xs">
                 {/* Form to log communication */}
                 <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
-                  <h4 className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+                  <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                     <MessageSquare className="h-4 w-4 text-primary" /> Log Client Interaction
                   </h4>
 
@@ -1170,7 +1171,7 @@ export function ClientOnboardingPage() {
 
                 {/* Communication History Timeline */}
                 <div className="space-y-2">
-                  <h4 className="font-bold text-foreground text-xs">Interaction History</h4>
+                  <h4 className="font-semibold text-foreground text-xs">Interaction History</h4>
                   {(activeClient.communications || []).length === 0 ? (
                     <div className="py-6 text-center text-muted-foreground text-xs">
                       No communication records logged yet for this account.
@@ -1179,7 +1180,7 @@ export function ClientOnboardingPage() {
                     activeClient.communications.map((comm) => (
                       <div key={comm.id} className="p-3 rounded-lg border border-border bg-card space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                          <span className="font-semibold text-foreground text-xs flex items-center gap-1.5">
                             <Badge variant="outline" className="text-[10px]">
                               {comm.channel}
                             </Badge>
@@ -1214,7 +1215,7 @@ export function ClientOnboardingPage() {
       <Dialog open={stepModalOpen} onOpenChange={setStepModalOpen}>
         <DialogContent className="max-w-md bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Flag Onboarding Step Roadblock</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Flag Onboarding Step Roadblock</DialogTitle>
             <DialogDescription className="text-xs">
               Document the blocker halting: {activeStep?.title}
             </DialogDescription>

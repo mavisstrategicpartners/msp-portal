@@ -580,7 +580,7 @@ export function WhoWeArePage() {
           <div className="mt-5 space-y-3">
             {DEPARTMENTS.slice(0, 5).map((department, index) => (
               <div key={department} className="flex items-center gap-3 text-sm">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-xs font-bold text-primary">{index + 1}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-xs font-semibold text-primary">{index + 1}</span>
                 <span>{department}</span>
               </div>
             ))}
@@ -628,24 +628,24 @@ export function ServicesPage() {
                 </div>
                 <div className="mt-4 grid gap-3 sm:gap-4 md:grid-cols-3">
                   <div className="rounded-md border border-border bg-secondary/30 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Who it's for</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Who it's for</p>
                     <p className="mt-1 text-sm">{service.who_for}</p>
                   </div>
                   <div className="rounded-md border border-border bg-secondary/30 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Client receives</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Client receives</p>
                     <p className="mt-1 text-sm">{service.client_receives}</p>
                   </div>
                   <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">Outcome</p>
+                    <p className="text-xs font-semibold text-primary">Outcome</p>
                     <p className="mt-1 text-sm">{service.outcome}</p>
                   </div>
                 </div>
                 <div className="mt-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What we do — step by step</p>
+                  <p className="text-xs font-semibold text-muted-foreground">What we do — step by step</p>
                   <ol className="mt-3 space-y-2">
                     {steps.length ? steps.map((step, i) => (
                       <li key={i} className="flex gap-3 text-sm">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{i + 1}</span>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">{i + 1}</span>
                         <span className="leading-6">{step}</span>
                       </li>
                     )) : <li className="text-sm text-muted-foreground">Steps not yet documented.</li>}
@@ -701,7 +701,7 @@ export function PricingPage() {
               <Card key={pkg.id} className={cn("p-5", index === 2 && "border-primary/40 bg-primary/5")}>
                 <Badge variant={index === 2 ? "default" : "outline"}>{index === 2 ? "Popular" : "Retainer"}</Badge>
                 <h2 className="mt-4 text-xl font-semibold">{pkg.name}</h2>
-                <p className="mt-2 text-3xl font-bold tracking-tight text-primary">{pkg.price}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-primary">{pkg.price}</p>
                 <p className="mt-3 text-sm text-muted-foreground">{pkg.best_for}</p>
                 <Button className="mt-5 w-full" variant={index === 2 ? "default" : "outline"}
                   onClick={() => copyToClipboard(`${pkg.name} — ${pkg.price}: ${pkg.best_for ?? ""}`, "Package copied for proposal")}>
@@ -767,7 +767,7 @@ export function GlossaryPage() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((item) => (
           <button key={item.id} onClick={() => setActive(item)} className="text-left">
-            <Card className="p-4 transition hover:border-primary/40 hover:shadow-md">
+            <Card className="p-4 transition hover:border-primary/40 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="font-semibold">{item.term}</h2>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -788,22 +788,22 @@ export function GlossaryPage() {
               </SheetHeader>
               <div className="mt-6 space-y-6">
                 <section>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">Full definition</h3>
+                  <h3 className="text-xs font-semibold text-primary">Full definition</h3>
                   <p className="mt-2 text-sm leading-6">{active.full_definition || active.definition}</p>
                 </section>
                 {active.why_it_matters && (
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">Why it matters at MSP</h3>
+                    <h3 className="text-xs font-semibold text-primary">Why it matters at MSP</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">{active.why_it_matters}</p>
                   </section>
                 )}
                 {active.how_to_steps && active.how_to_steps.length > 0 && (
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">How to work with this — step by step</h3>
+                    <h3 className="text-xs font-semibold text-primary">How to work with this — step by step</h3>
                     <ol className="mt-2 space-y-2">
                       {active.how_to_steps.map((step, i) => (
                         <li key={i} className="flex gap-3 text-sm">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{i + 1}</span>
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">{i + 1}</span>
                           <span className="leading-6">{step}</span>
                         </li>
                       ))}
@@ -946,7 +946,7 @@ export function RoadmapPage() {
         {ROADMAP.map((step, index) => (
           <Card key={step.title} className="p-5">
             <div className="flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">{index + 1}</div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">{index + 1}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-semibold">{step.title}</h2>
@@ -1693,7 +1693,7 @@ export function AuditPage() {
         <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
           <Lock className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
+        <h2 className="text-xl font-semibold text-foreground">Access Restricted</h2>
         <p className="text-sm text-muted-foreground">
           Audit Logs are restricted to the Chief Executive Officer and System Administrator. The Finance & Administration role is not authorized to view system audit events.
         </p>
@@ -1741,7 +1741,7 @@ export function KpisPage() {
     <div>
       {pageTitle(BarChart3, "Admin", "KPI Dashboards", "A lightweight operating scorecard until live BI dashboards are connected.")}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map(([name, value, note]) => <Card key={name} className="p-5"><Gauge className="h-5 w-5 text-primary" /><p className="mt-4 text-sm text-muted-foreground">{name}</p><p className="text-3xl font-bold">{value}%</p><Progress className="mt-3" value={value} /><p className="mt-2 text-xs text-muted-foreground">{note}</p></Card>)}
+        {metrics.map(([name, value, note]) => <Card key={name} className="p-5"><Gauge className="h-5 w-5 text-primary" /><p className="mt-4 text-sm text-muted-foreground">{name}</p><p className="text-2xl font-semibold">{value}%</p><Progress className="mt-3" value={value} /><p className="mt-2 text-xs text-muted-foreground">{note}</p></Card>)}
       </div>
     </div>
   );
@@ -1802,7 +1802,7 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/80 p-0 shadow-2xl">
+      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/80 p-0 shadow-sm">
         <DialogHeader>
           <div className="border-b border-border bg-secondary/30 px-5 py-4 sm:px-6">
             <div className="flex items-start justify-between gap-3">
@@ -1826,10 +1826,10 @@ export function MspChatPanel({ open, onOpenChange }: { open: boolean; onOpenChan
               <div className={cn("max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm", message.from === "you" ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card text-foreground")}>{message.text}</div>
             </div>
           ))}
-          {pending && <div className="flex items-end gap-2.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div><div className="rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" /></span></div></div>}
+          {pending && <div className="flex items-end gap-2.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div><div className="rounded-xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-primary" /><span className="h-1.5 w-1.5 rounded-full bg-primary [animation-delay:150ms]" /><span className="h-1.5 w-1.5 rounded-full bg-primary [animation-delay:300ms]" /></span></div></div>}
         </div>
         <div className="space-y-3 border-t border-border bg-secondary/20 px-5 py-4 sm:px-6">
-          {messages.length === 1 && <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Suggested prompts</p><div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" className="h-8 rounded-full bg-background text-xs" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div></div>}
+          {messages.length === 1 && <div><p className="mb-2 text-xs font-semibold text-muted-foreground">Suggested prompts</p><div className="flex flex-wrap gap-2">{shortcuts.map((shortcut) => <Button key={shortcut} variant="outline" size="sm" className="h-8 rounded-full bg-background text-xs" disabled={pending} onClick={() => send(shortcut)}>{shortcut}</Button>)}</div></div>}
           <form className="flex items-center gap-2 rounded-xl border border-input bg-background p-1.5 shadow-sm" onSubmit={(event) => { event.preventDefault(); send(); }}>
             <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ask Msp anything about the portal…" disabled={pending} className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0" />
             <Button type="submit" size="icon" disabled={pending || !input.trim()} className="h-9 w-9 shrink-0 rounded-lg"><Send className="h-4 w-4" /></Button>
@@ -1860,7 +1860,7 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
         <DialogHeader>
           <div className="flex items-center justify-between pr-4">
             <div>
-              <DialogTitle className="text-base font-bold">Staff Notifications</DialogTitle>
+              <DialogTitle className="text-base font-semibold">Staff Notifications</DialogTitle>
               <DialogDescription className="text-xs">
                 Assignments, deadline alerts, dependency responses & reviews.
               </DialogDescription>
@@ -1891,7 +1891,7 @@ export function NotificationsPanel({ open, onOpenChange }: { open: boolean; onOp
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
                     {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
                     {n.title}
                   </span>
@@ -2128,7 +2128,7 @@ export function ClientReportsPanel() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-6">
-      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">{title}</h3>
+      <h3 className="mb-2 text-sm font-semibold text-primary">{title}</h3>
       <div className="text-sm text-foreground">{children}</div>
     </section>
   );
@@ -2197,7 +2197,7 @@ function ReportBody({ report }: { report: MonthlyReport }) {
         {d.executive_summary && <Section title="Executive summary"><p>{d.executive_summary}</p></Section>}
         {d.business_overview && <Section title="Client business overview"><p>{d.business_overview}</p></Section>}
         {d.gbp_actions && <Section title="GBP actions completed"><ul className="list-disc pl-5">{d.gbp_actions.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul></Section>}
-        {d.gbp_metrics && <Section title="GBP performance"><div className="grid grid-cols-2 gap-3 md:grid-cols-5">{Object.entries(d.gbp_metrics).map(([k, v]) => <Card key={k} className="p-3"><p className="text-xs text-muted-foreground capitalize">{k.replace(/_/g, " ")}</p><p className="text-2xl font-bold text-primary">{String(v)}</p></Card>)}</div></Section>}
+        {d.gbp_metrics && <Section title="GBP performance"><div className="grid grid-cols-2 gap-3 md:grid-cols-5">{Object.entries(d.gbp_metrics).map(([k, v]) => <Card key={k} className="p-3"><p className="text-xs text-muted-foreground capitalize">{k.replace(/_/g, " ")}</p><p className="text-2xl font-semibold text-primary">{String(v)}</p></Card>)}</div></Section>}
         {d.keywords && <Section title="Keyword research">{Object.entries(d.keywords).map(([group, kws]: any) => (
           <div key={group} className="mb-2"><p className="text-sm font-medium capitalize">{group.replace(/_/g, " ")}</p><div className="mt-1 flex flex-wrap gap-1.5">{(kws as string[]).map((k) => <Badge key={k} variant="outline">{k}</Badge>)}</div></div>
         ))}</Section>}

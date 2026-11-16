@@ -37,7 +37,7 @@ export default function HostRecruitment() {
         ].map(s => (
           <div key={s.label} className="card">
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -49,7 +49,7 @@ export default function HostRecruitment() {
             <div key={l.id} className="card" style={{ padding: 14, background: 'var(--bg-secondary)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontWeight: 700 }}>{l.full_name}</div>
+                  <div style={{ fontWeight: 600 }}>{l.full_name}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{l.program}</div>
                 </div>
                 <span className="badge badge-success">{l.match_score}%</span>
@@ -70,7 +70,7 @@ export default function HostRecruitment() {
         {shortlisted.length === 0 ? <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Shortlist recommended learners to see them here.</div> :
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '8px 0' }}>Intern</th><th>Program</th><th>Match</th><th>Decision</th><th></th>
               </tr>
             </thead>
@@ -100,7 +100,7 @@ export default function HostRecruitment() {
         {interviews.length === 0 ? <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No interviews scheduled yet.</div> :
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '8px 0' }}>Intern</th><th>Date</th><th>Time</th><th>Mode</th><th>Status</th><th></th>
               </tr>
             </thead>

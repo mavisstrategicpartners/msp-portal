@@ -29,7 +29,7 @@ export default function KanbanBoard({ columns, items, onMove, renderCard, column
             }}
             style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: 10, minHeight: 320 }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 999, background: columnAccent ? columnAccent(col) : 'var(--brand)' }} />
                 {col}

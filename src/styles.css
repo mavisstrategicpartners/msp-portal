@@ -153,6 +153,15 @@
     border-color: var(--color-border);
   }
 
+  /* One weight scale across the platform: emphasis is semibold, table headings medium. */
+  strong,
+  b {
+    font-weight: 600;
+  }
+  th {
+    font-weight: 500;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);

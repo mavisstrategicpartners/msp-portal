@@ -51,7 +51,7 @@ export default function Coaching() {
           <div key={n.id} className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontWeight: 700 }}>{n.learner_name}</div>
+                <div style={{ fontWeight: 600 }}>{n.learner_name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{n.date} · by {n.mentor}</div>
               </div>
               <span className={'badge ' + (n.mood === 'Positive' ? 'badge-success' : n.mood === 'Needs Attention' ? 'badge-warning' : 'badge-info')}>{n.mood}</span>

@@ -87,15 +87,15 @@ export default function Calendar() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 420px', gap: 20, alignItems: 'flex-start' }}>
         <div className="card">
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
             {selectedDate ? `Events on ${formatLongDate(selectedDate)}` : 'All upcoming events'}
             {selectedDate && <button className="btn btn-ghost" style={{ marginLeft: 10 }} onClick={() => setSelectedDate(null)}>Show all</button>}
           </div>
 
           {dayHoliday && (
             <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#78350f', padding: '14px 16px', borderRadius: 10, marginBottom: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: '#78350f' }}>🇿🇦 {dayHoliday.name}</div>
-              <div style={{ fontSize: 11, color: '#92400e', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: 700 }}>South African Public Holiday</div>
+              <div style={{ fontWeight: 600, fontSize: 15, color: '#78350f' }}>🇿🇦 {dayHoliday.name}</div>
+              <div style={{ fontSize: 11, color: '#92400e', marginTop: 2, fontWeight: 600 }}>South African Public Holiday</div>
               <div style={{ fontSize: 13, marginTop: 8, color: '#78350f', lineHeight: 1.45 }}>{dayHoliday.description}</div>
               <div style={{ fontSize: 12, marginTop: 8, color: '#92400e' }}>Date: {formatLongDate(selectedDate)}</div>
             </div>
@@ -106,7 +106,7 @@ export default function Calendar() {
               <div key={e.id} style={{ border: '1px solid var(--border-color)', borderLeft: '4px solid var(--brand)', borderRadius: 10, padding: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>{e.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{e.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                       {e.type} • {formatShortDate(toKey(e.date))}{e.time ? ` • ${e.time}` : ''}
                     </div>
@@ -134,11 +134,11 @@ export default function Calendar() {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <button className="btn btn-ghost" onClick={() => navMonth(-1)}>‹</button>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>{monthLabel}</div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{monthLabel}</div>
             <button className="btn btn-ghost" onClick={() => navMonth(1)}>›</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 4, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 6 }}>
-            {WEEKDAYS.map(w => <div key={w} style={{ fontWeight: 700 }}>{w}</div>)}
+            {WEEKDAYS.map(w => <div key={w} style={{ fontWeight: 600 }}>{w}</div>)}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 4 }}>
             {grid.map((cell, idx) => {
@@ -159,8 +159,8 @@ export default function Calendar() {
                     background: isSelected ? 'var(--brand-soft)' : isHoliday ? 'var(--warning-soft)' : 'var(--bg-primary)',
                     cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, position: 'relative',
                   }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: isHoliday ? '#92400e' : 'var(--text-primary)' }}>{cell.day}</span>
-                  {isHoliday && <span style={{ fontSize: 8, color: '#92400e', fontWeight: 700, textAlign: 'center', lineHeight: 1.1 }}>{isHoliday.name.length > 12 ? isHoliday.name.slice(0, 10) + '…' : isHoliday.name}</span>}
+                  <span style={{ fontSize: 12, fontWeight: 600, color: isHoliday ? '#92400e' : 'var(--text-primary)' }}>{cell.day}</span>
+                  {isHoliday && <span style={{ fontSize: 8, color: '#92400e', fontWeight: 600, textAlign: 'center', lineHeight: 1.1 }}>{isHoliday.name.length > 12 ? isHoliday.name.slice(0, 10) + '…' : isHoliday.name}</span>}
                   {dayEv.length > 0 && <span style={{ width: 6, height: 6, borderRadius: 6, background: 'var(--brand)' }} />}
                 </button>
               )

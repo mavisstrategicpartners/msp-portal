@@ -104,7 +104,8 @@ export function ServiceDeadlinesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Service Deadlines & Delivery Coordination
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -206,11 +207,11 @@ export function ServiceDeadlinesPage() {
                           {item.originalDeadline}
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className={isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-foreground font-medium"}>
+                          <span className={isOverdue ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-foreground font-medium"}>
                             {item.currentDeadline}
                           </span>
                           {item.approvedDeadlineChangesCount > 0 && (
-                            <span className="ml-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold" title="Approved deadline extension count">
+                            <span className="ml-1 text-[10px] text-amber-600 dark:text-amber-400 font-semibold" title="Approved deadline extension count">
                               (+{item.approvedDeadlineChangesCount} rev)
                             </span>
                           )}

@@ -1,3 +1,4 @@
+import { AuthCard, AuthScreen } from "@/components/layout/auth-screen";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -269,9 +270,8 @@ function AuthPage() {
 
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#3b1d4d] text-white dark:bg-[#21172f]">
-      {/* Top right theme switcher */}
-      <div className="relative z-10 flex justify-end px-6 pt-6 sm:px-10">
+    <AuthScreen
+      topRight={
         <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5 text-[11px] font-medium text-white/80 shadow-sm">
           <span className="px-2 py-1">Theme</span>
           <button
@@ -299,12 +299,12 @@ function AuthPage() {
             Dark
           </button>
         </div>
-      </div>
-
-      {/* Center: Corporate Login Card */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8">
-        <div className="w-full max-w-[420px]">
-          <div className="space-y-6 rounded-lg border border-border bg-card p-8 shadow-md sm:p-9">
+      }
+    >
+      {/* Corporate sign-in card */}
+        <div>
+          <AuthCard>
+          <div className="space-y-6">
             {/* Header: Company Emblem & Title */}
             <div className="relative space-y-3 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center bg-transparent p-2">
@@ -319,8 +319,8 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Mavis Strategic Partners
+                <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                  Sign in to the portal
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   Sign in with your corporate credentials to continue.
@@ -412,7 +412,7 @@ function AuthPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="mx-auto mt-2 block h-10.5 w-3/5 max-w-[220px] bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:scale-[0.99]"
+                className="mt-2 h-10 w-full"
               >
                 {loading ? (
                   <>
@@ -437,26 +437,21 @@ function AuthPage() {
             </div>
           </div>
 
+          </AuthCard>
           {/* Security Notice */}
-          <div className="mt-5 space-y-1 text-center text-[11px] text-muted-foreground">
+          <div className="mt-5 space-y-1 text-center text-[11px] text-white/65">
             <p className="flex items-center justify-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <ShieldCheck className="h-3.5 w-3.5" />
               Authorized corporate personnel only. All access is logged and audited.
             </p>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/15 px-6 py-4 text-center text-[11px] text-white/70">
-        <p>© {new Date().getFullYear()} Mavis Strategic Partners (Pty) Ltd. All rights reserved.</p>
-      </footer>
 
       {/* Corporate IT Support Modal */}
       <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
         <DialogContent className="max-w-md border-border bg-card text-card-foreground shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
               <Building2 className="h-4 w-4 text-primary" /> Corporate IT Support
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -498,6 +493,6 @@ function AuthPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AuthScreen>
   );
 }

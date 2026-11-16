@@ -165,7 +165,7 @@ function EscalationsPage() {
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Open Escalations</p>
           <p
-            className={`text-2xl font-bold mt-1 ${
+            className={`text-2xl font-semibold mt-1 ${
               openList.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"
             }`}
           >
@@ -176,7 +176,7 @@ function EscalationsPage() {
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Level 3 (Executive)</p>
           <p
-            className={`text-2xl font-bold mt-1 ${
+            className={`text-2xl font-semibold mt-1 ${
               level3Count > 0 ? "text-red-600 font-extrabold" : "text-foreground"
             }`}
           >
@@ -186,14 +186,14 @@ function EscalationsPage() {
         </Card>
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Resolved Issues</p>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
             {resolvedList.length}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">Closed out successfully</p>
         </Card>
         <Card className="p-4 border-border">
           <p className="text-xs text-muted-foreground">Total Logged</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{escalations.length}</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{escalations.length}</p>
           <p className="text-[11px] text-muted-foreground mt-1">All recorded incidents</p>
         </Card>
       </div>
@@ -261,7 +261,7 @@ function EscalationsPage() {
       {displayedList.length === 0 && !isLoading ? (
         <Card className="p-12 text-center border-border">
           <CheckCircle2 className="h-12 w-12 text-emerald-500/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             {statusFilter === "open" ? "No Active Escalations" : "No Escalations Found"}
           </h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -324,7 +324,7 @@ function EscalationsPage() {
                       </Badge>
                     </div>
 
-                    <h4 className="text-base font-bold text-foreground mb-1">
+                    <h4 className="text-base font-semibold text-foreground mb-1">
                       {item.title}
                     </h4>
 
@@ -336,7 +336,7 @@ function EscalationsPage() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-2.5">
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 block">
+                        <span className="text-xs font-semibold text-muted-foreground/70 block">
                           Client / Team
                         </span>
                         <span className="font-medium text-foreground">
@@ -344,7 +344,7 @@ function EscalationsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 block">
+                        <span className="text-xs font-semibold text-muted-foreground/70 block">
                           Raised By
                         </span>
                         <span className="font-medium text-foreground">
@@ -352,7 +352,7 @@ function EscalationsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 block">
+                        <span className="text-xs font-semibold text-muted-foreground/70 block">
                           Owner
                         </span>
                         <span className="font-medium text-foreground">
@@ -360,7 +360,7 @@ function EscalationsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 block">
+                        <span className="text-xs font-semibold text-muted-foreground/70 block">
                           Target Date
                         </span>
                         <span className="font-medium text-foreground">

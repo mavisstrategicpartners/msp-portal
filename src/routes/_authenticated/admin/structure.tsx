@@ -6,7 +6,8 @@ export const Route = createFileRoute("/_authenticated/admin/structure")({
   component: () => (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Department Structure</h1>
+        <p className="text-xs font-medium text-muted-foreground">Organisation</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Department Structure</h1>
         <p className="text-sm text-muted-foreground">
           Departments, their managers and employees, as recorded in the portal. Task assignment follows this structure.
         </p>

@@ -227,43 +227,43 @@ export default function HRPerformance() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Avg Company Score</span>
+              <span className="text-xs font-semibold text-muted-foreground">Avg Company Score</span>
               <Award className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{avgScore} <span className="text-sm font-normal text-muted-foreground">/ 5.0</span></div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{avgScore} <span className="text-sm font-normal text-muted-foreground">/ 5.0</span></div>
             <div className="mt-1 text-xs text-emerald-600 font-medium">+0.3 vs last cycle</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Top Performers</span>
+              <span className="text-xs font-semibold text-muted-foreground">Top Performers</span>
               <Star className="h-4 w-4 text-amber-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{topPerformers}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{topPerformers}</div>
             <div className="mt-1 text-xs text-muted-foreground">Rating 4.0 and above</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Promotions Queued</span>
+              <span className="text-xs font-semibold text-muted-foreground">Promotions Queued</span>
               <TrendingUp className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{promotions}</div>
+            <div className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{promotions}</div>
             <div className="mt-1 text-xs text-muted-foreground">Recommended for advancement</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Active PIPs</span>
+              <span className="text-xs font-semibold text-muted-foreground">Active PIPs</span>
               <AlertTriangle className="h-4 w-4 text-rose-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{pips}</div>
+            <div className="mt-2 text-2xl font-semibold text-rose-600 dark:text-rose-400">{pips}</div>
             <div className="mt-1 text-xs text-muted-foreground">Improvement plan in progress</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Review Cycle</span>
+              <span className="text-xs font-semibold text-muted-foreground">Review Cycle</span>
               <Target className="h-4 w-4 text-blue-500" />
             </div>
             <div className="mt-2">
@@ -392,7 +392,7 @@ export default function HRPerformance() {
                           </td>
                           <td className="py-3 px-4 text-muted-foreground">{r.department}</td>
                           <td className="py-3 px-4">
-                            <div className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold bg-primary/10 text-primary">
+                            <div className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold bg-primary/10 text-primary">
                               <Star className="h-3 w-3 fill-current" />
                               <span>{Number(r.overall).toFixed(1)} / 5</span>
                             </div>
@@ -466,26 +466,26 @@ export default function HRPerformance() {
           <div className="space-y-4">
             <div className="card p-5">
               <div className="mb-4">
-                <h3 className="text-base font-bold text-foreground">9-Box Performance vs Potential Grid</h3>
+                <h3 className="text-base font-semibold text-foreground">9-Box Performance vs Potential Grid</h3>
                 <p className="text-xs text-muted-foreground">Evaluate workforce talent placement, succession readiness, and retention priorities.</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 {/* Row 1: High Potential */}
                 <div className="rounded-lg border border-purple-200 bg-purple-50/50 dark:bg-purple-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-purple-700 dark:text-purple-300">Enigma / Rough Diamond</div>
+                  <div className="text-xs font-semibold text-purple-700 dark:text-purple-300">Enigma / Rough Diamond</div>
                   <div className="text-[10px] text-muted-foreground">Low Perf, High Potential</div>
                   <div className="mt-2 text-xs text-foreground">1 candidate identified</div>
                 </div>
                 <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Future Leader / Growth Star</div>
+                  <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Future Leader / Growth Star</div>
                   <div className="text-[10px] text-muted-foreground">Med Perf, High Potential</div>
                   <div className="mt-2 space-y-1">
                     <span className="inline-block rounded bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.5 text-[11px] font-medium text-indigo-800 dark:text-indigo-200">Sipho Dlamini</span>
                   </div>
                 </div>
                 <div className="rounded-lg border border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Consistent Star (HiPo)</div>
+                  <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Consistent Star (HiPo)</div>
                   <div className="text-[10px] text-muted-foreground">High Perf, High Potential</div>
                   <div className="mt-2 space-y-1">
                     <span className="inline-block rounded bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:text-emerald-200">Thandi Mokoena</span>
@@ -495,38 +495,38 @@ export default function HRPerformance() {
 
                 {/* Row 2: Medium Potential */}
                 <div className="rounded-lg border border-border bg-muted/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-foreground">Inconsistent Contributor</div>
+                  <div className="text-xs font-semibold text-foreground">Inconsistent Contributor</div>
                   <div className="text-[10px] text-muted-foreground">Low Perf, Med Potential</div>
                   <div className="mt-2 text-xs text-muted-foreground">Needs regular check-ins</div>
                 </div>
                 <div className="rounded-lg border border-blue-200 bg-blue-50/40 dark:bg-blue-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-blue-700 dark:text-blue-300">Core Contributor / Backbone</div>
+                  <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">Core Contributor / Backbone</div>
                   <div className="text-[10px] text-muted-foreground">Med Perf, Med Potential</div>
                   <div className="mt-2">
                     <span className="inline-block rounded bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.5 text-[11px] font-medium text-blue-800 dark:text-blue-200">Bongani Nkosi</span>
                   </div>
                 </div>
                 <div className="rounded-lg border border-indigo-200 bg-indigo-50/40 dark:bg-indigo-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300">High Impact Specialist</div>
+                  <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">High Impact Specialist</div>
                   <div className="text-[10px] text-muted-foreground">High Perf, Med Potential</div>
                   <div className="mt-2 text-xs text-muted-foreground">Deep domain mastery</div>
                 </div>
 
                 {/* Row 3: Low Potential */}
                 <div className="rounded-lg border border-rose-300 bg-rose-50/50 dark:bg-rose-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-rose-700 dark:text-rose-300">Underperformer / PIP</div>
+                  <div className="text-xs font-semibold text-rose-700 dark:text-rose-300">Underperformer / PIP</div>
                   <div className="text-[10px] text-muted-foreground">Low Perf, Low Potential</div>
                   <div className="mt-2">
                     <span className="inline-block rounded bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 text-[11px] font-medium text-rose-800 dark:text-rose-200">Karabo Mthembu</span>
                   </div>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-foreground">Solid Professional</div>
+                  <div className="text-xs font-semibold text-foreground">Solid Professional</div>
                   <div className="text-[10px] text-muted-foreground">Med Perf, Low Potential</div>
                   <div className="mt-2 text-xs text-muted-foreground">Predictable execution</div>
                 </div>
                 <div className="rounded-lg border border-teal-200 bg-teal-50/40 dark:bg-teal-950/20 p-3 min-h-[110px]">
-                  <div className="text-xs font-bold text-teal-700 dark:text-teal-300">Trusted Expert</div>
+                  <div className="text-xs font-semibold text-teal-700 dark:text-teal-300">Trusted Expert</div>
                   <div className="text-[10px] text-muted-foreground">High Perf, Low Potential</div>
                   <div className="mt-2 text-xs text-muted-foreground">SME role ideal</div>
                 </div>
@@ -539,7 +539,7 @@ export default function HRPerformance() {
         {tab === 'goals' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="card p-5 space-y-4">
-              <h3 className="text-base font-bold text-foreground">Departmental OKR Progress</h3>
+              <h3 className="text-base font-semibold text-foreground">Departmental OKR Progress</h3>
               <div className="space-y-3">
                 {[
                   { dept: 'People & Culture', progress: 92, target: 'Roll out automated biometric clock-in' },
@@ -562,7 +562,7 @@ export default function HRPerformance() {
             </div>
 
             <div className="card p-5">
-              <h3 className="text-base font-bold text-foreground mb-3">Company Score Distribution</h3>
+              <h3 className="text-base font-semibold text-foreground mb-3">Company Score Distribution</h3>
               <BarChart data={chartData} height={200} color="var(--brand)" />
             </div>
           </div>
@@ -591,7 +591,7 @@ export default function HRPerformance() {
           <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Employee Name *</label>
+                <label className="text-xs font-semibold text-muted-foreground">Employee Name *</label>
                 <input
                   required
                   list="perf-emp-list"
@@ -608,7 +608,7 @@ export default function HRPerformance() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Department</label>
+                <label className="text-xs font-semibold text-muted-foreground">Department</label>
                 <input
                   value={form.department || ''}
                   onChange={e => setForm({ ...form, department: e.target.value })}
@@ -617,7 +617,7 @@ export default function HRPerformance() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Review Period</label>
+                <label className="text-xs font-semibold text-muted-foreground">Review Period</label>
                 <select
                   value={form.period}
                   onChange={e => setForm({ ...form, period: e.target.value })}
@@ -631,7 +631,7 @@ export default function HRPerformance() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Evaluator / Lead</label>
+                <label className="text-xs font-semibold text-muted-foreground">Evaluator / Lead</label>
                 <input
                   value={form.reviewer || ''}
                   onChange={e => setForm({ ...form, reviewer: e.target.value })}
@@ -643,8 +643,8 @@ export default function HRPerformance() {
             {/* Criteria Sliders */}
             <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">Core Evaluation Criteria</span>
-                <span className="text-xs font-bold text-foreground">Calculated Overall: {form.overall} / 5</span>
+                <span className="text-xs font-semibold text-primary">Core Evaluation Criteria</span>
+                <span className="text-xs font-semibold text-foreground">Calculated Overall: {form.overall} / 5</span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -716,7 +716,7 @@ export default function HRPerformance() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Goals Met</label>
+                <label className="text-xs font-semibold text-muted-foreground">Goals Met</label>
                 <input
                   type="number"
                   min="0"
@@ -727,7 +727,7 @@ export default function HRPerformance() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Goals Total</label>
+                <label className="text-xs font-semibold text-muted-foreground">Goals Total</label>
                 <input
                   type="number"
                   min="1"
@@ -762,7 +762,7 @@ export default function HRPerformance() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">360° Feedback & Performance Notes</label>
+              <label className="text-xs font-semibold text-muted-foreground">360° Feedback & Performance Notes</label>
               <textarea
                 rows={3}
                 value={form.feedback || ''}
@@ -792,8 +792,8 @@ export default function HRPerformance() {
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
               <div>
-                <div className="text-xs font-semibold text-muted-foreground uppercase">Overall Performance</div>
-                <div className="text-3xl font-extrabold text-foreground">{viewModal.overall} <span className="text-sm font-normal text-muted-foreground">/ 5.0</span></div>
+                <div className="text-xs font-semibold text-muted-foreground">Overall Performance</div>
+                <div className="text-2xl font-semibold text-foreground">{viewModal.overall} <span className="text-sm font-normal text-muted-foreground">/ 5.0</span></div>
               </div>
               <div className="space-y-1 text-right">
                 <div className="text-xs text-muted-foreground">Goals Attainment: <b>{viewModal.goals_met} of {viewModal.goals_total}</b></div>
@@ -807,24 +807,24 @@ export default function HRPerformance() {
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded border border-border p-2.5">
                 <span className="text-muted-foreground">Technical Mastery:</span>
-                <span className="float-right font-bold text-foreground">{viewModal.technical || 4}/5</span>
+                <span className="float-right font-semibold text-foreground">{viewModal.technical || 4}/5</span>
               </div>
               <div className="rounded border border-border p-2.5">
                 <span className="text-muted-foreground">Leadership:</span>
-                <span className="float-right font-bold text-foreground">{viewModal.leadership || 4}/5</span>
+                <span className="float-right font-semibold text-foreground">{viewModal.leadership || 4}/5</span>
               </div>
               <div className="rounded border border-border p-2.5">
                 <span className="text-muted-foreground">Team Collaboration:</span>
-                <span className="float-right font-bold text-foreground">{viewModal.teamwork || 4}/5</span>
+                <span className="float-right font-semibold text-foreground">{viewModal.teamwork || 4}/5</span>
               </div>
               <div className="rounded border border-border p-2.5">
                 <span className="text-muted-foreground">Culture & Values:</span>
-                <span className="float-right font-bold text-foreground">{viewModal.values || 4}/5</span>
+                <span className="float-right font-semibold text-foreground">{viewModal.values || 4}/5</span>
               </div>
             </div>
 
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Appraisal Commentary & Feedback</div>
+              <div className="text-xs font-semibold text-muted-foreground">Appraisal Commentary & Feedback</div>
               <p className="mt-1 rounded-lg border border-border bg-muted/20 p-3 text-sm text-foreground leading-relaxed">
                 {viewModal.feedback || 'No written feedback logged for this appraisal.'}
               </p>

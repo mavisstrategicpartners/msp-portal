@@ -176,7 +176,7 @@ export function EvidenceReviewDialog({ evidenceId, open, onOpenChange, onReviewe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-[96vw] max-w-5xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex flex-wrap items-center gap-2 pr-6 text-base font-bold">
+          <DialogTitle className="flex flex-wrap items-center gap-2 pr-6 text-base font-semibold">
             {ev?.taskTitle || "Evidence submission"}
             {ev && (
               <Badge variant="outline" className={STATUS_STYLE[ev.status] || ""}>
@@ -229,7 +229,7 @@ export function EvidenceReviewDialog({ evidenceId, open, onOpenChange, onReviewe
             </dl>
 
             <section className="space-y-1.5">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold text-muted-foreground">
                 Description
               </h3>
               <p className="whitespace-pre-wrap rounded-md border border-border bg-card p-3 text-sm text-foreground">
@@ -241,7 +241,7 @@ export function EvidenceReviewDialog({ evidenceId, open, onOpenChange, onReviewe
 
             {ev.deliverableLinks?.length > 0 && (
               <section className="space-y-1.5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-xs font-semibold text-muted-foreground">
                   Links
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -261,7 +261,7 @@ export function EvidenceReviewDialog({ evidenceId, open, onOpenChange, onReviewe
             )}
 
             <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold text-muted-foreground">
                 Evidence files ({files.length})
               </h3>
               {files.length === 0 ? (
@@ -394,7 +394,7 @@ export function EvidenceReviewDialog({ evidenceId, open, onOpenChange, onReviewe
 
             {ev.history?.length > 0 && (
               <section className="space-y-1.5">
-                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                   <History className="h-3.5 w-3.5" /> Earlier submissions
                 </h3>
                 <ul className="space-y-1 text-xs">

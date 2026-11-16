@@ -202,7 +202,7 @@ function StatCard({
   return (
     <Card className="p-4 flex flex-col gap-1.5 border-border/60">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-[11px] font-semibold text-muted-foreground">
           {label}
         </span>
         {Icon && (
@@ -212,7 +212,7 @@ function StatCard({
           />
         )}
       </div>
-      <div className="text-2xl font-bold tracking-tight" style={color ? { color } : undefined}>
+      <div className="text-2xl font-semibold tracking-tight" style={color ? { color } : undefined}>
         {value}
       </div>
       {sub && (
@@ -414,7 +414,7 @@ export function HrDashboard() {
             return (
               <Card
                 key={item.path}
-                className="p-3.5 text-left transition-all hover:border-primary/50 hover:shadow-md group cursor-pointer flex items-start gap-3"
+                className="p-3.5 text-left transition-all hover:border-primary/50 shadow-sm group cursor-pointer flex items-start gap-3"
                 onClick={() => {
                   window.location.href = item.path;
                 }}
@@ -425,7 +425,7 @@ export function HrDashboard() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                  <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                     {item.title}
                   </div>
                   <div className="text-xs text-muted-foreground truncate mt-0.5">
@@ -440,7 +440,7 @@ export function HrDashboard() {
 
       {/* ─── Section: Workforce Analytics Stats ─────────────────────────── */}
       <div>
-        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="mb-2 text-xs font-semibold text-muted-foreground">
           Workforce Analytics
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -483,19 +483,19 @@ export function HrDashboard() {
       {/* ─── Section: Charts ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="p-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-2">
+          <div className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2">
             <PieChart className="h-3.5 w-3.5" /> Employment Type
           </div>
           <MiniDonut data={empByType} />
         </Card>
         <Card className="p-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-2">
+          <div className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5" /> Department Headcount
           </div>
           <MiniBarChart data={empByDept} color="#7c3aed" />
         </Card>
         <Card className="p-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-2">
+          <div className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2">
             <Shield className="h-3.5 w-3.5" /> Diversity — Gender
           </div>
           <MiniDonut data={empByGender} />
@@ -505,7 +505,7 @@ export function HrDashboard() {
       {/* ─── Section: Pending Employee Leave Approvals ──────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="text-xs font-semibold text-muted-foreground">
             Pending Employee Leave Requests ({pendingLeaveCount})
           </div>
           <a
@@ -610,7 +610,7 @@ export function HrDashboard() {
       {/* ─── Section: Live Workforce Attendance & Time Tracking ──────── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="text-xs font-semibold text-muted-foreground">
             Live Workforce Attendance & Time Tracking
           </div>
           <div className="flex items-center gap-3">
@@ -663,7 +663,7 @@ export function HrDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">
+            <div className="text-xs font-semibold text-muted-foreground">
               Recruitment Funnel
             </div>
             <a
@@ -687,7 +687,7 @@ export function HrDashboard() {
 
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">
+            <div className="text-xs font-semibold text-muted-foreground">
               Learning & Development
             </div>
             <a

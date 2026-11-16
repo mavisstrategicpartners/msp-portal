@@ -111,7 +111,8 @@ export function DepartmentApprovalsPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             {profileData?.departmentName ?? "Department"} Approvals
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -168,7 +169,7 @@ export function DepartmentApprovalsPage() {
         {currentList.length === 0 ? (
           <Card className="p-12 text-center border-border">
             <CheckSquare className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-foreground">No approval requests recorded</h3>
+            <h3 className="text-base font-semibold text-foreground">No approval requests recorded</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
               Budget, deadline and exception requests are not yet captured in the portal's database, so none are
               shown. Deliverables awaiting your sign-off are in{" "}
@@ -182,7 +183,7 @@ export function DepartmentApprovalsPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <CardTitle className="text-base font-bold text-foreground">
+                      <CardTitle className="text-base font-semibold text-foreground">
                         {item.title}
                       </CardTitle>
                       <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
@@ -248,12 +249,12 @@ export function DepartmentApprovalsPage() {
 
               <CardContent className="p-4 space-y-3 text-xs">
                 <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                  <span className="text-xs font-semibold text-muted-foreground block">
                     Request Details & Justification
                   </span>
                   <p className="text-foreground font-medium leading-relaxed">{item.description}</p>
                   {item.amountZAR && (
-                    <div className="mt-2 text-sm font-bold text-primary flex items-center gap-1.5">
+                    <div className="mt-2 text-sm font-semibold text-primary flex items-center gap-1.5">
                       <Banknote className="h-4 w-4" />
                       Amount: {formatZAR(item.amountZAR)}
                     </div>
@@ -261,7 +262,7 @@ export function DepartmentApprovalsPage() {
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-3 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                  <span className="text-xs font-semibold text-muted-foreground block">
                     Attached Supporting Evidence
                   </span>
                   <p className="text-muted-foreground font-medium leading-relaxed">{item.supportingEvidence}</p>
@@ -269,7 +270,7 @@ export function DepartmentApprovalsPage() {
 
                 {item.decisionComments && (
                   <div className="p-3 rounded-lg border border-border bg-muted/20 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                    <span className="text-xs font-semibold text-muted-foreground block">
                       Decision Audit & Manager Comments
                     </span>
                     <p className="text-foreground leading-relaxed">
@@ -298,7 +299,7 @@ export function DepartmentApprovalsPage() {
           {selectedApproval && (
             <div className="space-y-4 py-2 text-xs">
               <div className="p-3 rounded-lg border border-border bg-muted/40 space-y-1">
-                <div className="font-bold text-foreground text-sm">{selectedApproval.title}</div>
+                <div className="font-semibold text-foreground text-sm">{selectedApproval.title}</div>
                 <div className="text-muted-foreground">Client: {selectedApproval.relatedClientName} &bull; Type: {selectedApproval.requestType}</div>
               </div>
 

@@ -64,7 +64,7 @@ export function GeneralManagerDashboard() {
             <span>Overall Execution Rate</span>
             <CheckSquare className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">92.4%</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">92.4%</p>
           <Progress value={92.4} className="mt-2 h-1.5" />
           <p className="text-[11px] text-muted-foreground mt-1.5">85 of 92 planned deliverables completed</p>
         </Card>
@@ -74,7 +74,7 @@ export function GeneralManagerDashboard() {
             <span>Company Capacity Load</span>
             <Users className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">81%</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">81%</p>
           <Progress value={81} className="mt-2 h-1.5" />
           <p className="text-[11px] text-muted-foreground mt-1.5">Healthy workload across 12 specialists</p>
         </Card>
@@ -84,7 +84,7 @@ export function GeneralManagerDashboard() {
             <span>Revenue Target vs Actual</span>
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(0, { compact: true })} / {formatZAR(0, { compact: true })}</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{formatZAR(0, { compact: true })} / {formatZAR(0, { compact: true })}</p>
           <Progress value={0} className="mt-2 h-1.5" />
           <p className="text-[11px] text-muted-foreground mt-1.5">No revenue records recorded yet</p>
         </Card>
@@ -94,7 +94,7 @@ export function GeneralManagerDashboard() {
             <span>Cross-Team Dependencies</span>
             <Layers className="h-4 w-4 text-amber-500" />
           </div>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">2 Blocked Handoffs</p>
+          <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-2">2 Blocked Handoffs</p>
           <p className="text-[11px] text-muted-foreground mt-3">Creative &rarr; Media Buying awaiting approval</p>
         </Card>
       </div>
@@ -103,7 +103,7 @@ export function GeneralManagerDashboard() {
       <Card className="p-5 border-border">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-foreground">Department Performance & Delivery Scorecard</h3>
+            <h3 className="text-base font-semibold text-foreground">Department Performance & Delivery Scorecard</h3>
             <p className="text-xs text-muted-foreground">Weekly tracking of deliverables, capacity, and active blockers by department.</p>
           </div>
           <Button size="sm" variant="outline" className="text-xs" onClick={() => toast.success("Generated weekly snapshot report.")}>
@@ -127,9 +127,9 @@ export function GeneralManagerDashboard() {
             <tbody className="divide-y divide-border">
               {DEPARTMENTS_DATA.map((dept) => (
                 <tr key={dept.department} className="hover:bg-muted/30">
-                  <td className="p-2.5 font-bold text-foreground">{dept.department}</td>
+                  <td className="p-2.5 font-semibold text-foreground">{dept.department}</td>
                   <td className="p-2.5 font-medium">{dept.targetDeliverables} items</td>
-                  <td className="p-2.5 font-bold text-emerald-600 dark:text-emerald-400">{dept.actualDelivered} items</td>
+                  <td className="p-2.5 font-semibold text-emerald-600 dark:text-emerald-400">{dept.actualDelivered} items</td>
                   <td className="p-2.5">
                     <div className="flex items-center gap-2">
                       <span className="w-8">{dept.capacityUtilizationPct}%</span>
@@ -138,7 +138,7 @@ export function GeneralManagerDashboard() {
                   </td>
                   <td className="p-2.5">
                     {dept.openBlockers > 0 ? (
-                      <span className="font-bold text-amber-600">{dept.openBlockers} Blocker</span>
+                      <span className="font-semibold text-amber-600">{dept.openBlockers} Blocker</span>
                     ) : (
                       <span className="text-muted-foreground">0</span>
                     )}
@@ -174,7 +174,7 @@ export function GeneralManagerDashboard() {
 
       {/* ─── Cross-Department Handoff Chain (Section 12) ───────────────────── */}
       <Card className="p-5 border-border">
-        <h3 className="text-base font-bold text-foreground mb-1">Cross-Department Service Handoff Pipeline</h3>
+        <h3 className="text-base font-semibold text-foreground mb-1">Cross-Department Service Handoff Pipeline</h3>
         <p className="text-xs text-muted-foreground mb-4">
           Tracking prerequisite readiness from Sales to Launch to identify cross-functional bottlenecks.
         </p>
@@ -189,7 +189,7 @@ export function GeneralManagerDashboard() {
             { stage: "6. Live Campaign Launch", status: "Target", time: "2 Business Days", state: "Upcoming" },
           ].map((s) => (
             <div key={s.stage} className={`p-3 rounded-lg border ${s.state === "Delayed" ? "border-rose-500/40 bg-rose-500/[0.05]" : "border-border bg-card"}`}>
-              <span className="font-bold block text-foreground">{s.stage}</span>
+              <span className="font-semibold block text-foreground">{s.stage}</span>
               <p className="text-[11px] text-muted-foreground mt-1">{s.time}</p>
               <Badge
                 variant="outline"

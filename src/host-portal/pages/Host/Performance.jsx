@@ -81,7 +81,7 @@ export default function Performance() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Reviewed {r.review_date} by {r.reviewer}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--brand)' }}>{avg}</div>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--brand)' }}>{avg}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Avg score</div>
                 </div>
               </div>

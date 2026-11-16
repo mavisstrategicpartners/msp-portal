@@ -56,11 +56,11 @@ export default function Reports() {
     <DashboardLayout title="Reports">
       {categories.map(cat => (
         <div key={cat.name} style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.08em', margin: '4px 0 10px' }}>{cat.icon} {cat.name}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', margin: '4px 0 10px' }}>{cat.icon} {cat.name}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
             {cat.items.map(r => (
               <div key={r.id} className="card">
-                <div style={{ fontSize: 15, fontWeight: 700 }}>{r.title}</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{r.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '6px 0 12px' }}>{r.desc}</div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-ghost" onClick={() => setPreview(r)}>Preview</button>
@@ -82,7 +82,7 @@ export default function Reports() {
             <table>
               <thead>
                 <tr>{preview.rows[0] && Object.keys(preview.rows[0]).map(k => (
-                  <th key={k} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{k}</th>
+                  <th key={k} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>{k}</th>
                 ))}</tr>
               </thead>
               <tbody>

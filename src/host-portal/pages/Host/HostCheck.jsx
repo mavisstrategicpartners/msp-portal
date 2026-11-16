@@ -11,7 +11,7 @@ const empty = {
   accommodate_disability: false, disability_types: '',
   virtual_site_visit: false, proximity_transport: '',
 }
-const labelStyle = { fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: '.05em' }
+const labelStyle = { fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }
 const inputStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--input-text)', fontSize: 13 }
 
 function Field({ label, k, form, set, type = 'text', full }) {
@@ -34,12 +34,12 @@ export default function HostCheck() {
   return (
     <DashboardLayout title="Host Employer Check">
       <div className="card" style={{ marginBottom: 16, background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
-        <div style={{ fontSize: 14, fontWeight: 700 }}>Host intake & vetting form</div>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>Host intake & vetting form</div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>Complete this once per intake cycle. Your responses inform learner matching, site visits, and reporting.</div>
       </div>
 
       <form onSubmit={submit} className="card">
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 12 }}>Contact person</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 12 }}>Contact person</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <Field label="Host full name" k="host_full_name" form={form} set={set} />
           <Field label="Title / position" k="contact_title" form={form} set={set} />
@@ -48,7 +48,7 @@ export default function HostCheck() {
           <Field label="Alternative email" k="alt_email" form={form} set={set} type="email" />
         </div>
 
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', margin: '22px 0 12px' }}>Company details</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', margin: '22px 0 12px' }}>Company details</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <Field label="Company name" k="company_name" form={form} set={set} />
           <Field label="Registration number" k="registration_number" form={form} set={set} />
@@ -61,7 +61,7 @@ export default function HostCheck() {
           <Field label="Number of employees" k="employees" form={form} set={set} type="number" />
         </div>
 
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', margin: '22px 0 12px' }}>Learner hosting</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', margin: '22px 0 12px' }}>Learner hosting</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <Field label="Learners currently hosting" k="learners_current" form={form} set={set} type="number" />
           <Field label="Learners previously hosted" k="learners_previous" form={form} set={set} type="number" />
@@ -70,7 +70,7 @@ export default function HostCheck() {
           <Field label="Specific roles to be filled" k="roles_needed" form={form} set={set} type="textarea" full />
         </div>
 
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', margin: '22px 0 12px' }}>Inclusion & logistics</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', margin: '22px 0 12px' }}>Inclusion & logistics</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <div>
             <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, marginTop: 20 }}>

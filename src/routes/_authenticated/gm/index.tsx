@@ -229,7 +229,7 @@ function GmDashboardPage() {
                       <td className="px-3 py-2.5">{deptTasks.length}</td>
                       <td className="px-3 py-2.5">
                         {deptOverdue.length > 0 ? (
-                          <span className="font-bold text-rose-600">{deptOverdue.length}</span>
+                          <span className="font-semibold text-rose-600">{deptOverdue.length}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
@@ -276,7 +276,7 @@ function KpiCard({ label, value, sub, icon, iconColor, progress }: {
 function MetricTile({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-      <p className={`text-2xl font-bold ${color || "text-foreground"}`}>{value}</p>
+      <p className={`text-2xl font-semibold ${color || "text-foreground"}`}>{value}</p>
       <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
     </div>
   );

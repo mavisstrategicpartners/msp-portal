@@ -10,6 +10,21 @@ export const Route = createFileRoute("/_authenticated/host/$")({
     if (!location.pathname.startsWith("/host/hr")) {
       throw redirect({ to: "/home" });
     }
+    // Pages that have been rebuilt on the MSP design standard open at their own address, so the
+    // older embedded copies (and their old layout) are never shown.
+    const rebuilt: Record<string, string> = {
+      "/host/hr": "/hr",
+      "/host/hr/leave": "/hr/leave",
+      "/host/hr/documents": "/hr/documents",
+      "/host/hr/attendance": "/hr/attendance",
+      "/host/hr/payroll": "/hr/payroll",
+      "/host/hr/timesheets": "/hr/timesheets",
+      "/host/hr/relations": "/hr/relations",
+      "/host/hr/recruitment": "/hr/recruitment",
+      "/host/hr/performance": "/hr/performance",
+    };
+    const target = rebuilt[location.pathname.replace(/\/$/, "")];
+    if (target) throw redirect({ to: target as any, replace: true });
   },
   component: HostSplat,
 });

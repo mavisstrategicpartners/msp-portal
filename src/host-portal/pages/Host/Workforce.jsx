@@ -29,7 +29,7 @@ export default function Workforce() {
       {tab === 'assigned' && (
         <div className="card">
           <table>
-            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
               <th style={{ padding: '10px 0' }}>Intern</th><th>Program</th><th>Mentor</th><th>Status</th></tr></thead>
             <tbody>
               {learners.map(l => (
@@ -54,7 +54,7 @@ export default function Workforce() {
       {tab === 'performance' && (
         <div className="card">
           <table>
-            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
               <th style={{ padding: '10px 0' }}>Intern</th><th>Attendance</th><th>Score</th><th>Progress</th></tr></thead>
             <tbody>
               {learners.map(l => (
@@ -80,7 +80,7 @@ export default function Workforce() {
             <button className="btn btn-primary" onClick={() => setAddingIncident(true)}>+ Log Incident</button>
           </div>
           <table>
-            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
               <th style={{ padding: '10px 0' }}>Date</th><th>Intern</th><th>Category</th><th>Severity</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
               {incidents.map(i => (

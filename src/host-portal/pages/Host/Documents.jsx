@@ -90,7 +90,7 @@ export default function Documents() {
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '10px 0' }}>Name</th><th>Category</th><th>Size</th><th>Uploaded</th><th>Authenticity</th><th>Signature</th><th></th>
               </tr>
             </thead>

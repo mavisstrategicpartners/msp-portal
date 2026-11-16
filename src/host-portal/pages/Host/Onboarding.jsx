@@ -240,7 +240,7 @@ export default function Onboarding() {
         </>}>
         <form id="onboard-form" onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
 
-          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>Personal details</div>
+          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>Personal details</div>
 
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Full Name<Req /></label>
@@ -263,7 +263,7 @@ export default function Onboarding() {
             <input required style={field} value={form.address} onChange={set('address')} placeholder="Street, suburb, city" />
           </div>
 
-          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8 }}>Citizenship</div>
+          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 8 }}>Citizenship</div>
 
           <div>
             <label style={labelStyle}>Citizenship<Req /></label>
@@ -284,7 +284,7 @@ export default function Onboarding() {
             </div>
           )}
 
-          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8 }}>Education</div>
+          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 8 }}>Education</div>
 
           <div>
             <label style={labelStyle}>Qualification<Req /></label>
@@ -302,7 +302,7 @@ export default function Onboarding() {
             <input style={field} value={form.institution} onChange={set('institution')} placeholder="e.g. University of Johannesburg" />
           </div>
 
-          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8 }}>Placement</div>
+          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 8 }}>Placement</div>
 
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Program<Req /> <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}>(only programs your company offers)</span></label>
@@ -336,7 +336,7 @@ export default function Onboarding() {
             <input style={field} value={form.mentor} onChange={set('mentor')} placeholder="Optional" />
           </div>
 
-          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 8 }}>Accessibility</div>
+          <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginTop: 8 }}>Accessibility</div>
 
           <label style={{ gridColumn: '1 / -1', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
             <input type="checkbox" checked={!!form.disability} onChange={set('disability')} />

@@ -1,3 +1,4 @@
+import { AuthCard, AuthScreen } from "@/components/layout/auth-screen";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
@@ -192,10 +193,10 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col justify-between bg-[#3b1d4d] text-white dark:bg-[#21172f]">
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
-        <div className="w-full max-w-[420px]">
-          <div className="space-y-6 rounded-lg border border-border bg-card p-8 text-card-foreground shadow-md sm:p-9">
+    <AuthScreen>
+        <div>
+          <AuthCard>
+          <div className="space-y-6">
             <div className="space-y-3 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                 {step === "done" ? (
@@ -210,7 +211,7 @@ function ForgotPasswordPage() {
                 <h1
                   ref={headingRef}
                   tabIndex={-1}
-                  className="text-xl font-bold tracking-tight text-foreground outline-none"
+                  className="text-xl font-semibold tracking-tight text-foreground outline-none"
                 >
                   {titles[step][0]}
                 </h1>
@@ -256,7 +257,7 @@ function ForgotPasswordPage() {
                   busyText="Sending code..."
                   disabled={busy || cooldown > 0}
                 >
-                  {cooldown > 0 ? `Send code (${cooldown}s)` : "Send Verification Code"}
+                  {cooldown > 0 ? `Send code (${cooldown}s)` : "Send verification code"}
                 </SubmitButton>
               </form>
             )}
@@ -371,7 +372,7 @@ function ForgotPasswordPage() {
                   <p className="text-[11px] text-destructive">The passwords do not match.</p>
                 )}
                 <SubmitButton busy={busy} busyText="Updating password..." disabled={busy}>
-                  Reset Password
+                  Reset password
                 </SubmitButton>
               </form>
             )}
@@ -403,16 +404,13 @@ function ForgotPasswordPage() {
             )}
           </div>
 
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[11px] text-white/70">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+          </AuthCard>
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[11px] text-white/65">
+            <ShieldCheck className="h-3.5 w-3.5" />
             Never share your verification code. MSP staff will never ask for it.
           </p>
         </div>
-      </main>
-      <footer className="relative z-10 border-t border-white/15 px-6 py-4 text-center text-[11px] text-white/70">
-        <p>© {new Date().getFullYear()} Mavis Strategic Partners (Pty) Ltd. All rights reserved.</p>
-      </footer>
-    </div>
+    </AuthScreen>
   );
 }
 
@@ -509,7 +507,7 @@ function SubmitButton({
     <Button
       type="submit"
       disabled={disabled}
-      className="mx-auto block h-10.5 w-full max-w-[260px] bg-primary text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+      className="h-10 w-full"
     >
       {busy ? (
         <>

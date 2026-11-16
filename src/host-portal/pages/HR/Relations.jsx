@@ -28,7 +28,7 @@ export default function Relations() {
       <div className="card">
         <table>
           <thead>
-            <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
               <th style={{ padding: '10px 0' }}>Employee</th><th>Type</th><th>Severity</th><th>Date</th><th>Status</th><th>Description</th><th></th>
             </tr>
           </thead>

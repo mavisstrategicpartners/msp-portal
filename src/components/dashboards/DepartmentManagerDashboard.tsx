@@ -47,8 +47,8 @@ export function DepartmentManagerDashboard() {
       {/* ─── Department Selector Banner ────────────────────────────────────── */}
       <Card className="p-4 border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/20">
         <div>
-          <span className="text-xs font-semibold uppercase text-muted-foreground">Department Management</span>
-          <h3 className="text-lg font-bold text-foreground">{selectedDept} Operations</h3>
+          <span className="text-xs font-semibold text-muted-foreground">Department Management</span>
+          <h3 className="text-lg font-semibold text-foreground">{selectedDept} Operations</h3>
         </div>
 
         <div className="flex items-center gap-2">
@@ -79,23 +79,23 @@ export function DepartmentManagerDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Department Tasks</span>
-          <p className="text-2xl font-bold text-foreground mt-1">{tasks.length}</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{tasks.length}</p>
         </Card>
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Pending Manager QA</span>
-          <p className="text-2xl font-bold text-primary mt-1">
+          <p className="text-2xl font-semibold text-primary mt-1">
             {tasks.filter((t) => t.status === "Submitted for review").length}
           </p>
         </Card>
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Blocked Deliverables</span>
-          <p className="text-2xl font-bold text-amber-500 mt-1">
+          <p className="text-2xl font-semibold text-amber-500 mt-1">
             {tasks.filter((t) => t.status === "Blocked").length}
           </p>
         </Card>
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Overdue Items</span>
-          <p className="text-2xl font-bold text-rose-500 mt-1">
+          <p className="text-2xl font-semibold text-rose-500 mt-1">
             {tasks.filter((t) => t.workingHoursLate > 0).length}
           </p>
         </Card>
@@ -105,7 +105,7 @@ export function DepartmentManagerDashboard() {
       <Card className="p-5 border-border space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h3 className="text-base font-bold text-foreground">Assigned Deliverables & QA Approvals</h3>
+            <h3 className="text-base font-semibold text-foreground">Assigned Deliverables & QA Approvals</h3>
             <p className="text-xs text-muted-foreground">
               Review team progress, approve evidence submissions, or unblock team members.
             </p>
@@ -119,7 +119,7 @@ export function DepartmentManagerDashboard() {
           {tasks.length === 0 ? (
             <div className="p-10 text-center border border-dashed border-border rounded-xl">
               <CheckSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-bold text-foreground">No tasks have been assigned yet.</p>
+              <p className="text-sm font-semibold text-foreground">No tasks have been assigned yet.</p>
               <p className="text-xs text-muted-foreground mt-1">Tasks assigned to employees will appear here.</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">No upcoming deadlines.</p>
             </div>
@@ -131,7 +131,7 @@ export function DepartmentManagerDashboard() {
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">{task.client}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{task.client}</span>
                     <Badge
                       variant={
                         task.status === "Blocked"
@@ -145,7 +145,7 @@ export function DepartmentManagerDashboard() {
                       {task.status}
                     </Badge>
                   </div>
-                  <h4 className="text-sm font-bold text-foreground mt-0.5">{task.title}</h4>
+                  <h4 className="text-sm font-semibold text-foreground mt-0.5">{task.title}</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Assignee Role: <strong>{task.assigneeRole}</strong> &bull; Due: <strong>{task.dueDate}</strong>
                   </p>

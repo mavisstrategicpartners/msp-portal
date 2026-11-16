@@ -82,7 +82,7 @@ function CompanyExecutionPage() {
         <Header />
         <Card className="p-12 text-center border-border">
           <Target className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">No Execution Data Available</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Execution Data Available</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Company initiatives, milestones and tasks have not been configured yet.
             Once tasks are created and assigned in the system, execution tracking will appear here automatically.
@@ -129,7 +129,7 @@ function CompanyExecutionPage() {
 
       {/* Task Table */}
       <Card className="p-5 border-border">
-        <h3 className="text-base font-bold text-foreground mb-4">
+        <h3 className="text-base font-semibold text-foreground mb-4">
           All Tasks & Deliverables ({filtered.length})
         </h3>
         <div className="overflow-x-auto">
@@ -147,7 +147,7 @@ function CompanyExecutionPage() {
             <tbody className="divide-y divide-border">
               {filtered.slice(0, 50).map((t: any) => (
                 <tr key={t.id} className="hover:bg-muted/30">
-                  <td className="p-2.5 font-bold text-foreground max-w-[300px] truncate">{t.title || t.name || "Untitled"}</td>
+                  <td className="p-2.5 font-semibold text-foreground max-w-[300px] truncate">{t.title || t.name || "Untitled"}</td>
                   <td className="p-2.5">{t.department || "—"}</td>
                   <td className="p-2.5">{t.assigned_name}</td>
                   <td className="p-2.5">{t.due_date ? new Date(t.due_date).toLocaleDateString("en-ZA") : "—"}</td>
@@ -208,7 +208,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: any; sub
   return (
     <Card className="p-4 border-border">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${color || "text-foreground"}`}>{value}</p>
+      <p className={`text-2xl font-semibold mt-1 ${color || "text-foreground"}`}>{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
     </Card>
   );

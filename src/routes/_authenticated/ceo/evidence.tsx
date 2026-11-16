@@ -67,7 +67,7 @@ function EvidencePage({ data }: { data: ExecutiveOverview }) {
                   <span>
                     <span className="font-semibold text-foreground">{a.title}</span> · {a.department} · {a.requestedBy} · {a.date}
                   </span>
-                  <span className="font-bold">{zar(a.amount)}</span>
+                  <span className="font-semibold">{zar(a.amount)}</span>
                 </Card>
               ))
             ) : (

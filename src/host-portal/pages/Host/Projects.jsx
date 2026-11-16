@@ -81,7 +81,7 @@ export default function Projects() {
         {stats.map(s => (
           <div key={s.label} className="card">
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -108,7 +108,7 @@ export default function Projects() {
             const projectTasks = tasks.filter(t => t.project_id === p.id)
             return (
               <div className="card" style={{ padding: 14, borderLeft: `4px solid ${priorityColor(p.priority)}` }}>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.client}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '8px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>

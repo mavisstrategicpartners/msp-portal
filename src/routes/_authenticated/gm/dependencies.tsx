@@ -75,7 +75,7 @@ function DependenciesPage() {
       {noDeps && blockedTasks.length === 0 ? (
         <Card className="p-12 text-center border-border">
           <GitBranch className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">No Dependencies Recorded</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Dependencies Recorded</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             No cross-department dependencies have been recorded in the system.
             Dependencies are created when work in one department requires input or completion from another.
@@ -88,17 +88,17 @@ function DependenciesPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Open Dependencies</p>
-              <p className={`text-2xl font-bold mt-1 ${openDeps.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+              <p className={`text-2xl font-semibold mt-1 ${openDeps.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
                 {openDeps.length}
               </p>
             </Card>
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Resolved</p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{resolvedDeps.length}</p>
+              <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{resolvedDeps.length}</p>
             </Card>
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Blocked Tasks</p>
-              <p className={`text-2xl font-bold mt-1 ${blockedTasks.length > 0 ? "text-rose-600" : "text-foreground"}`}>
+              <p className={`text-2xl font-semibold mt-1 ${blockedTasks.length > 0 ? "text-rose-600" : "text-foreground"}`}>
                 {blockedTasks.length}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1">Tasks with 'blocked' status</p>
@@ -108,7 +108,7 @@ function DependenciesPage() {
           {/* Dependencies List */}
           {dependencies.length > 0 && (
             <Card className="p-5 border-border">
-              <h3 className="text-base font-bold text-foreground mb-4">Dependency Records</h3>
+              <h3 className="text-base font-semibold text-foreground mb-4">Dependency Records</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
@@ -126,7 +126,7 @@ function DependenciesPage() {
                       const age = dep.created_at ? Math.floor((Date.now() - new Date(dep.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 0;
                       return (
                         <tr key={dep.id} className="hover:bg-muted/30">
-                          <td className="p-2.5 font-bold text-foreground max-w-[300px] truncate">
+                          <td className="p-2.5 font-semibold text-foreground max-w-[300px] truncate">
                             {dep.title || dep.description || "Dependency"}
                           </td>
                           <td className="p-2.5">{dep.waiting_department || dep.from_department || "—"}</td>
@@ -156,7 +156,7 @@ function DependenciesPage() {
           {/* Blocked Tasks */}
           {blockedTasks.length > 0 && (
             <Card className="p-5 border-border">
-              <h3 className="text-base font-bold text-foreground mb-4">
+              <h3 className="text-base font-semibold text-foreground mb-4">
                 <AlertTriangle className="inline h-4 w-4 text-amber-500 mr-2" />
                 Blocked Tasks ({blockedTasks.length})
               </h3>

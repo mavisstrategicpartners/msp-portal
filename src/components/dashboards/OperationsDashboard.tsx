@@ -91,25 +91,25 @@ export function OperationsDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Onboarding Workflows</span>
-          <p className="text-2xl font-bold text-foreground mt-1">{SAMPLE_ONBOARDING.length} Clients</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{SAMPLE_ONBOARDING.length} Clients</p>
           <p className="text-[11px] text-muted-foreground mt-1">0 Approaching 2-Day SLA Breach</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Campaigns Awaiting Launch</span>
-          <p className="text-2xl font-bold text-foreground mt-1">0 Campaigns</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">0 Campaigns</p>
           <p className="text-[11px] text-muted-foreground mt-1">Target: &le;2 days from verified readiness</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">QA Verification Queue</span>
-          <p className="text-2xl font-bold text-primary mt-1">{verifications.length} Deliverables</p>
+          <p className="text-2xl font-semibold text-primary mt-1">{verifications.length} Deliverables</p>
           <p className="text-[11px] text-muted-foreground mt-1">Awaiting independent verification</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Active Delivery Blockers</span>
-          <p className="text-2xl font-bold text-foreground mt-1">0 Blockers</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">0 Blockers</p>
           <p className="text-[11px] text-muted-foreground mt-1">All delivery handoffs clear</p>
         </Card>
       </div>
@@ -118,7 +118,7 @@ export function OperationsDashboard() {
       <Card className="p-5 border-border space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
           <div>
-            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" /> 2-Day Client Onboarding Pipeline (18 Working Hours Target)
             </h3>
             <p className="text-xs text-muted-foreground">
@@ -141,9 +141,9 @@ export function OperationsDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-base font-bold text-foreground">{onb.clientName}</h4>
+                    <h4 className="text-base font-semibold text-foreground">{onb.clientName}</h4>
                     {onb.isBreached && (
-                      <Badge variant="destructive" className="text-[10px] uppercase font-bold">
+                      <Badge variant="destructive" className="text-xs font-semibold">
                         SLA Breached ({onb.workingHoursAge} hrs age)
                       </Badge>
                     )}
@@ -179,7 +179,7 @@ export function OperationsDashboard() {
                     <div key={key} className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
                       <span className="capitalize text-muted-foreground">{key.replace(/([A-Z])/g, " $1")}:</span>
                       <span
-                        className={`font-bold ${
+                        className={`font-semibold ${
                           val === "Verified"
                             ? "text-emerald-600"
                             : val === "Missing"
@@ -203,7 +203,7 @@ export function OperationsDashboard() {
       <Card className="p-5 border-border">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-foreground">Independent QA Verification Queue</h3>
+            <h3 className="text-base font-semibold text-foreground">Independent QA Verification Queue</h3>
             <p className="text-xs text-muted-foreground">
               Review submitted deliverable evidence. A manager cannot verify their own deliverables.
             </p>
@@ -224,10 +224,10 @@ export function OperationsDashboard() {
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">{item.client}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{item.client}</span>
                     <Badge variant="secondary" className="text-[10px]">{item.service}</Badge>
                   </div>
-                  <h4 className="text-sm font-bold text-foreground mt-0.5">{item.deliverableTitle}</h4>
+                  <h4 className="text-sm font-semibold text-foreground mt-0.5">{item.deliverableTitle}</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Submitted by: <strong>{item.submitterRole}</strong> &bull; Reviewer: <strong>{item.reviewerRole}</strong>
                   </p>

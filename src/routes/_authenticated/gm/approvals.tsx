@@ -132,7 +132,7 @@ function ManagerApprovalsPage() {
       {noData ? (
         <Card className="p-12 text-center border-border">
           <CheckSquare className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">No Approval Requests</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Approval Requests</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             There are no approval requests in the system. When team members or managers submit requests
             that require General Manager approval, they will appear here.
@@ -144,17 +144,17 @@ function ManagerApprovalsPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Pending</p>
-              <p className={`text-2xl font-bold mt-1 ${pending.length > 0 ? "text-amber-600" : "text-foreground"}`}>{pending.length}</p>
+              <p className={`text-2xl font-semibold mt-1 ${pending.length > 0 ? "text-amber-600" : "text-foreground"}`}>{pending.length}</p>
             </Card>
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Approved</p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 {approvals.filter((a: any) => a.status === "approved").length}
               </p>
             </Card>
             <Card className="p-4 border-border">
               <p className="text-xs text-muted-foreground">Rejected</p>
-              <p className="text-2xl font-bold text-rose-600 mt-1">
+              <p className="text-2xl font-semibold text-rose-600 mt-1">
                 {approvals.filter((a: any) => a.status === "rejected").length}
               </p>
             </Card>
@@ -190,7 +190,7 @@ function ManagerApprovalsPage() {
                         </Badge>
                       )}
                     </div>
-                    <h4 className="text-sm font-bold text-foreground">{item.title || item.summary || "Approval Request"}</h4>
+                    <h4 className="text-sm font-semibold text-foreground">{item.title || item.summary || "Approval Request"}</h4>
                     {item.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>}
                     <div className="flex flex-wrap gap-4 mt-2 text-[11px] text-muted-foreground">
                       {item.requested_by_name && <span>From: <strong>{item.requested_by_name}</strong></span>}

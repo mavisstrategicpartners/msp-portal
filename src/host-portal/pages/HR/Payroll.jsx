@@ -375,7 +375,7 @@ export default function Payroll() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Calculator size={20} color="var(--brand)" />
-              <span style={{ fontWeight: 800, fontSize: 16 }}>Payroll Platform</span>
+              <span style={{ fontWeight: 600, fontSize: 16 }}>Payroll Platform</span>
             </div>
 
             {/* Period Selector */}
@@ -389,7 +389,7 @@ export default function Payroll() {
                   background: 'transparent',
                   border: 0,
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                   outline: 'none'
@@ -453,36 +453,36 @@ export default function Payroll() {
         {/* Aggregate Metrics Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Total Basic Pay</div>
-            <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4 }}>{money(periodStats.totalBasic)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Total Basic Pay</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4 }}>{money(periodStats.totalBasic)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Base salaries</div>
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: '#2563eb', textTransform: 'uppercase', fontWeight: 600 }}>Sales Commission</div>
-            <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4, color: '#2563eb' }}>{money(periodStats.totalSalesCommission)}</div>
+            <div style={{ fontSize: 11, color: '#2563eb', fontWeight: 600 }}>Sales Commission</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: '#2563eb' }}>{money(periodStats.totalSalesCommission)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Achieved sales % rates</div>
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: '#059669', textTransform: 'uppercase', fontWeight: 600 }}>Incentives & Gifts</div>
-            <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4, color: '#059669' }}>
+            <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>Incentives & Gifts</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: '#059669' }}>
               {money(periodStats.totalIncentives + periodStats.totalGifts)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>Performance rewards</div>
           </div>
 
           <div className="card" style={{ padding: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--danger)', textTransform: 'uppercase', fontWeight: 600 }}>Total Deductions</div>
-            <div style={{ fontSize: 19, fontWeight: 800, marginTop: 4, color: 'var(--danger)' }}>
+            <div style={{ fontSize: 11, color: 'var(--danger)', fontWeight: 600 }}>Total Deductions</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginTop: 4, color: 'var(--danger)' }}>
               - {money(periodStats.totalUif + periodStats.totalLoan + periodStats.totalAdvance)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>UIF, Loans, Advances</div>
           </div>
 
           <div className="card" style={{ padding: 14, background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
-            <div style={{ fontSize: 11, color: 'var(--brand)', textTransform: 'uppercase', fontWeight: 700 }}>Total Net Pay</div>
-            <div style={{ fontSize: 20, fontWeight: 900, marginTop: 4, color: 'var(--brand)' }}>{money(periodStats.totalNet)}</div>
+            <div style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>Total Net Pay</div>
+            <div style={{ fontSize: 20, fontWeight: 600, marginTop: 4, color: 'var(--brand)' }}>{money(periodStats.totalNet)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{periodStats.processedCount} staff processed</div>
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function Payroll() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>Staff Payroll Roster</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Staff Payroll Roster</div>
               <span className="badge badge-neutral" style={{ fontSize: 10 }}>{filteredStaff.length} staff</span>
             </div>
 
@@ -558,7 +558,7 @@ export default function Payroll() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         fontSize: 12,
                         flexShrink: 0
                       }}
@@ -577,7 +577,7 @@ export default function Payroll() {
 
                     {calc && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand)' }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--brand)' }}>
                           {money(calc.net)}
                         </div>
                         <span style={{ fontSize: 9.5, color: rec.status === 'Paid' ? '#16a34a' : '#d97706', fontWeight: 600 }}>
@@ -599,7 +599,7 @@ export default function Payroll() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{activeStaff?.full_name}</h2>
+                    <h2 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{activeStaff?.full_name}</h2>
                     <span className="badge badge-purple">{activeStaff?.department}</span>
                     <span className={`badge ${activeRecord.status === 'Paid' ? 'badge-success' : 'badge-warning'}`}>
                       {activeRecord.status || 'Draft'}
@@ -648,7 +648,7 @@ export default function Payroll() {
 
             {/* Interactive Calculator Card */}
             <div className="card" style={{ padding: 20, borderRadius: 12 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Coins size={19} color="var(--brand)" />
                 Payroll Platform Calculator Worksheet
               </div>
@@ -663,10 +663,10 @@ export default function Payroll() {
                 {/* 1. Basic Salary */}
                 <div style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 700 }}>
+                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600 }}>
                       1. Basic Salary (Monthly Base Pay)
                     </label>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
                       {money(activeCalc.basic)}
                     </span>
                   </div>
@@ -689,10 +689,10 @@ export default function Payroll() {
                 {/* 2. Sales Commission % Calculator */}
                 <div style={{ padding: 14, borderRadius: 10, background: 'rgba(59, 130, 246, 0.04)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 700, color: '#2563eb' }}>
+                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#2563eb' }}>
                       2. Calculate Sales Commission (% Rate)
                     </label>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: '#2563eb' }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: '#2563eb' }}>
                       {money(activeCalc.salesCommission)}
                     </span>
                   </div>
@@ -745,10 +745,10 @@ export default function Payroll() {
                   {/* Incentive Box */}
                   <div style={{ padding: 14, borderRadius: 10, background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 700, color: '#059669' }}>
+                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#059669' }}>
                         3. Add Incentive
                       </label>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: '#059669' }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#059669' }}>
                         {money(activeCalc.incentive)}
                       </span>
                     </div>
@@ -785,10 +785,10 @@ export default function Payroll() {
                   {/* Gift Box */}
                   <div style={{ padding: 14, borderRadius: 10, background: 'rgba(245, 158, 11, 0.04)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 700, color: '#d97706' }}>
+                      <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600, color: '#d97706' }}>
                         4. Add Gift
                       </label>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: '#d97706' }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#d97706' }}>
                         {money(activeCalc.gift)}
                       </span>
                     </div>
@@ -826,10 +826,10 @@ export default function Payroll() {
                 {/* 5. Deductions Section: UIF, Loan, Advance Salary, PAYE */}
                 <div style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 700 }}>
+                    <label style={{ ...labelStyle, margin: 0, fontSize: 13.5, fontWeight: 600 }}>
                       5. Statutory & Company Deductions
                     </label>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--danger)' }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--danger)' }}>
                       - {money(activeCalc.totalDeductions)}
                     </span>
                   </div>
@@ -945,10 +945,10 @@ export default function Payroll() {
                   
                   <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 800, color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
                         Net Pay Disbursement (Take-Home)
                       </div>
-                      <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--brand)' }}>
+                      <div style={{ fontSize: 26, fontWeight: 600, color: 'var(--brand)' }}>
                         {money(activeCalc.net)}
                       </div>
                     </div>
@@ -968,7 +968,7 @@ export default function Payroll() {
                         type="button"
                         className="btn btn-primary"
                         onClick={() => handleSaveRecord(activeRecord)}
-                        style={{ padding: '8px 18px', fontWeight: 700 }}
+                        style={{ padding: '8px 18px', fontWeight: 600 }}
                       >
                         Save & Calculate
                       </button>
@@ -984,7 +984,7 @@ export default function Payroll() {
         <div className="card" style={{ padding: 20, borderRadius: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
                 Monthly Payroll Register — {selectedPeriod}
               </h3>
               <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
@@ -1058,7 +1058,7 @@ export default function Payroll() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
-                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase' }}>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11 }}>
                   <th style={{ padding: '10px 8px' }}>Employee</th>
                   <th style={{ padding: '10px 8px' }}>Basic Salary</th>
                   <th style={{ padding: '10px 8px' }}>Sales Amount</th>
@@ -1070,7 +1070,7 @@ export default function Payroll() {
                   <th style={{ padding: '10px 8px', color: 'var(--danger)' }}>UIF</th>
                   <th style={{ padding: '10px 8px', color: 'var(--danger)' }}>Loan</th>
                   <th style={{ padding: '10px 8px', color: 'var(--danger)' }}>Advance</th>
-                  <th style={{ padding: '10px 8px', color: 'var(--brand)', fontWeight: 800 }}>Net Pay</th>
+                  <th style={{ padding: '10px 8px', color: 'var(--brand)', fontWeight: 600 }}>Net Pay</th>
                   <th style={{ padding: '10px 8px' }}>Status</th>
                   <th style={{ padding: '10px 8px', textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -1080,7 +1080,7 @@ export default function Payroll() {
                   <tr>
                     <td colSpan={14} style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <Calculator size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-                      <div style={{ fontWeight: 700, fontSize: 14 }}>No payroll entries for {selectedPeriod} yet</div>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>No payroll entries for {selectedPeriod} yet</div>
                       <div style={{ fontSize: 11.5, marginTop: 4 }}>
                         Switch to the Calculator Worksheet to calculate and save pay runs for your team.
                       </div>
@@ -1092,7 +1092,7 @@ export default function Payroll() {
                   return (
                     <tr key={r.id || r.employee_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '10px 8px' }}>
-                        <div style={{ fontWeight: 700 }}>{r.employee}</div>
+                        <div style={{ fontWeight: 600 }}>{r.employee}</div>
                         <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{r.department}</div>
                       </td>
                       <td style={{ padding: '10px 8px' }}>{money(calc.basic)}</td>
@@ -1101,11 +1101,11 @@ export default function Payroll() {
                       <td style={{ padding: '10px 8px', fontWeight: 600, color: '#2563eb' }}>{money(calc.salesCommission)}</td>
                       <td style={{ padding: '10px 8px', color: '#059669' }}>{money(calc.incentive)}</td>
                       <td style={{ padding: '10px 8px', color: '#d97706' }}>{money(calc.gift)}</td>
-                      <td style={{ padding: '10px 8px', fontWeight: 700 }}>{money(calc.gross)}</td>
+                      <td style={{ padding: '10px 8px', fontWeight: 600 }}>{money(calc.gross)}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--danger)' }}>- {money(calc.uif)}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--danger)' }}>{calc.loan > 0 ? `- ${money(calc.loan)}` : '—'}</td>
                       <td style={{ padding: '10px 8px', color: 'var(--danger)' }}>{calc.advance > 0 ? `- ${money(calc.advance)}` : '—'}</td>
-                      <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--brand)' }}>{money(calc.net)}</td>
+                      <td style={{ padding: '10px 8px', fontWeight: 600, color: 'var(--brand)' }}>{money(calc.net)}</td>
                       <td style={{ padding: '10px 8px' }}>
                         <span className={`badge ${r.status === 'Paid' ? 'badge-success' : 'badge-warning'}`}>
                           {r.status || 'Draft'}
@@ -1286,14 +1286,14 @@ export default function Payroll() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #3b1d4d', paddingBottom: 14, marginBottom: 14 }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#3b1d4d' }}>Mavis Strategic Partners (Pty) Ltd</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#3b1d4d' }}>Mavis Strategic Partners (Pty) Ltd</div>
                 <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
                   12 Innovation Drive, Sandton, Johannesburg, 2196<br />
                   Reg: 2018/456123/07 · Tax No: 987234501
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#3b1d4d' }}>CONFIDENTIAL PAYSLIP</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#3b1d4d' }}>CONFIDENTIAL PAYSLIP</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Period: {payslipRecord.period}</div>
                 <div style={{ fontSize: 11, color: '#64748b' }}>Pay Date: {payslipRecord.pay_date || '25th'}</div>
               </div>
@@ -1317,7 +1317,7 @@ export default function Payroll() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               {/* Earnings Column */}
               <div>
-                <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: '#3b1d4d', borderBottom: '1px solid #cbd5e1', paddingBottom: 4, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#3b1d4d', borderBottom: '1px solid #cbd5e1', paddingBottom: 4, marginBottom: 6 }}>
                   Earnings (ZAR)
                 </div>
                 <div style={{ display: 'grid', gap: 6, fontSize: 12 }}>
@@ -1363,7 +1363,7 @@ export default function Payroll() {
                       <b>{money(payslipRecord.gift)}</b>
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 6, fontWeight: 800 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 6, fontWeight: 600 }}>
                     <span>Total Gross Earnings</span>
                     <span>{money(payslipRecord.gross)}</span>
                   </div>
@@ -1372,7 +1372,7 @@ export default function Payroll() {
 
               {/* Deductions Column */}
               <div>
-                <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: '#991b1b', borderBottom: '1px solid #cbd5e1', paddingBottom: 4, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#991b1b', borderBottom: '1px solid #cbd5e1', paddingBottom: 4, marginBottom: 6 }}>
                   Deductions (ZAR)
                 </div>
                 <div style={{ display: 'grid', gap: 6, fontSize: 12 }}>
@@ -1398,7 +1398,7 @@ export default function Payroll() {
                       <b>- {money(payslipRecord.paye)}</b>
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 6, fontWeight: 800, color: '#991b1b' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 6, fontWeight: 600, color: '#991b1b' }}>
                     <span>Total Deductions</span>
                     <span>- {money(payslipRecord.totalDeductions)}</span>
                   </div>
@@ -1420,12 +1420,12 @@ export default function Payroll() {
               }}
             >
               <div>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 800, color: '#475569' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#475569' }}>
                   NET REMUNERATION PAYABLE
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b' }}>Transferred to registered bank account</div>
               </div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#3b1d4d' }}>
+              <div style={{ fontSize: 22, fontWeight: 600, color: '#3b1d4d' }}>
                 {money(payslipRecord.net)}
               </div>
             </div>

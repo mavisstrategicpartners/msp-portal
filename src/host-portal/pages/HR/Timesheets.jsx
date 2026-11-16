@@ -82,7 +82,7 @@ export default function Timesheets() {
         {summary.map(s => (
           <div key={s.label} className="card" style={{ padding: 14 }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{s.value}</div>
+            <div style={{ fontSize: 22, fontWeight: 600 }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -109,7 +109,7 @@ export default function Timesheets() {
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '10px 0' }}>Employee</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Total</th><th>Projects</th><th>Status</th><th></th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ export default function Timesheets() {
                     {isOpen && (
                       <tr style={{ background: 'var(--bg-secondary)' }}>
                         <td colSpan={8} style={{ padding: '10px 12px' }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>Project breakdown for {r.employee} — {r.date}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Project breakdown for {r.employee} — {r.date}</div>
                           <table style={{ width: '100%' }}>
                             <thead>
                               <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>

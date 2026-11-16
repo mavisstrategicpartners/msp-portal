@@ -30,7 +30,7 @@ export default function Contracts() {
     <DashboardLayout title="Contract Management">
       <div className="card" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{contracts.length} contracts</div>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>{contracts.length} contracts</div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Generate, e-sign (Adobe Sign–style: type / draw / upload), and store all placement and host agreements.</div>
         </div>
         <button className="btn btn-primary" onClick={() => setCreating(true)}>+ Generate Contract</button>
@@ -38,7 +38,7 @@ export default function Contracts() {
 
       <div className="card">
         <table>
-          <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
             <th style={{ padding: '10px 0' }}>Title</th><th>Party</th><th>Status</th><th>Signed at</th><th>Expires</th><th></th></tr></thead>
           <tbody>
             {contracts.map(c => (

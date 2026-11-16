@@ -201,37 +201,37 @@ export default function HRIntegrations() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Active Connectors</span>
+              <span className="text-xs font-semibold text-muted-foreground">Active Connectors</span>
               <Zap className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{connectedCount} <span className="text-sm font-normal text-muted-foreground">/ {integrations.length}</span></div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{connectedCount} <span className="text-sm font-normal text-muted-foreground">/ {integrations.length}</span></div>
             <div className="mt-1 text-xs text-emerald-600 font-medium">All live connectors operational</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Sync Health</span>
+              <span className="text-xs font-semibold text-muted-foreground">Sync Health</span>
               <ShieldCheck className="h-4 w-4 text-primary" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">100%</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">100%</div>
             <div className="mt-1 text-xs text-muted-foreground">Zero sync latency or auth errors</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Biometrics Terminal</span>
+              <span className="text-xs font-semibold text-muted-foreground">Biometrics Terminal</span>
               <Clock className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">Active</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">Active</div>
             <div className="mt-1 text-xs text-muted-foreground">Real-time attendance ingestion</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Daily Sync Operations</span>
+              <span className="text-xs font-semibold text-muted-foreground">Daily Sync Operations</span>
               <Database className="h-4 w-4 text-blue-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">428</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">428</div>
             <div className="mt-1 text-xs text-muted-foreground">API events logged in last 24h</div>
           </div>
         </div>
@@ -297,10 +297,10 @@ export default function HRIntegrations() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <span className="text-xs font-semibold text-muted-foreground">
                           {item.category}
                         </span>
-                        <h4 className="font-bold text-base text-foreground mt-0.5">{item.name}</h4>
+                        <h4 className="font-semibold text-base text-foreground mt-0.5">{item.name}</h4>
                       </div>
                       <span className={`badge ${isConnected ? 'badge-success' : 'badge-danger'}`}>
                         {item.status}
@@ -415,7 +415,7 @@ export default function HRIntegrations() {
         >
           <form onSubmit={saveConfig} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">API Endpoint URL</label>
+              <label className="text-xs font-semibold text-muted-foreground">API Endpoint URL</label>
               <input
                 defaultValue={`https://api.${configModal.name.toLowerCase().replace(/[^a-z]/g, '')}.com/v2/sync`}
                 className="mt-1 w-full rounded-md border border-input bg-background p-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -423,7 +423,7 @@ export default function HRIntegrations() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">API Secret Key / Token</label>
+              <label className="text-xs font-semibold text-muted-foreground">API Secret Key / Token</label>
               <input
                 type="password"
                 defaultValue=""
@@ -433,7 +433,7 @@ export default function HRIntegrations() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Sync Frequency</label>
+                <label className="text-xs font-semibold text-muted-foreground">Sync Frequency</label>
                 <select
                   defaultValue={configModal.frequency}
                   className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -446,7 +446,7 @@ export default function HRIntegrations() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Environment</label>
+                <label className="text-xs font-semibold text-muted-foreground">Environment</label>
                 <select
                   defaultValue="Production (Live)"
                   className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -458,7 +458,7 @@ export default function HRIntegrations() {
             </div>
 
             <div className="rounded-lg bg-muted/30 p-3 space-y-2">
-              <span className="text-xs font-bold text-foreground">Automated Webhook Dispatch:</span>
+              <span className="text-xs font-semibold text-foreground">Automated Webhook Dispatch:</span>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 <span>Payload signatures verified using SHA-256 HMAC</span>

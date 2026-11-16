@@ -18,7 +18,8 @@ function ModulesDirectory() {
   return (
     <div className="mx-auto max-w-[1200px] space-y-5">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Department modules</h1>
+        <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Department modules</h1>
         <p className="text-sm text-muted-foreground">
           The tools each department uses to run its work, alongside tasks. Records are kept per department and start empty.
         </p>

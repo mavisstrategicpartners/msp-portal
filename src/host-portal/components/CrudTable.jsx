@@ -47,7 +47,7 @@ export default function CrudTable({
           {sums.map((s, i) => (
             <div key={i} className="card">
               <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{s.label}</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: s.color || 'var(--text-primary)' }}>{s.value}</div>
+              <div style={{ fontSize: 28, fontWeight: 600, color: s.color || 'var(--text-primary)' }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function CrudTable({
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 {columns.map(c => <th key={c.key} style={{ padding: '10px 12px 10px 0' }}>{c.label}</th>)}
                 <th></th>
               </tr>

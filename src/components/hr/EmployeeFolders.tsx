@@ -619,7 +619,7 @@ function EditDetailsDialog({ folder, departments, onClose }: { folder: Folder; d
           <DialogDescription className="text-xs">Every change is recorded in the folder's history.</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Employment</p>
+          <p className="text-xs font-semibold text-muted-foreground">Employment</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {field("fullName", "Full name")}
             {field("jobTitle", "Job title")}
@@ -643,7 +643,7 @@ function EditDetailsDialog({ folder, departments, onClose }: { folder: Folder; d
             {field("join_date", "Start date", "date")}
             {field("end_date", "End date (if any)", "date")}
           </div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Personal</p>
+          <p className="text-xs font-semibold text-muted-foreground">Personal</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {field("phone", "Phone")}
             {field("id_number", "ID / passport number")}

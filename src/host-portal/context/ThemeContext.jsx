@@ -1,20 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
+// The HR pages follow the portal-wide theme (src/components/theme-provider.tsx) instead of keeping
+// their own setting, so they always match the light/dark mode the user chose in the top bar.
 const ThemeContext = createContext({ theme: 'light', toggleTheme: () => {} })
 
+const current = () => (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('msp-theme') || localStorage.getItem('host-theme') || 'dark')
+  const [theme, setTheme] = useState(current)
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('msp-theme', theme)
-    localStorage.setItem('msp.theme', theme)
-    localStorage.setItem('host-theme', theme)
-  }, [theme])
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme: () => setTheme(t => t === 'light' ? 'dark' : 'light') }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+    const obs = new MutationObserver(() => setTheme(current()))
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return <ThemeContext.Provider value={{ theme, toggleTheme: () => {} }}>{children}</ThemeContext.Provider>
 }
 
 export const useTheme = () => useContext(ThemeContext)

@@ -39,7 +39,7 @@ export default function CompanyProfile() {
       <div className="card" style={{ marginBottom: 16, background: 'var(--bg-primary)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>{profile.company_name}</div>
+            <div style={{ fontSize: 22, fontWeight: 600 }}>{profile.company_name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{profile.industry} · {profile.address}</div>
             <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
               <span className="badge badge-info">BBBEE {profile.bbbee_level}</span>
@@ -49,7 +49,7 @@ export default function CompanyProfile() {
           </div>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, background: 'var(--bg-primary)', padding: '10px 14px', borderRadius: 999, border: '1px solid var(--border-color)' }}>
             <input type="checkbox" checked={profile.open_to_host} onChange={set('open_to_host')} />
-            <span style={{ fontWeight: 700 }}>Open to Host new learners</span>
+            <span style={{ fontWeight: 600 }}>Open to Host new learners</span>
             <span className={'badge ' + (profile.open_to_host ? 'badge-success' : 'badge-danger')}>{profile.open_to_host ? 'On' : 'Off'}</span>
           </label>
         </div>
@@ -92,7 +92,7 @@ export default function CompanyProfile() {
               </div>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Currently placed</div>
-                <div style={{ fontSize: 22, fontWeight: 800 }}>{learners.length} <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>of {profile.learner_capacity}</span></div>
+                <div style={{ fontSize: 22, fontWeight: 600 }}>{learners.length} <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>of {profile.learner_capacity}</span></div>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function CompanyProfile() {
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Learners in your workspace</h3>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '8px 0' }}>Name</th><th>Program</th><th>Education</th><th>Experience</th><th></th>
               </tr>
             </thead>
@@ -154,7 +154,7 @@ export default function CompanyProfile() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Quarterly manager reports</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Quarterly manager reports</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Managers will be prompted to submit a report every quarter.</div>
               </div>
               <span className="badge badge-success">Auto-prompt enabled</span>
@@ -163,7 +163,7 @@ export default function CompanyProfile() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Weekly timesheet approvals</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Weekly timesheet approvals</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Every Friday managers must confirm timesheet accuracy for each learner (Approve / Not Approved).</div>
               </div>
               <span className="badge badge-success">Auto-prompt enabled</span>
@@ -172,7 +172,7 @@ export default function CompanyProfile() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Task monitoring</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Task monitoring</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Live dashboard tracks task progress across all assigned learners.</div>
               </div>
               <Link className="btn btn-ghost" to="/host/tasks">Open Tasks →</Link>
@@ -287,7 +287,7 @@ function ProgramsAndDepartments({ profile, setProfile }) {
             <span key={d} className="chip" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               {d}
               <button onClick={() => editDept(d)} title="Rename" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 12, padding: 0 }}>✎</button>
-              <button onClick={() => removeDept(d)} title="Remove" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 700, padding: 0 }}>×</button>
+              <button onClick={() => removeDept(d)} title="Remove" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, padding: 0 }}>×</button>
             </span>
           ))}
         </div>

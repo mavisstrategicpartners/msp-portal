@@ -173,7 +173,8 @@ export function ClientRecoveryPlansPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Client Retention & Recovery Plans
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -236,7 +237,7 @@ export function ClientRecoveryPlansPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-primary" />
-                      <CardTitle className="text-base font-bold text-foreground">
+                      <CardTitle className="text-base font-semibold text-foreground">
                         {plan.clientName}
                       </CardTitle>
                       <Badge
@@ -281,7 +282,7 @@ export function ClientRecoveryPlansPage() {
                 {/* Reason & Objective */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="rounded-lg border border-rose-300 dark:border-rose-500/30 bg-rose-50/70 dark:bg-rose-950/20 p-3">
-                    <strong className="text-rose-950 dark:text-rose-300 block mb-1 font-bold">Reason for Concern & Supporting Evidence:</strong>
+                    <strong className="text-rose-950 dark:text-rose-300 block mb-1 font-semibold">Reason for Concern & Supporting Evidence:</strong>
                     <p className="text-foreground leading-relaxed">{plan.reasonForConcern}</p>
                     {plan.supportingEvidence && (
                       <p className="text-muted-foreground mt-1.5 text-[11px] font-medium">
@@ -291,7 +292,7 @@ export function ClientRecoveryPlansPage() {
                   </div>
 
                   <div className="rounded-lg border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/70 dark:bg-emerald-950/20 p-3">
-                    <strong className="text-emerald-950 dark:text-emerald-300 block mb-1 font-bold">Recovery Objective & Agreed Expectations:</strong>
+                    <strong className="text-emerald-950 dark:text-emerald-300 block mb-1 font-semibold">Recovery Objective & Agreed Expectations:</strong>
                     <p className="text-foreground leading-relaxed">{plan.recoveryObjective}</p>
                     {plan.clientExpectations && (
                       <p className="text-muted-foreground mt-1.5 text-[11px] font-medium">
@@ -332,7 +333,7 @@ export function ClientRecoveryPlansPage() {
 
                 {plan.outcomeNotes && (
                   <div className="rounded border border-purple-200 dark:border-purple-800 bg-purple-50/70 dark:bg-purple-950/30 p-2.5">
-                    <strong className="text-purple-950 dark:text-purple-200 font-bold">Closure / Outcome Notes:</strong>{" "}
+                    <strong className="text-purple-950 dark:text-purple-200 font-semibold">Closure / Outcome Notes:</strong>{" "}
                     <span className="font-semibold text-foreground">{plan.outcomeNotes}</span>
                   </div>
                 )}

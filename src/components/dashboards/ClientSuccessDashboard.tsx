@@ -104,7 +104,7 @@ export function ClientSuccessDashboard() {
       {/* ─── Client Success Header ────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-5 rounded-xl border border-border shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 font-bold">
+          <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 font-semibold">
             <HeartHandshake className="h-6 w-6" />
           </div>
           <div>
@@ -124,25 +124,25 @@ export function ClientSuccessDashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Total Client Portfolio</span>
-          <p className="text-2xl font-bold text-foreground mt-1">{accounts.length} Accounts</p>
+          <p className="text-2xl font-semibold text-foreground mt-1">{accounts.length} Accounts</p>
           <p className="text-[11px] text-muted-foreground mt-1">100% Retainer contracts</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Average CSAT Score</span>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">{avgSatisfaction} / 10</p>
+          <p className="text-2xl font-semibold text-emerald-500 mt-1">{avgSatisfaction} / 10</p>
           <p className="text-[11px] text-muted-foreground mt-1">Customer satisfaction index</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">At-Risk Clients</span>
-          <p className="text-2xl font-bold text-rose-500 mt-1">{atRiskCount}</p>
+          <p className="text-2xl font-semibold text-rose-500 mt-1">{atRiskCount}</p>
           <p className="text-[11px] text-muted-foreground mt-1">1 Red &bull; 1 Amber account</p>
         </Card>
 
         <Card className="p-4 border-border">
           <span className="text-xs font-semibold text-muted-foreground">Check-ins Due This Week</span>
-          <p className="text-2xl font-bold text-primary mt-1">
+          <p className="text-2xl font-semibold text-primary mt-1">
             {accounts.filter((a) => a.monthlyCheckInStatus === "Scheduled").length}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">Scheduled client review calls</p>
@@ -153,7 +153,7 @@ export function ClientSuccessDashboard() {
       <Card className="p-5 border-border space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h3 className="text-base font-bold text-foreground">Client Account Portfolio</h3>
+            <h3 className="text-base font-semibold text-foreground">Client Account Portfolio</h3>
             <p className="text-xs text-muted-foreground">
               Review monthly check-in status, record client feedback, and initiate recovery workflows.
             </p>
@@ -177,7 +177,7 @@ export function ClientSuccessDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-foreground">{acc.name}</span>
+                    <span className="text-sm font-semibold text-foreground">{acc.name}</span>
                     <Badge
                       variant={
                         acc.health === "Red"
@@ -202,8 +202,8 @@ export function ClientSuccessDashboard() {
 
                 <div className="flex items-center gap-4 text-right">
                   <div>
-                    <span className="text-[11px] text-muted-foreground uppercase font-semibold">Satisfaction</span>
-                    <p className="text-base font-bold text-foreground flex items-center justify-end gap-1">
+                    <span className="text-[11px] text-muted-foreground font-semibold">Satisfaction</span>
+                    <p className="text-base font-semibold text-foreground flex items-center justify-end gap-1">
                       {acc.satisfactionScore >= 8 ? (
                         <Smile className="h-4 w-4 text-emerald-500" />
                       ) : acc.satisfactionScore >= 6 ? (
@@ -254,7 +254,7 @@ export function ClientSuccessDashboard() {
       <Dialog open={checkInModalOpen} onOpenChange={setCheckInModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Record Monthly Check-In</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Record Monthly Check-In</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Log conversation outcomes and satisfaction feedback for {selectedAccount?.name}.
             </DialogDescription>

@@ -56,7 +56,7 @@ export default function Marketplace() {
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ fontSize: 34 }}>🤖</div>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>Advanced AI Matching Engine</div>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Advanced AI Matching Engine</div>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Toggle criteria to re-score every available learner against your host profile.</div>
           </div>
         </div>
@@ -86,11 +86,11 @@ export default function Marketplace() {
           <div key={l.id} className="card" style={{ borderTop: `3px solid ${scoreColor(l.adjusted)}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>{l.full_name}</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{l.full_name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{l.program}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: scoreColor(l.adjusted) }}>{l.adjusted}%</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: scoreColor(l.adjusted) }}>{l.adjusted}%</div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>match</div>
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function Marketplace() {
             <div><b>Industry:</b> {viewing.industry}</div>
             <div><b>Disability:</b> {viewing.disability || '—'}</div>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Why the AI matched this learner to {HOST_COMPANY}:</div>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Why the AI matched this learner to {HOST_COMPANY}:</div>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--text-secondary)' }}>
             {viewing.match_reasons.map((r, i) => <li key={i}>{r}</li>)}
           </ul>

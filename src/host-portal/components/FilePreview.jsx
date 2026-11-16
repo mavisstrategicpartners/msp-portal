@@ -12,7 +12,7 @@ export default function FilePreview({ url, mime, name, mockTitle, mockBody, heig
   return (
     <div style={{ ...wrapper, padding: 24, minHeight: height, color: 'var(--text-primary)', background: 'white', lineHeight: 1.6 }}>
       <div style={{ borderBottom: '2px solid var(--brand)', paddingBottom: 10, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '.08em', textTransform: 'uppercase' }}>Mavis Strategic Partners (Pty) Ltd — Official document</div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Mavis Strategic Partners (Pty) Ltd — Official document</div>
         <h2 style={{ margin: '4px 0 0', fontSize: 20 }}>{mockTitle || name || 'Document'}</h2>
       </div>
       <p style={{ marginTop: 0, fontSize: 13 }}>{mockBody || 'This is a placeholder rendering used for local testing. In production, the uploaded document would be displayed here for review.'}</p>

@@ -282,7 +282,7 @@ export function OperationsDashboardOverviewPage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-foreground">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 Priority Action Queue
               </CardTitle>
@@ -380,7 +380,7 @@ export function OperationsDashboardOverviewPage() {
                           {item.owner}
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className={isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-muted-foreground font-medium"}>
+                          <span className={isOverdue ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-muted-foreground font-medium"}>
                             {item.dueDate}
                           </span>
                         </td>

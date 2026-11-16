@@ -422,14 +422,7 @@ export function ContentEditor() {
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Sliders className="h-5 w-5" />
-            </span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Admin Portal
-            </span>
-          </div>
+          <p className="text-xs font-medium text-muted-foreground">Admin</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Content Editor
           </h1>
@@ -936,7 +929,7 @@ function EditItemDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-semibold">
             {isNew ? `Add New ${meta.singular}` : `Edit ${meta.singular}`}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">

@@ -124,7 +124,8 @@ export function DepartmentQAPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             {profileData?.departmentName ?? "Department"} Quality Assurance (QA)
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -183,7 +184,7 @@ export function DepartmentQAPage() {
         {currentList.length === 0 ? (
           <Card className="p-12 text-center border-border">
             <ShieldCheck className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-foreground">No Items in this QA Queue</h3>
+            <h3 className="text-base font-semibold text-foreground">No Items in this QA Queue</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {activeTab === "pending"
                 ? "All submitted deliverables have been reviewed. New submissions from specialists will appear here."
@@ -200,7 +201,7 @@ export function DepartmentQAPage() {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Building2 className="h-4 w-4 text-primary shrink-0" />
-                      <CardTitle className="text-base font-bold text-foreground">
+                      <CardTitle className="text-base font-semibold text-foreground">
                         {task.title}
                       </CardTitle>
                       <Badge variant="outline" className="text-[11px] rounded-full px-2.5 py-0.5 bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 shadow-none font-medium">
@@ -264,14 +265,14 @@ export function DepartmentQAPage() {
               <CardContent className="p-4 space-y-3 text-xs">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                    <span className="text-xs font-semibold text-muted-foreground block">
                       Required Quality Criteria
                     </span>
                     <p className="text-foreground font-medium leading-relaxed">{task.evidenceRequired}</p>
                   </div>
 
                   <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                    <span className="text-xs font-semibold text-muted-foreground block">
                       Specialist Submitted Evidence
                     </span>
                     {latestEvidence[task.id] ? (
@@ -300,7 +301,7 @@ export function DepartmentQAPage() {
 
                 {task.qaDecisionNotes && (
                   <div className="p-3 rounded-lg border border-border bg-card space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                    <span className="text-xs font-semibold text-muted-foreground block">
                       QA Decision Audit & Comments
                     </span>
                     <p className="text-foreground leading-relaxed">
@@ -338,7 +339,7 @@ export function DepartmentQAPage() {
           {selectedTask && (
             <div className="space-y-4 py-2 text-xs">
               <div className="p-3 rounded-lg border border-border bg-muted/40 space-y-1">
-                <div className="font-bold text-foreground text-sm">{selectedTask.title}</div>
+                <div className="font-semibold text-foreground text-sm">{selectedTask.title}</div>
                 <div className="text-muted-foreground">Client: {selectedTask.clientName} &bull; Specialist: {selectedTask.assignedToName}</div>
               </div>
 

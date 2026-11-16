@@ -193,7 +193,7 @@ export function MonthlyReportsPage() {
                 {shown.length ? (
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <tr className="border-b border-border text-left text-[11px] text-muted-foreground">
                         <th className="px-4 py-2.5 font-medium">Report</th>
                         <th className="px-3 py-2.5 font-medium">Department</th>
                         <th className="px-3 py-2.5 font-medium">Month</th>
@@ -367,7 +367,7 @@ function FileList({ report }: { report: MonthlyReportRow }) {
   if (!report.attachments?.length) return null;
   return (
     <section>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">Supporting files</h3>
+      <h3 className="mb-2 text-xs font-semibold text-primary">Supporting files</h3>
       <ul className="divide-y divide-border rounded-lg border border-border">
         {report.attachments.map((f) => {
           const l = links.data?.find((x) => x.path === f.path);
@@ -494,7 +494,7 @@ function ReportViewer({
           {REPORT_SECTIONS.map((s) =>
             r.data?.[s.key] ? (
               <section key={s.key}>
-                <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-primary">{s.label}</h3>
+                <h3 className="mb-1.5 text-xs font-semibold text-primary">{s.label}</h3>
                 <p className="whitespace-pre-line text-sm text-foreground">{r.data[s.key]}</p>
               </section>
             ) : null,

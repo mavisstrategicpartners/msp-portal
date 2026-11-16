@@ -78,7 +78,7 @@ function roleBadge(tier: RoleTier) {
   };
   const { label, cls, Icon } = map[tier] ?? map.staff;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>
       <Icon className="h-3 w-3" />
       {label}
     </span>
@@ -411,7 +411,7 @@ function ManageUsersPage() {
                     <td className="px-6 py-4 text-muted-foreground">{mainDepartment(s)?.name ?? s.department ?? "—"}</td>
                     <td className="px-6 py-4">{roleBadge(s.role_tier)}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide font-medium ${
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${
                         s.is_active
                           ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                           : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"

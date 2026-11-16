@@ -264,7 +264,7 @@ export function OperationsControlCenter() {
                 <span className="text-sm font-medium text-muted-foreground">Workforce Presence</span>
                 <Users className="h-5 w-5 text-primary" />
               </div>
-              <p className="mt-4 text-3xl font-bold text-foreground">
+              <p className="mt-4 text-2xl font-semibold text-foreground">
                 {ops.metrics.people.present}{" "}
                 <span className="text-sm font-normal text-muted-foreground">/ {ops.metrics.people.total} Present</span>
               </p>
@@ -285,7 +285,7 @@ export function OperationsControlCenter() {
                 <span className="text-sm font-medium text-muted-foreground">Active Workload</span>
                 <CheckSquare className="h-5 w-5 text-primary" />
               </div>
-              <p className="mt-4 text-3xl font-bold text-foreground">
+              <p className="mt-4 text-2xl font-semibold text-foreground">
                 {ops.tasks.length}{" "}
                 <span className="text-sm font-normal text-muted-foreground">Tasks</span>
               </p>
@@ -306,7 +306,7 @@ export function OperationsControlCenter() {
                 <span className="text-sm font-medium text-muted-foreground">Active Clients</span>
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
-              <p className="mt-4 text-3xl font-bold text-foreground">
+              <p className="mt-4 text-2xl font-semibold text-foreground">
                 {ops.clients.length}{" "}
                 <span className="text-sm font-normal text-muted-foreground">Retainers</span>
               </p>
@@ -333,7 +333,7 @@ export function OperationsControlCenter() {
                 <span className="text-sm font-medium text-muted-foreground">Pipeline Opportunities</span>
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <p className="mt-4 text-3xl font-bold text-foreground">
+              <p className="mt-4 text-2xl font-semibold text-foreground">
                 {formatZAR(ops.metrics.sales.pipelineValue, { compact: true })}
               </p>
               <Progress
@@ -709,7 +709,7 @@ export function OperationsControlCenter() {
                       <h3 className="font-semibold text-foreground">{workflow.clientName}</h3>
                       <p className="text-xs text-muted-foreground">Stage: <strong className="text-primary">{workflow.currentStage}</strong> &bull; Lead: {workflow.accountManager}</p>
                     </div>
-                    <span className="text-xs font-bold text-foreground">{workflow.progress}%</span>
+                    <span className="text-xs font-semibold text-foreground">{workflow.progress}%</span>
                   </div>
                   <Progress value={workflow.progress} className="h-2" />
                 </Card>

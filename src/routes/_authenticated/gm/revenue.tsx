@@ -83,7 +83,7 @@ function RevenuePerformancePage() {
       {!hasFinancialData && !isLoading ? (
         <Card className="p-12 text-center border-border">
           <Banknote className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">Revenue Data Not Configured</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Revenue Data Not Configured</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Revenue targets, invoices and payment records have not been configured in the system.
             Once financial records are added, performance tracking will appear here automatically.
@@ -105,7 +105,7 @@ function RevenuePerformancePage() {
                 <span>Revenue Target</span>
                 <BarChart3 className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-foreground mt-2">
+              <p className="text-2xl font-semibold text-foreground mt-2">
                 {hasTargets ? formatZAR(targetAmount, { compact: true }) : "Not Configured"}
               </p>
               {hasTargets && <Progress value={progressPct} className="mt-2 h-1.5" />}
@@ -119,7 +119,7 @@ function RevenuePerformancePage() {
                 <span>Total Invoiced</span>
                 <Banknote className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-foreground mt-2">
+              <p className="text-2xl font-semibold text-foreground mt-2">
                 {invoices.length > 0 ? formatZAR(totalInvoiced, { compact: true }) : "R0"}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1.5">{invoices.length} invoices</p>
@@ -130,7 +130,7 @@ function RevenuePerformancePage() {
                 <span>Total Collected</span>
                 <Coins className="h-4 w-4 text-emerald-500" />
               </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+              <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-2">
                 {payments.length > 0 ? formatZAR(totalPaid, { compact: true }) : "R0"}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1.5">{payments.length} payments recorded</p>
@@ -141,7 +141,7 @@ function RevenuePerformancePage() {
                 <span>Outstanding</span>
                 <AlertTriangle className={`h-4 w-4 ${totalOutstanding > 0 ? "text-amber-500" : "text-emerald-500"}`} />
               </div>
-              <p className={`text-2xl font-bold mt-2 ${totalOutstanding > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+              <p className={`text-2xl font-semibold mt-2 ${totalOutstanding > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
                 {totalOutstanding > 0 ? formatZAR(totalOutstanding, { compact: true }) : "R0"}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1.5">{activeClients} active clients</p>
@@ -151,7 +151,7 @@ function RevenuePerformancePage() {
           {/* Invoice Table */}
           {invoices.length > 0 && (
             <Card className="p-5 border-border">
-              <h3 className="text-base font-bold text-foreground mb-4">Recent Invoices</h3>
+              <h3 className="text-base font-semibold text-foreground mb-4">Recent Invoices</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
@@ -166,7 +166,7 @@ function RevenuePerformancePage() {
                   <tbody className="divide-y divide-border">
                     {invoices.slice(0, 20).map((inv: any) => (
                       <tr key={inv.id} className="hover:bg-muted/30">
-                        <td className="p-2.5 font-bold text-foreground">{inv.invoice_number || inv.id}</td>
+                        <td className="p-2.5 font-semibold text-foreground">{inv.invoice_number || inv.id}</td>
                         <td className="p-2.5">{inv.client_name || inv.client_id || "—"}</td>
                         <td className="p-2.5 font-medium">{formatZAR(inv.amount || inv.total || 0)}</td>
                         <td className="p-2.5">{inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-ZA") : "—"}</td>

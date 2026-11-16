@@ -132,7 +132,7 @@ export default function HostDashboard() {
           </div>
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '8px 0' }}>Name</th><th>Program</th><th>Status</th><th>Attendance</th>
               </tr>
             </thead>

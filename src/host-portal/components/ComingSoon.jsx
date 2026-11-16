@@ -16,7 +16,7 @@ export default function ComingSoon({ title, tagline, features = [] }) {
           {features.map((f, i) => (
             <div key={i} className="card">
               <div style={{ marginBottom: 8, color: 'var(--brand)' }}>{f.icon ? <f.icon size={22} /> : '◆'}</div>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{f.title}</div>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{f.title}</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{f.body}</div>
             </div>
           ))}

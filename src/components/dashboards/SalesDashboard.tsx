@@ -578,7 +578,7 @@ export function SalesDashboard() {
               <Banknote className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(wonValue)}</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{formatZAR(wonValue)}</p>
           <div className="mt-2 space-y-1">
             <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
               <div
@@ -601,7 +601,7 @@ export function SalesDashboard() {
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(activePipelineValue)}</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{formatZAR(activePipelineValue)}</p>
           <p className="text-[11px] text-muted-foreground mt-2">
             {leads.filter((l) => l.stage !== "Won" && l.stage !== "Lost").length} qualified opportunities in progress
           </p>
@@ -615,7 +615,7 @@ export function SalesDashboard() {
               <Zap className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{conversionRate}%</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{conversionRate}%</p>
           <p className="text-[11px] text-muted-foreground mt-2">
             {wonLeads.length} won deals from {leads.length} total opportunities
           </p>
@@ -629,7 +629,7 @@ export function SalesDashboard() {
               <Calendar className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{appointments.length} Meetings</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{appointments.length} Meetings</p>
           <p className="text-[11px] text-muted-foreground mt-2">
             {overdueFollowUps.length > 0 ? (
               <span className="text-rose-500 font-medium">{overdueFollowUps.length} follow-ups need attention</span>
@@ -677,7 +677,7 @@ export function SalesDashboard() {
               <Card className="p-5 border-border">
                 <div className="flex items-center justify-between mb-3 border-b border-border pb-2.5">
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Pipeline Stage Distribution</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Pipeline Stage Distribution</h3>
                     <p className="text-xs text-muted-foreground">Opportunities across defined conversion milestones</p>
                   </div>
                   <Button size="sm" variant="ghost" className="text-xs" onClick={() => setActiveTab("pipeline")}>
@@ -695,7 +695,7 @@ export function SalesDashboard() {
                       <div key={stage} className="p-3 rounded-lg border border-border bg-card/60 flex flex-col justify-between">
                         <span className="text-[11px] font-semibold text-muted-foreground">{stage}</span>
                         <div className="mt-2">
-                          <p className="text-lg font-bold text-foreground">{count}</p>
+                          <p className="text-lg font-semibold text-foreground">{count}</p>
                           <p className="text-[10px] text-muted-foreground truncate font-mono">
                             {formatZAR(val, { compact: true })}
                           </p>
@@ -710,7 +710,7 @@ export function SalesDashboard() {
               <Card className="p-5 border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Top Performing Industry Verticals</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Top Performing Industry Verticals</h3>
                     <p className="text-xs text-muted-foreground">High-value revenue sectors for targeted ad spend</p>
                   </div>
                   <Button size="sm" variant="ghost" className="text-xs" onClick={() => setActiveTab("industry")}>
@@ -728,7 +728,7 @@ export function SalesDashboard() {
                           {ind.wonDeals} deals won ({ind.conversionRate}% win rate)
                         </Badge>
                       </div>
-                      <span className="font-bold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
+                      <span className="font-semibold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
                     </div>
                   ))}
                 </div>
@@ -740,13 +740,13 @@ export function SalesDashboard() {
               {/* Target Status Card */}
               <Card className="p-5 border-border space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-2.5">
-                  <h3 className="text-sm font-bold text-foreground">Target Quota Progress</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Target Quota Progress</h3>
                   <Target className="h-4 w-4 text-primary" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground font-medium">Achieved this month:</span>
-                    <span className="font-bold text-emerald-500">{formatZAR(wonValue)}</span>
+                    <span className="font-semibold text-emerald-500">{formatZAR(wonValue)}</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
                     <div
@@ -772,7 +772,7 @@ export function SalesDashboard() {
               {/* Upcoming GHL Meetings Card */}
               <Card className="p-5 border-border space-y-3">
                 <div className="flex items-center justify-between border-b border-border pb-2.5">
-                  <h3 className="text-sm font-bold text-foreground">Upcoming Client Meetings</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Upcoming Client Meetings</h3>
                   <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 border-purple-300">
                     GHL Synced
                   </Badge>
@@ -878,7 +878,7 @@ export function SalesDashboard() {
                     filteredLeads.map((lead) => (
                       <tr key={lead.id} className="hover:bg-muted/20 transition-colors">
                         <td className="p-3">
-                          <div className="font-bold text-foreground">{lead.businessName}</div>
+                          <div className="font-semibold text-foreground">{lead.businessName}</div>
                           <div className="text-[11px] text-muted-foreground">
                             {lead.contactPerson} &bull; {lead.phone || lead.email}
                           </div>
@@ -903,7 +903,7 @@ export function SalesDashboard() {
                             {lead.stage}
                           </Badge>
                         </td>
-                        <td className="p-3 font-mono font-bold text-foreground">
+                        <td className="p-3 font-mono font-semibold text-foreground">
                           {formatZAR(lead.estimatedValue)}
                         </td>
                         <td className="p-3 text-muted-foreground">
@@ -953,7 +953,7 @@ export function SalesDashboard() {
               return (
                 <div key={stage} className="p-3 rounded-xl border border-border bg-card/60 space-y-3 flex flex-col">
                   <div className="flex items-center justify-between border-b border-border pb-2">
-                    <span className="font-bold text-xs text-foreground">{stage}</span>
+                    <span className="font-semibold text-xs text-foreground">{stage}</span>
                     <Badge variant="secondary" className="text-[10px] font-mono">
                       {stageLeads.length}
                     </Badge>
@@ -970,14 +970,14 @@ export function SalesDashboard() {
                         className="p-3 rounded-lg border border-border bg-card hover:border-primary/50 transition-all cursor-pointer space-y-2 shadow-2xs"
                       >
                         <div className="flex items-start justify-between gap-1">
-                          <h4 className="font-bold text-xs text-foreground leading-snug">{l.businessName}</h4>
+                          <h4 className="font-semibold text-xs text-foreground leading-snug">{l.businessName}</h4>
                           <Badge variant="outline" className="text-[9px] py-0 px-1">
                             {l.industry.split(" ")[0]}
                           </Badge>
                         </div>
                         <p className="text-[11px] text-muted-foreground">{l.contactPerson}</p>
                         <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[10px]">
-                          <span className="font-bold text-emerald-500 font-mono">{formatZAR(l.estimatedValue)}</span>
+                          <span className="font-semibold text-emerald-500 font-mono">{formatZAR(l.estimatedValue)}</span>
                           <span className="text-muted-foreground">{l.assignedSalesperson.split(" ")[0]}</span>
                         </div>
                       </div>
@@ -1000,7 +1000,7 @@ export function SalesDashboard() {
             {/* Current Target Status Box */}
             <Card className="p-5 border-border space-y-4">
               <div>
-                <h3 className="text-base font-bold text-foreground">
+                <h3 className="text-base font-semibold text-foreground">
                   Monthly Target Progress ({selectedMonth})
                 </h3>
                 <p className="text-xs text-muted-foreground">
@@ -1011,7 +1011,7 @@ export function SalesDashboard() {
               <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="font-semibold text-foreground">Won Revenue to Date:</span>
-                  <span className="font-bold text-emerald-500">{formatZAR(wonValue)}</span>
+                  <span className="font-semibold text-emerald-500">{formatZAR(wonValue)}</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
                   <div
@@ -1039,7 +1039,7 @@ export function SalesDashboard() {
             <Card className="p-5 border-border md:col-span-2 space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div>
-                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <Crown className="h-4 w-4 text-amber-500" />
                     Monthly Sales Leaderboard & Performance Rankings
                   </h3>
@@ -1072,24 +1072,24 @@ export function SalesDashboard() {
                       >
                         <td className="p-3">
                           {rank.rank === 1 ? (
-                            <div className="flex items-center gap-1 text-amber-500 font-bold">
+                            <div className="flex items-center gap-1 text-amber-500 font-semibold">
                               <Crown className="h-4 w-4" /> #1
                             </div>
                           ) : (
-                            <span className="text-muted-foreground font-bold">#{rank.rank}</span>
+                            <span className="text-muted-foreground font-semibold">#{rank.rank}</span>
                           )}
                         </td>
                         <td className="p-3">
-                          <div className="font-bold text-foreground">{rank.consultantName}</div>
+                          <div className="font-semibold text-foreground">{rank.consultantName}</div>
                           <div className="text-[10px] text-muted-foreground">{rank.consultantEmail}</div>
                         </td>
                         <td className="p-3 font-mono text-muted-foreground">{formatZAR(rank.targetAmount)}</td>
-                        <td className="p-3 font-mono font-bold text-emerald-500">
+                        <td className="p-3 font-mono font-semibold text-emerald-500">
                           {formatZAR(rank.actualWonAmount)}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold font-mono">{rank.percentageAchieved}%</span>
+                            <span className="font-semibold font-mono">{rank.percentageAchieved}%</span>
                             <div className="w-16 bg-secondary rounded-full h-1.5 overflow-hidden">
                               <div
                                 className={`h-1.5 rounded-full ${
@@ -1131,7 +1131,7 @@ export function SalesDashboard() {
           <Card className="p-5 border-border space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
                   Industry Categorisation & Marketing Intelligence
                 </h3>
@@ -1146,17 +1146,17 @@ export function SalesDashboard() {
                 <div key={ind.industry} className="p-4 rounded-xl border border-border bg-card space-y-2.5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-bold text-sm text-foreground">{ind.industry}</h4>
+                      <h4 className="font-semibold text-sm text-foreground">{ind.industry}</h4>
                       <p className="text-xs text-muted-foreground">{ind.totalLeads} total leads entered</p>
                     </div>
-                    <Badge variant="outline" className="text-xs font-mono font-bold text-primary">
+                    <Badge variant="outline" className="text-xs font-mono font-semibold text-primary">
                       {ind.conversionRate}% Win
                     </Badge>
                   </div>
 
                   <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Won Deals: {ind.wonDeals}</span>
-                    <span className="font-bold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
+                    <span className="font-semibold text-emerald-500 font-mono">{formatZAR(ind.totalRevenue)}</span>
                   </div>
                 </div>
               ))}
@@ -1170,7 +1170,7 @@ export function SalesDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-foreground">GoHighLevel Calendar & Appointments</h3>
+                  <h3 className="text-base font-semibold text-foreground">GoHighLevel Calendar & Appointments</h3>
                   <Badge className="bg-purple-500/15 text-purple-600 border-purple-300 text-[10px]">
                     GHL API Connected
                   </Badge>
@@ -1223,7 +1223,7 @@ export function SalesDashboard() {
                     appointments.map((app) => (
                       <tr key={app.id} className="hover:bg-muted/20">
                         <td className="p-3">
-                          <div className="font-bold text-foreground">{app.clientName}</div>
+                          <div className="font-semibold text-foreground">{app.clientName}</div>
                           <div className="text-[11px] text-muted-foreground">
                             {app.contactEmail || app.contactPhone || "Scheduled Contact"}
                           </div>
@@ -1266,7 +1266,7 @@ export function SalesDashboard() {
         {/* ── TAB 7: FOLLOW-UPS & TOUCHPOINTS ──────────────────────────────── */}
         <TabsContent value="followups" className="space-y-4">
           <Card className="p-5 border-border space-y-4">
-            <h3 className="text-base font-bold text-foreground">Follow-Up Schedule & Touchpoints</h3>
+            <h3 className="text-base font-semibold text-foreground">Follow-Up Schedule & Touchpoints</h3>
             <div className="space-y-3">
               {leads
                 .filter((l) => l.stage !== "Won" && l.stage !== "Lost")
@@ -1281,7 +1281,7 @@ export function SalesDashboard() {
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-foreground">{lead.businessName}</span>
+                          <span className="font-semibold text-xs text-foreground">{lead.businessName}</span>
                           {isOverdue && (
                             <Badge variant="destructive" className="text-[9px] py-0 px-1.5">
                               OVERDUE
@@ -1310,7 +1310,7 @@ export function SalesDashboard() {
         {/* ── TAB 8: OPERATIONS HANDOVER ───────────────────────────────────── */}
         <TabsContent value="handover" className="space-y-4">
           <Card className="p-5 border-border space-y-4">
-            <h3 className="text-base font-bold text-foreground">Client Handover to Operations</h3>
+            <h3 className="text-base font-semibold text-foreground">Client Handover to Operations</h3>
             <p className="text-xs text-muted-foreground">
               Transfer verified closed-won deals to the 2-day onboarding pipeline.
             </p>
@@ -1322,7 +1322,7 @@ export function SalesDashboard() {
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-foreground">{lead.businessName}</span>
+                      <span className="font-semibold text-sm text-foreground">{lead.businessName}</span>
                       {lead.handoverCompleted ? (
                         <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/40 text-[10px]">
                           Active in Operations
@@ -1358,7 +1358,7 @@ export function SalesDashboard() {
       <Dialog open={addLeadOpen} onOpenChange={setAddLeadOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Register New Lead Opportunity</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Register New Lead Opportunity</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               All records are validated in real-time to prevent duplicate company, email, and phone entries.
             </DialogDescription>
@@ -1367,7 +1367,7 @@ export function SalesDashboard() {
           {/* Duplicate Warning Banner */}
           {duplicateWarning?.isDuplicate && (
             <div className="p-3.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold">
+              <div className="flex items-center gap-2 text-xs font-semibold">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
                 <span>Duplicate Lead Detected</span>
               </div>
@@ -1508,7 +1508,7 @@ export function SalesDashboard() {
       <Dialog open={editLeadOpen} onOpenChange={setEditLeadOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Edit Opportunity Details</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Edit Opportunity Details</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Update prospect milestones, expected values, or contact details.
             </DialogDescription>
@@ -1516,7 +1516,7 @@ export function SalesDashboard() {
 
           {editDuplicateWarning?.isDuplicate && (
             <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs space-y-1">
-              <p className="font-bold flex items-center gap-1.5">
+              <p className="font-semibold flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                 Duplicate Conflict Warning
               </p>
@@ -1629,7 +1629,7 @@ export function SalesDashboard() {
       <Dialog open={targetModalOpen} onOpenChange={setTargetModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Assign Monthly Sales Quota</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Assign Monthly Sales Quota</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Set or adjust individual sales consultant targets for {selectedMonth}.
             </DialogDescription>
@@ -1685,7 +1685,7 @@ export function SalesDashboard() {
       <Dialog open={logActivityOpen} onOpenChange={setLogActivityOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Log Sales Touchpoint</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Log Sales Touchpoint</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Record outcome from client call, meeting, or email exchange.
             </DialogDescription>
@@ -1744,7 +1744,7 @@ export function SalesDashboard() {
       <Dialog open={handoverOpen} onOpenChange={setHandoverOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Initiate Operations Handover</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Initiate Operations Handover</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Transfer closed-won account {handoverLead?.businessName} into the 2-day onboarding pipeline.
             </DialogDescription>

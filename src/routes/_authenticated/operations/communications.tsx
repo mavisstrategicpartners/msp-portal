@@ -125,7 +125,8 @@ export function ClientCommunicationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Client Communication Timeline
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -184,7 +185,7 @@ export function ClientCommunicationsPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Building2 className="h-4 w-4 text-primary shrink-0" />
-                    <CardTitle className="text-sm font-bold text-foreground">
+                    <CardTitle className="text-sm font-semibold text-foreground">
                       {item.clientName}
                     </CardTitle>
                     <Badge variant="outline" className="text-[11px] bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 font-medium px-2.5 py-0.5 rounded-full shadow-none">
@@ -218,13 +219,13 @@ export function ClientCommunicationsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {item.outstandingQuestions && (
                     <div className="rounded border border-amber-300 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/20 p-2.5 text-amber-950 dark:text-amber-200">
-                      <strong className="text-amber-950 dark:text-amber-300 block mb-0.5 font-bold">Outstanding Question:</strong>
+                      <strong className="text-amber-950 dark:text-amber-300 block mb-0.5 font-semibold">Outstanding Question:</strong>
                       <span className="text-foreground">{item.outstandingQuestions}</span>
                     </div>
                   )}
                   {item.promisedFollowUp && (
                     <div className="rounded border border-purple-200 dark:border-purple-800 bg-purple-50/70 dark:bg-purple-950/30 p-2.5 text-purple-950 dark:text-purple-200">
-                      <strong className="text-purple-950 dark:text-purple-200 block mb-0.5 font-bold">Promised Follow-Up:</strong>
+                      <strong className="text-purple-950 dark:text-purple-200 block mb-0.5 font-semibold">Promised Follow-Up:</strong>
                       <span className="text-foreground">{item.promisedFollowUp}</span>
                     </div>
                   )}

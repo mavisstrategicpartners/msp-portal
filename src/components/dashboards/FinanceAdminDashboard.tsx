@@ -337,23 +337,23 @@ export function FinanceAdminDashboard() {
             <div className="md:col-span-2 space-y-4">
               <Card className="p-5 border-border">
                 <div className="mb-3 border-b border-border pb-2.5">
-                  <h3 className="text-sm font-bold text-foreground">Cash Collection Status</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Cash Collection Status</h3>
                   <p className="text-xs text-muted-foreground">Billing and payment verification across all recorded invoices</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   <div className="p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5">
                     <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Verified & Banked</span>
-                    <p className="text-xl font-bold text-emerald-500 mt-1">{formatZAR(verifiedCashCollected)}</p>
+                    <p className="text-xl font-semibold text-emerald-500 mt-1">{formatZAR(verifiedCashCollected)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{verifiedInvoices.length} invoices cleared gate</p>
                   </div>
                   <div className="p-3.5 rounded-lg border border-amber-500/30 bg-amber-500/5">
                     <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">Awaiting Payment</span>
-                    <p className="text-xl font-bold text-amber-500 mt-1">{formatZAR(awaitingReceivables)}</p>
+                    <p className="text-xl font-semibold text-amber-500 mt-1">{formatZAR(awaitingReceivables)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{awaitingInvoices.length} invoices</p>
                   </div>
                   <div className="p-3.5 rounded-lg border border-rose-500/30 bg-rose-500/5">
                     <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Overdue Receivables</span>
-                    <p className="text-xl font-bold text-rose-500 mt-1">{formatZAR(overdueReceivables)}</p>
+                    <p className="text-xl font-semibold text-rose-500 mt-1">{formatZAR(overdueReceivables)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{overdueInvoices.length} invoices past due</p>
                   </div>
                 </div>
@@ -362,7 +362,7 @@ export function FinanceAdminDashboard() {
               <Card className="p-5 border-border">
                 <div className="flex items-center justify-between mb-3 border-b border-border pb-2.5">
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Unverified Invoices Awaiting Payment Gate Action</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Unverified Invoices Awaiting Payment Gate Action</h3>
                     <p className="text-xs text-muted-foreground">Verify client receipts to unlock onboarding intake</p>
                   </div>
                   <Button size="sm" variant="ghost" className="text-xs" onClick={() => setActiveTab("invoices")}>
@@ -380,7 +380,7 @@ export function FinanceAdminDashboard() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-[11px] text-muted-foreground">{inv.invoiceNumber}</span>
-                              <span className="font-bold text-foreground">{inv.client}</span>
+                              <span className="font-semibold text-foreground">{inv.client}</span>
                               {inv.paymentStatus === "Overdue" && <Badge variant="destructive" className="text-[9px] py-0 px-1.5">OVERDUE</Badge>}
                             </div>
                             <p className="text-[11px] text-muted-foreground">
@@ -402,24 +402,24 @@ export function FinanceAdminDashboard() {
             <div className="space-y-4">
               <Card className="p-5 border-border flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground mb-1">Financial Health Summary</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Financial Health Summary</h3>
                   <p className="text-xs text-muted-foreground mb-4">All recorded invoices and expenses</p>
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between py-1.5 border-b border-border">
                       <span className="text-muted-foreground">Gross Invoiced Revenue:</span>
-                      <span className="font-bold text-foreground">{formatZAR(totalBookedMonthlyRevenue)}</span>
+                      <span className="font-semibold text-foreground">{formatZAR(totalBookedMonthlyRevenue)}</span>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-border">
                       <span className="text-muted-foreground">Verified Cash Received:</span>
-                      <span className="font-bold text-emerald-500">{formatZAR(verifiedCashCollected)}</span>
+                      <span className="font-semibold text-emerald-500">{formatZAR(verifiedCashCollected)}</span>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-border">
                       <span className="text-muted-foreground">Operating Expenses:</span>
-                      <span className="font-bold text-foreground">{formatZAR(totalExpenses)}</span>
+                      <span className="font-semibold text-foreground">{formatZAR(totalExpenses)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-t-2 border-border font-semibold">
                       <span className="text-foreground">Net Operating Cash Flow:</span>
-                      <span className={`font-bold ${netAgencyProfit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{formatZAR(netAgencyProfit)}</span>
+                      <span className={`font-semibold ${netAgencyProfit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>{formatZAR(netAgencyProfit)}</span>
                     </div>
                   </div>
                 </div>
@@ -443,7 +443,7 @@ export function FinanceAdminDashboard() {
           <Card className="p-5 border-border space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-foreground">Client Billing & Payment Verification Gate</h3>
+                <h3 className="text-base font-semibold text-foreground">Client Billing & Payment Verification Gate</h3>
                 <p className="text-xs text-muted-foreground">Verify incoming EFT and card payments. Verified status signals Operations to begin onboarding.</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -488,10 +488,10 @@ export function FinanceAdminDashboard() {
                       <tr key={inv.id} className="hover:bg-muted/30 transition">
                         <td className="py-3 px-3 font-mono text-muted-foreground font-semibold">{inv.invoiceNumber}</td>
                         <td className="py-3 px-3">
-                          <div className="font-bold text-foreground">{inv.client}</div>
+                          <div className="font-semibold text-foreground">{inv.client}</div>
                           <div className="text-[11px] text-muted-foreground">{inv.package || "—"}</div>
                         </td>
-                        <td className="py-3 px-3 font-bold text-foreground">{formatZAR(inv.monthlyServiceFeeZar)}</td>
+                        <td className="py-3 px-3 font-semibold text-foreground">{formatZAR(inv.monthlyServiceFeeZar)}</td>
                         <td className="py-3 px-3 font-mono text-muted-foreground">{inv.dueDate}</td>
                         <td className="py-3 px-3">
                           <Badge variant="outline" className={`text-[10px] font-semibold ${statusTone(inv.paymentStatus)}`}>{inv.paymentStatus}</Badge>
@@ -527,7 +527,7 @@ export function FinanceAdminDashboard() {
           <Card className="p-5 border-border space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-foreground">Operating Expenses</h3>
+                <h3 className="text-base font-semibold text-foreground">Operating Expenses</h3>
                 <p className="text-xs text-muted-foreground">Vendor payments, specialist disbursements and software overhead.</p>
               </div>
               <div className="flex gap-2">
@@ -561,7 +561,7 @@ export function FinanceAdminDashboard() {
                       <tr key={exp.id} className="hover:bg-muted/30 transition">
                         <td className="py-3 px-3"><Badge variant="outline" className="text-[10px] bg-secondary/50">{exp.category}</Badge></td>
                         <td className="py-3 px-3 font-semibold text-foreground">{exp.vendor}</td>
-                        <td className="py-3 px-3 font-bold text-foreground">{formatZAR(exp.amountZar)}</td>
+                        <td className="py-3 px-3 font-semibold text-foreground">{formatZAR(exp.amountZar)}</td>
                         <td className="py-3 px-3 font-mono text-muted-foreground">{exp.date}</td>
                         <td className="py-3 px-3"><Badge variant="outline" className={`text-[10px] ${statusTone(exp.status)}`}>{exp.status}</Badge></td>
                         <td className="py-3 px-3"><RowActions kind="expenses" record={exp} /></td>
@@ -589,7 +589,7 @@ export function FinanceAdminDashboard() {
             <Card className="p-5 border-border space-y-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-base font-bold text-foreground">Operating Budgets vs Actuals</h3>
+                  <h3 className="text-base font-semibold text-foreground">Operating Budgets vs Actuals</h3>
                   <p className="text-xs text-muted-foreground">Departmental cost allocations</p>
                 </div>
                 <div className="flex gap-2">
@@ -628,7 +628,7 @@ export function FinanceAdminDashboard() {
 
             <Card className="p-5 border-border space-y-4">
               <div>
-                <h3 className="text-base font-bold text-foreground">Agency Fees by Client</h3>
+                <h3 className="text-base font-semibold text-foreground">Agency Fees by Client</h3>
                 <p className="text-xs text-muted-foreground">Invoiced and verified agency fees per client, from recorded invoices</p>
               </div>
               {byClient.length === 0 ? (
@@ -638,11 +638,11 @@ export function FinanceAdminDashboard() {
                   {byClient.map((c) => (
                     <div key={c.client} className="p-3 rounded-lg border border-border bg-card flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-foreground">{c.client}</p>
+                        <p className="font-semibold text-foreground">{c.client}</p>
                         <p className="text-[11px] text-muted-foreground">{c.count} invoice{c.count === 1 ? "" : "s"}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-foreground">{formatZAR(c.invoiced)}</p>
+                        <p className="font-semibold text-foreground">{formatZAR(c.invoiced)}</p>
                         <p className="text-[10px] text-emerald-600">{formatZAR(c.verified)} verified</p>
                       </div>
                     </div>
@@ -658,7 +658,7 @@ export function FinanceAdminDashboard() {
           <Card className="p-5 border-border space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-foreground">Financial Approvals Queue</h3>
+                <h3 className="text-base font-semibold text-foreground">Financial Approvals Queue</h3>
                 <p className="text-xs text-muted-foreground">Expenditure requests requiring Finance & Administration authorisation.</p>
               </div>
               <div className="flex gap-2">
@@ -678,7 +678,7 @@ export function FinanceAdminDashboard() {
                   <div key={app.id} className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-xs text-foreground">{app.title}</span>
+                        <span className="font-semibold text-xs text-foreground">{app.title}</span>
                         <Badge variant="outline" className="text-[10px]">{app.category}</Badge>
                         <Badge variant="outline" className={`text-[10px] ${statusTone(app.status)}`}>{app.status}</Badge>
                       </div>
@@ -689,8 +689,8 @@ export function FinanceAdminDashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-[10px] text-muted-foreground uppercase font-semibold">Amount</span>
-                        <p className="text-sm font-bold text-foreground">{formatZAR(app.amountZar)}</p>
+                        <span className="text-xs text-muted-foreground font-semibold">Amount</span>
+                        <p className="text-sm font-semibold text-foreground">{formatZAR(app.amountZar)}</p>
                       </div>
                       {app.status === "Pending" && canEdit && (
                         <div className="flex items-center gap-1.5">
@@ -717,7 +717,7 @@ export function FinanceAdminDashboard() {
             <Card className="p-5 border-border space-y-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-base font-bold text-foreground">Financial Audit Trail</h3>
+                  <h3 className="text-base font-semibold text-foreground">Financial Audit Trail</h3>
                   <p className="text-xs text-muted-foreground">Every change, verification, edit and deletion. Entries cannot be edited or deleted.</p>
                 </div>
                 <SectionExport kind="audit" label="PDF" />
@@ -729,7 +729,7 @@ export function FinanceAdminDashboard() {
                   {auditLogs.map((log) => (
                     <div key={log.id} className="p-3 rounded-lg border border-border bg-card space-y-1">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-foreground">{log.action}</span>
+                        <span className="font-semibold text-foreground">{log.action}</span>
                         <span className="text-muted-foreground font-mono">{log.time}</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground break-words">{log.detail}</p>
@@ -742,12 +742,12 @@ export function FinanceAdminDashboard() {
 
             <Card className="p-5 border-border space-y-4 flex flex-col justify-between">
               <div>
-                <h3 className="text-base font-bold text-foreground">PDF Reports</h3>
+                <h3 className="text-base font-semibold text-foreground">PDF Reports</h3>
                 <p className="text-xs text-muted-foreground">
                   Download the complete Finance & Administration report, or one section, for a month or for all records. Every PDF has totals in rand and page numbers.
                 </p>
                 <div className="mt-4 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 text-amber-500 font-bold">
+                  <div className="flex items-center gap-2 text-amber-500 font-semibold">
                     <AlertTriangle className="h-4 w-4" />
                     <span>External Accounting: Xero / Sage not connected</span>
                   </div>
@@ -870,7 +870,7 @@ function RecordDialog({ kind, record, onClose, onSaved }: { kind: Kind; record: 
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold">{isNew ? "New" : "Edit"} {titles[kind]}</DialogTitle>
+          <DialogTitle className="text-base font-semibold">{isNew ? "New" : "Edit"} {titles[kind]}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
             {kind === "invoices" ? "MSP agency fees only. Client ad spend is paid directly to the platforms and is not invoiced here." : "Amounts in South African Rand (ZAR)."}
             {!isNew && " The change is recorded in the audit trail."}
@@ -952,7 +952,7 @@ function ExportDialog({ open, onClose, periods, data, me }: { open: boolean; onC
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold">Export to PDF</DialogTitle>
+          <DialogTitle className="text-base font-semibold">Export to PDF</DialogTitle>
           <DialogDescription className="text-xs">Invoices are grouped by due date; expenses and approvals by their date.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-1">

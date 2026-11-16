@@ -50,7 +50,8 @@ export function DepartmentClientsPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             
             {profileData?.departmentName ?? "Department"} Client Delivery Details
           </h1>
@@ -83,7 +84,7 @@ export function DepartmentClientsPage() {
       {clients.length === 0 ? (
         <Card className="border-border p-12 text-center shadow-xs">
           <Building2 className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-foreground mb-1">No Client Delivery Scopes Configured</h3>
+          <h3 className="text-base font-semibold text-foreground mb-1">No Client Delivery Scopes Configured</h3>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
             No official client delivery details have been assigned yet.
             Once genuine clients are onboarded and assigned, authorized deliverable scopes will appear here automatically.
@@ -96,7 +97,7 @@ export function DepartmentClientsPage() {
               <CardHeader className="pb-3 border-b border-border">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-base font-bold text-foreground">{client.name}</CardTitle>
+                    <CardTitle className="text-base font-semibold text-foreground">{client.name}</CardTitle>
                     <CardDescription className="text-xs font-medium text-muted-foreground mt-0.5">
                       {client.industry}
                     </CardDescription>
@@ -112,34 +113,34 @@ export function DepartmentClientsPage() {
 
               <CardContent className="p-4 space-y-4 text-xs">
                 <div className="p-2.5 rounded-lg border border-border bg-muted/20">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-0.5">
+                  <span className="text-xs font-semibold text-muted-foreground block mb-0.5">
                     Package & Retainer Scope
                   </span>
-                  <div className="font-bold text-foreground text-xs">{client.package}</div>
+                  <div className="font-semibold text-foreground text-xs">{client.package}</div>
                   <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">{client.scopeSummary}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-2 rounded-lg border border-border bg-muted/30">
-                    <span className="text-[10px] text-muted-foreground uppercase font-medium">Active Deliverables</span>
-                    <div className="text-base font-bold text-foreground mt-0.5">{client.activeDeliverablesCount} Items</div>
+                    <span className="text-xs text-muted-foreground font-medium">Active Deliverables</span>
+                    <div className="text-base font-semibold text-foreground mt-0.5">{client.activeDeliverablesCount} Items</div>
                   </div>
                   <div className="p-2 rounded-lg border border-border bg-muted/30">
-                    <span className="text-[10px] text-muted-foreground uppercase font-medium">Open Delivery Issues</span>
-                    <div className={`text-base font-bold mt-0.5 ${client.openIssuesCount > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                    <span className="text-xs text-muted-foreground font-medium">Open Delivery Issues</span>
+                    <div className={`text-base font-semibold mt-0.5 ${client.openIssuesCount > 0 ? "text-rose-600" : "text-emerald-600"}`}>
                       {client.openIssuesCount} {client.openIssuesCount === 1 ? "Blocker" : "Blockers"}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">
+                  <span className="text-xs font-semibold text-muted-foreground block mb-1">
                     Key Acceptance Criteria
                   </span>
                   <ul className="space-y-1 text-[11px] text-muted-foreground">
                     {client.acceptanceCriteria.slice(0, 2).map((ac, idx) => (
                       <li key={idx} className="flex items-start gap-1.5">
-                        <span className="text-primary font-bold">&bull;</span>
+                        <span className="text-primary font-semibold">&bull;</span>
                         <span>{ac}</span>
                       </li>
                     ))}
@@ -181,14 +182,14 @@ export function DepartmentClientsPage() {
 
             <div className="space-y-4 py-2 text-xs">
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                <span className="text-xs font-semibold text-muted-foreground block">
                   Authorised Service Scope
                 </span>
                 <p className="text-foreground font-medium leading-relaxed">{activeClient.scopeSummary}</p>
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-bold text-foreground block">
+                <span className="text-xs font-semibold text-foreground block">
                   Client-Approved Requirements & Acceptance Criteria
                 </span>
                 <div className="rounded-lg border border-border bg-card divide-y divide-border">
@@ -202,13 +203,13 @@ export function DepartmentClientsPage() {
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-bold text-foreground block">
+                <span className="text-xs font-semibold text-foreground block">
                   Required Verification Checklist
                 </span>
                 <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                   {activeClient.requiredEvidenceChecklist.map((ev, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-muted-foreground font-medium">
-                      <span className="text-primary font-bold">&check;</span>
+                      <span className="text-primary font-semibold">&check;</span>
                       <span>{ev}</span>
                     </div>
                   ))}
@@ -216,7 +217,7 @@ export function DepartmentClientsPage() {
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-bold text-foreground block">
+                <span className="text-xs font-semibold text-foreground block">
                   Relevant Communication Notes
                 </span>
                 <div className="rounded-lg border border-border bg-card divide-y divide-border text-[11px] text-muted-foreground font-medium">

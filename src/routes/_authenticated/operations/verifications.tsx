@@ -100,7 +100,8 @@ export function VerificationQueuePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Operational Verification Queue
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -161,7 +162,7 @@ export function VerificationQueuePage() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <Building2 className="h-4 w-4 text-primary shrink-0" />
-                        <CardTitle className="text-base font-bold text-foreground">
+                        <CardTitle className="text-base font-semibold text-foreground">
                           {item.recordTitle}
                         </CardTitle>
                         <Badge variant="outline" className="text-[11px] bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 font-medium px-2.5 py-0.5 shadow-none rounded-full">
@@ -250,7 +251,7 @@ export function VerificationQueuePage() {
 
                   <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/70 dark:bg-purple-950/30 p-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <strong className="text-purple-950 dark:text-purple-200 font-bold">Evidence / Submission Link:</strong>{" "}
+                      <strong className="text-purple-950 dark:text-purple-200 font-semibold">Evidence / Submission Link:</strong>{" "}
                       <span className="font-semibold text-foreground">{item.submissionEvidence}</span>
                     </div>
                     {item.verifiedAt && (
@@ -262,7 +263,7 @@ export function VerificationQueuePage() {
 
                   {item.rejectionReason && (
                     <div className="rounded-lg border border-rose-300 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/20 p-3 text-rose-900 dark:text-rose-200">
-                      <strong className="text-rose-900 dark:text-rose-300 font-bold">Rejection / Rework Notes:</strong> {item.rejectionReason}
+                      <strong className="text-rose-900 dark:text-rose-300 font-semibold">Rejection / Rework Notes:</strong> {item.rejectionReason}
                     </div>
                   )}
                 </CardContent>

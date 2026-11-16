@@ -199,37 +199,37 @@ export default function Training() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Active Programs</span>
+              <span className="text-xs font-semibold text-muted-foreground">Active Programs</span>
               <BookOpen className="h-4 w-4 text-primary" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{courses.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{courses.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">{mandatoryCount} mandatory compliance modules</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Total Enrollments</span>
+              <span className="text-xs font-semibold text-muted-foreground">Total Enrollments</span>
               <GraduationCap className="h-4 w-4 text-blue-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{totalEnrolled}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{totalEnrolled}</div>
             <div className="mt-1 text-xs text-muted-foreground">Active learner & employee seats</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Certifications Awarded</span>
+              <span className="text-xs font-semibold text-muted-foreground">Certifications Awarded</span>
               <Award className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{totalCompleted}</div>
+            <div className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{totalCompleted}</div>
             <div className="mt-1 text-xs text-muted-foreground">Successfully verified passes</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Completion Rate</span>
+              <span className="text-xs font-semibold text-muted-foreground">Completion Rate</span>
               <CheckCircle2 className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{overallRate}%</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{overallRate}%</div>
             <div className="mt-1 text-xs text-emerald-600 font-medium">Above enterprise benchmark (75%)</div>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function Training() {
                         )}
                       </div>
 
-                      <h4 className="font-bold text-sm text-foreground leading-snug line-clamp-2">
+                      <h4 className="font-semibold text-sm text-foreground leading-snug line-clamp-2">
                         {c.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">Provider: {c.provider}</p>
@@ -352,7 +352,7 @@ export default function Training() {
                       <div>
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-muted-foreground">Completion ({c.completed}/{c.enrolled})</span>
-                          <span className="font-bold text-foreground">{completionRate}%</span>
+                          <span className="font-semibold text-foreground">{completionRate}%</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
@@ -478,7 +478,7 @@ export default function Training() {
         >
           <form onSubmit={submitCourse} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Course Title *</label>
+              <label className="text-xs font-semibold text-muted-foreground">Course Title *</label>
               <input
                 required
                 value={courseModal.title}
@@ -490,7 +490,7 @@ export default function Training() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Category</label>
+                <label className="text-xs font-semibold text-muted-foreground">Category</label>
                 <select
                   value={courseModal.category}
                   onChange={e => setCourseModal({ ...courseModal, category: e.target.value })}
@@ -504,7 +504,7 @@ export default function Training() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Delivery Mode</label>
+                <label className="text-xs font-semibold text-muted-foreground">Delivery Mode</label>
                 <select
                   value={courseModal.mode}
                   onChange={e => setCourseModal({ ...courseModal, mode: e.target.value })}
@@ -517,7 +517,7 @@ export default function Training() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Provider / Institution</label>
+                <label className="text-xs font-semibold text-muted-foreground">Provider / Institution</label>
                 <input
                   value={courseModal.provider || ''}
                   onChange={e => setCourseModal({ ...courseModal, provider: e.target.value })}
@@ -527,7 +527,7 @@ export default function Training() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Duration (Hours)</label>
+                <label className="text-xs font-semibold text-muted-foreground">Duration (Hours)</label>
                 <input
                   value={courseModal.duration || ''}
                   onChange={e => setCourseModal({ ...courseModal, duration: e.target.value })}
@@ -537,7 +537,7 @@ export default function Training() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Completion Deadline</label>
+                <label className="text-xs font-semibold text-muted-foreground">Completion Deadline</label>
                 <input
                   type="date"
                   value={courseModal.deadline || ''}
@@ -582,7 +582,7 @@ export default function Training() {
         >
           <form onSubmit={submitEnrollment} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Select Employee</label>
+              <label className="text-xs font-semibold text-muted-foreground">Select Employee</label>
               <select
                 value={enrollModal.employee}
                 onChange={e => setEnrollModal({ ...enrollModal, employee: e.target.value })}
@@ -595,7 +595,7 @@ export default function Training() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Select Course</label>
+              <label className="text-xs font-semibold text-muted-foreground">Select Course</label>
               <select
                 value={enrollModal.course}
                 onChange={e => setEnrollModal({ ...enrollModal, course: e.target.value })}

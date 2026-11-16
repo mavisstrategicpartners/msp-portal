@@ -124,7 +124,7 @@ export default function HRDashboard() {
         {/* Quick Module Navigation Hub */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            <h2 className="text-xs font-semibold text-muted-foreground">
               HR Functional Modules
             </h2>
             <span className="text-xs text-primary font-medium flex items-center gap-1">
@@ -138,13 +138,13 @@ export default function HRDashboard() {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className="card p-3.5 text-left transition-all hover:border-primary/50 hover:shadow-md group flex items-start gap-3"
+                  className="card p-3.5 text-left transition-all hover:border-primary/50 shadow-sm group flex items-start gap-3"
                 >
                   <div className={`rounded-lg p-2 bg-muted/40 group-hover:bg-primary/10 transition-colors ${item.color}`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                    <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                       {item.title}
                     </div>
                     <div className="text-xs text-muted-foreground truncate mt-0.5">
@@ -159,7 +159,7 @@ export default function HRDashboard() {
 
         {/* Workforce Analytics Stats */}
         <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">
             Workforce Analytics
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -173,15 +173,15 @@ export default function HRDashboard() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="card p-4">
-            <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Employment Type</div>
+            <div className="text-xs font-semibold text-muted-foreground mb-2">Employment Type</div>
             <Donut data={empByType} size={160} thickness={20} />
           </div>
           <div className="card p-4">
-            <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Department Headcount</div>
+            <div className="text-xs font-semibold text-muted-foreground mb-2">Department Headcount</div>
             <BarChart data={empByDept} height={180} color="#7c3aed" />
           </div>
           <div className="card p-4">
-            <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Diversity — Gender</div>
+            <div className="text-xs font-semibold text-muted-foreground mb-2">Diversity — Gender</div>
             <Donut data={empByGender} size={160} thickness={20} />
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function HRDashboard() {
         {/* Pending Employee Leave Approvals */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="text-xs font-semibold text-muted-foreground">
               Pending Employee Leave Requests ({pendingLeaveCount})
             </div>
             <Link to="/host/hr/leave" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
@@ -267,7 +267,7 @@ export default function HRDashboard() {
 {/* Real-time Attendance & Time Tracking */}
 <div>
   <div className="flex items-center justify-between mb-2">
-    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="text-xs font-semibold text-muted-foreground">
       Live Workforce Attendance & Time Tracking
     </div>
     <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ export default function HRDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase text-muted-foreground">Recruitment Funnel</div>
+              <div className="text-xs font-semibold text-muted-foreground">Recruitment Funnel</div>
               <Link to="/host/hr/recruitment" className="text-xs text-primary font-semibold hover:underline">
                 View Jobs →
               </Link>
@@ -307,7 +307,7 @@ export default function HRDashboard() {
 
           <div className="card p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase text-muted-foreground">Learning & Development</div>
+              <div className="text-xs font-semibold text-muted-foreground">Learning & Development</div>
               <Link to="/host/hr/training" className="text-xs text-primary font-semibold hover:underline">
                 Course Catalog →
               </Link>

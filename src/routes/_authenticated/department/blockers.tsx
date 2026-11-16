@@ -55,7 +55,8 @@ function DepartmentBlockersPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Department workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Blockers & Outstanding Issues
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

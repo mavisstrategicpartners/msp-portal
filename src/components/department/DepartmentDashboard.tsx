@@ -6,6 +6,7 @@
  * department's responsibilities. Departments with their own dedicated workspace (HR, Finance,
  * Sales, Operations) link to it. Every figure is counted from task records; nothing is estimated.
  */
+import { EmptyState, Page, PageHeader } from "@/components/layout/page";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
@@ -101,17 +102,19 @@ export function DepartmentDashboard() {
     );
   if (!options.length)
     return (
-      <div className="mx-auto max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 text-center">
-        <UserCog className="mx-auto h-6 w-6 text-amber-500" />
-        <p className="mt-2 text-sm font-semibold text-foreground">You are not appointed as a department manager</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Department dashboards are for appointed managers. The CEO or an administrator appoints managers on the
-          Department Structure page. Your own tasks are on your home page.
-        </p>
-        <Button asChild size="sm" variant="outline" className="mt-4">
-          <Link to="/home">Go to my tasks</Link>
-        </Button>
-      </div>
+      <Page>
+        <PageHeader eyebrow="Department workspace" title="Department dashboard" />
+        <EmptyState
+          icon={UserCog}
+          title="You are not appointed as a department manager"
+          description="Department dashboards are for appointed managers. The CEO or an administrator appoints managers on the Department Structure page. Your own tasks are on your home page."
+          action={
+            <Button asChild size="sm" variant="outline">
+              <Link to="/home">Go to my tasks</Link>
+            </Button>
+          }
+        />
+      </Page>
     );
 
   const dept = options.find((d) => d.key === key) ?? options[0];

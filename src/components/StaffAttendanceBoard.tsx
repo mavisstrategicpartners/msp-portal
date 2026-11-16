@@ -192,7 +192,7 @@ export function StaffAttendanceBoard({
                       <div className="flex items-center gap-2.5">
                         <Avatar className="h-7 w-7 text-xs">
                           {staff.avatar && <AvatarImage src={staff.avatar} />}
-                          <AvatarFallback className="text-[10px] font-semibold uppercase bg-primary/10 text-primary">
+                          <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
                             {staff.name.slice(0, 2)}
                           </AvatarFallback>
                         </Avatar>

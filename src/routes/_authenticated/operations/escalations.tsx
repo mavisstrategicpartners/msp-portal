@@ -171,7 +171,8 @@ export function OperationalEscalationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations & Relationships</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Operational Escalations & Roadblocks
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -237,7 +238,7 @@ export function OperationalEscalationsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary" />
-                        <CardTitle className="text-base font-bold text-foreground">
+                        <CardTitle className="text-base font-semibold text-foreground">
                           {item.title}
                         </CardTitle>
                         <Badge variant="outline" className="text-[11px] bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800 font-medium px-2.5 py-0.5 rounded-full shadow-none">
@@ -286,22 +287,22 @@ export function OperationalEscalationsPage() {
                 <CardContent className="space-y-3 pt-0 text-xs">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-border bg-muted/40 p-2.5">
-                      <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Accountable Owner</span>
+                      <span className="text-xs font-semibold text-muted-foreground block">Accountable Owner</span>
                       <span className="font-semibold text-foreground text-sm">{item.currentOwner}</span>
                     </div>
                     <div className="rounded-lg border border-border bg-muted/40 p-2.5">
-                      <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Target Resolution</span>
+                      <span className="text-xs font-semibold text-muted-foreground block">Target Resolution</span>
                       <span className="font-semibold text-foreground text-sm">{item.targetResolutionDate}</span>
                     </div>
                     <div className="rounded-lg border border-border bg-muted/40 p-2.5">
-                      <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Current Recommended Action</span>
+                      <span className="text-xs font-semibold text-muted-foreground block">Current Recommended Action</span>
                       <span className="text-purple-950 dark:text-purple-200 truncate block font-semibold" title={item.nextAction}>{item.nextAction}</span>
                     </div>
                   </div>
 
                   {item.progressNotes && item.progressNotes.length > 0 && (
                     <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-                      <strong className="text-foreground block text-[11px] mb-1 font-bold">Audit Progress Trail:</strong>
+                      <strong className="text-foreground block text-[11px] mb-1 font-semibold">Audit Progress Trail:</strong>
                       {item.progressNotes.map((note, idx) => (
                         <div key={idx} className="text-xs leading-relaxed text-foreground/90 font-medium">
                           • {note}

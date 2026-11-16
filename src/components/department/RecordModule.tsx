@@ -186,7 +186,7 @@ export function RecordModule({ type }: { type: RecordType }) {
             {shown.length ? (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <tr className="border-b border-border text-left text-[11px] text-muted-foreground">
                     <th className="px-4 py-2.5 font-medium">{type.singular[0].toUpperCase() + type.singular.slice(1)}</th>
                     {type.client && <th className="px-3 py-2.5 font-medium">Client</th>}
                     <th className="px-3 py-2.5 font-medium">Status</th>

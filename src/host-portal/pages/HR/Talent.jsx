@@ -203,37 +203,37 @@ export default function Talent() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">High-Potential (HiPo)</span>
+              <span className="text-xs font-semibold text-muted-foreground">High-Potential (HiPo)</span>
               <Crown className="h-4 w-4 text-amber-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{hipoList.length}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{hipoList.length}</div>
             <div className="mt-1 text-xs text-muted-foreground">Top tier future leaders</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Ready-Now Successors</span>
+              <span className="text-xs font-semibold text-muted-foreground">Ready-Now Successors</span>
               <UserCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{readyNowCount}</div>
+            <div className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{readyNowCount}</div>
             <div className="mt-1 text-xs text-muted-foreground">Prepared for immediate promotion</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Avg IDP Completion</span>
+              <span className="text-xs font-semibold text-muted-foreground">Avg IDP Completion</span>
               <GraduationCap className="h-4 w-4 text-purple-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-foreground">{avgIdp}%</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{avgIdp}%</div>
             <div className="mt-1 text-xs text-muted-foreground">Personal development milestones</div>
           </div>
 
           <div className="card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Retention Alerts</span>
+              <span className="text-xs font-semibold text-muted-foreground">Retention Alerts</span>
               <AlertCircle className="h-4 w-4 text-rose-500" />
             </div>
-            <div className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{highRiskCount}</div>
+            <div className="mt-2 text-2xl font-semibold text-rose-600 dark:text-rose-400">{highRiskCount}</div>
             <div className="mt-1 text-xs text-muted-foreground">High flight-risk talent flagged</div>
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function Talent() {
           <div className="space-y-4">
             <div className="card p-4">
               <div className="mb-3">
-                <h3 className="text-base font-bold text-foreground">Critical Leadership Succession Bench</h3>
+                <h3 className="text-base font-semibold text-foreground">Critical Leadership Succession Bench</h3>
                 <p className="text-xs text-muted-foreground">Identified successors for core operational roles to mitigate key-person dependency.</p>
               </div>
 
@@ -293,7 +293,7 @@ export default function Talent() {
                   <div key={role.title} className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="font-bold text-foreground text-sm">{role.title}</div>
+                        <div className="font-semibold text-foreground text-sm">{role.title}</div>
                         <div className="text-xs text-muted-foreground">{role.department}</div>
                       </div>
                       <span className={`badge ${role.vacancyRisk === 'Critical' ? 'badge-danger' : role.vacancyRisk === 'High' ? 'badge-warning' : 'badge-info'}`}>
@@ -447,10 +447,10 @@ export default function Talent() {
         {tab === 'hipo' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {hipoList.map(h => (
-              <div key={h.id} className="card p-5 space-y-4 border-l-4 border-l-primary">
+              <div key={h.id} className="card p-5 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-bold text-base text-foreground">{h.employee}</h4>
+                    <h4 className="font-semibold text-base text-foreground">{h.employee}</h4>
                     <p className="text-xs text-muted-foreground">{h.role}</p>
                   </div>
                   <span className="badge badge-success">HiPo</span>
@@ -479,7 +479,7 @@ export default function Talent() {
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span>Individual Development Plan (IDP)</span>
-                    <span className="font-bold">{h.idp_progress}%</span>
+                    <span className="font-semibold">{h.idp_progress}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${h.idp_progress}%` }} />
@@ -512,7 +512,7 @@ export default function Talent() {
           <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Employee Name *</label>
+                <label className="text-xs font-semibold text-muted-foreground">Employee Name *</label>
                 <input
                   required
                   list="talent-emp-list"
@@ -536,7 +536,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Current Role</label>
+                <label className="text-xs font-semibold text-muted-foreground">Current Role</label>
                 <input
                   value={form.role || ''}
                   onChange={e => setForm({ ...form, role: e.target.value })}
@@ -545,7 +545,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Department</label>
+                <label className="text-xs font-semibold text-muted-foreground">Department</label>
                 <input
                   value={form.department || ''}
                   onChange={e => setForm({ ...form, department: e.target.value })}
@@ -554,7 +554,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Potential Rating</label>
+                <label className="text-xs font-semibold text-muted-foreground">Potential Rating</label>
                 <select
                   value={form.potential}
                   onChange={e => setForm({ ...form, potential: e.target.value })}
@@ -567,7 +567,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Readiness Timeline</label>
+                <label className="text-xs font-semibold text-muted-foreground">Readiness Timeline</label>
                 <select
                   value={form.readiness}
                   onChange={e => setForm({ ...form, readiness: e.target.value })}
@@ -581,7 +581,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Successor For (Role)</label>
+                <label className="text-xs font-semibold text-muted-foreground">Successor For (Role)</label>
                 <input
                   value={form.successor_for || ''}
                   onChange={e => setForm({ ...form, successor_for: e.target.value })}
@@ -591,7 +591,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Flight Risk</label>
+                <label className="text-xs font-semibold text-muted-foreground">Flight Risk</label>
                 <select
                   value={form.flight_risk || 'Low'}
                   onChange={e => setForm({ ...form, flight_risk: e.target.value })}
@@ -604,7 +604,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">IDP Progress (%)</label>
+                <label className="text-xs font-semibold text-muted-foreground">IDP Progress (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -616,7 +616,7 @@ export default function Talent() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Assigned Mentor</label>
+                <label className="text-xs font-semibold text-muted-foreground">Assigned Mentor</label>
                 <input
                   value={form.mentor || ''}
                   onChange={e => setForm({ ...form, mentor: e.target.value })}
@@ -626,7 +626,7 @@ export default function Talent() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Key Strengths & Development Focus</label>
+                <label className="text-xs font-semibold text-muted-foreground">Key Strengths & Development Focus</label>
                 <textarea
                   rows={2}
                   value={form.strengths || ''}

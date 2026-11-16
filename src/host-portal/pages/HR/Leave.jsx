@@ -131,7 +131,7 @@ export default function Leave() {
         {summary.map(s => (
           <div key={s.label} className="card">
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -162,7 +162,7 @@ export default function Leave() {
             <div style={{ overflowX: 'auto' }}>
               <table>
                 <thead>
-                  <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                     <th style={{ padding: '10px 0' }}>Employee</th>
                     <th>Leave Dates</th>
                     <th>Reason</th>
@@ -229,7 +229,7 @@ export default function Leave() {
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
-                <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                   <th style={{ padding: '10px 0' }}>Intern</th><th>Type</th><th>From → To</th><th>Days</th><th>Document</th><th>Authenticity</th><th>Status</th><th></th>
                 </tr>
               </thead>
@@ -259,7 +259,7 @@ export default function Leave() {
         <div className="card">
           <table>
             <thead>
-              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                 <th style={{ padding: '10px 0' }}>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Reason</th><th></th>
               </tr>
             </thead>
@@ -284,7 +284,7 @@ export default function Leave() {
       {tab === 'balances' && (
         <div className="card">
           <table>
-            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <thead><tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
               <th style={{ padding: '10px 0' }}>Employee</th>
               {LEAVE_TYPES.filter(t => !['Maternity','Paternity'].includes(t)).map(t => <th key={t}>{t}</th>)}
             </tr></thead>
@@ -306,7 +306,7 @@ export default function Leave() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 10 }}>
             {ZA_PUBLIC_HOLIDAYS.map(h => (
               <div key={h.date} className="card" style={{ padding: 12, background: 'var(--bg-secondary)' }}>
-                <div style={{ fontSize: 12, color: 'var(--brand)', fontWeight: 700 }}>{h.date}</div>
+                <div style={{ fontSize: 12, color: 'var(--brand)', fontWeight: 600 }}>{h.date}</div>
                 <div style={{ fontWeight: 600 }}>{h.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>{h.description}</div>
               </div>

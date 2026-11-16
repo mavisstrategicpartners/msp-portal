@@ -85,7 +85,7 @@ export default function Tasks() {
         {stats.map(s => (
           <div key={s.label} className="card">
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -108,7 +108,7 @@ export default function Tasks() {
         {tasks.length === 0 ? (
           <div style={{ padding: '48px 16px', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: 12, margin: '16px 0' }}>
             <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.6 }}>📋</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>No tasks have been assigned yet.</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>No tasks have been assigned yet.</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Tasks assigned to employees will appear here.</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>No upcoming deadlines.</div>
             <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAdd}>+ Create First Task</button>
@@ -119,7 +119,7 @@ export default function Tasks() {
             <KanbanBoard columns={TASK_STATUSES} items={filtered} onMove={move} columnAccent={columnAccent}
               renderCard={(t) => (
                 <div className="card" style={{ padding: 12, borderLeft: `4px solid ${priorityColor(t.priority)}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{t.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{projectName(t.project_id)}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 6 }}>👤 {learnerName(t.assignee_learner_id)}</div>
                   {t.due_date && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>📅 {t.due_date}</div>}
@@ -135,7 +135,7 @@ export default function Tasks() {
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
-                <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <tr style={{ textAlign: 'left', fontSize: 11, color: 'var(--text-muted)' }}>
                   <th style={{ padding: '10px 0' }}>Task</th><th>Project</th><th>Assignee</th><th>Priority</th><th>Due</th><th>Status</th><th></th>
                 </tr>
               </thead>
