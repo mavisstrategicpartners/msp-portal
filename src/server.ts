@@ -46,6 +46,11 @@ export default {
         return await handleAttendanceApi(request);
       }
 
+      if (url.pathname.startsWith("/api/chat")) {
+        const { handleChatApi } = await import("./lib/chat.server");
+        return await handleChatApi(request);
+      }
+
       if (url.pathname.startsWith("/api/staff")) {
         const { handleStaffApi } = await import("./lib/staff-server");
         return await handleStaffApi(request);

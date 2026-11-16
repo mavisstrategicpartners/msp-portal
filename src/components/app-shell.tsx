@@ -5,10 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   User, Search, Bell, Sun, Moon, LogOut, HelpCircle, ChevronsLeft, ChevronsRight, ChevronDown,
   MessageCircle, Crown, KeyRound, Menu, Camera, UserRound,
+  MessagesSquare,
 } from "lucide-react";
 import { buildSidebar, canAccessPath, isItemActive, itemKey, navContextFromProfile } from "@/lib/navigation";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useChatRealtime, useChatUnread } from "@/lib/chat-api";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/use-profile";
@@ -74,6 +76,8 @@ function ShellInner({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { data: profileData, isLoading: profileLoading } = useProfile();
+  // Live chat updates (new messages refresh unread counts and open conversations).
+  useChatRealtime(Boolean(profileData?.user));
   const navCtx = navContextFromProfile(profileData);
   // Workspace pages are only shown to roles allowed in src/lib/navigation.ts.
   // Anyone else who opens one by URL is sent to their own dashboard.
@@ -149,7 +153,8 @@ function ShellInner({ children }: { children: ReactNode }) {
           {profileLoading || blocked ? null : children}
         </main>
       </div>
-      <MspBubble onOpen={() => setMspOpen(true)} />
+      {/* The assistant bubble would sit over the chat composer. */}
+      {pathname !== "/chat" && <MspBubble onOpen={() => setMspOpen(true)} />}
       <PortalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
       <MspChatPanel open={mspOpen} onOpenChange={setMspOpen} />
       <NotificationsPanel open={notificationsOpen} onOpenChange={setNotificationsOpen} />
@@ -275,6 +280,7 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
                           {active && <span aria-hidden className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-[#e879d8]" />}
                           <item.icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-white/55")} />
                           {!narrow && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
+                          {item.badge === "chat" && <ChatBadge narrow={narrow} />}
                         </Link>
                       </li>
                     );
@@ -452,6 +458,7 @@ function TopBar({
           </Button>
         )}
         {!isCeoPath && <Button variant="ghost" size="icon" aria-label="Help" onClick={onOpenHelp} className="hidden sm:inline-flex"><HelpCircle className="h-4 w-4" /></Button>}
+        <TopBarChat />
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
@@ -530,5 +537,39 @@ function RoleBadge({ tier }: { tier?: "root_admin" | "manager" | "staff" | "inte
     <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", config.cls)}>
       <Icon className="h-3 w-3" /> {config.label}
     </span>
+  );
+}
+/** Unread chat messages next to "Company Chat" in the sidebar. */
+function ChatBadge({ narrow }: { narrow: boolean }) {
+  const { data } = useChatUnread();
+  const n = data?.unreadTotal ?? 0;
+  if (!n) return null;
+  return (
+    <span
+      aria-label={`${n} unread messages`}
+      className={cn(
+        "flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e879d8] px-1.5 text-[11px] font-semibold text-[#2a0f2e]",
+        narrow && "absolute right-1 top-0.5 h-4 min-w-4 px-1 text-[10px]",
+      )}
+    >
+      {n > 99 ? "99+" : n}
+    </span>
+  );
+}
+
+function TopBarChat() {
+  const { data } = useChatUnread();
+  const n = data?.unreadTotal ?? 0;
+  return (
+    <Button variant="ghost" size="icon" asChild className="relative">
+      <Link to={"/chat" as any} aria-label={n ? `Company Chat, ${n} unread` : "Company Chat"}>
+        <MessagesSquare className="h-4 w-4" />
+        {n > 0 && (
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-primary-foreground">
+            {n > 9 ? "9+" : n}
+          </span>
+        )}
+      </Link>
+    </Button>
   );
 }

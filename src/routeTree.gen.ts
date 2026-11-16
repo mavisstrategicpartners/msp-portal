@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as SetPasswordRouteImport } from './routes/set-password'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedDepartmentsRouteImport } from './routes/_authenticated/departments'
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedGlossaryRouteImport } from './routes/_authenticated/glossary'
@@ -123,6 +124,11 @@ const SetPasswordRoute = SetPasswordRouteImport.update({
   id: '/set-password',
   path: '/set-password',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDepartmentsRoute =
   AuthenticatedDepartmentsRouteImport.update({
@@ -607,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/set-password': typeof SetPasswordRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
@@ -698,6 +705,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/set-password': typeof SetPasswordRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/departments': typeof AuthenticatedDepartmentsRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/glossary': typeof AuthenticatedGlossaryRoute
@@ -791,6 +799,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/set-password': typeof SetPasswordRoute
+  '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/departments': typeof AuthenticatedDepartmentsRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/glossary': typeof AuthenticatedGlossaryRoute
@@ -884,6 +893,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/set-password'
+    | '/chat'
     | '/departments'
     | '/finance'
     | '/glossary'
@@ -975,6 +985,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/set-password'
+    | '/chat'
     | '/departments'
     | '/finance'
     | '/glossary'
@@ -1067,6 +1078,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/set-password'
+    | '/_authenticated/chat'
     | '/_authenticated/departments'
     | '/_authenticated/finance'
     | '/_authenticated/glossary'
@@ -1198,6 +1210,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/set-password'
       preLoaderRoute: typeof SetPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/departments': {
       id: '/_authenticated/departments'
@@ -1798,6 +1817,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedDepartmentsRoute: typeof AuthenticatedDepartmentsRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedGlossaryRoute: typeof AuthenticatedGlossaryRoute
@@ -1886,6 +1906,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedDepartmentsRoute: AuthenticatedDepartmentsRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedGlossaryRoute: AuthenticatedGlossaryRoute,

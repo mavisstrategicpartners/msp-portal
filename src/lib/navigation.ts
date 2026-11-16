@@ -55,6 +55,7 @@ import {
   Users,
   Wrench,
   Trophy,
+  MessagesSquare,
   PhoneCall,
   FileSearch,
   Goal,
@@ -78,6 +79,8 @@ export type NavItem = {
   searchDefault?: boolean;
   /** Optional visibility rule on top of the workspace/group rule. */
   visible?: (ctx: NavContext) => boolean;
+  /** Live count shown next to the label (e.g. unread chat messages). */
+  badge?: "chat";
 };
 
 /** Departments whose work is delivered to clients (client delivery and client reports are relevant). */
@@ -638,6 +641,13 @@ export const PERSONAL_GROUP: NavGroup = {
   ],
 };
 
+/** Company Chat: every signed-in employee, in every workspace (CEO included). */
+export const CHAT_GROUP: NavGroup = {
+  id: "communication",
+  label: "Communication",
+  items: [{ to: "/chat", label: "Company Chat", icon: MessagesSquare, badge: "chat" }],
+};
+
 /** Company knowledge base: shown once, collapsed by default, for everyone. */
 export const KNOWLEDGE_GROUP: NavGroup = {
   id: "knowledge",
@@ -813,7 +823,7 @@ export function buildSidebar(pathname: string, ctx: NavContext) {
   const ws = WORKSPACES[current];
   const switcher = workspaceSwitcherGroup(current, ctx);
   const groups = visibleGroups(
-    [...ws.groups, PERSONAL_GROUP, ...(switcher ? [switcher] : []), KNOWLEDGE_GROUP],
+    [...ws.groups, CHAT_GROUP, PERSONAL_GROUP, ...(switcher ? [switcher] : []), KNOWLEDGE_GROUP],
     ctx,
   );
 
