@@ -73,8 +73,8 @@ function DepartmentReviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <ClipboardCheck className="h-6 w-6 text-primary" /> Department Review
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Department Review
         </h1>
         <p className="mt-1 text-sm text-muted-foreground max-w-3xl">
           Tasks whose responsible department could not be established from the records, and the confirmed manager of
@@ -110,7 +110,7 @@ function DepartmentReviewPage() {
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <thead className="bg-muted/40 text-muted-foreground text-xs">
                   <tr>
                     <th className="px-3 py-2">Task</th>
                     <th className="px-3 py-2">Assigned to</th>

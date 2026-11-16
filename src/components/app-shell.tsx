@@ -38,7 +38,33 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function ShellInner({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsedState] = useState(false);
+  useEffect(() => {
+    try {
+      setCollapsedState(localStorage.getItem("msp.nav.collapsed") === "1");
+    } catch {}
+  }, []);
+  // Tablets and small laptops (768–1023px) get the icon rail by default so the page keeps its width.
+  const [compact, setCompact] = useState(false);
+  const [compactExpanded, setCompactExpanded] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
+    const on = () => setCompact(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const railCollapsed = compact ? !compactExpanded : collapsed;
+  const setCollapsed = (fn: (c: boolean) => boolean) =>
+    compact
+      ? setCompactExpanded((e) => !e)
+      : setCollapsedState((c) => {
+      const next = fn(c);
+      try {
+        localStorage.setItem("msp.nav.collapsed", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mspOpen, setMspOpen] = useState(false);
@@ -76,13 +102,13 @@ function ShellInner({ children }: { children: ReactNode }) {
   }, []);
 
   // Close mobile drawer when navigation changes
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => { setMobileOpen(false); setCompactExpanded(false); }, [pathname]);
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      <Sidebar collapsed={collapsed} />
+      <Sidebar collapsed={railCollapsed} />
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[280px] p-0 md:hidden">
+        <SheetContent side="left" className="w-[280px] max-w-[85vw] border-r-0 p-0 md:hidden [&>button]:text-white [&>button]:opacity-80">
           <Sidebar collapsed={false} mobile />
         </SheetContent>
       </Sheet>
@@ -90,16 +116,16 @@ function ShellInner({ children }: { children: ReactNode }) {
         <TopBar
           onToggleSidebar={() => setCollapsed((c) => !c)}
           onOpenMobileNav={() => setMobileOpen(true)}
-          collapsed={collapsed}
+          collapsed={railCollapsed}
           onOpenSearch={() => setSearchOpen(true)}
           onOpenNotifications={() => setNotificationsOpen(true)}
           onOpenHelp={() => setHelpOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-8">
+        <main className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {!profileLoading && !blocked && profileData && !profileData.isCEO &&
             pathname === (profileData.defaultDashboard ?? "/home") && (
-              <div className="mb-6">
+              <div className="mb-6 empty:hidden">
                 <MyFollowUps />
               </div>
             )}
@@ -170,6 +196,13 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
     setOpenState((prev) => (prev[activeGroupId] === false ? { ...prev, [activeGroupId]: true } : prev));
   }, [activeGroupId, pathname]);
 
+  // Keep the current page in view inside a long menu.
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = navRef.current?.querySelector('[aria-current="page"]') as HTMLElement | null;
+    el?.scrollIntoView({ block: "nearest" });
+  }, [pathname, collapsed]);
+
   function toggleGroup(id: string, current: boolean) {
     setOpenState((prev) => {
       const next = { ...prev, [id]: !current };
@@ -178,42 +211,45 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
     });
   }
 
+  const narrow = collapsed && !mobile;
   return (
-    <aside className={cn(
-      "relative shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#3b1d4d] text-white dark:bg-[#21172f]",
-      mobile ? "flex h-full w-full" : "sticky top-0 hidden h-screen md:flex",
-      !mobile && (collapsed ? "w-[68px]" : "w-[260px]"),
-    )}>
-      <div className={cn("flex h-[76px] items-center border-b border-white/10 px-4", collapsed && "justify-center px-2")}>
-        <Link to={(data?.defaultDashboard ?? "/home") as any} className="flex items-center gap-2.5">
-          <MspLogo showWord={!collapsed} />
+    <aside
+      className={cn(
+        "relative shrink-0 flex-col overflow-hidden border-r border-white/10 bg-[#3b1d4d] text-white dark:bg-[#1c1428]",
+        mobile ? "flex h-full w-full" : "sticky top-0 hidden h-screen md:flex",
+        !mobile && (collapsed ? "w-[64px]" : "w-[248px]"),
+        "transition-[width] duration-200",
+      )}
+    >
+      {/* Brand — same height as the top bar so the two borders line up. */}
+      <div className={cn("flex h-16 shrink-0 items-center border-b border-white/10", narrow ? "justify-center px-2" : "px-4")}>
+        <Link to={(data?.defaultDashboard ?? "/home") as any} className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40" aria-label="Go to my dashboard">
+          <MspLogo showWord={!narrow} />
         </Link>
       </div>
-      {!collapsed && nav && (
-        <div className="mx-3 mt-4 rounded-lg border border-white/10 bg-white/[0.06] p-2.5">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">{nav.title}</p>
-          <p className="mt-1 text-xs text-white/80">{nav.subtitle}</p>
+      {!narrow && nav && (
+        <div className="shrink-0 border-b border-white/10 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">Workspace</p>
+          <p className="mt-0.5 truncate text-[13px] font-medium text-white" title={`${nav.title} — ${nav.subtitle}`}>{nav.title}</p>
         </div>
       )}
-      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2 py-4">
+      <nav ref={navRef} aria-label="Main navigation" className={cn("scrollbar-thin flex-1 overflow-y-auto overscroll-contain py-3", narrow ? "px-2" : "px-3")}>
         {nav?.groups.map((group, index) => {
           const hasActive = group.id === activeGroupId;
-          const isOpen = collapsed || (openState[group.id] ?? (hasActive || (group.defaultOpen ?? true)));
+          const isOpen = narrow || (openState[group.id] ?? (hasActive || (group.defaultOpen ?? true)));
           const listId = `nav-group-${group.id}${mobile ? "-m" : ""}`;
           return (
-            <div key={group.id} className={cn(collapsed ? "mb-2" : "mb-4")}>
-              {collapsed ? (
-                index > 0 && <div className="mx-2 mb-2 border-t border-white/10" aria-hidden />
-              ) : (
+            <div key={group.id} className={cn(index > 0 && (narrow ? "mt-2 border-t border-white/10 pt-2" : "mt-4"))}>
+              {!narrow && (
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.id, isOpen)}
                   aria-expanded={isOpen}
                   aria-controls={listId}
-                  className="flex w-full items-center justify-between rounded px-3 pb-1.5 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-white/55 transition hover:text-white/80"
+                  className="mb-1 flex h-7 w-full items-center justify-between rounded-md px-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.12em] text-white/45 transition hover:text-white/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
-                  {group.label}
-                  <ChevronDown className={cn("h-3 w-3 transition-transform", !isOpen && "-rotate-90")} />
+                  <span className="truncate">{group.label}</span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", !isOpen && "-rotate-90")} />
                 </button>
               )}
               {isOpen && (
@@ -228,17 +264,17 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
                           // Links that open a section of a page scroll to that section themselves.
                           resetScroll={item.search ? false : undefined}
                           aria-current={active ? "page" : undefined}
+                          aria-label={narrow ? item.label : undefined}
+                          title={narrow ? item.label : undefined}
                           className={cn(
-                            "group flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-medium no-underline transition",
-                            active
-                              ? "border-l-primary bg-white/12 text-white shadow-sm"
-                              : "text-white/70 hover:border-white/20 hover:bg-white/[0.06] hover:text-white",
-                            collapsed && "justify-center px-2",
+                            "relative flex h-9 items-center gap-3 rounded-md text-[13.5px] no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
+                            narrow ? "justify-center px-0" : "px-2.5",
+                            active ? "bg-white/[0.12] font-medium text-white" : "text-white/70 hover:bg-white/[0.06] hover:text-white",
                           )}
-                          title={collapsed ? item.label : undefined}
                         >
-                          <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                          {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                          {active && <span aria-hidden className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-[#e879d8]" />}
+                          <item.icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-white/55")} />
+                          {!narrow && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
                         </Link>
                       </li>
                     );
@@ -249,13 +285,6 @@ function Sidebar({ collapsed, mobile = false }: { collapsed: boolean; mobile?: b
           );
         })}
       </nav>
-      <div className="border-t border-white/10 p-3">
-        {!collapsed && (
-          <p className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] leading-relaxed text-white/60">
-            <span className="font-semibold text-white">Need help?</span> Open MSP Assist in the bottom-right corner.
-          </p>
-        )}
-      </div>
     </aside>
   );
 }
@@ -390,18 +419,18 @@ function TopBar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-xl sm:px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 sm:px-4 md:px-6">
       <Button variant="ghost" size="icon" onClick={onOpenMobileNav} className="md:hidden" aria-label="Open navigation">
         <Menu className="h-5 w-5" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="hidden md:flex">
+      <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="hidden md:flex" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
         {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
       </Button>
-      <div className="relative min-w-0 flex-1 max-w-lg">
+      <div className="relative min-w-[120px] flex-1 max-w-lg">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <button type="button" onClick={onOpenSearch} className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-secondary/40 pl-9 pr-2 text-left text-sm text-muted-foreground transition hover:bg-secondary/70">
           <span className="truncate">Search SOPs, services, tools…</span>
-          <kbd className="ml-auto hidden rounded border border-border bg-background/80 px-1.5 py-0.5 text-[10px] font-medium md:inline">⌘K</kbd>
+          <kbd className="ml-auto hidden rounded border border-border bg-background/80 px-1.5 py-0.5 text-[10px] font-medium lg:inline">⌘K</kbd>
         </button>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -428,14 +457,14 @@ function TopBar({
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="ml-1 flex items-center gap-2 rounded-full border border-border px-1.5 py-1 transition hover:bg-secondary/60 sm:pr-3">
+            <button className="ml-1 flex items-center gap-2 rounded-full border border-border px-1 py-1 transition hover:bg-secondary/60 lg:pr-3" aria-label="Account menu">
               <Avatar className="h-8 w-8 border border-border">
                 <AvatarImage src={avatarUrl ?? undefined} alt="Profile picture" />
                 <AvatarFallback className="bg-primary/15 text-primary">
                   {initialsMode ? <span className="text-xs font-semibold">{initials}</span> : <UserRound className="h-4 w-4" strokeWidth={1.8} />}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden max-w-[150px] text-left sm:block">
+              <span className="hidden max-w-[150px] text-left lg:block">
                 <span className="block truncate text-xs font-semibold text-foreground">{data?.profile?.full_name || "Signed in"}</span>
                 <span className="block truncate text-[10px] text-muted-foreground">{data?.profile?.job_title || "Staff member"}</span>
               </span>
@@ -479,10 +508,10 @@ function MspBubble({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition hover:bg-primary/90"
-      title="Ask Msp"
+      className="group fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      title="Ask MSP Assist" aria-label="Open MSP Assist"
     >
-      <MessageCircle className="h-6 w-6" />
+      <MessageCircle className="h-5 w-5" />
       <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-success ring-2 ring-background" />
     </button>
   );

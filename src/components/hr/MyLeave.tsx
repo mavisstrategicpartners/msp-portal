@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { hrApi } from "@/components/hr/MyHrDocuments";
 import { LeaveStatusBadge, type LeaveRequest } from "@/components/hr/LeaveShared";
 import { LEAVE_TYPES, workingDays } from "@/lib/hr-shared";
+import { selectClass } from "@/components/layout/page";
 
 const fmt = (d?: string | null) => (d ? format(parseISO(d), "d MMM yyyy") : "—");
 const KEY = ["leave", "mine"];
@@ -48,18 +49,20 @@ export function MyLeavePage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight"><CalendarDays className="h-6 w-6 text-primary" /> My Leave</h1>
+        <p className="text-xs font-medium text-muted-foreground">My workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">My Leave</h1>
         <p className="mt-1 text-sm text-muted-foreground">Apply for leave and follow HR's decision. Only you and HR can see your applications.</p>
       </div>
 
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <Card className="space-y-4 p-5">
-        <h2 className="font-semibold">Apply for leave</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <h2 className="text-sm font-semibold">Apply for leave</h2>
+        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
           <div className="space-y-1.5">
             <Label className="text-xs" htmlFor="lv-type">Type of leave</Label>
-            <select id="lv-type" value={type} onChange={(e) => setType(e.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
+            <select id="lv-type" value={type} onChange={(e) => setType(e.target.value)} className={`${selectClass} w-full`}>
               {LEAVE_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
@@ -84,8 +87,9 @@ export function MyLeavePage() {
         </div>
       </Card>
 
+      <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">My applications</h2>
+        <h2 className="text-sm font-semibold">My applications</h2>
         <span className="text-xs text-muted-foreground">Approved in {year}: {approvedThisYear.reduce((n, r) => n + (r.days ?? 0), 0)} working days</span>
       </div>
       {q.isLoading ? (
@@ -99,6 +103,8 @@ export function MyLeavePage() {
           {q.data.requests.map((r) => <MyLeaveRow key={r.id} r={r} />)}
         </Card>
       )}
+      </div>
+      </div>
     </div>
   );
 }

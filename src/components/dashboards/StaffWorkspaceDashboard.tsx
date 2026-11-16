@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { PageHeader, StatCard, StatGrid, greeting, greetName } from "@/components/layout/page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,11 +89,11 @@ import {
   EvidenceFile,
 } from "@/lib/staff-tasks.types";
 
-export function StaffWorkspaceDashboard() {
+export function StaffWorkspaceDashboard({ eyebrow = "My workspace", meta }: { eyebrow?: ReactNode; meta?: ReactNode } = {}) {
   const { data: profileData } = useProfile();
   const userName = profileData?.profile?.full_name || "Team Member";
   const userRole = profileData?.profile?.job_title || "Specialist";
-  const department = profileData?.profile?.department || "Operations";
+  const department = (profileData as any)?.departmentName || profileData?.profile?.department || null;
   const isManagerOrAbove = profileData?.isManagerOrAbove || false;
 
   const [activeTab, setActiveTab] = useState<
@@ -442,56 +443,34 @@ export function StaffWorkspaceDashboard() {
   return (
     <div className="space-y-6">
       <EvidenceReviewDialog evidenceId={viewEvidenceId} open={!!viewEvidenceId} onOpenChange={(o) => !o && setViewEvidenceId(null)} />
-      {/* ─── Top Eyebrow / Presence Header ──────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-xs">
-            <User className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-foreground">{userName}</h1>
-              <Badge variant="outline" className="text-[10px] bg-secondary/50 font-semibold border-border">
-                {userRole}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Department: <strong className="text-foreground">{department}</strong> &bull; Assigned Deliverables & Performance Hub
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            size="sm"
-            onClick={() => handleOpenEvidenceModal()}
-            className="h-9 bg-primary text-xs font-semibold text-primary-foreground gap-1.5 hover:bg-primary/90 shadow-xs"
-          >
-            <FileUp className="h-4 w-4" /> Submit Evidence
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleOpenNewDependency()}
-            className="h-9 text-xs font-semibold text-rose-600 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/20 gap-1.5"
-          >
-            <ShieldAlert className="h-4 w-4" /> Request Dependency
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={eyebrow}
+        title={`${greeting()}, ${greetName(userName)}`}
+        description={[userRole, department].filter(Boolean).join(" · ")}
+        meta={meta}
+        actions={
+          <>
+            <Button size="sm" variant="outline" onClick={() => handleOpenNewDependency()}>
+              <ShieldAlert className="h-4 w-4" /> Request dependency
+            </Button>
+            <Button size="sm" onClick={() => handleOpenEvidenceModal()}>
+              <FileUp className="h-4 w-4" /> Submit evidence
+            </Button>
+          </>
+        }
+      />
 
       {/* ─── Navigation Tabs ────────────────────────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
         <div className="overflow-x-auto pb-1">
-          <TabsList className="bg-muted/50 p-1 border border-border h-11 w-full justify-start rounded-xl">
-            <TabsTrigger value="overview" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="overview" className="gap-1.5 px-3 text-xs">
               <Layers className="h-3.5 w-3.5" /> Overview
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+            <TabsTrigger value="tasks" className="gap-1.5 px-3 text-xs">
               <CheckSquare className="h-3.5 w-3.5" /> Assigned Tasks ({tasks.length})
             </TabsTrigger>
-            <TabsTrigger value="deadlines" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+            <TabsTrigger value="deadlines" className="gap-1.5 px-3 text-xs">
               <Clock className="h-3.5 w-3.5" /> Deadlines
               {deadlineCategories.overdue.length > 0 && (
                 <span className="ml-1 rounded-full bg-rose-500 text-white text-[9px] px-1.5 py-0.2 font-bold">
@@ -499,13 +478,13 @@ export function StaffWorkspaceDashboard() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="dependencies" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+            <TabsTrigger value="dependencies" className="gap-1.5 px-3 text-xs">
               <GitBranch className="h-3.5 w-3.5" /> Dependency Requests ({dependencies.length})
             </TabsTrigger>
-            <TabsTrigger value="evidence" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+            <TabsTrigger value="evidence" className="gap-1.5 px-3 text-xs">
               <FileCheck className="h-3.5 w-3.5" /> Evidence Submissions ({evidenceList.length})
             </TabsTrigger>
-            <TabsTrigger value="scorecard" className="text-xs font-semibold px-4 gap-1.5 data-[state=active]:bg-card">
+            <TabsTrigger value="scorecard" className="gap-1.5 px-3 text-xs">
               <Award className="h-3.5 w-3.5" /> Personal Scorecard
             </TabsTrigger>
           </TabsList>
@@ -516,60 +495,35 @@ export function StaffWorkspaceDashboard() {
         ══════════════════════════════════════════════════════════════════════ */}
         <TabsContent value="overview" className="space-y-6">
           {/* Top KPI Cards */}
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <Card className="p-4 border-border shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground">My Assigned Tasks</span>
-                <CheckSquare className="h-4 w-4 text-primary" />
-              </div>
-              <p className="text-2xl font-bold text-foreground mt-2">{tasks.length}</p>
-              <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                <span className="font-semibold text-emerald-600">{tasks.filter((t) => t.status === "Completed").length} done</span>
-                &bull;
-                <span>{tasks.filter((t) => t.status === "In Progress").length} active</span>
-              </div>
-            </Card>
-
-            <Card className="p-4 border-border shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground">Overdue Items</span>
-                <AlertTriangle className="h-4 w-4 text-rose-500" />
-              </div>
-              <p className={`text-2xl font-bold mt-2 ${deadlineCategories.overdue.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
-                {deadlineCategories.overdue.length}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {deadlineCategories.overdue.length > 0 ? "Requires immediate delivery update" : "All deliverables on schedule"}
-              </p>
-            </Card>
-
-            <Card className="p-4 border-border shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground">Awaiting Manager Review</span>
-                <Clock className="h-4 w-4 text-amber-500" />
-              </div>
-              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-                {tasks.filter((t) => t.status === "Submitted for Review").length}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-1">Pending QA sign-off</p>
-            </Card>
-
-            <Card className="p-4 border-border shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground">On-Time Completion Rate</span>
-                <Award className="h-4 w-4 text-emerald-500" />
-              </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-                {typeof scorecard?.onTimeCompletionRate === "number"
-                  ? `${scorecard.onTimeCompletionRate}%`
-                  : "Insufficient data"}
-              </p>
-              {typeof scorecard?.onTimeCompletionRate === "number" && (
-                <Progress value={scorecard.onTimeCompletionRate} className="mt-2 h-1.5" />
-              )}
-              <p className="text-[11px] text-muted-foreground mt-1">Calculated from verified task records</p>
-            </Card>
-          </div>
+          <StatGrid>
+            <StatCard
+              label="My assigned tasks"
+              value={tasks.length}
+              icon={CheckSquare}
+              hint={`${tasks.filter((t) => t.status === "Completed").length} done · ${tasks.filter((t) => t.status === "In Progress").length} in progress`}
+            />
+            <StatCard
+              label="Overdue"
+              value={deadlineCategories.overdue.length}
+              icon={AlertTriangle}
+              tone={deadlineCategories.overdue.length > 0 ? "danger" : "default"}
+              hint={deadlineCategories.overdue.length > 0 ? "Needs a delivery update" : "All deliverables on schedule"}
+            />
+            <StatCard
+              label="Awaiting manager review"
+              value={tasks.filter((t) => t.status === "Submitted for Review").length}
+              icon={Clock}
+              hint="Pending QA sign-off"
+            />
+            <StatCard
+              label="On-time completion"
+              value={typeof scorecard?.onTimeCompletionRate === "number" ? `${scorecard.onTimeCompletionRate}%` : "—"}
+              icon={Award}
+              hint={typeof scorecard?.onTimeCompletionRate === "number" ? "From verified task records" : "Not enough completed tasks yet"}
+            >
+              {typeof scorecard?.onTimeCompletionRate === "number" && <Progress value={scorecard.onTimeCompletionRate} className="mt-2 h-1.5" />}
+            </StatCard>
+          </StatGrid>
 
           {/* Active Blocker Alert Banner */}
           {tasks.some((t) => t.status === "Blocked") && (
@@ -1452,7 +1406,7 @@ export function StaffWorkspaceDashboard() {
             {/* Performance Breakdown Table */}
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold uppercase text-[10px]">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="py-2.5 px-4">Evaluation Period</th>
                     <th className="py-2.5 px-3">Assigned Tasks</th>

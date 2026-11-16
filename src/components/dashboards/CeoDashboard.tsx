@@ -1168,7 +1168,7 @@ function CompanyActivity({ data, className, bare }: { data: ExecutiveOverview; c
           <div className="space-y-4 px-5 py-4">
             {groups.map((g) => (
               <div key={g.label}>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">{g.label}</p>
                 <ol className="space-y-2.5 border-l border-border pl-3.5">
                   {g.items.map((a, i) => (
                     <li key={i} className="relative">
@@ -1244,7 +1244,7 @@ function DepartmentPerformance({ data, bare }: { data: ExecutiveOverview; bare?:
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border bg-muted/40 text-left text-xs font-medium text-muted-foreground">
                   <th className="px-5 py-2.5 font-medium">Department</th>
                   <th className="px-3 py-2.5 font-medium">Manager</th>
                   <th className="px-3 py-2.5 text-right font-medium">Employees</th>

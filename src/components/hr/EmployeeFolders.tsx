@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EMPLOYMENT_TYPES, FOLDER_CATEGORIES } from "@/lib/hr-shared";
 import { KIND_LABEL, StatusBadge, hrApi, type HrRequest } from "@/components/hr/MyHrDocuments";
 import { LeaveStatusBadge } from "@/components/hr/LeaveShared";
+import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
 
 type Dept = { key: string; name: string };
 type EmployeeRow = {
@@ -75,7 +76,7 @@ const fmt = (d?: string | null) => {
   }
 };
 const size = (n?: number | null) => (!n ? "" : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
-const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
+const sel = `${selectClass} w-full`;
 
 export function EmployeeFoldersPage() {
   const [openId, setOpenId] = useState<string | null>(() => (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("employee") : null));
@@ -105,13 +106,11 @@ export function EmployeeFoldersPage() {
 
   const all = q.data?.employees ?? [];
   return (
-    <div className="mx-auto max-w-[1300px] space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <FolderOpen className="h-3.5 w-3.5" /> HR
-          </div>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">Employee Folders</h1>
+          <p className="text-xs font-medium text-muted-foreground">HR workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Employee Folders</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Each employee's confidential HR folder: details, documents, requests, leave and a full history of HR actions. Only HR and administrators can change records; the CEO can view them.
           </p>
@@ -123,26 +122,19 @@ export function EmployeeFoldersPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          ["Employees", all.length],
-          ["Documents on file", all.reduce((n, e) => n + e.documents, 0)],
-          ["Open document requests", all.reduce((n, e) => n + e.open_requests, 0)],
-          ["Leave awaiting HR", all.reduce((n, e) => n + e.pending_leave, 0)],
-        ].map(([label, n]) => (
-          <div key={label as string} className="rounded-xl border border-border bg-card px-4 py-3">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-xl font-semibold">{n as number}</p>
-          </div>
-        ))}
-      </div>
+      <StatGrid>
+        <StatCard label="Employees" value={all.length} />
+        <StatCard label="Documents on file" value={all.reduce((n, e) => n + e.documents, 0)} />
+        <StatCard label="Open document requests" value={all.reduce((n, e) => n + e.open_requests, 0)} />
+        <StatCard label="Leave awaiting HR" value={all.reduce((n, e) => n + e.pending_leave, 0)} />
+      </StatGrid>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, email or employee number" className="h-8 w-72 pl-8 text-xs" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, email or employee number" className="h-9 w-72 pl-8" />
         </div>
-        <select value={dept} onChange={(e) => setDept(e.target.value)} className="h-8 rounded-md border border-input bg-background px-2 text-xs" aria-label="Department">
+        <select value={dept} onChange={(e) => setDept(e.target.value)} className={selectClass} aria-label="Department">
           <option value="">All departments</option>
           {(q.data?.departments ?? []).map((d) => (
             <option key={d.key} value={d.key}>{d.name}</option>
@@ -160,7 +152,7 @@ export function EmployeeFoldersPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
+              <thead className="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2 font-medium">Employee</th>
                   <th className="px-4 py-2 font-medium">Department</th>
@@ -228,12 +220,12 @@ function FolderView({ id, departments, onBack }: { id: string; departments: Dept
   const reqs = f.requests.filter((r) => r.status !== "Cancelled");
 
   return (
-    <div className="mx-auto max-w-[1300px] space-y-5">
+    <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" /> All employees</Button>
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{p.full_name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{p.full_name}</h1>
             <p className="text-sm text-muted-foreground">{[p.job_title, p.department?.name, p.email].filter(Boolean).join(" · ")}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {d.employee_number ? `Employee no. ${d.employee_number} · ` : ""}

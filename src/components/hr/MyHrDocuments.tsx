@@ -121,10 +121,8 @@ export function MyHrDocumentsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <FileSignature className="h-3.5 w-3.5" /> HR
-        </div>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight">My HR Documents</h1>
+        <p className="text-xs font-medium text-muted-foreground">My workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">My HR Documents</h1>
         <p className="mt-1 text-sm text-muted-foreground">Documents HR has asked you to sign, complete or upload, and the ones you have already handed in.</p>
       </div>
 

@@ -1,4 +1,5 @@
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
+import { Page, PageHeader, StatCard, StatGrid } from "@/components/layout/page";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -243,215 +244,38 @@ export function OperationsDashboardOverviewPage() {
   }, [priorityQueue, search, priorityFilter]);
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header Banner */}
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-[#3b1d4d]/90 via-[#2d123d] to-[#1e0a29] p-6 text-white shadow-lg backdrop-blur">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-primary/30 text-primary-foreground border-primary/40 uppercase tracking-wider text-[10px]">
-                Operations & Relationship Command
-              </Badge>
-              <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-950/40">
-                Authoritative Database Connected
-              </Badge>
-            </div>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
-              Operations & Relationship Manager Workspace
-            </h1>
-            <p className="mt-1 text-sm text-purple-200/80 max-w-3xl">
-              Live operational telemetry covering client lifecycles, service deadlines, QA verification queues, retention recovery plans, and cross-department escalations.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={loading}
-              className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-            >
-              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+    <Page className="pb-12">
+      <PageHeader
+        eyebrow="Operations & Relationships"
+        title="Operations & Relationship Manager Workspace"
+        description="Client lifecycles, service deadlines, QA verification, retention recovery plans and cross-department escalations."
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
             </Button>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-white shadow"
-              onClick={() => navigate({ to: "/operations/verifications" as any })}
-            >
-              <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
-              Verification Queue ({awaitingVerificationCount})
+            <Button size="sm" onClick={() => navigate({ to: "/operations/verifications" as any })}>
+              <CheckCircle2 className="h-3.5 w-3.5" /> Verification queue ({awaitingVerificationCount})
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* My attendance (clock in / out) */}
       <StaffAttendanceWidget />
 
       {/* KPI Summary Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-        {/* Metric 1 */}
-        <Card
-          className="border-border hover:border-primary/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/workflows" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Active Clients</CardDescription>
-            <Building2 className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{activeClientsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Authoritative database client records <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 2 */}
-        <Card
-          className="border-border hover:border-primary/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/onboarding" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Clients Onboarding</CardDescription>
-            <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{onboardingClientsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Active intake & setup stages <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 3 */}
-        <Card
-          className="border-border hover:border-rose-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/onboarding" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Onboarding Steps Overdue</CardDescription>
-            <AlertCircle className="h-4 w-4 text-rose-500" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${onboardingOverdueCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
-              {onboardingOverdueCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              {onboardingOverdueCount > 0 ? "Pending technical & access blockers" : "All steps within target window"}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 4 */}
-        <Card
-          className="border-border hover:border-amber-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/deadlines" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Approaching Deadlines</CardDescription>
-            <Clock className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{approachingDeadlinesCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Deliverables due within 7 days <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 5 */}
-        <Card
-          className="border-border hover:border-rose-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/deadlines" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Overdue Deliverables</CardDescription>
-            <AlertTriangle className="h-4 w-4 text-rose-500" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${overdueDeliverablesCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
-              {overdueDeliverablesCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Requires immediate SLA review <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 6 */}
-        <Card
-          className="border-border hover:border-primary/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/communications" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Client Follow-Ups Due</CardDescription>
-            <Activity className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{communicationFollowUpsDueCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Promised touchpoints & complaints <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 7 */}
-        <Card
-          className="border-border hover:border-amber-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/recovery" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Active Recovery Plans</CardDescription>
-            <ShieldAlert className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{activeRecoveryPlansCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Retention interventions for at-risk accounts <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 8 */}
-        <Card
-          className="border-border hover:border-indigo-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/verifications" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Awaiting Verification</CardDescription>
-            <ClipboardCheck className="h-4 w-4 text-indigo-500" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${awaitingVerificationCount > 0 ? "text-indigo-600 dark:text-indigo-400" : "text-foreground"}`}>
-              {awaitingVerificationCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Deliverables awaiting QA validation <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Metric 9 */}
-        <Card
-          className="border-border hover:border-rose-500/50 transition cursor-pointer bg-card shadow-sm"
-          onClick={() => navigate({ to: "/operations/escalations" as any })}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">Unresolved Escalations</CardDescription>
-            <AlertTriangle className="h-4 w-4 text-rose-500" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${unresolvedEscalationsCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>
-              {unresolvedEscalationsCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              Active operational roadblocks <ArrowUpRight className="h-3 w-3" />
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <StatGrid cols={3}>
+        <StatCard label="Active clients" value={activeClientsCount} icon={Building2} hint="Client records in the database" onClick={() => navigate({ to: "/operations/workflows" as any })} />
+        <StatCard label="Clients onboarding" value={onboardingClientsCount} icon={Users} hint="Intake and setup stages" onClick={() => navigate({ to: "/operations/onboarding" as any })} />
+        <StatCard label="Onboarding steps overdue" value={onboardingOverdueCount} icon={AlertCircle} tone={onboardingOverdueCount > 0 ? "danger" : "default"} hint={onboardingOverdueCount > 0 ? "Technical and access blockers" : "All steps within target"} onClick={() => navigate({ to: "/operations/onboarding" as any })} />
+        <StatCard label="Deadlines in the next 7 days" value={approachingDeadlinesCount} icon={Clock} tone={approachingDeadlinesCount > 0 ? "warning" : "default"} hint="Deliverables due soon" onClick={() => navigate({ to: "/operations/deadlines" as any })} />
+        <StatCard label="Overdue deliverables" value={overdueDeliverablesCount} icon={AlertTriangle} tone={overdueDeliverablesCount > 0 ? "danger" : "default"} hint="Needs an SLA review" onClick={() => navigate({ to: "/operations/deadlines" as any })} />
+        <StatCard label="Client follow-ups due" value={communicationFollowUpsDueCount} icon={Activity} hint="Promised touchpoints and complaints" onClick={() => navigate({ to: "/operations/communications" as any })} />
+        <StatCard label="Active recovery plans" value={activeRecoveryPlansCount} icon={ShieldAlert} hint="At-risk accounts" onClick={() => navigate({ to: "/operations/recovery" as any })} />
+        <StatCard label="Awaiting verification" value={awaitingVerificationCount} icon={ClipboardCheck} tone={awaitingVerificationCount > 0 ? "warning" : "default"} hint="Deliverables awaiting QA" onClick={() => navigate({ to: "/operations/verifications" as any })} />
+        <StatCard label="Unresolved escalations" value={unresolvedEscalationsCount} icon={AlertTriangle} tone={unresolvedEscalationsCount > 0 ? "danger" : "default"} hint="Operational roadblocks" onClick={() => navigate({ to: "/operations/escalations" as any })} />
+      </StatGrid>
 
       {/* Priority Action Queue Section */}
       <Card className="border-border bg-card shadow-sm">
@@ -503,7 +327,7 @@ export function OperationsDashboardOverviewPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-border bg-muted/50 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="py-3 px-3">Client / Record</th>
                     <th className="py-3 px-3">Issue / Required Action</th>
@@ -586,6 +410,6 @@ export function OperationsDashboardOverviewPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </Page>
   );
 }

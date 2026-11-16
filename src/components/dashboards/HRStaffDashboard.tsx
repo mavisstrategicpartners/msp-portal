@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { hrApi } from "@/components/hr/MyHrDocuments";
+import { EmptyState, Page, PageHeader, Section, StatCard, StatGrid, greetName } from "@/components/layout/page";
 import {
   Users,
   Clock,
+  FileCheck,
   CalendarDays,
   ClipboardList,
   Calculator,
@@ -304,272 +306,106 @@ export function HRStaffDashboard() {
     },
   ];
 
+  const leaveHint = telemetry.pendingLeaveCount === 1 ? "1 application" : `${telemetry.pendingLeaveCount} applications`;
   return (
-    <div className="space-y-10">
-      {/* ─── 1. Standard Employee Header & Profile Info ─────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              HR & People Operations Hub
-            </span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            {greetingText}, <span className="brand-text">{userName}</span>
-          </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground text-sm">
-            Welcome to the Mavis Strategic Partners portal — your single source of truth for how we
-            work, workforce oversight, and employee management.
-          </p>
-        </div>
-
-        {/* Profile Card / Role Badge */}
-        <div className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 shadow-xs shrink-0">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-            <Users className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-foreground">{userRole}</span>
-              <Badge variant="outline" className="text-[10px] bg-secondary/50 font-semibold border-border">
-                {department}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-muted-foreground font-mono">
-              Africa/Johannesburg (08:00–17:00 SAST)
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── 2. Reference Staff Layout: Tip of Day + Clock In / Clock Out ───── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card className="flex flex-col justify-center h-full gap-3 border-primary/20 bg-primary/[0.04] p-5">
-            <div className="flex items-center gap-2">
-              <div className="rounded-md border border-primary/20 bg-primary/10 p-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">HR Operational Tip</p>
-            </div>
-            <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground leading-relaxed">
-              <Lightbulb className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-              {tip}
-            </p>
-            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Authorized Role: Human Resources
-              </span>
-              <span>&bull;</span>
-              <span>Company Operations & Performance Dashboard</span>
-            </div>
-          </Card>
-        </div>
-
-        {/* Staff Attendance Widget for HR (Real Clock In, Break, Clock Out, Net Hours) */}
-        <div className="md:col-span-1">
-          <StaffAttendanceWidget />
-        </div>
-      </div>
-
-      {/* ─── 3. Genuine HR Management Telemetry ────────────────────────────── */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              Workforce Telemetry & Real-Time Stats
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Live figures derived directly from company records.
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={loadHRData}
-            disabled={loading}
-            className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1"
-          >
+    <Page>
+      <PageHeader
+        eyebrow="HR workspace"
+        title={`${greetingText}, ${greetName(userName)}`}
+        description="Workforce presence, leave, document requests and employee records."
+        actions={
+          <Button variant="outline" size="sm" onClick={loadHRData} disabled={loading}>
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
           </Button>
-        </div>
+        }
+      />
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <Card className="p-4 border-border/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Total Employees
-              </span>
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-              {telemetry.totalEmployees}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Active company staff</p>
-          </Card>
+      <StaffAttendanceWidget />
 
-          <Card className="p-4 border-border/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Clocked In Today
-              </span>
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
-              {telemetry.clockedInCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Present on duty</p>
-          </Card>
+      <StatGrid cols={6}>
+        <StatCard label="Employees" value={telemetry.totalEmployees} icon={Users} hint="Active accounts" />
+        <StatCard label="Clocked in now" value={telemetry.clockedInCount} icon={Clock} tone={telemetry.clockedInCount ? "success" : "default"} hint="Present on duty" />
+        <StatCard label="On break" value={telemetry.onBreakCount} icon={Coffee} hint="Currently on a break" />
+        <StatCard label="Leave awaiting HR" value={telemetry.pendingLeaveCount} icon={CalendarDays} tone={telemetry.pendingLeaveCount ? "warning" : "default"} hint={telemetry.pendingLeaveCount ? leaveHint : "Nothing waiting"} onClick={() => navigate({ to: "/hr/leave" })} />
+        <StatCard label="Documents to review" value={telemetry.docToReview} icon={FileCheck} tone={telemetry.docToReview ? "warning" : "default"} hint={`${telemetry.docOutstanding} outstanding · ${telemetry.docOverdue} overdue`} onClick={() => navigate({ to: "/hr/document-requests" })} />
+        <StatCard label="Timesheets to review" value={telemetry.timesheetReviewCount} icon={ClipboardList} hint="Submitted for approval" onClick={() => navigate({ to: "/hr/timesheets" })} />
+      </StatGrid>
 
-          <Card className="p-4 border-border/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Staff On Break
-              </span>
-              <Coffee className="h-4 w-4 text-amber-500" />
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Section
+          className="xl:col-span-2"
+          title="Leave awaiting approval"
+          description="Approve here, or open Leave Management to decline or ask for more information."
+          actions={
+            <Link to="/hr/leave" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+              Leave Management <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          }
+          bodyClassName="p-0"
+        >
+          {telemetry.pendingLeaveRequests.length === 0 ? (
+            <div className="p-5">
+              <EmptyState icon={CheckCircle2} title="No leave waiting for HR" description="New applications appear here as soon as employees submit them." />
             </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
-              {telemetry.onBreakCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Temporary rest intervals</p>
-          </Card>
-
-          <Card className="p-4 border-border/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Pending Leave
-              </span>
-              <CalendarDays className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
-              {telemetry.pendingLeaveCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Awaiting approval</p>
-          </Card>
-
-          <Card className="p-4 border-border/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Timesheets
-              </span>
-              <ClipboardList className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-              {telemetry.timesheetReviewCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">Submitted logs for review</p>
-          </Card>
-        </div>
-      </section>
-
-      {/* ─── 4. Outstanding Actions / Pending Leave Requests Review ────────── */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              Outstanding Actions & Approvals
-            </h2>
-            {telemetry.pendingLeaveCount > 0 && (
-              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/20 font-semibold">
-                {telemetry.pendingLeaveCount} Action Required
-              </Badge>
-            )}
-          </div>
-          <Link to="/hr/leave" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
-            Full Leave Queue <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {telemetry.pendingLeaveRequests.length === 0 ? (
-          <Card className="p-6 border-dashed border-border/80 flex items-center justify-center text-center">
-            <div className="space-y-1">
-              <CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto" />
-              <p className="text-sm font-semibold text-foreground">All Leave & Workforce Requests Up to Date</p>
-              <p className="text-xs text-muted-foreground">
-                No leave requests currently require HR review. New employee submissions will appear here automatically.
-              </p>
-            </div>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {telemetry.pendingLeaveRequests.slice(0, 4).map((req) => {
-              const staffName = req.profiles?.full_name || "Employee";
-              const staffDept = req.profiles?.department || "Operations";
-              return (
-                <Card key={req.id} className="p-4 border-border/80 flex flex-col justify-between gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-foreground">{staffName}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          {req.leave_type || "Annual"}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {staffDept} &bull; {req.start_date} to {req.end_date}
+          ) : (
+            <ul className="divide-y divide-border">
+              {telemetry.pendingLeaveRequests.slice(0, 6).map((req) => {
+                const staffName = req.profiles?.full_name || "Employee";
+                return (
+                  <li key={req.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground">
+                        {staffName} <span className="font-normal text-muted-foreground">· {req.leave_type || "Leave"}</span>
                       </p>
-                      {req.reason && (
-                        <p className="text-xs text-muted-foreground/90 italic mt-1 bg-muted/40 p-1.5 rounded">
-                          "{req.reason}"
-                        </p>
-                      )}
+                      <p className="truncate text-xs text-muted-foreground">
+                        {req.start_date} to {req.end_date}
+                        {req.reason ? ` · ${req.reason}` : ""}
+                      </p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/50">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate({ to: "/hr/leave" })}
-                      className="h-7 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-border"
-                    >
-                      <XCircle className="h-3.5 w-3.5 mr-1" /> Decline / ask…
+                    <Button size="sm" variant="outline" onClick={() => navigate({ to: "/hr/leave" })}>
+                      Review
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleApproveLeave(req.id, staffName)}
-                      className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-                    >
-                      <Check className="h-3.5 w-3.5 mr-1" /> Approve
+                    <Button size="sm" onClick={() => handleApproveLeave(req.id, staffName)}>
+                      <Check className="h-3.5 w-3.5" /> Approve
                     </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Section>
 
-      {/* ─── 5. Functional HR Modules Navigation ───────────────────────────── */}
+        <Section title="Document requests" actions={<Link to="/hr/document-requests" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">Open <ArrowRight className="h-3.5 w-3.5" /></Link>}>
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            {[
+              ["Outstanding", telemetry.docOutstanding, ""],
+              ["Overdue", telemetry.docOverdue, telemetry.docOverdue ? "text-rose-600 dark:text-rose-400" : ""],
+              ["To review", telemetry.docToReview, telemetry.docToReview ? "text-amber-600 dark:text-amber-400" : ""],
+              ["Completed", telemetry.docCompleted, ""],
+            ].map(([label, n, cls]) => (
+              <div key={label as string}>
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className={`text-xl font-semibold tabular-nums ${cls}`}>{n as number}</dd>
+              </div>
+            ))}
+          </dl>
+        </Section>
+      </div>
+
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          HR Management Modules & Directory
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-sm font-semibold text-foreground">HR modules</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {hrModules.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.to} to={item.to as any} className="group">
-                <Card className="flex flex-col justify-between h-full p-5 border-border/70 transition-all hover:border-primary/50 hover:shadow-sm">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="rounded-lg p-2 bg-primary/10 text-primary">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <Badge variant="outline" className={`text-[10px] font-semibold ${item.badgeColor}`}>
-                        {item.badge}
-                      </Badge>
-                    </div>
-                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                      {item.title}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-primary">
-                    Open Module <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                <Card className="flex h-full items-start gap-3 p-4 transition-colors hover:border-primary/40">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:text-primary">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
                   </div>
                 </Card>
               </Link>
@@ -577,71 +413,6 @@ export function HRStaffDashboard() {
           })}
         </div>
       </section>
-
-      {/* ─── 6. The Four Core Rules (Identical to reference staff layout) ───── */}
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">
-          The Four Core Rules
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {CORE_RULES.map((r) => (
-            <Card key={r.label} className="group border-border/70 p-5 transition-colors hover:border-primary/40">
-              <r.icon className="relative h-6 w-6 text-primary" />
-              <p className="relative mt-4 text-sm font-semibold">{r.label}</p>
-              <p className="relative mt-1 text-xs text-muted-foreground">{r.desc}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── 7. Common Staff Navigation Quicklinks (SOPs, Tools, Services) ──── */}
-      <section className="pt-6 border-t border-border">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">
-          Jump Back In
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Link to="/sops" className="group">
-            <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
-              <div>
-                <BookOpen className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-sm font-semibold">SOP Library</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Standard operating procedures for all departments.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Card>
-          </Link>
-          <Link to="/services" className="group">
-            <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
-              <div>
-                <Briefcase className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-sm font-semibold">Our Services</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">The 7 strategic service offerings we sell.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Card>
-          </Link>
-          <Link to="/tools" className="group">
-            <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
-              <div>
-                <Wrench className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-sm font-semibold">Tools & Systems</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">GHL, Meta, Zoho, Slack and internal platforms.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Card>
-          </Link>
-          <Link to="/who-we-are" className="group">
-            <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40">
-              <div>
-                <Compass className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-sm font-semibold">Who We Are</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Our team structure, mission, and company values.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Card>
-          </Link>
-        </div>
-      </section>
-    </div>
+    </Page>
   );
 }

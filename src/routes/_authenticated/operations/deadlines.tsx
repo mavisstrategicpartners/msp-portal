@@ -104,8 +104,7 @@ export function ServiceDeadlinesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Clock className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Service Deadlines & Delivery Coordination
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -170,7 +169,7 @@ export function ServiceDeadlinesPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-border bg-muted/50 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="py-3 px-3">Deliverable & Service</th>
                     <th className="py-3 px-3">Client</th>

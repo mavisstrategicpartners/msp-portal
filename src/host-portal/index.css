@@ -3,54 +3,35 @@
  * into the MSP shell. Colours are aligned with the MSP enterprise design system.
  */
 .host-portal-root {
-  --bg-page: #f6f4fa;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f0edf5;
-  --text-primary: #201a2c;
-  --text-secondary: #5e526d;
-  --text-muted: #958ba1;
-  --border-color: #ded7e6;
-  --input-bg: #ffffff;
-  --input-border: #cfc5da;
-  --input-text: #201a2c;
-  --brand: #d946c8;
-  --brand-dark: #b832a9;
-  --brand-soft: #f8e2f5;
+  /* Mapped onto the MSP design tokens (src/styles.css) so these pages match every other portal,
+     in light and dark mode alike. */
+  --bg-page: var(--background);
+  --bg-primary: var(--card);
+  --bg-secondary: var(--muted);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: var(--muted-foreground);
+  --border-color: var(--border);
+  --input-bg: var(--background);
+  --input-border: var(--input);
+  --input-text: var(--foreground);
+  --brand: var(--primary);
+  --brand-dark: color-mix(in oklch, var(--primary) 85%, black);
+  --brand-soft: color-mix(in oklch, var(--primary) 12%, transparent);
   --success: #16a34a;
-  --success-soft: #dcfce7;
+  --success-soft: color-mix(in oklch, #16a34a 12%, transparent);
   --warning: #d97706;
-  --warning-soft: #fef3c7;
+  --warning-soft: color-mix(in oklch, #d97706 14%, transparent);
   --danger: #dc2626;
-  --danger-soft: #fee2e2;
-  --purple: #6d3c86;
-  --purple-soft: #eee4f3;
-  --shadow-sm: 0 1px 2px rgba(45,25,60,.08);
-  --shadow-md: 0 6px 18px rgba(45,25,60,.12);
+  --danger-soft: color-mix(in oklch, #dc2626 12%, transparent);
+  --purple: var(--accent-foreground);
+  --purple-soft: var(--accent);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.08);
   color: var(--text-primary);
   background: transparent;
   font-family: inherit;
   min-height: 100%;
-}
-
-.dark .host-portal-root {
-  --bg-page: #070e14;
-  --bg-primary: #101922;
-  --bg-secondary: #151f2a;
-  --text-primary: #f4f2f7;
-  --text-secondary: #b8c1cf;
-  --text-muted: #8491a2;
-  --border-color: rgba(255,255,255,0.10);
-  --input-bg: #101922;
-  --input-border: #344151;
-  --input-text: #f4f2f7;
-  --brand: #ed58d8;
-  --brand-dark: #d63fc1;
-  --brand-soft: rgba(237,88,216,0.16);
-  --success-soft: #14532d;
-  --warning-soft: #78350f;
-  --danger-soft: #7f1d1d;
-  --purple: #c66be0;
-  --purple-soft: rgba(198,107,224,0.16);
 }
 
 .host-portal-root * { box-sizing: border-box; }
@@ -62,8 +43,8 @@
 .host-portal-root textarea { font-family: inherit; }
 
 .host-portal-root .btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px; height: 36px;
+  padding: 0 14px; border-radius: calc(var(--radius) - 2px); font-size: 13px; font-weight: 500;
   border: 1px solid transparent; cursor: pointer; transition: all .15s;
 }
 .host-portal-root .btn-primary { background: var(--brand); color: #ffffff; }
@@ -86,8 +67,8 @@
 .host-portal-root .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 22px;
+  border-radius: var(--radius);
+  padding: 20px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -119,4 +100,4 @@
 
 .host-portal-root input:focus,
 .host-portal-root select:focus,
-.host-portal-root textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+.host-portal-root textarea:focus { outline: none; box-shadow: 0 0 0 1px var(--ring); }

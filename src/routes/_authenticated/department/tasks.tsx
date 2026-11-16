@@ -365,8 +365,7 @@ export function DepartmentTasksPage() {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <CheckSquare className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             My Department Tasks & Deliverables
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -489,7 +488,7 @@ export function DepartmentTasksPage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold uppercase text-[10px]">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="py-3 px-4">Task & Deliverable</th>
                     <th className="py-3 px-3">Client / Task Type</th>

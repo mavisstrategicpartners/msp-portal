@@ -313,15 +313,10 @@ export function AdminAttendanceCommandCenter() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Top Banner */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/70 pb-5">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              MSP Operations Command Center
-            </span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">MSP Operations Command Center</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Workforce Presence & Attendance Register
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -544,15 +539,15 @@ export function AdminAttendanceCommandCenter() {
           <Card className="p-0 border-border/70 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+                <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
                   <tr>
-                    <th className="py-3 px-4 font-semibold">Staff Member</th>
-                    <th className="py-3 px-4 font-semibold">Department</th>
-                    <th className="py-3 px-4 font-semibold">Contract Tier</th>
-                    <th className="py-3 px-4 font-semibold">Live Presence</th>
-                    <th className="py-3 px-4 font-semibold">Clocked In At</th>
-                    <th className="py-3 px-4 font-semibold text-center">Break Duration</th>
-                    <th className="py-3 px-4 font-semibold text-right">Net Hours</th>
+                    <th className="py-3 px-4 font-medium">Staff Member</th>
+                    <th className="py-3 px-4 font-medium">Department</th>
+                    <th className="py-3 px-4 font-medium">Contract Tier</th>
+                    <th className="py-3 px-4 font-medium">Live Presence</th>
+                    <th className="py-3 px-4 font-medium">Clocked In At</th>
+                    <th className="py-3 px-4 font-medium text-center">Break Duration</th>
+                    <th className="py-3 px-4 font-medium text-right">Net Hours</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -825,31 +820,31 @@ export function AdminAttendanceCommandCenter() {
           <Card className="p-0 border-border/70 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-muted/60 text-muted-foreground border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground border-b border-border bg-muted/40 text-xs">
                   <tr>
-                    <th className="py-3 px-3 font-semibold w-48">Employee / Role</th>
-                    <th className="py-3 px-3 font-semibold w-28">Department</th>
-                    <th className="py-3 px-3 font-semibold text-center w-36">
+                    <th className="py-3 px-3 font-medium w-48">Employee / Role</th>
+                    <th className="py-3 px-3 font-medium w-28">Department</th>
+                    <th className="py-3 px-3 font-medium text-center w-36">
                       Mon ({registerData?.rows[0]?.days[0]?.formattedDate || "Mon"})
                       <div className="text-[10px] font-normal text-muted-foreground">08:00 – 17:00</div>
                     </th>
-                    <th className="py-3 px-3 font-semibold text-center w-36">
+                    <th className="py-3 px-3 font-medium text-center w-36">
                       Tue ({registerData?.rows[0]?.days[1]?.formattedDate || "Tue"})
                       <div className="text-[10px] font-normal text-muted-foreground">08:00 – 17:00</div>
                     </th>
-                    <th className="py-3 px-3 font-semibold text-center w-36">
+                    <th className="py-3 px-3 font-medium text-center w-36">
                       Wed ({registerData?.rows[0]?.days[2]?.formattedDate || "Wed"})
                       <div className="text-[10px] font-normal text-muted-foreground">08:00 – 17:00</div>
                     </th>
-                    <th className="py-3 px-3 font-semibold text-center w-36">
+                    <th className="py-3 px-3 font-medium text-center w-36">
                       Thu ({registerData?.rows[0]?.days[3]?.formattedDate || "Thu"})
                       <div className="text-[10px] font-normal text-muted-foreground">08:00 – 17:00</div>
                     </th>
-                    <th className="py-3 px-3 font-semibold text-center w-36">
+                    <th className="py-3 px-3 font-medium text-center w-36">
                       Fri ({registerData?.rows[0]?.days[4]?.formattedDate || "Fri"})
                       <div className="text-[10px] font-normal text-muted-foreground">08:00 – 17:00</div>
                     </th>
-                    <th className="py-3 px-3 font-semibold text-right w-28">Total Hours</th>
+                    <th className="py-3 px-3 font-medium text-right w-28">Total Hours</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

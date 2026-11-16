@@ -69,8 +69,8 @@ function DepartmentPerformancePage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Target className="h-6 w-6 text-primary" /> Department Performance
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Department Performance
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Calculated from the tasks recorded under this department and their reviewed deliverables. Nothing is estimated.
@@ -132,7 +132,7 @@ function DepartmentPerformancePage() {
               </p>
               <Card className="overflow-x-auto p-0">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <thead className="bg-muted/40 text-muted-foreground text-xs">
                     <tr>
                       <th className="px-3 py-2">Team member</th>
                       <th className="px-3 py-2 text-center">Open</th>

@@ -1,3 +1,4 @@
+import { StatCard, StatGrid } from "@/components/layout/page";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
@@ -301,25 +302,22 @@ function ManageUsersPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/70 pb-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-primary/20" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-primary">Admin</span>
-          </div>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Manage Staff</h1>
+          <p className="text-xs font-medium text-muted-foreground">Admin</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Manage Staff</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Add, edit, and manage all MSP staff accounts and their roles.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="ghost" size="sm" onClick={loadStaff} disabled={loading} className="gap-2">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={loadStaff} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button onClick={() => setAddOpen(true)} className="gap-2">
+          <Button size="sm" onClick={() => setAddOpen(true)}>
             <UserPlus className="h-4 w-4" />
             Add Staff Member
           </Button>
@@ -327,22 +325,12 @@ function ManageUsersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Staff", value: stats.total, icon: Users, cls: "" },
-          { label: "Active", value: stats.active, icon: UserCheck, cls: "border-l-4 border-l-green-500" },
-          { label: "Managers", value: stats.managers, icon: KeyRound, cls: "border-l-4 border-l-blue-500" },
-          { label: "Interns", value: stats.interns, icon: User, cls: "border-l-4 border-l-orange-400" },
-        ].map((s) => (
-          <Card key={s.label} className={`p-4 border-border/70 flex items-center justify-between ${s.cls}`}>
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{s.label}</p>
-              <p className="text-2xl font-bold mt-1">{s.value}</p>
-            </div>
-            <s.icon className="w-8 h-8 text-muted-foreground/20" />
-          </Card>
-        ))}
-      </div>
+      <StatGrid>
+        <StatCard label="Total staff" value={stats.total} icon={Users} />
+        <StatCard label="Active" value={stats.active} icon={UserCheck} />
+        <StatCard label="Managers" value={stats.managers} icon={KeyRound} />
+        <StatCard label="Interns" value={stats.interns} icon={User} />
+      </StatGrid>
 
       {/* Table */}
       <Card className="border-border/70">
@@ -383,14 +371,14 @@ function ManageUsersPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
+            <thead className="text-xs text-muted-foreground bg-muted/40">
               <tr>
-                <th className="px-6 py-3 font-semibold">Staff Member</th>
-                <th className="px-6 py-3 font-semibold">Department</th>
-                <th className="px-6 py-3 font-semibold">Role</th>
-                <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold">Email</th>
-                <th className="px-6 py-3 font-semibold text-right">Actions</th>
+                <th className="px-6 py-3 font-medium">Staff Member</th>
+                <th className="px-6 py-3 font-medium">Department</th>
+                <th className="px-6 py-3 font-medium">Role</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Email</th>
+                <th className="px-6 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">

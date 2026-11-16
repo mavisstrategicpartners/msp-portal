@@ -257,7 +257,7 @@ function PeopleTable({
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people" className="h-8 w-64 text-xs" />
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-xs">
-          <thead className="bg-muted/40 text-left text-muted-foreground">
+          <thead className="bg-muted/40 text-left text-muted-foreground text-xs">
             <tr>
               <th className="px-3 py-2 font-medium">Person</th>
               <th className="px-3 py-2 font-medium">Department</th>

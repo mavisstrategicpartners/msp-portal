@@ -1,4 +1,5 @@
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
+import { PageHeader } from "@/components/layout/page";
 import { useState, useMemo, useEffect } from "react";
 import { formatZAR } from "@/lib/currency";
 import { Card } from "@/components/ui/card";
@@ -497,41 +498,19 @@ export function SalesDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* ─── Header & Top Actions ─────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              {isConsultant
-                ? `Sales Consultant Workspace — ${currentUserName}`
-                : isManager
-                ? "Sales Performance & Management System"
-                : "Executive Sales Dashboard"}
-            </h1>
-            <Badge
-              variant="outline"
-              className={
-                isAdmin
-                  ? "bg-purple-500/15 text-purple-600 border-purple-300 text-[10px]"
-                  : isManager
-                  ? "bg-blue-500/15 text-blue-600 border-blue-300 text-[10px]"
-                  : "bg-emerald-500/15 text-emerald-600 border-emerald-300 text-[10px]"
-              }
-            >
-              {isAdmin ? "Administrator" : isManager ? "Sales Manager" : "Sales Consultant"}
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {isConsultant
-              ? "Your personal deal pipeline, assigned monthly target quota, scheduled appointments, and daily follow-up queue."
-              : "Consolidated team telemetry, consultant target management, GoHighLevel calendar integration, and industry intelligence."}
-          </p>
-        </div>
-
-        <div className="flex items-center flex-wrap gap-2.5">
+      <PageHeader
+        eyebrow={`Sales workspace · ${isAdmin ? "Administrator" : isManager ? "Sales Manager" : "Sales Consultant"}`}
+        title={isConsultant ? `Sales Consultant Workspace — ${currentUserName}` : isManager ? "Sales Performance & Management" : "Executive Sales Dashboard"}
+        description={
+          isConsultant
+            ? "Your deal pipeline, monthly target, appointments and daily follow-up queue."
+            : "Team performance, consultant targets, GoHighLevel calendar and industry intelligence."
+        }
+        actions={
+          <>
           {/* Consultant Switcher for Managers/Admins */}
           {isManager && (
-            <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg px-2.5 py-1">
+            <div className="flex h-9 items-center gap-1.5 rounded-md border border-input bg-background px-2.5">
               <Users className="h-3.5 w-3.5 text-muted-foreground" />
               <select
                 value={consultantFilter}
@@ -548,7 +527,7 @@ export function SalesDashboard() {
           )}
 
           {/* Month Selector */}
-          <div className="flex items-center gap-1.5 bg-card border border-border rounded-lg px-2.5 py-1">
+          <div className="flex h-9 items-center gap-1.5 rounded-md border border-input bg-background px-2.5">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <select
               value={selectedMonth}
@@ -567,7 +546,7 @@ export function SalesDashboard() {
               variant="outline"
               size="sm"
               onClick={() => setTargetModalOpen(true)}
-              className="text-xs h-8 gap-1.5 border-border"
+              className="h-9"
             >
               <Target className="h-3.5 w-3.5 text-primary" />
               Assign Targets
@@ -578,12 +557,13 @@ export function SalesDashboard() {
           <Button
             size="sm"
             onClick={() => setAddLeadOpen(true)}
-            className="bg-primary text-xs font-semibold text-primary-foreground gap-1.5 h-8 shadow-xs"
+            className="h-9"
           >
             <Plus className="h-3.5 w-3.5" /> Register Lead
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ─── My attendance (clock in / out) ─────────────────────────────── */}
       <StaffAttendanceWidget />
@@ -876,7 +856,7 @@ export function SalesDashboard() {
             {/* Leads Table */}
             <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="p-3">Company & Contact</th>
                     <th className="p-3">Industry</th>
@@ -1074,7 +1054,7 @@ export function SalesDashboard() {
 
               <div className="rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
+                  <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                     <tr>
                       <th className="p-3 w-16">Rank</th>
                       <th className="p-3">Consultant</th>
@@ -1222,7 +1202,7 @@ export function SalesDashboard() {
 
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
+                <thead className="border-b border-border text-muted-foreground bg-muted/40 text-xs">
                   <tr>
                     <th className="p-3">Client Prospect</th>
                     <th className="p-3">Date & Time</th>

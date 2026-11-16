@@ -8,6 +8,7 @@
  * add, edit and delete; the CEO sees everything read-only. Exports are PDF.
  */
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
+import { Page, PageHeader, StatCard, StatGrid } from "@/components/layout/page";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
@@ -265,98 +266,52 @@ export function FinanceAdminDashboard() {
     return <div className="rounded-xl border border-border bg-card p-8 text-sm text-muted-foreground">{(q.error as Error).message}</div>;
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* ─── Role Authority Banner ────────────────────────────────────────── */}
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-[#21172f] via-[#1a1026] to-[#10081a] p-6 text-white shadow-lg backdrop-blur">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary/30 text-primary-foreground border-primary/40 uppercase tracking-wider text-[10px]">Finance & Administration</Badge>
-              <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-950/40 text-[10px]">Payment Verification Gate Enforced</Badge>
-              {!canEdit && (
-                <Badge variant="outline" className="border-white/30 text-white/80 text-[10px]">
-                  <Eye className="mr-1 h-3 w-3" /> Read-only
-                </Badge>
-              )}
-            </div>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl flex items-center gap-2">
-              <Banknote className="h-7 w-7 text-emerald-400" />
-              Finance & Administration Command Centre
-            </h1>
-            <p className="mt-1 text-sm text-purple-200/80 max-w-3xl">
-              Manage client invoicing, enforce the payment verification gate before onboarding clearance, and maintain budget controls.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} className="border-white/20 bg-white/10 text-white hover:bg-white/20 text-xs h-9">
-              <FileDown className="h-3.5 w-3.5 mr-1.5" /> Export Report (PDF)
+    <Page className="pb-12">
+      <PageHeader
+        eyebrow="Finance & Administration"
+        title="Finance & Administration Command Centre"
+        description="Client invoicing, the payment verification gate before onboarding clearance, expenses, budgets and approvals."
+        meta={!canEdit ? <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" /> Read-only view</span> : undefined}
+        actions={
+          <>
+            <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
+              <FileDown className="h-3.5 w-3.5" /> Export report (PDF)
             </Button>
             {canEdit && (
-              <Button size="sm" onClick={() => setEditing({ kind: "invoices", record: null })} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow text-xs gap-1.5 h-9">
-                <Plus className="h-4 w-4" /> Issue Invoice
+              <Button size="sm" onClick={() => setEditing({ kind: "invoices", record: null })}>
+                <Plus className="h-4 w-4" /> Issue invoice
               </Button>
             )}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ─── My attendance (clock in / out) ─────────────────────────────── */}
       <StaffAttendanceWidget />
 
       {canEdit && <LocalRecordsNotice onImported={refresh} />}
 
-      {/* ─── Financial Boundary Notice ────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 p-3.5 rounded-lg border border-primary/30 bg-primary/10 text-foreground text-xs">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-          <span>
-            <strong>Financial Boundary Rule:</strong> Only MSP's own agency fees are tracked here. Client ad spend is paid directly to Meta, TikTok and Google and is not MSP revenue. Verified client payments clear the gate to unlock Operations 2-day client intake.
-          </span>
-        </div>
-        <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">Audited</Badge>
-      </div>
+      <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        <ShieldCheck className="mt-px h-4 w-4 shrink-0 text-muted-foreground" />
+        <span>
+          <strong className="font-medium text-foreground">Only MSP's own agency fees are tracked here.</strong> Client ad spend is paid directly to Meta, TikTok and Google and is not MSP revenue. Verified client payments clear the gate to unlock the Operations 2-day client intake.
+        </span>
+      </p>
 
-      {/* ─── KPI Cards ─────────────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="p-4 border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Invoiced Agency Fees</span>
-            <Banknote className="h-4 w-4 text-primary" />
+      <StatGrid cols={3}>
+        <StatCard label="Invoiced agency fees" value={formatZAR(totalBookedMonthlyRevenue)} icon={Banknote} hint={`${invoices.length} invoice${invoices.length === 1 ? "" : "s"} recorded`} />
+        <StatCard label="Verified cash collected" value={formatZAR(verifiedCashCollected)} icon={CheckCircle2} tone={verifiedCashCollected > 0 ? "success" : "default"} hint={`${verifiedInvoices.length} invoices cleared · ${collectionRate}% collected`}>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+            <div className="h-1.5 rounded-full bg-emerald-500 transition-all" style={{ width: `${collectionRate}%` }} />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-2">{formatZAR(totalBookedMonthlyRevenue)}</p>
-          <p className="text-[11px] text-muted-foreground mt-2">{invoices.length} invoice{invoices.length === 1 ? "" : "s"} recorded</p>
-        </Card>
-        <Card className="p-4 border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Verified Cash Collected</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-          </div>
-          <p className="text-2xl font-bold text-emerald-500 mt-2">{formatZAR(verifiedCashCollected)}</p>
-          <div className="mt-2 flex items-center justify-between text-[11px]">
-            <span className="text-muted-foreground">{verifiedInvoices.length} invoices cleared</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{collectionRate}% collection</span>
-          </div>
-          <div className="w-full bg-secondary rounded-full h-1.5 mt-1.5 overflow-hidden">
-            <div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${collectionRate}%` }} />
-          </div>
-        </Card>
-        <Card className="p-4 border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Overdue Receivables</span>
-            <AlertTriangle className="h-4 w-4 text-rose-500" />
-          </div>
-          <p className="text-2xl font-bold text-rose-500 mt-2">{formatZAR(overdueReceivables)}</p>
-          <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-2">
-            {overdueInvoices.length} overdue invoice{overdueInvoices.length === 1 ? "" : "s"}
-          </p>
-        </Card>
-      </div>
+        </StatCard>
+        <StatCard label="Overdue receivables" value={formatZAR(overdueReceivables)} icon={AlertTriangle} tone={overdueReceivables > 0 ? "danger" : "default"} hint={`${overdueInvoices.length} overdue invoice${overdueInvoices.length === 1 ? "" : "s"}`} />
+      </StatGrid>
 
       {/* ─── Tabs ─────────────────────────────────────────────────────────── */}
       <Tabs ref={sectionRef} value={activeTab} onValueChange={setActiveTab} className="scroll-mt-24 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <TabsList className="bg-muted/70 p-1 rounded-lg border border-border flex flex-wrap gap-1 h-auto">
+          <TabsList className="flex h-auto flex-wrap justify-start gap-1">
             <TabsTrigger value="overview" className="text-xs px-3 py-1.5">Financial Overview</TabsTrigger>
             <TabsTrigger value="invoices" className="text-xs px-3 py-1.5">Invoices & Verification Gate ({invoices.length})</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs px-3 py-1.5">Expenses ({expenses.length})</TabsTrigger>
@@ -512,7 +467,7 @@ export function FinanceAdminDashboard() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-border bg-muted/40 uppercase font-semibold text-muted-foreground text-[10px]">
+                <thead className="border-b border-border bg-muted/40 text-muted-foreground text-xs">
                   <tr>
                     <th className="py-2.5 px-3">Invoice #</th>
                     <th className="py-2.5 px-3">Client & Package</th>
@@ -586,7 +541,7 @@ export function FinanceAdminDashboard() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-border bg-muted/40 uppercase font-semibold text-muted-foreground text-[10px]">
+                <thead className="border-b border-border bg-muted/40 text-muted-foreground text-xs">
                   <tr>
                     <th className="py-2.5 px-3">Category</th>
                     <th className="py-2.5 px-3">Vendor / Purpose</th>
@@ -849,7 +804,7 @@ export function FinanceAdminDashboard() {
       </AlertDialog>
 
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} periods={periods} data={exportData} me={data?.me} />
-    </div>
+    </Page>
   );
 }
 

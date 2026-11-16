@@ -113,10 +113,8 @@ export function MonthlyReportsPage() {
     <div className="mx-auto max-w-[1440px]">
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <FileBarChart2 className="h-3.5 w-3.5" /> Reporting
-          </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight">Monthly Reports</h1>
+          <p className="text-xs font-medium text-muted-foreground">Reporting</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Monthly Reports</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {q.data?.oversees
               ? "Every department's monthly report, who prepared it and when it was submitted."

@@ -66,7 +66,7 @@ function DependenciesPage() {
         <Link to="/gm" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-2">
           <ArrowLeft className="h-3 w-3" /> Back to GM Dashboard
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Cross-Department Dependencies</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Cross-Department Dependencies</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Work requiring cooperation between departments — blockers, handoffs and coordination actions.
         </p>
@@ -111,7 +111,7 @@ function DependenciesPage() {
               <h3 className="text-base font-bold text-foreground mb-4">Dependency Records</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+                  <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
                     <tr>
                       <th className="p-2.5">Description</th>
                       <th className="p-2.5">Waiting Dept</th>

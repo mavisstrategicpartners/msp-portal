@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hrApi } from "@/components/hr/MyHrDocuments";
+import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
 import { LeaveStatusBadge, type LeaveRequest } from "@/components/hr/LeaveShared";
 
 const fmt = (d?: string | null) => (d ? format(parseISO(d), "d MMM yyyy") : "—");
@@ -35,39 +36,28 @@ export function HrLeavePage() {
   const onLeave = all.filter((r) => r.status === "approved" && r.start_date <= today && r.end_date >= today);
 
   return (
-    <div className="mx-auto max-w-[1300px] space-y-5">
+    <div className="space-y-6">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <CalendarDays className="h-3.5 w-3.5" /> HR
-        </div>
-        <h1 className="mt-3 text-2xl font-bold tracking-tight">Leave Management</h1>
+        <p className="text-xs font-medium text-muted-foreground">HR workspace</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Leave Management</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           Employees apply under My Leave. Approve, decline or ask for more information; the employee is notified and the decision is kept in their HR folder.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {(
-          [
-            ["Awaiting HR", all.filter((r) => r.status === "pending").length, "pending"],
-            ["Waiting on employee", all.filter((r) => r.status === "info_requested").length, "info_requested"],
-            ["On leave today", onLeave.length, "approved"],
-            ["Declined", all.filter((r) => r.status === "declined").length, "declined"],
-          ] as [string, number, Filter][]
-        ).map(([label, n, f]) => (
-          <button key={label} type="button" onClick={() => setFilter(f)} className={`rounded-xl border bg-card px-4 py-3 text-left transition hover:border-primary/40 ${filter === f ? "border-primary" : "border-border"}`}>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-xl font-semibold">{n}</p>
-          </button>
-        ))}
-      </div>
+      <StatGrid>
+        <StatCard label="Awaiting HR" value={all.filter((r) => r.status === "pending").length} tone={all.some((r) => r.status === "pending") ? "warning" : "default"} active={filter === "pending"} onClick={() => setFilter("pending")} />
+        <StatCard label="Waiting on employee" value={all.filter((r) => r.status === "info_requested").length} active={filter === "info_requested"} onClick={() => setFilter("info_requested")} />
+        <StatCard label="On leave today" value={onLeave.length} active={filter === "approved"} onClick={() => setFilter("approved")} />
+        <StatCard label="Declined" value={all.filter((r) => r.status === "declined").length} active={filter === "declined"} onClick={() => setFilter("declined")} />
+      </StatGrid>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search employee, type or department" className="h-8 w-72 pl-8 text-xs" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search employee, type or department" className="h-9 w-72 pl-8" />
         </div>
-        <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className="h-8 rounded-md border border-input bg-background px-2 text-xs" aria-label="Status">
+        <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className={selectClass} aria-label="Status">
           <option value="open">Open (awaiting HR or employee)</option>
           <option value="pending">Awaiting HR</option>
           <option value="info_requested">More information requested</option>

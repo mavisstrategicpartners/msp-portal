@@ -52,7 +52,7 @@ function PerformancePage({ data }: { data: ExecutiveOverview }) {
         {active.length ? (
           <Card className="overflow-x-auto p-0">
             <table className="w-full text-left text-xs">
-              <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <thead className="bg-muted/40 text-muted-foreground text-xs">
                 <tr>
                   <th className="px-3 py-2">Department</th>
                   <th className="px-3 py-2">Manager</th>

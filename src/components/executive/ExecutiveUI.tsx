@@ -118,7 +118,7 @@ export function ExecHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{subtitle}</p>
         {source && (
           <p className="mt-1 text-[11px] text-muted-foreground/80 max-w-3xl">
@@ -197,10 +197,10 @@ export function Kpi({
           ? "text-emerald-600 dark:text-emerald-400"
           : "text-foreground";
   const body = (
-    <Card className="p-4 h-full border-border bg-card hover:border-primary/40 transition">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1.5 text-2xl font-bold ${color}`}>{value}</p>
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+    <Card className={`h-full p-4 ${to ? "transition hover:border-primary/40" : ""}`}>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={`mt-1.5 text-2xl font-semibold tabular-nums tracking-tight ${color}`}>{value}</p>
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </Card>
   );
   return to ? (
@@ -461,7 +461,7 @@ export function TaskTable({
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-left text-xs">
-        <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-muted/40 text-muted-foreground text-xs">
           <tr>
             <th className="px-3 py-2">Task</th>
             {showDepartment && <th className="px-3 py-2">Department</th>}
@@ -568,7 +568,7 @@ export function PeopleTable({ people, empty = "No employees match." }: { people:
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-left text-xs">
-        <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-muted/40 text-muted-foreground text-xs">
           <tr>
             <th className="px-3 py-2">Employee</th>
             <th className="px-3 py-2">Department</th>

@@ -144,7 +144,7 @@ function EscalationsPage() {
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Unresolved Escalations</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Unresolved Escalations</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Company-wide operational, client, and cross-department escalations requiring General Manager visibility and intervention.
             </p>

@@ -108,7 +108,7 @@ export function ClientSuccessDashboard() {
             <HeartHandshake className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">Client Success & Retention</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Client Success & Retention</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               Monitor client satisfaction scores, monthly touchpoints, and retention risk recovery.
             </p>

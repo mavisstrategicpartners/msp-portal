@@ -12,6 +12,7 @@ import {
   computeTotalBreakMs,
 } from "@/lib/attendance-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatCard, StatGrid } from "@/components/layout/page";
 
 export function StaffAttendanceBoard({
   title = "Live Workforce Presence",
@@ -119,74 +120,36 @@ export function StaffAttendanceBoard({
   return (
     <div className="space-y-5 w-full">
       {/* Title & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">{title}</h2>
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
+          <h2 className="text-base font-semibold text-foreground">{title}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">
-            Updated {lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">
+            Updated {lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={loading}
-            className="gap-1.5 h-8 text-xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-3.5 border-border/70 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">Total Staff</p>
-            <p className="text-2xl font-bold mt-0.5 text-foreground">{stats.total}</p>
-          </div>
-          <Users className="w-7 h-7 text-muted-foreground/30" />
-        </Card>
-
-        <Card className="p-3.5 border-border/70 flex items-center justify-between border-l-4 border-l-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10">
-          <div>
-            <p className="text-[11px] font-semibold uppercase text-emerald-700 dark:text-emerald-400">Clocked In</p>
-            <p className="text-2xl font-bold mt-0.5 text-emerald-700 dark:text-emerald-400">{stats.active}</p>
-          </div>
-          <CheckCircle2 className="w-7 h-7 text-emerald-500/40" />
-        </Card>
-
-        <Card className="p-3.5 border-border/70 flex items-center justify-between border-l-4 border-l-amber-500 bg-amber-50/20 dark:bg-amber-950/10">
-          <div>
-            <p className="text-[11px] font-semibold uppercase text-amber-700 dark:text-amber-400">On Break</p>
-            <p className="text-2xl font-bold mt-0.5 text-amber-700 dark:text-amber-400">{stats.break}</p>
-          </div>
-          <Coffee className="w-7 h-7 text-amber-500/40" />
-        </Card>
-
-        <Card className="p-3.5 border-border/70 flex items-center justify-between border-l-4 border-l-muted-foreground/30">
-          <div>
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">Clocked Out</p>
-            <p className="text-2xl font-bold mt-0.5 text-muted-foreground">{stats.out}</p>
-          </div>
-          <XCircle className="w-7 h-7 text-muted-foreground/20" />
-        </Card>
-      </div>
+      <StatGrid>
+        <StatCard label="Total staff" value={stats.total} icon={Users} />
+        <StatCard label="Clocked in" value={stats.active} icon={CheckCircle2} tone={stats.active ? "success" : "default"} />
+        <StatCard label="On break" value={stats.break} icon={Coffee} tone={stats.break ? "warning" : "default"} />
+        <StatCard label="Clocked out" value={stats.out} icon={XCircle} />
+      </StatGrid>
 
       {/* Main Board Table */}
-      <Card className="p-4 border-border/70">
+      <Card className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search staff, role, department..."
-              className="pl-8 h-8 text-xs"
+              className="h-9 pl-8 text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -197,15 +160,15 @@ export function StaffAttendanceBoard({
         </div>
 
         <div className="overflow-x-auto rounded-md border border-border">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
               <tr>
-                <th className="py-2.5 px-3 font-semibold">Staff Member</th>
-                <th className="py-2.5 px-3 font-semibold">Department</th>
-                <th className="py-2.5 px-3 font-semibold">Status</th>
-                <th className="py-2.5 px-3 font-semibold">Clocked In At</th>
-                <th className="py-2.5 px-3 font-semibold text-center">Break Duration</th>
-                <th className="py-2.5 px-3 font-semibold text-right">Net Hours Worked</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Staff Member</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Department</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Status</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Clocked In At</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium text-center">Break Duration</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium text-right">Net Hours Worked</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -225,7 +188,7 @@ export function StaffAttendanceBoard({
               ) : (
                 filtered.map((staff) => (
                   <tr key={staff.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="py-2.5 px-3">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar className="h-7 w-7 text-xs">
                           {staff.avatar && <AvatarImage src={staff.avatar} />}
@@ -240,15 +203,15 @@ export function StaffAttendanceBoard({
                       </div>
                     </td>
 
-                    <td className="py-2.5 px-3 text-muted-foreground">
+                    <td className="px-4 py-3 text-muted-foreground">
                       <span className="inline-flex items-center rounded-md bg-secondary/50 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground border border-border">
                         {staff.department}
                       </span>
                     </td>
 
-                    <td className="py-2.5 px-3">
+                    <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
                           staff.status === "Clocked In"
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-500/30"
                             : staff.status === "On Break"
@@ -269,12 +232,12 @@ export function StaffAttendanceBoard({
                       </span>
                     </td>
 
-                    <td className="py-2.5 px-3 font-mono text-muted-foreground">
+                    <td className="px-4 py-3 font-mono text-muted-foreground">
                       {staff.time}
                     </td>
 
                     {/* Break Duration column */}
-                    <td className="py-2.5 px-3 text-center">
+                    <td className="px-4 py-3 text-center">
                       <span
                         className={`font-mono text-xs ${
                           staff.status === "On Break"
@@ -287,7 +250,7 @@ export function StaffAttendanceBoard({
                     </td>
 
                     {/* Net Hours Worked column */}
-                    <td className="py-2.5 px-3 text-right">
+                    <td className="px-4 py-3 text-right">
                       <span
                         className={`font-mono font-semibold ${
                           staff.status === "Clocked In"

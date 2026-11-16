@@ -12,6 +12,7 @@ import { useProfile } from "@/lib/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
+import { Page, PageHeader, StatCard, StatGrid, greetName } from "@/components/layout/page";
 
 export const Route = createFileRoute("/_authenticated/gm/")({
   head: () => ({ meta: [{ title: "GM Command Centre — Company Execution Dashboard" }] }),
@@ -120,33 +121,18 @@ function GmDashboardPage() {
   const activeClients = clients.filter((c: any) => c.status === "active" || c.is_active).length;
 
   return (
-    <div className="space-y-6">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          <span className="font-semibold text-foreground">Managing Director / General Manager:</span>
-          <span>Company execution, revenue targets, capacity, manager approvals, cross-department dependencies and unresolved escalations.</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-          <Clock className="h-3 w-3" /> Africa/Johannesburg (08:00–17:00 SAST)
-        </div>
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          {greeting()}, <span className="brand-text">{name}</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
-          Company execution overview — real-time visibility into plans, revenue, capacity, pending approvals, cross-department blockers and escalations.
-        </p>
-      </div>
+    <Page>
+      <PageHeader
+        eyebrow="GM workspace"
+        title={`${greeting()}, ${greetName(name)}`}
+        description="Company execution, revenue, capacity, manager approvals, cross-department dependencies and escalations."
+      />
 
       {/* ── Clock In / Attendance ──────────────────────────────────────── */}
       <StaffAttendanceWidget />
 
       {/* ── Top KPI Cards ──────────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatGrid>
         <KpiCard
           label="Company Execution Rate"
           value={totalTasks > 0 ? `${executionRate}%` : "No Data"}
@@ -176,13 +162,13 @@ function GmDashboardPage() {
           icon={AlertTriangle}
           iconColor={openEscalations > 0 ? "text-rose-500" : "text-emerald-500"}
         />
-      </div>
+      </StatGrid>
 
       {/* ── Execution Snapshot ──────────────────────────────────────────── */}
       <Card className="p-5 border-border">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-foreground">Execution Snapshot</h3>
+            <h2 className="text-sm font-semibold text-foreground">Execution Snapshot</h2>
             <p className="text-xs text-muted-foreground">Task and deliverable progress across the company.</p>
           </div>
           <Link to="/gm/execution" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
@@ -212,7 +198,7 @@ function GmDashboardPage() {
         <Card className="p-5 border-border">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-foreground">Department Overview</h3>
+              <h2 className="text-sm font-semibold text-foreground">Department Overview</h2>
               <p className="text-xs text-muted-foreground">Workforce distribution and task allocation by department.</p>
             </div>
             <Link to="/gm/capacity" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
@@ -220,14 +206,14 @@ function GmDashboardPage() {
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
-                  <th className="p-2.5">Department</th>
-                  <th className="p-2.5">Employees</th>
-                  <th className="p-2.5">Active Tasks</th>
-                  <th className="p-2.5">Overdue</th>
-                  <th className="p-2.5">Status</th>
+                  <th className="px-3 py-2.5 font-medium">Department</th>
+                  <th className="px-3 py-2.5 font-medium">Employees</th>
+                  <th className="px-3 py-2.5 font-medium">Active Tasks</th>
+                  <th className="px-3 py-2.5 font-medium">Overdue</th>
+                  <th className="px-3 py-2.5 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -238,17 +224,17 @@ function GmDashboardPage() {
                   const status = deptOverdue.length > 2 ? "Critical" : deptOverdue.length > 0 ? "At Risk" : "On Track";
                   return (
                     <tr key={dept} className="hover:bg-muted/30">
-                      <td className="p-2.5 font-bold text-foreground">{dept}</td>
-                      <td className="p-2.5 font-medium">{deptEmployees.length}</td>
-                      <td className="p-2.5">{deptTasks.length}</td>
-                      <td className="p-2.5">
+                      <td className="px-3 py-2.5 font-medium text-foreground">{dept}</td>
+                      <td className="px-3 py-2.5 font-medium">{deptEmployees.length}</td>
+                      <td className="px-3 py-2.5">{deptTasks.length}</td>
+                      <td className="px-3 py-2.5">
                         {deptOverdue.length > 0 ? (
                           <span className="font-bold text-rose-600">{deptOverdue.length}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
-                      <td className="p-2.5">
+                      <td className="px-3 py-2.5">
                         <Badge variant="outline" className={`text-[10px] ${
                           status === "On Track" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
                           : status === "At Risk" ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
@@ -270,25 +256,20 @@ function GmDashboardPage() {
           )}
         </Card>
       )}
-    </div>
+    </Page>
   );
 }
 
 /* ── Reusable Sub-components ───────────────────────────────────────────── */
 
-function KpiCard({ label, value, sub, icon: Icon, iconColor, progress }: {
+function KpiCard({ label, value, sub, icon, iconColor, progress }: {
   label: string; value: string; sub: string; icon: any; iconColor: string; progress?: number;
 }) {
+  const tone = iconColor.includes("rose") ? "danger" : iconColor.includes("amber") ? "warning" : "default";
   return (
-    <Card className="p-4 border-border">
-      <div className="flex items-center justify-between text-muted-foreground text-xs">
-        <span>{label}</span>
-        <Icon className={`h-4 w-4 ${iconColor}`} />
-      </div>
-      <p className="text-2xl font-bold text-foreground mt-2">{value}</p>
-      {typeof progress === "number" && <Progress value={progress} className="mt-2 h-1.5" />}
-      <p className="text-[11px] text-muted-foreground mt-1.5">{sub}</p>
-    </Card>
+    <StatCard label={label} value={value === "No Data" ? "—" : value} hint={sub} icon={icon} tone={tone as any}>
+      {typeof progress === "number" && progress > 0 && <Progress value={progress} className="mt-2 h-1.5" />}
+    </StatCard>
   );
 }
 
@@ -306,7 +287,7 @@ function NavCard({ to, icon: Icon, title, desc, badge, badgeColor }: {
 }) {
   return (
     <Link to={to as any} className="group">
-      <Card className="flex items-start justify-between gap-3 border-border/70 p-5 transition-colors hover:border-primary/40 h-full">
+      <Card className="flex h-full items-start justify-between gap-3 p-4 transition-colors hover:border-primary/40">
         <div>
           <Icon className="h-5 w-5 text-primary" />
           <p className="mt-3 text-sm font-semibold">{title}</p>

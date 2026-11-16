@@ -134,7 +134,7 @@ function CompanyExecutionPage() {
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+            <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
               <tr>
                 <th className="p-2.5">Task</th>
                 <th className="p-2.5">Department</th>
@@ -195,7 +195,7 @@ function Header() {
         <Link to="/gm" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-2">
           <ArrowLeft className="h-3 w-3" /> Back to GM Dashboard
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Company Execution</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Company Execution</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Active initiatives, milestones, overdue commitments and operational progress.
         </p>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Coffee, CheckCircle2, LogOut, ShieldCheck } from "lucide-react";
+import { Clock, Coffee, CheckCircle2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -135,152 +135,83 @@ export function StaffAttendanceWidget({ className = "" }: { className?: string }
 
   if (loading) {
     return (
-      <Card className={`flex flex-col border-border/70 p-5 items-center justify-center min-h-[140px] ${className}`}>
-        <Clock className="w-5 h-5 animate-pulse text-primary" />
-        <p className="text-xs text-muted-foreground mt-2">Connecting to attendance system…</p>
+      <Card className={`flex min-h-[72px] items-center gap-3 border-border px-5 py-4 ${className}`}>
+        <Clock className="h-4 w-4 animate-pulse text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">Loading your time record…</p>
       </Card>
     );
   }
 
+  const tone =
+    state === "Clocked In"
+      ? { dot: "bg-emerald-500", chip: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" }
+      : state === "On Break"
+        ? { dot: "bg-amber-500", chip: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400" }
+        : { dot: "bg-muted-foreground/40", chip: "border-border bg-muted text-muted-foreground" };
+
+  // Compact time-tracking bar: one row when there is room, stacked on narrow cards and phones.
   return (
-    <Card className={`flex flex-col border-border/70 p-5 transition-colors hover:border-primary/40 relative overflow-hidden ${className}`}>
-      {/* Glow highlight */}
-      <div
-        className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-20 pointer-events-none ${
-          state === "Clocked In"
-            ? "bg-emerald-500"
-            : state === "On Break"
-            ? "bg-amber-500"
-            : "bg-muted"
-        }`}
-      />
-
-      <div className="flex items-center justify-between mb-3 relative z-10">
-        <div>
-          <h2 className="text-base font-semibold flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            Time Tracking
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {record.clockInTime
-              ? `Started at ${formatJohannesburgTime(record.clockInTime)}`
-              : "Not clocked in today"}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <div className="text-2xl font-bold font-mono tracking-tight text-foreground">
-            {calculateHoursWorked()}
-          </div>
-          <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
-            {state === "Clocked In" ? "Net Working Time" : state === "On Break" ? "Net Working Time" : "Total Logged"}
+    <Card className={`@container border-border px-5 py-4 ${className}`}>
+      <div className="flex flex-col gap-3 @lg:flex-row @lg:items-center @lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground">Time tracking</h2>
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone.chip}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} aria-hidden />
+                {state}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {record.clockInTime ? `Started at ${formatJohannesburgTime(record.clockInTime)}` : "Not clocked in today"}
+              {hasBreaks && (
+                <>
+                  {" · "}
+                  <Coffee className="inline h-3 w-3 -translate-y-px" /> Break{" "}
+                  <span className={`font-mono ${state === "On Break" ? "text-amber-600 dark:text-amber-400" : ""}`}>{breakDuration}</span>
+                  {state === "On Break" ? " (on break now)" : ""}
+                </>
+              )}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Break duration display — shown when any breaks have occurred */}
-      {hasBreaks && (
-        <div className="flex items-center gap-2 mb-3 relative z-10">
-          <Coffee className={`w-3.5 h-3.5 ${state === "On Break" ? "text-amber-500" : "text-muted-foreground"}`} />
-          <span className="text-xs text-muted-foreground">Break:</span>
-          <span className={`text-xs font-mono font-semibold ${
-            state === "On Break" ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
-          }`}>
-            {breakDuration}
-          </span>
-          {state === "On Break" && (
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 uppercase tracking-wider font-semibold">
-              (active)
-            </span>
-          )}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 @lg:justify-end">
+          <div className="text-left @lg:text-right">
+            <div className="font-mono text-lg font-semibold tabular-nums leading-tight text-foreground">{calculateHoursWorked()}</div>
+            <div className="text-[11px] text-muted-foreground">{state === "Clocked Out" ? "Logged today" : "Net working time"}</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {state === "Clocked Out" && (
+              <Button onClick={handleClockIn} disabled={saving} size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Clock in
+              </Button>
+            )}
+            {state === "Clocked In" && (
+              <>
+                <Button onClick={handleStartBreak} disabled={saving} variant="outline" size="sm">
+                  <Coffee className="mr-1 h-3.5 w-3.5" /> Take break
+                </Button>
+                <Button onClick={handleClockOut} disabled={saving} variant="outline" size="sm" className="text-rose-600 hover:text-rose-700">
+                  <LogOut className="mr-1 h-3.5 w-3.5" /> Clock out
+                </Button>
+              </>
+            )}
+            {state === "On Break" && (
+              <>
+                <Button onClick={handleEndBreak} disabled={saving} size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700">
+                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Resume work
+                </Button>
+                <Button onClick={handleClockOut} disabled={saving} variant="outline" size="sm" className="text-rose-600 hover:text-rose-700">
+                  <LogOut className="mr-1 h-3.5 w-3.5" /> Clock out
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      )}
-
-      <div className="flex items-center gap-2 mt-2 relative z-10">
-        {state === "Clocked Out" && (
-          <Button
-            onClick={handleClockIn}
-            disabled={saving}
-            size="sm"
-            className="h-9 px-4 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 text-white shadow-sm transition-all hover:shadow-md"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            Clock In
-          </Button>
-        )}
-
-        {state === "Clocked In" && (
-          <>
-            <Button
-              onClick={handleStartBreak}
-              disabled={saving}
-              variant="outline"
-              size="sm"
-              className="h-9 px-4 text-sm font-medium border-amber-300 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 focus-visible:ring-2 focus-visible:ring-amber-400/50 text-amber-700 dark:text-amber-400 transition-all"
-            >
-              <Coffee className="w-3.5 h-3.5 mr-1.5" />
-              Take Break
-            </Button>
-            <Button
-              onClick={handleClockOut}
-              disabled={saving}
-              variant="destructive"
-              size="sm"
-              className="h-9 px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-destructive/50 transition-all"
-            >
-              <LogOut className="w-3.5 h-3.5 mr-1.5" />
-              Clock Out
-            </Button>
-          </>
-        )}
-
-        {state === "On Break" && (
-          <>
-            <Button
-              onClick={handleEndBreak}
-              disabled={saving}
-              size="sm"
-              className="h-9 px-4 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500/50 text-white transition-all"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-              Resume Work
-            </Button>
-            <Button
-              onClick={handleClockOut}
-              disabled={saving}
-              variant="destructive"
-              size="sm"
-              className="h-9 px-4 text-sm font-medium focus-visible:ring-2 focus-visible:ring-destructive/50 transition-all"
-            >
-              <LogOut className="w-3.5 h-3.5 mr-1.5" />
-              Clock Out
-            </Button>
-          </>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-xs font-medium relative z-10 pt-2 border-t border-border/40">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-[11px]">Live Status:</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-              state === "Clocked In"
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-500/30"
-                : state === "On Break"
-                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-500/30"
-                : "bg-muted text-muted-foreground border border-border"
-            }`}
-          >
-            {state}
-          </span>
-        </div>
-
-        {state === "Clocked In" && (
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-            Active
-          </span>
-        )}
       </div>
     </Card>
   );

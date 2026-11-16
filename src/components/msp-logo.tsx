@@ -7,9 +7,9 @@ export function MspLogo({ className, showWord = true }: { className?: string; sh
         <img src="/msp-logo.png" alt="Mavis Strategic Partners" className="h-full w-full object-contain" />
       </div>
       {showWord && (
-        <div className="flex flex-col leading-none">
+        <div className="flex min-w-0 flex-col gap-0.5 leading-none">
           <span className="text-[15px] font-bold tracking-tight text-white">MSP</span>
-          <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/60">Mavis Strategic Partners</span>
+          <span className="whitespace-nowrap text-[8.5px] font-semibold uppercase tracking-[0.12em] text-white/55">Mavis Strategic Partners</span>
         </div>
       )}
     </div>

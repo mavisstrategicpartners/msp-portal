@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { DEPARTMENTS } from "@/lib/departments";
 import { FOLDER_CATEGORIES } from "@/lib/hr-shared";
+import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
 import { FileLinks, KIND_LABEL, StatusBadge, hrApi, isOverdue, type HrFile, type HrRequest } from "@/components/hr/MyHrDocuments";
 
 type ListResponse = { requests: HrRequest[]; people: { id: string; name: string; title: string | null }[]; canManage: boolean };
@@ -69,13 +70,11 @@ export function HrDocumentRequestsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1300px] space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <FileSignature className="h-3.5 w-3.5" /> HR
-          </div>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight">Document Requests</h1>
+          <p className="text-xs font-medium text-muted-foreground">HR workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Document Requests</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Ask employees to sign, acknowledge, complete or upload documents. Accepted documents are filed in the employee's HR folder automatically. Each employee sees only what you request from them in My HR Documents.
           </p>
@@ -87,26 +86,19 @@ export function HrDocumentRequestsPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          ["Outstanding", counts.outstanding, "outstanding"],
-          ["To review", counts.review, "review"],
-          ["Overdue", counts.overdue, "overdue"],
-          ["Accepted", counts.accepted, "accepted"],
-        ].map(([label, n, f]) => (
-          <button key={label as string} type="button" onClick={() => setFilter(f as any)} className={`rounded-xl border bg-card px-4 py-3 text-left transition hover:border-primary/40 ${filter === f && f !== "all" ? "border-primary" : "border-border"}`}>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className={`text-xl font-semibold ${label === "Overdue" && Number(n) > 0 ? "text-rose-600" : ""}`}>{n as number}</p>
-          </button>
-        ))}
-      </div>
+      <StatGrid>
+        <StatCard label="Outstanding" value={counts.outstanding} active={filter === "outstanding"} onClick={() => setFilter("outstanding")} />
+        <StatCard label="To review" value={counts.review} tone={counts.review ? "warning" : "default"} active={filter === "review"} onClick={() => setFilter("review")} />
+        <StatCard label="Overdue" value={counts.overdue} tone={counts.overdue ? "danger" : "default"} active={filter === "overdue"} onClick={() => setFilter("overdue")} />
+        <StatCard label="Accepted" value={counts.accepted} active={filter === "accepted"} onClick={() => setFilter("accepted")} />
+      </StatGrid>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search document or employee" className="h-8 w-64 pl-8 text-xs" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search document or employee" className="h-9 w-64 pl-8" />
         </div>
-        <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="h-8 rounded-md border border-input bg-background px-2 text-xs" aria-label="Status">
+        <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className={selectClass} aria-label="Status">
           <option value="all">All requests</option>
           <option value="outstanding">Outstanding</option>
           <option value="review">Submitted / signed — to review</option>

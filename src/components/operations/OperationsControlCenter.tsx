@@ -165,10 +165,8 @@ export function OperationsControlCenter() {
       {/* 1. Standard Native MSP Page Title Eyebrow Banner */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <Activity className="h-3.5 w-3.5" /> Operations
-          </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl text-foreground">
+          <p className="text-xs font-medium text-muted-foreground">Operations</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             Operations Control Centre
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground md:text-base">
@@ -494,7 +492,7 @@ export function OperationsControlCenter() {
               </div>
             ) : (
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+                <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                   <tr>
                     <th className="p-3.5">Task</th>
                     <th className="p-3.5">Client / Context</th>
@@ -575,7 +573,7 @@ export function OperationsControlCenter() {
 
           <Card className="p-0 overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+              <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
                   <th className="p-3.5">Name</th>
                   <th className="p-3.5">Role & Department</th>
@@ -799,7 +797,7 @@ export function OperationsControlCenter() {
               </div>
             ) : (
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+                <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                   <tr>
                     <th className="p-3.5">Business</th>
                     <th className="p-3.5">Contact Person</th>

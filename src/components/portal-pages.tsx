@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle, ArrowRight, BarChart3, BookOpen, Bot, Briefcase, Building2, CalendarDays,
-  CheckCircle2, ChevronRight, ClipboardCheck, ClipboardList, Clock, Compass, Edit3, ExternalLink,
+  CheckCircle2, Circle, ChevronRight, ClipboardCheck, ClipboardList, Clock, Compass, Edit3, ExternalLink,
   FileSignature, Gauge, ListTree, Lock, Mail, Map as MapIcon, MessageCircle, Phone, Plus, Search, Send,
   ShieldCheck, Sparkles, Tag, Target, User, UserX, Users, Wrench, Eye, EyeOff, KeyRound,
   RotateCcw, PowerOff, FileBarChart2, Crown, Laptop, Code2, Megaphone, Share2, Sliders, UserCheck, Layers, GitBranch, ArrowUpRight, Check,
@@ -500,11 +500,9 @@ function pageTitle(icon: Icon, eyebrow: string, title: string, description: stri
   return (
     <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <IconComponent className="h-3.5 w-3.5" /> {eyebrow}
-        </div>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground md:text-base">{description}</p>
+        <p className="text-xs font-medium text-muted-foreground">{eyebrow}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
       </div>
     </div>
   );
@@ -995,7 +993,7 @@ export function ToolsPage() {
       <div className="space-y-8">
         {orderedCats.map((cat) => (
           <section key={cat}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{cat}</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">{cat}</h2>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {(grouped.get(cat) ?? []).map((tool) => <ToolCard key={tool.id} tool={tool} />)}
             </div>
@@ -1231,8 +1229,9 @@ export function ProfilePage() {
 
   return (
     <div>
-      {pageTitle(User, "Workspace", "My Profile", "Everything about you in one scrollable panel — no tabs, no wizards.")}
-      <div className="max-w-2xl space-y-4">
+      {pageTitle(User, "My account", "My Profile", "Your details, password and notification preferences.")}
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+        <div className="space-y-4">
         <Card className="p-5">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16"><AvatarFallback className="bg-primary/15 text-lg text-primary">{(profile.full_name || profile.email).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
@@ -1253,14 +1252,19 @@ export function ProfilePage() {
             <div><Label>Department</Label><Input value={profile.department || "Not set"} disabled /><p className="mt-1 text-xs text-muted-foreground">Changed by an admin.</p></div>
             <div><Label>Job title</Label><Input value={profile.job_title || "Not set"} disabled /></div>
           </div>
-          <Button className="mt-4" disabled={saveProfile.isPending} onClick={() => saveProfile.mutate()}>Save changes</Button>
+          <div className="mt-4 flex justify-end">
+            <Button disabled={saveProfile.isPending} onClick={() => saveProfile.mutate()}>Save changes</Button>
+          </div>
         </Card>
+        <HrDocumentsSummary />
+        </div>
+        <div className="space-y-4">
 
         <Card className="p-5 scroll-mt-20" id="password">
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-primary" />
             <div>
-              <h3 className="font-semibold">Change Password</h3>
+              <h3 className="font-semibold">Change password</h3>
               <p className="text-xs text-muted-foreground">
                 Enter your current password, then choose a new one. Your passwords are never shown or stored by the portal.
               </p>
@@ -1276,7 +1280,7 @@ export function ProfilePage() {
             className="mt-4 space-y-3.5"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="current-pw">Current Password *</Label>
+              <Label htmlFor="current-pw">Current password <span className="text-rose-600">*</span></Label>
               <div className="relative">
                 <Input
                   id="current-pw"
@@ -1292,7 +1296,7 @@ export function ProfilePage() {
                   type="button"
                   onClick={() => setShowCurrentPassword((v) => !v)}
                   aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -1301,7 +1305,7 @@ export function ProfilePage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="new-pw">New Password *</Label>
+                <Label htmlFor="new-pw">New password <span className="text-rose-600">*</span></Label>
                 <div className="relative">
                   <Input
                     id="new-pw"
@@ -1318,7 +1322,7 @@ export function ProfilePage() {
                     type="button"
                     onClick={() => setShowNewPassword((v) => !v)}
                   aria-label={showNewPassword ? "Hide new password" : "Show new password"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -1326,7 +1330,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirm-pw">Confirm New Password *</Label>
+                <Label htmlFor="confirm-pw">Confirm new password <span className="text-rose-600">*</span></Label>
                 <div className="relative">
                   <Input
                     id="confirm-pw"
@@ -1344,7 +1348,7 @@ export function ProfilePage() {
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                   aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -1352,16 +1356,17 @@ export function ProfilePage() {
               </div>
             </div>
 
-            <ul className="grid gap-1 text-xs sm:grid-cols-2" aria-label="Password requirements">
+            <ul className="grid gap-1.5 rounded-lg border border-border bg-muted/40 p-3 text-xs sm:grid-cols-2" aria-label="Password requirements">
               {pwRules.map((r) => (
-                <li key={r.id} className={r.ok ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
-                  {r.ok ? "✓" : "○"} {r.label}
+                <li key={r.id} className={`flex items-center gap-1.5 ${r.ok ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                  {r.ok ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <Circle className="h-3.5 w-3.5 shrink-0" />} {r.label}
                 </li>
               ))}
-              <li className={pwMatch ? "text-emerald-600 dark:text-emerald-400" : passwordForm.confirmPassword ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}>
-                {pwMatch ? "✓ Passwords match" : passwordForm.confirmPassword ? "✗ Passwords do not match" : "○ Confirmation matches"}
+              <li className={`flex items-center gap-1.5 ${pwMatch ? "text-emerald-700 dark:text-emerald-400" : passwordForm.confirmPassword ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
+                {pwMatch ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <Circle className="h-3.5 w-3.5 shrink-0" />}
+                {pwMatch ? "Passwords match" : passwordForm.confirmPassword ? "Passwords do not match" : "Confirmation matches"}
               </li>
-              {pwSame && <li className="text-rose-600 dark:text-rose-400">✗ Must differ from your current password</li>}
+              {pwSame && <li className="text-rose-600 dark:text-rose-400">Must differ from your current password</li>}
             </ul>
 
             {pwResult && (
@@ -1373,13 +1378,11 @@ export function ProfilePage() {
               </p>
             )}
 
-            <Button
-              type="submit"
-              disabled={!pwReady || changePassword.isPending}
-              className="mt-1"
-            >
-              {changePassword.isPending ? "Updating password…" : "Update Password"}
-            </Button>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={!pwReady || changePassword.isPending}>
+                {changePassword.isPending ? "Updating password…" : "Update password"}
+              </Button>
+            </div>
           </form>
         </Card>
 
@@ -1390,8 +1393,7 @@ export function ProfilePage() {
             <div className="flex items-center justify-between rounded-md border border-border p-3"><span className="text-sm">Log chatbot conversations</span><Switch checked={prefs.logChat} onCheckedChange={(v) => setPrefs({ ...prefs, logChat: v })} /></div>
           </div>
         </Card>
-
-        <HrDocumentsSummary />
+        </div>
       </div>
     </div>
   );

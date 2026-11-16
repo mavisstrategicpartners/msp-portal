@@ -401,7 +401,7 @@ export function HrDashboard() {
       {/* ─── Section: HR Functional Modules ─────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+          <h2 className="text-sm font-semibold text-foreground">
             HR Functional Modules
           </h2>
           <span className="text-xs text-emerald-500 font-medium flex items-center gap-1">
@@ -523,7 +523,7 @@ export function HrDashboard() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                <thead className="border-b border-border text-xs text-muted-foreground bg-muted/40">
                   <tr>
                     <th className="py-2.5 px-4">Employee</th>
                     <th className="py-2.5 px-4">Dates</th>

@@ -125,8 +125,7 @@ export function ClientCommunicationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <MessageCircle className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Client Communication Timeline
           </h1>
           <p className="text-sm text-muted-foreground mt-1">

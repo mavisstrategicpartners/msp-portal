@@ -317,7 +317,7 @@ Mavis Strategic Partners`
             <div className="card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                  <thead className="border-b border-border text-xs text-muted-foreground bg-muted/40">
                     <tr>
                       <th className="py-3 px-4">Employee</th>
                       <th className="py-3 px-4">Role & Dept</th>
@@ -428,7 +428,7 @@ Mavis Strategic Partners`
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                <thead className="border-b border-border text-xs text-muted-foreground bg-muted/40">
                   <tr>
                     <th className="py-3 px-4">Employee</th>
                     <th className="py-3 px-4">Document Type</th>
@@ -499,7 +499,7 @@ Mavis Strategic Partners`
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-muted/30 text-xs font-semibold uppercase text-muted-foreground">
+                <thead className="border-b border-border text-xs text-muted-foreground bg-muted/40">
                   <tr>
                     <th className="py-3 px-4">Timestamp</th>
                     <th className="py-3 px-4">Actor</th>

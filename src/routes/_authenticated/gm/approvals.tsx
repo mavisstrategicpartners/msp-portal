@@ -123,7 +123,7 @@ function ManagerApprovalsPage() {
         <Link to="/gm" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-2">
           <ArrowLeft className="h-3 w-3" /> Back to GM Dashboard
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Manager Approvals</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Manager Approvals</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Decisions that fall within the General Manager's configured authority.
         </p>

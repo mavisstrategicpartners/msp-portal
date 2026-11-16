@@ -164,6 +164,12 @@
 
 }
 
+/* Thin, quiet scrollbars for long navigation and wide tables. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+}
+
 @utility glass {
   background: var(--card);
   border: 1px solid var(--border);

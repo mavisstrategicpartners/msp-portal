@@ -113,7 +113,7 @@ export function GeneralManagerDashboard() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-muted/50 uppercase font-semibold text-muted-foreground border-b border-border">
+            <thead className="text-muted-foreground border-b border-border bg-muted/40 text-xs">
               <tr>
                 <th className="p-2.5">Department</th>
                 <th className="p-2.5">Target Work</th>
