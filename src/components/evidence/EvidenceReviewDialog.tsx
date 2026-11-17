@@ -24,7 +24,7 @@ import {
   XCircle,
   File as FileIcon,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   Dialog,
   DialogContent,

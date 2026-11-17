@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, Copy, Download, Eye, FolderOpen, Loader2, Pencil, Plus, Search, Trash2, Upload, UserPlus } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,6 +22,7 @@ import { EMPLOYMENT_TYPES, FOLDER_CATEGORIES } from "@/lib/hr-shared";
 import { KIND_LABEL, StatusBadge, hrApi, type HrRequest } from "@/components/hr/MyHrDocuments";
 import { LeaveStatusBadge } from "@/components/hr/LeaveShared";
 import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
+import { confirmAction } from "@/lib/confirm";
 
 type Dept = { key: string; name: string };
 type EmployeeRow = {
@@ -425,7 +426,12 @@ function DocRow({ employeeId, doc, canManage }: { employeeId: string; doc: Folde
     }
   };
   const remove = async () => {
-    if (!confirm(`Remove "${doc.name}" from this folder? ${doc.source === "upload" ? "The file will be deleted." : "The original stays with its document request."}`)) return;
+    if (!(await confirmAction({
+      title: "Remove document from folder?",
+      description: `"${doc.name}" will be removed from this employee folder. ${doc.source === "upload" ? "The uploaded file will be permanently deleted." : "The original stays with its document request."}`,
+      confirmText: "Remove",
+      variant: "destructive",
+    }))) return;
     setBusy(true);
     try {
       await hrApi(base, { method: "DELETE" });
@@ -508,7 +514,7 @@ function UploadDialog({ employeeId, employeeName, onClose }: { employeeId: strin
     try {
       const base = `/api/staff/hr/employees/${employeeId}/documents`;
       const s = await hrApi(`${base}/upload-url`, { method: "POST", body: JSON.stringify({ fileName: file.name, size: file.size }) });
-      const { error } = await supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      const { error } = await uploading(file.name, () => supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false }));
       if (error) throw new Error(`Upload failed: ${error.message}`);
       await hrApi(base, { method: "POST", body: JSON.stringify({ path: s.path, name: name.trim() || file.name, category: cat, documentDate: date, notes, size: file.size, mimeType: file.type }) });
       toast.success("Added to the folder");

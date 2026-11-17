@@ -12,7 +12,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/_authenticated/gm/execution")({
   head: () => ({ meta: [{ title: "Company Execution — GM Command Centre" }] }),

@@ -32,12 +32,13 @@ import {
   Users, UserPlus, Search, MoreVertical, ShieldCheck, Pencil,
   UserX, UserCheck, Crown, KeyRound, User, RefreshCw, Trash2, Copy,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { DEPARTMENTS as ORG_DEPTS, departmentFromText } from "@/lib/departments";
 import { useDepartments } from "@/lib/department-scope";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, updateTeamMember, deleteTeamMember, resetStaffPassword } from "@/lib/admin.functions";
+import { confirmAction } from "@/lib/confirm";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   head: () => ({ meta: [{ title: "Manage Staff — MSP Admin" }] }),
@@ -266,7 +267,7 @@ function ManageUsersPage() {
 
   // ── Toggle active ─────────────────────────────────────────────────────────
   async function handleResetPassword(s: StaffProfile) {
-    if (!window.confirm(`Reset the password for ${s.full_name || s.email}? They will be signed out and must choose a new password at next sign-in.`)) return;
+    if (!(await confirmAction({ title: "Reset password?", description: `${s.full_name || s.email} will be signed out everywhere and must choose a new password at their next sign-in. You will see a one-time temporary password.`, confirmText: "Reset password", variant: "warning" }))) return;
     try {
       const r = await resetStaffPassword({ data: { userId: s.id } });
       setIssued({ name: s.full_name || s.email, email: r.email, password: r.temporaryPassword, reason: "reset" });

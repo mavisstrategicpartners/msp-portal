@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo, useEffect } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -5,7 +6,7 @@ import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { supabase } from '@/integrations/supabase/client'
 import { seedPayrollRecords, seedEmployees } from '../../data/mockData.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Calculator,
   Lock,
@@ -310,8 +311,8 @@ export default function Payroll() {
   }
 
   // Delete a record
-  const handleDeleteRecord = (rec) => {
-    if (window.confirm(`Delete payroll entry for ${rec.employee} (${rec.period})?`)) {
+  const handleDeleteRecord = async (rec) => {
+    if (await confirmAction({ title: 'Delete payroll entry?', description: `The payroll entry for ${rec.employee} (${rec.period}) will be permanently deleted. This cannot be undone.`, confirmText: 'Delete', variant: 'destructive' })) {
       setRecords(prev => prev.filter(r => r.id !== rec.id))
       toast.success(`Removed payroll record`)
     }

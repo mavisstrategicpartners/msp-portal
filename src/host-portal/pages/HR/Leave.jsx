@@ -7,7 +7,7 @@ import { uid } from '../../lib/useLocalStorage.js';
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js';
 import { useNotifications } from '../../context/NotificationContext.jsx';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/notify';
 import { Lightbulb, Paperclip, XCircle, CheckCircle } from 'lucide-react'
 
 const badgeFor = (v) => v === 'Verified' ? 'badge-success' : v === 'Needs Review' ? 'badge-warning' : 'badge-danger'

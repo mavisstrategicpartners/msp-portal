@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Circle, Eye, EyeOff, KeyRound, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { authNotices, showFlash } from "@/lib/notify";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ function SetPasswordPage() {
       // Fetch a fresh token so the cleared flag takes effect immediately.
       await supabase.auth.refreshSession();
       clearAccessCache();
+      authNotices.passwordUpdated();
       navigate({ to: "/home", replace: true });
     } catch (err: any) {
       setError(err?.message || "Your password could not be saved. Please try again.");
@@ -63,6 +65,8 @@ function SetPasswordPage() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    authNotices.signedOut();
+    showFlash();
     clearAccessCache();
     navigate({ to: "/auth", replace: true });
   };

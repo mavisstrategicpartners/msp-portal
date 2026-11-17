@@ -23,7 +23,7 @@ import {
   OperationalEscalation,
   ClientCommunicationRecord,
 } from "@/lib/operations-manager.service";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/_authenticated/operations/")({
   head: () => ({ meta: [{ title: "Operations Dashboard — MSP Operations & Relationships" }] }),

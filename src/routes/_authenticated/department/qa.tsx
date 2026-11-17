@@ -17,7 +17,7 @@ import { useProfile } from "@/lib/use-profile";
 import { getAuthHeaders } from "@/lib/api-auth-headers";
 import type { EvidenceSubmission } from "@/lib/staff-tasks.types";
 import { EvidenceReviewDialog } from "@/components/evidence/EvidenceReviewDialog";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";

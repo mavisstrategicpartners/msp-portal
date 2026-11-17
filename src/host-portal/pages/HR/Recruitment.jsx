@@ -5,7 +5,7 @@ import { seedVacancies, seedApplicants, VACANCY_TYPES, HOST_COMPANY } from '../.
 import { uid } from '../../lib/useLocalStorage.js';
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js';
 import { useNotifications } from '../../context/NotificationContext.jsx';
-import { toast } from 'sonner';
+import { toast } from '@/lib/notify';
 import { useConfirm } from '@/components/ui/modal-context';
 
 const empty = { title: '', department: '', type: 'Full-time', location: '', posted: '', closes: '', applicants: 0, status: 'Open', salary: '', description: '', requirements: [], tags: [] }

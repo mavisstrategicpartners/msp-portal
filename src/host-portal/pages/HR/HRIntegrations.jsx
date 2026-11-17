@@ -3,7 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal from '../../components/Modal.jsx'
 import { seedIntegrations } from '../../data/mockData.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Wrench,
   CheckCircle2,

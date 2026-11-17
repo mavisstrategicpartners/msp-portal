@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { authNotices } from "@/lib/notify";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -172,6 +173,7 @@ function ForgotPasswordPage() {
       setConfirm("");
       setResetToken("");
       setStep("done");
+      authNotices.passwordUpdated();
     } catch {
       setError("We couldn't update your password. Please try again.");
     } finally {

@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -5,7 +6,7 @@ import { seedEmployees, seedAnnouncements, seedLetters, seedAudit } from '../../
 import { uid } from '../../lib/useLocalStorage.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Users,
   Bell,
@@ -94,10 +95,10 @@ export default function HRAdmin() {
     setEmpForm(null)
   }
 
-  const removeEmployee = (e) => {
-    if (window.confirm(`Are you sure you want to remove ${e.full_name} from the employee directory?`)) {
+  const removeEmployee = async (e) => {
+    if (await confirmAction({ title: `Remove ${e.full_name}?`, description: `${e.full_name} will be removed from this HR directory. Their portal account and HR records elsewhere are not affected.`, confirmText: 'Remove', variant: 'destructive' })) {
       setEmployees(prev => prev.filter(x => x.id !== e.id))
-      toast.info('Employee Removed', { description: `${e.full_name} was removed from records.` })
+      toast.success('Employee removed', { description: `${e.full_name} was removed from the HR directory.` })
     }
   }
 
@@ -410,10 +411,10 @@ Mavis Strategic Partners`
                     <span className="text-muted-foreground">Posted by: <b>{a.author}</b></span>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (window.confirm('Delete announcement?')) {
+                      onClick={async () => {
+                        if (await confirmAction({ title: 'Delete announcement?', description: 'The announcement will be removed for everyone. This cannot be undone.', confirmText: 'Delete', variant: 'destructive' })) {
                           setAnnouncements(prev => prev.filter(x => x.id !== a.id))
-                          toast.info('Announcement deleted')
+                          toast.success('Announcement deleted')
                         }
                       }}
                       className="text-rose-600 hover:underline"

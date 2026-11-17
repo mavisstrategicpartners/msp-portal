@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal from '../../components/Modal.jsx'
 import { seedAvailableLearners, HOST_COMPANY } from '../../data/mockData.js'

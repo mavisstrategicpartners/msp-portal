@@ -16,7 +16,7 @@ import {
 } from "@/lib/department-manager.service";
 import { formatZAR } from "@/lib/currency";
 import { useProfile } from "@/lib/use-profile";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";

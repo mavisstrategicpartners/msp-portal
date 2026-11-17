@@ -11,7 +11,7 @@ import {
   ShieldAlert, User, ExternalLink, ListChecks, Plus, Mail, Phone, MapPin,
   Briefcase, Calendar, UserCheck, ShieldCheck, FileText, ArrowRight,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -35,6 +35,7 @@ import {
   CreateClientInput,
 } from "@/lib/operations.types";
 import { useProfile } from "@/lib/use-profile";
+import { confirmAction } from "@/lib/confirm";
 
 export const Route = createFileRoute("/_authenticated/operations/onboarding")({
   head: () => ({ meta: [{ title: "Client Onboarding — MSP Operations" }] }),
@@ -868,9 +869,9 @@ export function ClientOnboardingPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
+              onClick={async () => {
                 if (formName || formContactName || formEmail) {
-                  if (confirm("Discard unsaved client registration changes?")) {
+                  if (await confirmAction({ title: "Discard changes?", description: "The client registration details you entered have not been saved and will be lost.", confirmText: "Discard", variant: "warning" })) {
                     setAddModalOpen(false);
                     resetAddForm();
                   }

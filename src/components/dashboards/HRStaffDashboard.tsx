@@ -36,7 +36,7 @@ import {
 import { useProfile } from "@/lib/use-profile";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 const CORE_RULES = [
   { icon: TrendingUp, label: "Leads over Followers", desc: "We chase revenue, not vanity metrics." },

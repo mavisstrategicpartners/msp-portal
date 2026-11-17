@@ -231,8 +231,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 9999px;
   flex-shrink: 0;
 }
@@ -257,14 +257,14 @@
 
 /* ℹ️ Info: system violet */
 .toast-badge-info {
-  background: #6366f1;
-  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+  background: var(--primary);
+  box-shadow: 0 3px 10px color-mix(in oklab, var(--primary) 35%, transparent);
 }
 
 /* Fallback badge styling for standard sonner icons if toast-badge is not present */
 [data-sonner-toast] [data-icon]:not(:has(.toast-badge)) {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -330,3 +330,8 @@
   color: #94a3b8 !important;
 }
 
+
+/* Notifications: keep the icon column aligned with the title, and close button inside the card. */
+[data-sonner-toast] [data-icon] { margin-top: 1px !important; }
+[data-sonner-toast][data-type="loading"] [data-icon] { color: var(--primary); }
+[data-sonner-toast] [data-close-button] { left: auto !important; right: -6px !important; top: -6px !important; }

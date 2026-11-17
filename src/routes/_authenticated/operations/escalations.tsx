@@ -16,7 +16,7 @@ import {
   OperationalEscalation,
   RealClient,
 } from "@/lib/operations-manager.service";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";

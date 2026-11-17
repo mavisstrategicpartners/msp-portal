@@ -15,7 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/lib/use-profile";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/_authenticated/gm/escalations")({
   head: () => ({ meta: [{ title: "Unresolved Escalations — GM Command Centre" }] }),

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { AlertTriangle, CheckCircle2, Clock, Download, Eye, FileSignature, FileText, Loader2, Paperclip, Upload, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -214,7 +214,7 @@ function OpenRequest({ r }: { r: HrRequest }) {
       try {
         if (file.size > 25 * 1024 * 1024) throw new Error(`${file.name} is larger than 25 MB.`);
         const s = await hrApi(`/api/staff/hr-documents/mine/${r.id}/upload-url`, { method: "POST", body: JSON.stringify({ fileName: file.name, size: file.size, mimeType: file.type }) });
-        const { error } = await supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false });
+        const { error } = await uploading(file.name, () => supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false }));
         if (error) throw new Error(`${file.name}: upload failed (${error.message}).`);
         setUploads((u) => [...u, { name: file.name, path: s.path, size: file.size, mimeType: file.type }]);
       } catch (e: any) {

@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { useCreateFollowUp, useExecutiveOverview, useUpdateFollowUp } from "@/lib/executive.service";
 import { useMarkNotificationRead, useStaffNotifications } from "@/lib/staff-tasks.service";
 import type { StaffNotification } from "@/lib/staff-tasks.types";

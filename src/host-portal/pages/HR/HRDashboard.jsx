@@ -16,7 +16,7 @@ import {
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { StaffAttendanceWidget } from '@/components/StaffAttendanceWidget'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   CheckCircle,
   XCircle,

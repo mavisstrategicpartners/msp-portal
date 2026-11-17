@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { CalendarDays, FolderOpen, Loader2, Search } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { hrApi } from "@/components/hr/MyHrDocuments";
 import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
 import { LeaveStatusBadge, type LeaveRequest } from "@/components/hr/LeaveShared";
+import { confirmAction } from "@/lib/confirm";
 
 const fmt = (d?: string | null) => (d ? format(parseISO(d), "d MMM yyyy") : "—");
 type Filter = "open" | "pending" | "info_requested" | "approved" | "declined" | "all";
@@ -130,7 +131,7 @@ function LeaveRow({ r, canManage }: { r: LeaveRequest; canManage: boolean }) {
               {r.status !== "approved" && <Button size="sm" className="h-8 text-xs" disabled={busy} onClick={() => act("approve")}>Approve</Button>}
               {!decided && <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy || !note.trim()} onClick={() => act("request_info")}>Ask for more information</Button>}
               {r.status !== "declined" && (
-                <Button size="sm" variant="outline" className="h-8 text-xs text-rose-600" disabled={busy || !note.trim()} onClick={() => (!decided || confirm("Change an approved application to declined?")) && act("decline")}>Decline</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs text-rose-600" disabled={busy || !note.trim()} onClick={async () => { if (!decided || (await confirmAction({ title: "Decline an approved application?", description: "This changes an approved leave application to declined. The employee will see the new status and your note.", confirmText: "Decline", variant: "destructive" }))) act("decline"); }}>Decline</Button>
               )}
             </div>
           )}

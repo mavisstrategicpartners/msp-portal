@@ -20,7 +20,7 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { DepartmentKey } from "./types";
 
 interface DeptTask {

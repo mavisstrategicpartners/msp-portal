@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { authNotices, toast } from "@/lib/notify";
 import {
   Loader2,
   Lock,
@@ -204,7 +204,7 @@ function AuthPage() {
     e.preventDefault();
     const targetEmail = email.trim();
     if (!targetEmail) {
-      toast.error("Please enter your work email.");
+      toast.warning("Some required information is missing", { description: "Please enter your work email." });
       return;
     }
     const lowerEmail = targetEmail.toLowerCase();
@@ -212,13 +212,13 @@ function AuthPage() {
       lowerEmail.endsWith("@mavisstrateegicpartners.co.za") ||
       lowerEmail.endsWith("@mavisstrategicpartners.co.za");
     if (!isCompanyDomain) {
-      toast.error("Invalid Company Domain", {
-        description: "Please enter your official MSP company email address (@mavisstrateegicpartners.co.za).",
+      toast.error("Use your MSP work email", {
+        description: "Sign in with your company email address (@mavisstrategicpartners.co.za).",
       });
       return;
     }
     if (!password) {
-      toast.error("Please enter your password.");
+      toast.warning("Some required information is missing", { description: "Please enter your password." });
       return;
     }
     setLoading(true);
@@ -247,17 +247,20 @@ function AuthPage() {
           localStorage.setItem("msp.rememberedEmail", targetEmail);
         }
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
-        toast.success("Welcome back", { description: "Signed in successfully." });
+        authNotices.signedIn();
         await navigateForDepartment(signInData.user.id);
         return;
       }
 
       if (error) {
-        toast.error("Sign-in failed", { description: error.message });
+        // Never echo the server's reason: the same message whether the account exists or not.
+        const status = (error as any).status;
+        if (!status || status >= 500 || /fetch|network/i.test(error.message)) authNotices.signInUnavailable();
+        else authNotices.signInFailed();
         return;
       }
-    } catch (error: any) {
-      toast.error("Authentication error", { description: error?.message || "An unexpected error occurred." });
+    } catch {
+      authNotices.signInUnavailable();
     } finally {
       setLoading(false);
     }

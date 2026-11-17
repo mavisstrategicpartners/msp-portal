@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import { toast } from '@/lib/notify'
 
 const FONTS = ['"Brush Script MT", cursive', '"Segoe Script", cursive', 'Georgia, serif']
 
@@ -46,13 +47,13 @@ export default function SignaturePad({ onConfirm, onCancel, defaultName = '' }) 
 
   const confirm = () => {
     if (tab === 'draw') {
-      if (!hasDrawn) return alert('Please draw your signature first.')
+      if (!hasDrawn) return toast.warning('Signature required', { description: 'Please draw your signature first.' })
       onConfirm({ dataUrl: canvasRef.current.toDataURL('image/png'), method: 'drawn' })
     } else if (tab === 'type') {
-      if (!typed.trim()) return alert('Please type your name.')
+      if (!typed.trim()) return toast.warning('Signature required', { description: 'Please type your name.' })
       onConfirm({ dataUrl: buildTypedDataUrl(), method: 'typed', typed })
     } else {
-      if (!uploadUrl) return alert('Please upload a signature image.')
+      if (!uploadUrl) return toast.warning('Signature required', { description: 'Please upload a signature image.' })
       onConfirm({ dataUrl: uploadUrl, method: 'uploaded' })
     }
   }

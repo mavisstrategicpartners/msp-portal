@@ -11,8 +11,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         success: (
           <div className="toast-badge toast-badge-success">
             <svg
-              width="20"
-              height="20"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#ffffff"
@@ -27,8 +27,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         error: (
           <div className="toast-badge toast-badge-error">
             <svg
-              width="18"
-              height="18"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#ffffff"
@@ -44,8 +44,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         warning: (
           <div className="toast-badge toast-badge-warning">
             <svg
-              width="18"
-              height="18"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#ffffff"
@@ -61,8 +61,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         info: (
           <div className="toast-badge toast-badge-info">
             <svg
-              width="18"
-              height="18"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#ffffff"
@@ -80,9 +80,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast: [
             "group toast",
-            "group-[.toaster]:flex group-[.toaster]:items-center group-[.toaster]:gap-4",
-            "group-[.toaster]:rounded-[20px] group-[.toaster]:px-5 group-[.toaster]:py-4",
-            "group-[.toaster]:min-w-[320px] group-[.toaster]:max-w-[420px]",
+            "group-[.toaster]:flex group-[.toaster]:items-start group-[.toaster]:gap-3",
+            "group-[.toaster]:rounded-2xl group-[.toaster]:px-4 group-[.toaster]:py-3.5",
+            "group-[.toaster]:w-full sm:group-[.toaster]:w-[380px] group-[.toaster]:max-w-full",
             "group-[.toaster]:bg-white group-[.toaster]:text-slate-900",
             "group-[.toaster]:border group-[.toaster]:border-black/[0.06]",
             "group-[.toaster]:shadow-[0_12px_36px_-4px_rgba(0,0,0,0.12),0_4px_12px_-2px_rgba(0,0,0,0.05)]",
@@ -93,13 +93,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
           ].join(" "),
           title: [
             "group-[.toast]:font-semibold",
-            "group-[.toast]:text-[15px]",
+            "group-[.toast]:text-sm",
             "group-[.toast]:leading-snug",
             "group-[.toast]:text-slate-900",
             "dark:group-[.toast]:text-slate-50",
           ].join(" "),
           description: [
-            "group-[.toast]:text-[13px]",
+            "group-[.toast]:text-[13px] group-[.toast]:break-words",
             "group-[.toast]:leading-relaxed",
             "group-[.toast]:mt-0.5",
             "group-[.toast]:text-slate-500",

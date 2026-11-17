@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -6,7 +7,7 @@ import { uid } from '../../lib/useLocalStorage.js'
 import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
 import { BarChart, Donut, StatCard } from '../../components/Chart.jsx'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Star,
   Award,
@@ -215,10 +216,10 @@ export default function HRPerformance() {
     setForm(null)
   }
 
-  const remove = (r) => {
-    if (window.confirm(`Are you sure you want to delete the performance review for ${r.employee}?`)) {
+  const remove = async (r) => {
+    if (await confirmAction({ title: `Delete performance review?`, description: `The performance review for ${r.employee} will be permanently deleted. This cannot be undone.`, confirmText: 'Delete', variant: 'destructive' })) {
       setReviews(prev => prev.filter(x => x.id !== r.id))
-      toast.info('Review Deleted', { description: `Removed evaluation for ${r.employee}.` })
+      toast.success('Review deleted', { description: `Removed the evaluation for ${r.employee}.` })
     }
   }
 

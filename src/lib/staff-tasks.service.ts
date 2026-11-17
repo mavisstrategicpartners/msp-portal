@@ -11,7 +11,7 @@ import {
   TaskStatus,
   DependencyStatus,
   EvidenceReviewStatus, EvidenceFile, EvidenceDetail } from "./staff-tasks.types";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 
 
 // ── 1. Tasks Queries & Mutations ─────────────────────────────────────────────
@@ -412,9 +412,9 @@ export async function uploadEvidenceFile(file: File, taskId: string): Promise<Ev
   if (!slotRes.ok || !slot.path || !slot.token) {
     throw new Error(slot.error || "Could not prepare the upload. Please try again.");
   }
-  const { error } = await supabase.storage
+  const { error } = await uploading(file.name, () => supabase.storage
     .from("evidence")
-    .uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false });
+    .uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false }));
   if (error) throw new Error(`Upload failed: ${error.message}`);
   return { name: file.name, path: slot.path, url: "", size: file.size, mimeType };
 }

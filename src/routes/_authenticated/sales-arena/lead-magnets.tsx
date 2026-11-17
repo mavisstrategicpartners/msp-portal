@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ExternalLink, FileDown, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Page, PageHeader, Section, StatCard, StatGrid, selectClass, table } from "@/components/layout/page";
 import { ArenaGate, ArenaNav, Loading, StatusBadge } from "@/components/sales-arena/ArenaUI";

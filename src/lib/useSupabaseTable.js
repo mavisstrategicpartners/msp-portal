@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { pendingWrites } from '@/lib/pending-writes';
+import { toast } from '@/lib/notify';
 import { supabase } from '@/integrations/supabase/client';
 
 function isSyntheticItem(item) {
@@ -38,6 +40,16 @@ function isSyntheticItem(item) {
  * syncs changes back to the database in the background, with local storage fallback
  * so that state is never wiped out when navigating away, refreshing, or logging back in.
  */
+// When a page showed "Saved" for this write, notify.ts already turns it into an error; this is
+// the error for writes that had no success message at all (e.g. a background reorder).
+const recentFailure = new Map();
+function notifiedFailure(table) {
+  const now = Date.now();
+  const last = recentFailure.get(table) || 0;
+  recentFailure.set(table, now);
+  return now - last < 5000;
+}
+
 export function useSupabaseTable(tableName, initialSeed = []) {
   const storageKey = `msp_table_${tableName}`;
   // Built-in sample rows are display-only: they must never be written to the
@@ -115,6 +127,9 @@ export function useSupabaseTable(tableName, initialSeed = []) {
   }, [tableName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateData = (updater) => {
+    // Registered now, so a success notification raised right after this call waits for the
+    // server's answer (lib/notify.ts) instead of claiming success before the write happened.
+    const finish = pendingWrites.begin();
     setData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
 
@@ -143,22 +158,28 @@ export function useSupabaseTable(tableName, initialSeed = []) {
             return JSON.stringify(old) !== JSON.stringify(x);
           });
 
+          let failure = null;
           if (added.length > 0) {
             const { error } = await supabase.from(tableName).insert(added);
-            if (error) console.error('[useSupabaseTable] insert ' + tableName + ':', error);
+            if (error) { console.error('[useSupabaseTable] insert ' + tableName + ':', error); failure = failure || error.message; }
           }
           for (const item of updated) {
             const id = getItemId(item);
             const { error } = await supabase.from(tableName).update(item).eq('id', id);
-            if (error) console.error('[useSupabaseTable] update ' + tableName + ':', error);
+            if (error) { console.error('[useSupabaseTable] update ' + tableName + ':', error); failure = failure || error.message; }
           }
           for (const item of removed) {
             const id = getItemId(item);
             const { error } = await supabase.from(tableName).delete().eq('id', id);
-            if (error) console.error('[useSupabaseTable] delete ' + tableName + ':', error);
+            if (error) { console.error('[useSupabaseTable] delete ' + tableName + ':', error); failure = failure || error.message; }
+          }
+          finish(failure);
+          if (failure && !notifiedFailure(tableName)) {
+            toast.error('Changes could not be saved', { description: `The server rejected the change: ${failure}` });
           }
         } catch (err) {
           console.error('[useSupabaseTable] sync ' + tableName + ':', err);
+          finish(err?.message || 'Network error');
         }
       })();
 

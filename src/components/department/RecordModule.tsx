@@ -8,7 +8,7 @@ import { useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ClipboardList, Download, Eye, FileText, Image as ImageIcon, Link2, Loader2, Paperclip, Plus, Search, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ import {
 } from "@/lib/department-modules";
 import { useProfile } from "@/lib/use-profile";
 import { supabase } from "@/integrations/supabase/client";
+import { confirmAction } from "@/lib/confirm";
 
 type RecordsResponse = {
   records: DeptRecord[];
@@ -287,7 +288,7 @@ async function uploadRecordFile(typeKey: string, file: File): Promise<RecordAtta
     body: JSON.stringify({ type: typeKey, fileName: file.name, mimeType: file.type, size: file.size }),
   });
   const mimeType = file.type || "application/octet-stream";
-  const { error } = await supabase.storage.from("evidence").uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false });
+  const { error } = await uploading(file.name, () => supabase.storage.from("evidence").uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false }));
   if (error) throw new Error(`${file.name}: upload failed (${error.message}).`);
   return { name: file.name, path: slot.path, size: file.size, mimeType };
 }
@@ -466,7 +467,7 @@ function RecordEditor({
     }
   };
   const remove = async () => {
-    if (!record || !confirm(`Delete this ${type.singular}?`)) return;
+    if (!record || !(await confirmAction({ title: `Delete this ${type.singular}?`, description: `The ${type.singular} will be permanently deleted for everyone in the department. This cannot be undone.`, confirmText: "Delete", variant: "destructive" }))) return;
     try {
       await api(`/api/staff/records/${record.id}`, { method: "DELETE" });
       toast.success("Deleted");

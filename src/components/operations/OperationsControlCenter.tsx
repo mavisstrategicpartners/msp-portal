@@ -44,7 +44,7 @@ import {
   Send,
   Eye,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { ClientOperation } from "@/lib/operations-data";
 
 export function OperationsControlCenter() {

@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeScript } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { showFlash, toast } from "@/lib/notify";
 import { ModalProvider } from "@/components/ui/modal-context";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -119,7 +120,15 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <Toaster position="top-right" offset={20} />
+        {/* One notification area for every portal: top-right under the top bar on desktop,
+            the top of the screen on phones; never more than four at once. */}
+        <Toaster
+          position="top-right"
+          offset={{ top: 76, right: 20 }}
+          mobileOffset={{ top: 68, left: 12, right: 12 }}
+          visibleToasts={4}
+          closeButton
+        />
         <Scripts />
       </body>
     </html>
@@ -148,8 +157,31 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ModalProvider>
+        <NotificationEffects />
         <Outlet />
       </ModalProvider>
     </QueryClientProvider>
   );
+}
+
+/** App-wide notices: messages carried over a page load, and connection status. */
+function NotificationEffects() {
+  useEffect(() => {
+    showFlash();
+    const offline = () =>
+      toast.warning("Your connection appears unstable", {
+        id: "net-status",
+        description: "You're offline. Changes can't be saved until the connection returns.",
+        important: true,
+      });
+    const online = () => toast.success("Back online", { id: "net-status", description: "Your connection has been restored." });
+    if (typeof navigator !== "undefined" && navigator.onLine === false) offline();
+    window.addEventListener("offline", offline);
+    window.addEventListener("online", online);
+    return () => {
+      window.removeEventListener("offline", offline);
+      window.removeEventListener("online", online);
+    };
+  }, []);
+  return null;
 }

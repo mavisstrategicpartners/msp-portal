@@ -1,3 +1,4 @@
+import { uploading } from "@/lib/notify";
 import { UNASSIGNED_DEPARTMENT } from "@/lib/departments";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthHeaders } from "@/lib/api-auth-headers";
@@ -146,9 +147,9 @@ export async function uploadTaskAttachment(
   const path = `task-attachments/${taskId}/${Date.now()}_${cleanName}`;
 
   try {
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await uploading(file.name, () => supabase.storage
       .from("evidence")
-      .upload(path, file, { upsert: true, contentType: file.type });
+      .upload(path, file, { upsert: true, contentType: file.type }));
 
     if (uploadError) {
       // Fall back to a local object URL (works for images in-session)

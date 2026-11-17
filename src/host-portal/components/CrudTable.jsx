@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import DashboardLayout from './DashboardLayout.jsx'
 import Modal, { field, labelStyle } from './Modal.jsx'
 import { useLocalStorage, uid } from '../lib/useLocalStorage.js'
+import { confirmAction } from '@/lib/confirm'
+import { toast } from '@/lib/notify'
 
 /**
  * Generic CRUD table used by HR pages.
@@ -25,12 +27,12 @@ export default function CrudTable({
 
   const openAdd = () => { setEditing(null); setForm(emptyValues); setShowForm(true) }
   const openEdit = (r) => { setEditing(r.id); setForm({ ...emptyValues, ...r }); setShowForm(true) }
-  const remove = (r) => { if (window.confirm('Delete this record?')) setList(prev => prev.filter(x => x.id !== r.id)) }
+  const remove = async (r) => { if (await confirmAction({ title: 'Delete this record?', description: 'The record will be permanently deleted. This cannot be undone.', confirmText: 'Delete', variant: 'destructive' })) setList(prev => prev.filter(x => x.id !== r.id)) }
 
   const submit = (e) => {
     e.preventDefault()
     const missing = fields.find(f => f.required && !String(form[f.key] ?? '').trim())
-    if (missing) return alert(`${missing.label} is required`)
+    if (missing) return toast.warning('Some required information is missing', { description: `${missing.label} is required.` })
     if (editing) setList(prev => prev.map(x => x.id === editing ? { ...x, ...form } : x))
     else setList(prev => [{ id: uid(prefix), ...form }, ...prev])
     setShowForm(false)

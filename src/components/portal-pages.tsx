@@ -9,7 +9,7 @@ import {
   RotateCcw, PowerOff, FileBarChart2, Crown, Laptop, Code2, Megaphone, Share2, Sliders, UserCheck, Layers, GitBranch, ArrowUpRight, Check,
   FileText,
 } from "lucide-react";
-import { toast } from "sonner";
+import { authNotices, toast } from "@/lib/notify";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { createTeamMember, setAdminRole, updateTeamMember } from "@/lib/admin.functions";
@@ -1213,7 +1213,7 @@ export function ProfilePage() {
     },
     onSuccess: () => {
       setPwResult({ ok: true, message: "Password changed. Use your new password the next time you sign in." });
-      toast.success("Password changed", { description: "Your new password works from your next sign-in." });
+      authNotices.passwordUpdated();
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setShowCurrentPassword(false);
       setShowNewPassword(false);

@@ -11,6 +11,7 @@ import { buildSidebar, canAccessPath, isItemActive, itemKey, navContextFromProfi
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useChatRealtime, useChatUnread } from "@/lib/chat-api";
+import { authNotices, uploading } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/use-profile";
@@ -77,7 +78,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { data: profileData, isLoading: profileLoading } = useProfile();
   // Live chat updates (new messages refresh unread counts and open conversations).
-  useChatRealtime(Boolean(profileData?.user));
+  useChatRealtime(Boolean(profileData?.user), profileData?.user?.id);
   const navCtx = navContextFromProfile(profileData);
   // Workspace pages are only shown to roles allowed in src/lib/navigation.ts.
   // Anyone else who opens one by URL is sent to their own dashboard.
@@ -354,9 +355,9 @@ function TopBar({
     try {
       const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const path = `${data.user.id}/avatar-${Date.now()}.${extension}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await uploading("profile photo", () => supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, file, { upsert: true, contentType: file.type }));
 
       if (uploadError) throw uploadError;
 
@@ -421,6 +422,8 @@ function TopBar({
       localStorage.removeItem("msp.rememberedPassword");
       localStorage.removeItem("msp.demoAvatar");
     } catch {}
+    // Shown on the sign-in page after the reload.
+    authNotices.signedOut();
     window.location.replace("/auth");
   }
 

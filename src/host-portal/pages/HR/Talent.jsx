@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -5,7 +6,7 @@ import { seedTalent, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
 import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Crown,
   Sparkles,
@@ -180,10 +181,10 @@ export default function Talent() {
     setForm(null)
   }
 
-  const remove = (t) => {
-    if (window.confirm(`Remove ${t.employee} from the talent pipeline?`)) {
+  const remove = async (t) => {
+    if (await confirmAction({ title: 'Remove from talent pipeline?', description: `${t.employee} will be removed from talent tracking. This cannot be undone.`, confirmText: 'Remove', variant: 'destructive' })) {
       setTalent(prev => prev.filter(x => x.id !== t.id))
-      toast.info('Record Removed', { description: `${t.employee} was removed from talent tracking.` })
+      toast.success('Record removed', { description: `${t.employee} was removed from talent tracking.` })
     }
   }
 

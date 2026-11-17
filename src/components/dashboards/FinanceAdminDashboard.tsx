@@ -37,7 +37,7 @@ import {
   X,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -63,6 +63,7 @@ import {
   type FinInvoice,
   type Period,
 } from "@/lib/finance-pdf";
+import { confirmAction } from "@/lib/confirm";
 
 type Kind = "invoices" | "expenses" | "approvals" | "budgets";
 type FinanceResponse = FinanceData & { canEdit: boolean; me: string };
@@ -1025,7 +1026,7 @@ function LocalRecordsNotice({ onImported }: { onImported: () => void }) {
         ({(Object.keys(local) as Kind[]).filter((k) => local[k].length).map((k) => `${local[k].length} ${k}`).join(", ")}). Save them to the database, or discard them.
       </span>
       <div className="flex shrink-0 gap-2">
-        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => confirm("Discard these unsaved records from this browser?") && clear()} disabled={importing}>
+        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={async () => { if (await confirmAction({ title: "Discard unsaved records?", description: "These imported records have not been saved and will be removed from this browser. This cannot be undone.", confirmText: "Discard", variant: "destructive" })) clear(); }} disabled={importing}>
           <X className="mr-1 h-3.5 w-3.5" /> Discard
         </Button>
         <Button size="sm" className="h-8 text-xs" onClick={importAll} disabled={importing}>

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { AlertTriangle, CalendarDays, Loader2, Send } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { hrApi } from "@/components/hr/MyHrDocuments";
 import { LeaveStatusBadge, type LeaveRequest } from "@/components/hr/LeaveShared";
 import { LEAVE_TYPES, workingDays } from "@/lib/hr-shared";
 import { selectClass } from "@/components/layout/page";
+import { confirmAction } from "@/lib/confirm";
 
 const fmt = (d?: string | null) => (d ? format(parseISO(d), "d MMM yyyy") : "—");
 const KEY = ["leave", "mine"];
@@ -137,7 +138,7 @@ function MyLeaveRow({ r }: { r: LeaveRequest }) {
         </div>
         <LeaveStatusBadge status={r.status} />
         {(r.status === "pending" || r.status === "info_requested") && (
-          <Button size="sm" variant="ghost" className="h-7 text-xs text-rose-600" disabled={busy} onClick={() => confirm("Withdraw this leave application?") && call({ method: "DELETE" }, "Application withdrawn")}>Withdraw</Button>
+          <Button size="sm" variant="ghost" className="h-7 text-xs text-rose-600" disabled={busy} onClick={async () => { if (await confirmAction({ title: "Withdraw leave application?", description: "Your application will be withdrawn and HR will no longer review it. You can submit a new one later.", confirmText: "Withdraw", variant: "warning" })) call({ method: "DELETE" }, "Application withdrawn"); }}>Withdraw</Button>
         )}
       </div>
       {r.hr_note && (

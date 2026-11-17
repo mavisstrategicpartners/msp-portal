@@ -62,7 +62,7 @@ import {
   Flame,
   FileUp,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";
 import { useProfile } from "@/lib/use-profile";
 import {

@@ -27,7 +27,7 @@ import {
   PieChart,
   FileText,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseTable } from "@/lib/useSupabaseTable";
 import { StaffAttendanceWidget } from "@/components/StaffAttendanceWidget";

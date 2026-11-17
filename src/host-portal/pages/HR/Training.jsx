@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -5,7 +6,7 @@ import { seedTraining, seedEmployees } from '../../data/mockData.js'
 import { uid } from '../../lib/useLocalStorage.js'
 import { useCompanyEmployees } from '../../lib/useCompanyEmployees.js'
 import { useSupabaseTable } from '@/lib/useSupabaseTable.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   GraduationCap,
   BookOpen,
@@ -151,10 +152,10 @@ export default function Training() {
     setCourseModal(null)
   }
 
-  const removeCourse = (c) => {
-    if (window.confirm(`Delete course "${c.title}"?`)) {
+  const removeCourse = async (c) => {
+    if (await confirmAction({ title: `Delete course "${c.title}"?`, description: 'The course and its details will be permanently deleted. This cannot be undone.', confirmText: 'Delete', variant: 'destructive' })) {
       setCourses(prev => prev.filter(x => x.id !== c.id))
-      toast.info('Course Deleted', { description: `Removed ${c.title}.` })
+      toast.success('Course deleted', { description: `Removed ${c.title}.` })
     }
   }
 

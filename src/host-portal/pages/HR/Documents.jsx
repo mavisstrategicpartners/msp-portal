@@ -1,3 +1,4 @@
+import { confirmAction } from '@/lib/confirm'
 import { useState, useMemo, useRef, useEffect } from 'react'
 import DashboardLayout from '../../components/DashboardLayout.jsx'
 import Modal, { field, labelStyle } from '../../components/Modal.jsx'
@@ -9,7 +10,7 @@ import {
   seedFolderSettings,
   seedHrDocuments
 } from '../../data/mockData.js'
-import { toast } from 'sonner'
+import { toast } from '@/lib/notify'
 import {
   Folder,
   FolderOpen,
@@ -263,13 +264,13 @@ export default function HRDocuments() {
   }
 
   // Delete an employee folder
-  const handleDeleteFolder = (staff) => {
+  const handleDeleteFolder = async (staff) => {
     if (!staff) return
     const docCount = documents.filter(d => d.employee_id === staff.id).length
     const confirmMsg = `Are you sure you want to delete the folder for "${staff.full_name}"?` +
       (docCount > 0 ? ` All ${docCount} document(s) in this folder will also be removed.` : '')
     
-    if (window.confirm(confirmMsg)) {
+    if (await confirmAction({ title: 'Delete employee folder?', description: confirmMsg + ' This cannot be undone.', confirmText: 'Delete folder', variant: 'destructive' })) {
       setEmployees(prev => prev.filter(e => e.id !== staff.id))
       setDocuments(prev => prev.filter(d => d.employee_id !== staff.id))
       setFolderSettings(prev => prev.filter(f => f.employee_id !== staff.id))
@@ -344,8 +345,8 @@ export default function HRDocuments() {
   }
 
   // Delete document
-  const handleDeleteDoc = (doc) => {
-    if (window.confirm(`Delete "${doc.name}" from ${activeStaff?.full_name}'s folder?`)) {
+  const handleDeleteDoc = async (doc) => {
+    if (await confirmAction({ title: 'Delete document?', description: `"${doc.name}" will be removed from ${activeStaff?.full_name}'s folder. This cannot be undone.`, confirmText: 'Delete', variant: 'destructive' })) {
       setDocuments(prev => prev.filter(d => d.id !== doc.id))
       toast.success(`Removed ${doc.name}`)
     }

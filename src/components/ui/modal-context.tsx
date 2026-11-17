@@ -207,7 +207,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             if (!open) handleConfirmCancel();
           }}
         >
-          <AlertDialogContent className="sm:max-w-[440px] border border-border/80 bg-card/95 p-6 backdrop-blur-xl shadow-2xl rounded-2xl animate-in fade-in zoom-in-95 duration-200">
+          <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[440px] sm:max-w-[440px] border border-border/80 bg-card/95 p-6 backdrop-blur-xl shadow-2xl rounded-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-4">
               <div
                 className={cn(
@@ -230,14 +230,14 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             <AlertDialogFooter className="mt-6 flex-row justify-end gap-2.5 sm:space-x-0">
               <AlertDialogCancel
                 onClick={handleConfirmCancel}
-                className="rounded-xl border-border/70 hover:bg-muted/60 text-sm font-medium transition-colors"
+                className="mt-0 h-10 rounded-xl border-border/70 hover:bg-muted/60 text-sm font-medium transition-colors"
               >
                 {confirmState.options.cancelText}
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirmAction}
                 className={cn(
-                  "rounded-xl font-medium text-sm transition-all px-4 py-2",
+                  "h-10 rounded-xl font-medium text-sm transition-all px-4 py-2",
                   getVariantStyles(confirmState.options.variant).actionClass
                 )}
               >

@@ -6,13 +6,14 @@ import {
   ArrowLeft, BellOff, Bell, FileText, Hash, LogOut, MessageSquarePlus, MoreHorizontal, Paperclip, Pencil, Reply, Search, Send, Trash2, Users, X,
   Building2, Globe2, UserRound, Loader2,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { chatFetch, dayLabel, fileSize, initials, timeLabel } from "@/lib/chat-api";
 import { useProfile } from "@/lib/use-profile";
+import { confirmAction } from "@/lib/confirm";
 import { cn } from "@/lib/utils";
 
 /**
@@ -221,7 +222,7 @@ function Thread({ convId, summary, onBack }: { convId: string; summary?: Conv; o
   const firstUnread = lastRead ? messages.find((m) => m.created_at > lastRead && m.sender_id !== myId && m.kind === "text")?.id : null;
 
   const remove = async (m: Msg) => {
-    if (!confirm("Delete this message for everyone?")) return;
+    if (!(await confirmAction({ title: "Delete message?", description: "The message and any attached files will be deleted for everyone in this conversation. This cannot be undone.", confirmText: "Delete", variant: "destructive" }))) return;
     try {
       await chatFetch(`/messages/${m.id}`, { method: "DELETE" });
       setOlder((o) => o.map((x) => (x.id === m.id ? { ...x, deleted: true, body: null, attachments: [] } : x)));
@@ -433,7 +434,7 @@ function Composer({ convId, replyTo, editing, onCancel, onSent }: { convId: stri
         const attachments = [];
         for (const f of files) {
           const slot = await chatFetch<any>(`/conversations/${convId}/upload-url`, { method: "POST", body: { fileName: f.name, size: f.size } });
-          const { error } = await supabase.storage.from(slot.bucket).uploadToSignedUrl(slot.path, slot.token, f, { contentType: f.type || "application/octet-stream", upsert: false });
+          const { error } = await uploading(f.name, () => supabase.storage.from(slot.bucket).uploadToSignedUrl(slot.path, slot.token, f, { contentType: f.type || "application/octet-stream", upsert: false }));
           if (error) throw new Error(`Could not upload ${f.name}.`);
           attachments.push({ path: slot.path, name: f.name, size: f.size, mimeType: f.type });
         }
@@ -610,7 +611,7 @@ function InfoDialog({ open, onOpenChange, convId, data, myId, onLeft }: { open: 
     }
   };
   const leave = async () => {
-    if (!confirm("Leave this group? You will no longer see its messages.")) return;
+    if (!(await confirmAction({ title: "Leave group?", description: "You will no longer see this group's messages or files. A group owner can add you back.", confirmText: "Leave group", variant: "warning" }))) return;
     try {
       await chatFetch(`/conversations/${convId}/leave`, { method: "POST" });
       onOpenChange(false);
@@ -662,7 +663,7 @@ function InfoDialog({ open, onOpenChange, convId, data, myId, onLeft }: { open: 
                   </span>
                   {m.role !== "member" && <span className="text-xs text-muted-foreground">{m.role === "owner" ? "Owner" : "Admin"}</span>}
                   {conv?.can_manage && m.role !== "owner" && m.user_id !== myId && (
-                    <button type="button" className="text-xs text-destructive hover:underline" onClick={() => patch({ remove: [m.user_id] })}>Remove</button>
+                    <button type="button" className="text-xs text-destructive hover:underline" onClick={async () => { if (await confirmAction({ title: `Remove ${m.name}?`, description: `${m.name} will be removed from this group and will no longer see its messages or files.`, confirmText: "Remove", variant: "destructive" })) patch({ remove: [m.user_id] }); }}>Remove</button>
                   )}
                 </li>
               ))}

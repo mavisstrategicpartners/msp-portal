@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ChevronDown, ChevronRight, FileSignature, Loader2, Plus, Search, Upload, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading } from "@/lib/notify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import { DEPARTMENTS } from "@/lib/departments";
 import { FOLDER_CATEGORIES } from "@/lib/hr-shared";
 import { StatCard, StatGrid, selectClass } from "@/components/layout/page";
 import { FileLinks, KIND_LABEL, StatusBadge, hrApi, isOverdue, type HrFile, type HrRequest } from "@/components/hr/MyHrDocuments";
+import { confirmAction } from "@/lib/confirm";
 
 type ListResponse = { requests: HrRequest[]; people: { id: string; name: string; title: string | null }[]; canManage: boolean };
 const KEY = ["hr-documents", "requests"];
@@ -158,7 +159,7 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
   const [busy, setBusy] = useState(false);
   const files = useQuery({ queryKey: ["hr-documents", "requests", r.id, "files"], queryFn: async () => hrApi(`/api/staff/hr-documents/requests/${r.id}/files`), enabled: show });
   const act = async (action: "accept" | "return" | "reject" | "cancel") => {
-    if (action === "cancel" && !confirm(`Cancel this request for ${r.employee_name}? It will disappear from their HR Documents.`)) return;
+    if (action === "cancel" && !(await confirmAction({ title: "Cancel document request?", description: `The request to ${r.employee_name} will be cancelled and will disappear from their HR Documents.`, confirmText: "Cancel request", cancelText: "Keep request", variant: "destructive" }))) return;
     setBusy(true);
     try {
       await hrApi(`/api/staff/hr-documents/requests/${r.id}`, { method: "PATCH", body: JSON.stringify({ action, note }) });
@@ -202,7 +203,7 @@ function EmployeeRow({ r, canManage }: { r: HrRequest; canManage: boolean }) {
                   </div>
                   <Button size="sm" className="h-8 text-xs" disabled={busy} onClick={() => act("accept")}>Accept</Button>
                   <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy || !note.trim()} onClick={() => act("return")}>Request corrections</Button>
-                  <Button size="sm" variant="outline" className="h-8 text-xs text-rose-600" disabled={busy || !note.trim()} onClick={() => { if (confirm(`Reject "${r.title}" from ${r.employee_name}? This closes the request.`)) act("reject"); }}>Reject</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-rose-600" disabled={busy || !note.trim()} onClick={async () => { if (await confirmAction({ title: "Reject this document?", description: `"${r.title}" from ${r.employee_name} will be rejected and the request closed. The employee will see your note.`, confirmText: "Reject", variant: "destructive" })) act("reject"); }}>Reject</Button>
                 </>
               )}
               {!["Accepted", "Rejected"].includes(r.status) && (
@@ -235,7 +236,7 @@ function NewRequestDialog({ people, preset, onClose }: { people: ListResponse["p
     setBusy(true);
     try {
       const s = await hrApi("/api/staff/hr-documents/requests/upload-url", { method: "POST", body: JSON.stringify({ fileName: file.name, size: file.size, mimeType: file.type }) });
-      const { error } = await supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      const { error } = await uploading(file.name, () => supabase.storage.from("hr-documents").uploadToSignedUrl(s.path, s.token, file, { contentType: file.type || "application/octet-stream", upsert: false }));
       if (error) throw new Error(`Upload failed: ${error.message}`);
       setTemplate({ name: file.name, path: s.path, size: file.size, mimeType: file.type });
     } catch (e: any) {

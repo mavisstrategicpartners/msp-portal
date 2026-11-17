@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SEV_ICON, UnreadDot, notificationLink, relTime, splitLink } from "@/components/executive/ExecutiveUI";

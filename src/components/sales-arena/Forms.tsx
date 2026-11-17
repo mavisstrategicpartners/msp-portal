@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast, uploading as withUploadNotice } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -324,7 +324,7 @@ export function MagnetForm({ open, onOpenChange, magnet, preset }: { open: boole
     setUploading(true);
     try {
       const slot = await arenaFetch<any>(`/lead-magnets/${id}/upload-url`, { method: "POST", body: { fileName: file.name, size: file.size } });
-      const { error } = await supabase.storage.from(slot.bucket).uploadToSignedUrl(slot.path, slot.token, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      const { error } = await withUploadNotice(file.name, () => supabase.storage.from(slot.bucket).uploadToSignedUrl(slot.path, slot.token, file, { contentType: file.type || "application/octet-stream", upsert: false }));
       if (error) throw new Error("The upload failed. Try again.");
       await arenaFetch(`/lead-magnets/${id}`, { method: "PATCH", body: { report_file: { path: slot.path, name: file.name, size: file.size, mimeType: file.type } } });
     } finally {

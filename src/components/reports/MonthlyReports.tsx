@@ -30,7 +30,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast, uploading as withUploadNotice } from "@/lib/notify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ import { ClientReportsPanel } from "@/components/portal-pages";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthHeaders } from "@/lib/api-auth-headers";
 import { REPORT_SECTIONS, type MonthlyReportRow, type ReportFile } from "@/lib/monthly-reports";
+import { confirmAction } from "@/lib/confirm";
 
 type ReportsResponse = {
   reports: MonthlyReportRow[];
@@ -453,7 +454,7 @@ function ReportViewer({
     }
   };
   const del = async () => {
-    if (!confirm("Delete this draft report and its files?")) return;
+    if (!(await confirmAction({ title: "Delete draft report?", description: "The draft and all files attached to it will be permanently deleted. This cannot be undone.", confirmText: "Delete", variant: "destructive" }))) return;
     try {
       await api(`/api/staff/reports/${r.id}`, { method: "DELETE" });
       toast.success("Draft deleted");
@@ -584,7 +585,7 @@ function ReportEditor({
           body: JSON.stringify({ departmentKey: dept, fileName: file.name, mimeType: file.type, size: file.size }),
         });
         const mimeType = file.type || "application/octet-stream";
-        const { error } = await supabase.storage.from("evidence").uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false });
+        const { error } = await withUploadNotice(file.name, () => supabase.storage.from("evidence").uploadToSignedUrl(slot.path, slot.token, file, { contentType: mimeType, upsert: false }));
         if (error) throw new Error(`${file.name}: upload failed (${error.message}).`);
         setFiles((f) => [...f, { name: file.name, path: slot.path, size: file.size, mimeType }]);
       } catch (e: any) {
